@@ -52,6 +52,7 @@ Example:
 * You insert it into the system and it immediately sets the score tracker + timer to what's needed for that game.
 * Immediately play!
 
+NOTE: This means that, once this new library is done, I should be able to just place that `index.html` and JS file into the `tools` folder at <https://pandaqi.com> to host the tools for anyone to use again.
 
 ## File-Folder Structure
 
