@@ -1,0 +1,30 @@
+{
+  "name": "pq-game-buddy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Offline toolkit for game night: timers, dice, scorepads, secret roles and templates.",
+  "engines": {
+    "bun": ">=1.3"
+  },
+  "scripts": {
+    "dev": "bun ./scripts/dev.ts",
+    "gen": "bun ./scripts/gen-manifest.ts",
+    "build": "bun ./scripts/build.ts",
+    "build:single": "bun ./scripts/build.ts --single",
+    "typecheck": "bun x tsc --noEmit && bun x svelte-check --tsconfig ./tsconfig.json --threshold warning",
+    "test": "bun test",
+    "lint:templates": "bun ./scripts/lint-templates.ts",
+    "size": "bun ./scripts/build.ts --size-only",
+    "check": "bun run scripts/gen-manifest.ts --check && bun run typecheck && bun test && bun run lint:templates && bun run build"
+  },
+  "devDependencies": {
+    "@happy-dom/global-registrator": "^15.11.7",
+    "@types/bun": "^1.1.14",
+    "bun-plugin-svelte": "^0.0.6",
+    "happy-dom": "^15.11.7",
+    "svelte": "^5.20.0",
+    "svelte-check": "^4.1.4",
+    "typescript": "^5.7.3"
+  }
+}

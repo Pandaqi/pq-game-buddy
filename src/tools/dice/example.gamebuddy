@@ -1,0 +1,11 @@
+# dice.example.gamebuddy — a d20 with advantage
+
+[game]
+name: Dice Rolls
+players: 1-8
+time: 5m
+tags: dice, rpg
+
+[tool dice]
+roll: 1d20
+advantage: advantage

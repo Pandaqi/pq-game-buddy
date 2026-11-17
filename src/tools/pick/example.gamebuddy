@@ -1,0 +1,12 @@
+# pick.example.gamebuddy — draw numbers, or seat the table
+
+[game]
+name: Random Pick
+players: 2-8
+time: 5m
+tags: random, party
+
+[tool pick]
+source: number
+count: 1
+replacement: yes

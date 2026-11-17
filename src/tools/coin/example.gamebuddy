@@ -1,0 +1,12 @@
+# coin.example.gamebuddy — who goes first
+
+[game]
+name: Coin Toss
+players: 2-8
+time: 1m
+tags: random, party
+
+[tool coin]
+coins: 1
+fairness: 50
+mode: single

@@ -1,0 +1,11 @@
+# demo.example.gamebuddy — the smallest possible tool block
+
+[game]
+name: Demo Counter
+players: 1
+time: 1m
+tags: dev
+
+[tool demo]
+label: Taps
+start: 0

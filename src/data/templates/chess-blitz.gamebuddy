@@ -1,0 +1,17 @@
+# chess-blitz.gamebuddy — two clocks with a three second increment
+
+[game]
+name: Blitz Chess
+players: 2
+time: 10m
+tags: competitive, two-player
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[tool timer clock]
+mode: chess
+duration: 5m
+increment: 3s
+players: 2
+sound: bell

@@ -1,0 +1,17 @@
+# timer.example.gamebuddy — a three minute flip timer per player
+
+[game]
+name: Flip Timers
+players: 2-4
+time: 15m
+tags: timer, party
+
+[tool timer]
+mode: flip
+duration: 3m
+per-player: yes
+players: 4
+layout: grid
+warn-at: 20s
+sound: bell
+haptic: short

@@ -1,0 +1,14 @@
+# score.example.gamebuddy — a simple running total
+
+[game]
+name: Score Pad
+players: 2-6
+time: 30m
+tags: board, track
+
+[tool score]
+mode: simple
+win: highest
+target: 0
+step: 1
+start: 0

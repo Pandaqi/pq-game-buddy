@@ -1,0 +1,27 @@
+# kitchen-rush-timers.gamebuddy — one three minute hourglass per player
+
+[game]
+name: Kitchen Rush (timers)
+players: 2-4
+time: 45m
+tags: realtime, cooperative, party
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[players]
+Alice
+Bob
+Charlie
+Dave
+
+# One big tap target per player: tap to flip your hourglass.
+[tool timer kitchen]
+mode: flip
+duration: 3m
+per-player: yes
+players: 4
+layout: grid
+warn-at: 20s
+sound: bell
+haptic: short
