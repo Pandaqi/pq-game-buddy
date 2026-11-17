@@ -2,7 +2,9 @@ import { describe, expect, test } from 'bun:test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { schemas } from '../src/core/schemas.generated';
-import { bundledTemplates } from '../src/data/templates.generated';
+import { listTemplates } from '../src/data/templates';
+import { summariseTemplate } from '../src/data/template-summary';
+import { templateTexts } from '../src/data/template-text.generated';
 import {
   allDiagnostics,
   hasErrors,
@@ -230,7 +232,7 @@ describe('round trip', () => {
     expect(again.tools.map((tool) => tool.values)).toEqual(resolved.tools.map((tool) => tool.values));
   }
 
-  for (const item of bundledTemplates) {
+  for (const item of templateTexts) {
     test(`bundled template ${item.id}`, () => roundTrip(item.text));
   }
 
@@ -246,8 +248,16 @@ describe('round trip', () => {
     test(`tool example ${dir.name}`, () => roundTrip(text));
   }
 
+  test('the generated summaries match the generated texts', () => {
+    const summaries = new Map(listTemplates().map((summary) => [summary.id, summary]));
+    expect(summaries.size).toBe(templateTexts.length);
+    for (const item of templateTexts) {
+      expect(summaries.get(item.id)).toEqual(summariseTemplate(item.id, item.text));
+    }
+  });
+
   test('every bundled template parses cleanly', () => {
-    for (const item of bundledTemplates) {
+    for (const item of templateTexts) {
       const { diagnostics } = parseTemplate(item.text);
       expect(diagnostics.filter((entry) => entry.severity === 'error')).toHaveLength(0);
     }

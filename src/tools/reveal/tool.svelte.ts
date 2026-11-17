@@ -1,7 +1,6 @@
 import type { ToolContext } from '../../core/registry';
 import { PLAYER_COLORS } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
-import Reveal from './Reveal.svelte';
 import {
   allBid,
   allVoted,
@@ -19,6 +18,7 @@ import {
   type RevealRole,
   type RevealState,
 } from './logic';
+import Reveal from './Reveal.svelte';
 import meta from './meta';
 import preset from './preset';
 

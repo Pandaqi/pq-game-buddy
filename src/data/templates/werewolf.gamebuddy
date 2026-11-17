@@ -1,0 +1,52 @@
+# werewolf.gamebuddy — deal roles, then run the night
+
+[game]
+name: Werewolf
+players: 5-10
+time: 30m
+tags: party, social-deduction
+source: https://boardgamegeek.com/boardgame/147949/one-night-ultimate-werewolf
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Deal one role per player, face down
+- Put the night script within reach of the narrator
+- Agree the length of the discussion phase
+
+[rules]
+Villagers must find the werewolves before the village empties.
+- Everyone looks at their role privately
+- Follow the night script: werewolves wake, the seer inspects, everyone wakes
+- Discuss for the agreed time, then vote; the most votes is out
+- The village wins when every werewolf is out; the werewolves win otherwise
+
+[tool reveal roles]
+mode: roles
+roles: werewolf=2, seer=1, troublemaker=1, villager=fill
+auto-hide: 8
+
+[tool timer discuss]
+mode: countdown
+duration: 3m
+warn-at: 30s
+sound: bell
+
+[script night]
+1. say: Everyone, look at your role and keep it secret.
+2. reveal: roles
+3. say: Everyone, close your eyes.
+4. wait: 3s
+5. say: Werewolves, open your eyes and look at each other.
+6. wait: 5s
+7. say: Werewolves, close your eyes.
+8. say: Seer, take the phone and inspect one player's role.
+9. say: Seer, open the Reveal tool and inspect one player, then cover it again.
+10. say: Seer, close your eyes. Everyone, open your eyes.
+11. wait: 5s
+12. say: Discuss and vote for a werewolf.
+13. timer: discuss start
+
+[tool rules]
+quick: Find the werewolves before the village is destroyed.

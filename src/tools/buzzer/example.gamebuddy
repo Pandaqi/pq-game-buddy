@@ -1,0 +1,13 @@
+# buzzer.example.gamebuddy — a quiz round with four buzzers
+
+[game]
+name: Quiz Buzzers
+players: 2-8
+time: 15m
+tags: party, quiz, competitive
+
+[tool buzzer buzz]
+players: 4
+delay: 3s
+false-start: yes
+rounds: 5

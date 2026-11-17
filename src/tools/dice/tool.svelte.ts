@@ -1,6 +1,5 @@
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import Dice from './Dice.svelte';
 import {
   describeResult,
   normaliseMacros,
@@ -11,6 +10,7 @@ import {
   type DiceResult,
   type DiceState,
 } from './logic';
+import Dice from './Dice.svelte';
 import meta from './meta';
 import preset from './preset';
 

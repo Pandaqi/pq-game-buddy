@@ -93,4 +93,34 @@ a {
     background: #fff;
     color: #000;
   }
+  /* Printable score sheets, brackets, rules and session summaries. */
+  header.top,
+  .tabs,
+  .players,
+  .undo,
+  .sheet,
+  .backdrop,
+  .toast,
+  .dropzone {
+    display: none !important;
+  }
+  .panel,
+  .block,
+  .round {
+    border: 1px solid #999 !important;
+    break-inside: avoid;
+  }
+  table {
+    border-collapse: collapse;
+  }
+  th,
+  td {
+    border: 1px solid #999 !important;
+  }
+  a[href]::after {
+    content: '';
+  }
+  @page {
+    margin: 12mm;
+  }
 }

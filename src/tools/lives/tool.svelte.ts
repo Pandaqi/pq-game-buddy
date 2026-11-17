@@ -1,8 +1,8 @@
 import type { ToolContext } from '../../core/registry';
 import { PLAYER_COLORS } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
-import Lives from './Lives.svelte';
 import { clampLives, isGameOver, isOut, resultsFor, type LivesInstance, type LivesState } from './logic';
+import Lives from './Lives.svelte';
 import meta from './meta';
 import preset from './preset';
 

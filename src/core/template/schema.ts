@@ -206,8 +206,12 @@ export function coerceField(spec: FieldSpec, raw: string): CoerceResult {
     }
     case 'text':
     case 'string':
-    default:
-      return { ok: true, value: text };
+    default: {
+      // A quoted single value is unwrapped so hand-written files and older
+      // serialized files both mean the same thing.
+      const unquoted = /^"([\s\S]*)"$/.test(text) ? text.slice(1, -1) : text;
+      return { ok: true, value: unquoted };
+    }
   }
 }
 

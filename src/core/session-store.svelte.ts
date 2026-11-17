@@ -6,8 +6,8 @@
 import { audio } from './audio';
 import { haptics } from './haptics';
 import { t } from './i18n';
-import { manifest } from './manifest.generated';
 import type { AnyToolModule, SessionApi, ToolContext, ToolInstance } from './registry';
+import { hasTool, loadTool } from './tools.generated';
 import { createRng } from './rng';
 import type { InstanceRecord, Player, Session } from './session';
 import { makePlayers, newSessionId, nextPlayerId, PLAYER_COLORS, initialOf } from './session';
@@ -45,9 +45,6 @@ export interface SessionIndexEntry {
   updatedAt: number;
 }
 
-const toolById = new Map<string, AnyToolModule>();
-for (const module of manifest) toolById.set(module.id, module);
-
 function brokenInstance(reason: string): ToolInstance<Record<string, unknown>> {
   const data = { reason };
   return {
@@ -72,6 +69,9 @@ class SessionStore {
   unavailable = $state<{ toolId: string; instanceId: string }[]>([]);
 
   private entriesList: ToolEntry[] = [];
+  private modules = new Map<string, AnyToolModule>();
+  private moduleLoads = new Map<string, Promise<AnyToolModule | null>>();
+  private runId = 0;
   private saveTimer: ReturnType<typeof setTimeout> | null = null;
   private noticeId = 0;
   private noticeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -188,7 +188,39 @@ class SessionStore {
     return entry;
   }
 
-  start(input: StartInput): void {
+  /**
+   * A tool's code is fetched the first time a session needs it, then kept. `create`
+   * stays synchronous, so no view ever observes a half-built instance.
+   */
+  private async moduleFor(toolId: string): Promise<AnyToolModule | null> {
+    const ready = this.modules.get(toolId);
+    if (ready) return ready;
+    if (!hasTool(toolId)) return null;
+    const running = this.moduleLoads.get(toolId);
+    if (running) return running;
+    const promise = loadTool(toolId)
+      .then((module) => {
+        this.modules.set(toolId, module);
+        return module;
+      })
+      .catch((error: unknown) => {
+        console.error(`[tool:${toolId}] failed to load`, error);
+        return null;
+      })
+      .finally(() => this.moduleLoads.delete(toolId));
+    this.moduleLoads.set(toolId, promise);
+    return promise;
+  }
+
+  async start(input: StartInput): Promise<void> {
+    this.runId += 1;
+    const run = this.runId;
+    // Load first, build second: the whole entry list appears in one synchronous pass.
+    const loaded = await Promise.all(
+      input.tools.map(async (spec) => ({ spec, module: await this.moduleFor(spec.toolId) })),
+    );
+    if (run !== this.runId) return;
+
     this.disposeEntries();
     this.unavailable = [];
     const now = Date.now();
@@ -207,8 +239,7 @@ class SessionStore {
     // Tools read session players while they are created, so the new session
     // has to be live before the first tool starts.
     this.session = session;
-    for (const spec of input.tools) {
-      const module = toolById.get(spec.toolId);
+    for (const { spec, module } of loaded) {
       if (!module) {
         this.unavailable.push({ toolId: spec.toolId, instanceId: spec.instanceId });
         continue;
@@ -226,12 +257,18 @@ class SessionStore {
     this.saveNow();
   }
 
-  resume(record: Session): void {
+  async resume(record: Session): Promise<void> {
+    this.runId += 1;
+    const run = this.runId;
+    const loaded = await Promise.all(
+      record.instances.map(async (saved) => ({ saved, module: await this.moduleFor(saved.toolId) })),
+    );
+    if (run !== this.runId) return;
+
     this.disposeEntries();
     this.unavailable = [];
     this.session = record;
-    for (const saved of record.instances) {
-      const module = toolById.get(saved.toolId);
+    for (const { saved, module } of loaded) {
       if (!module) {
         this.unavailable.push({ toolId: saved.toolId, instanceId: saved.id });
         continue;
@@ -244,13 +281,13 @@ class SessionStore {
     this.version += 1;
   }
 
-  /** Resume the most recent saved session. Returns false when there is none. */
-  loadLatest(): boolean {
+  /** Resume the most recent saved session. False when there is none. */
+  async loadLatest(): Promise<boolean> {
     const index = readJson<SessionIndexEntry[]>(KEYS.sessions, []);
     for (const item of index) {
       const record = readJson<Session | null>(KEYS.session(item.id), null);
       if (record && record.id) {
-        this.resume(record);
+        await this.resume(record);
         this.lastSession = item;
         return true;
       }

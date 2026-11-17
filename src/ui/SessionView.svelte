@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { createDisplayChannel, displayUrl } from '../core/display';
   import { recordPlay, updatePlay, type PlayResult } from '../core/play-log';
   import { navigate } from '../core/router';
   import { store } from '../core/session-store.svelte';
@@ -18,6 +19,15 @@
   let finishWinner = $state('');
   let finishSaved = $state(false);
   let forgetOnClose = $state(false);
+  const display = createDisplayChannel();
+
+  // Feed the display tab: no network, just a broadcast of the active tool's state.
+  $effect(() => {
+    void store.version;
+    const active = store.activeEntry;
+    if (!active) return;
+    display.post({ instanceId: active.id, toolId: active.toolId, state: active.instance.state() });
+  });
   const finishTied = $derived(
     finishResults.length > 1 &&
       typeof finishResults[0]?.score === 'number' &&
@@ -229,10 +239,10 @@
   {/if}
 
   {#if entry}
-    {@const ToolComponent = entry.module.component}
+    {@const Tool = entry.module.component}
     <div class="panel">
       <svelte:boundary>
-        <ToolComponent ctx={entry.ctx} instance={entry.instance} />
+        <Tool ctx={entry.ctx} instance={entry.instance} />
         {#snippet failed(error, reset)}
           <div class="broken" role="alert">
             <h2>{entry.label} hit an error</h2>
@@ -357,6 +367,10 @@
 {#if menuOpen}
   <Sheet title="Game menu" onclose={() => (menuOpen = false)}>
     <button type="button" class="wide" onclick={copySummary}>Copy summary</button>
+    <button type="button" class="wide" onclick={() => window.print()}>Print this game</button>
+    {#if entry}
+      <a class="wide link" href={displayUrl(entry.id)} target="_blank" rel="noopener noreferrer">Open display view</a>
+    {/if}
     <button type="button" class="wide" onclick={saveTemplate}>Save as template</button>
     <button type="button" class="wide" onclick={shareLink}>Share as link</button>
     <button type="button" class="wide" onclick={exportSession}>Export session JSON</button>

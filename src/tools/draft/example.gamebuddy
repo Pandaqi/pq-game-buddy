@@ -1,0 +1,12 @@
+# draft.example.gamebuddy — a snake draft with a one-minute clock
+
+[game]
+name: Card Draft
+players: 2-6
+time: 20m
+tags: cards, draft
+
+[tool draft picks]
+snake: yes
+seconds: 60s
+pool: Fire Dragon, Ice Golem, Forest Sprite, Storm Hawk, Stone Turtle, Shadow Cat

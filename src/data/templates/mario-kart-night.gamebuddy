@@ -1,0 +1,36 @@
+# mario-kart-night.gamebuddy — four races, one cup
+
+[game]
+name: Mario Kart Night
+players: 2-8
+time: 60m
+tags: video-game, tournament
+source: Fan-made helper; Mario Kart is a trademark of Nintendo
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Agree the number of races and the points for each finishing place
+- Draw the cup with the bracket tool, or skip it for a simple points night
+- Set up controllers and pick the first track
+
+[rules]
+Score points each race and crown a cup winner.
+- Write each player's points per race in the score sheet
+- Optional cup: a single-elimination bracket for a knockout evening
+- Highest total after the last race wins
+
+[tool score cup]
+mode: rounds
+rounds: 4
+win: highest
+hint: 40 points usually wins a four-race cup
+
+[tool bracket knockout]
+format: single
+best-of: 1
+seeding: random
+
+[tool rules]
+quick: Most points after four races wins the cup.

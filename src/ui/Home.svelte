@@ -12,7 +12,7 @@
     onstart: (toolId: string) => void;
     onimport: () => void;
     oncontinue: () => void;
-    ontemplate: (text: string) => void;
+    ontemplate: (id: string) => void;
   } = $props();
 
   let query = $state('');
@@ -81,7 +81,7 @@
     <ul class="templates">
       {#each templates as template (template.id)}
         <li>
-          <button type="button" class="template" onclick={() => ontemplate(template.text)}>
+          <button type="button" class="template" onclick={() => ontemplate(template.id)}>
             <span class="title">{template.name}</span>
             <span class="meta">
               {template.players ?? 'any'} players{#if template.time} · {template.time}{/if}

@@ -1,0 +1,37 @@
+# just-one.gamebuddy — one word clues, one guesser
+
+[game]
+name: Just One
+players: 3-7
+time: 20m
+tags: party, words
+source: https://boardgamegeek.com/boardgame/254640/just-one
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Write a stack of mystery words, or use the word tool to draw them
+- Everyone gets a pen and a clue card
+- Choose the first guesser
+
+[rules]
+Everyone writes a one-word clue for the same mystery word.
+- Compare clues out loud; identical clues are cancelled before the guesser sees them
+- The guesser gets one guess
+- A correct guess scores one point, a wrong one scores nothing
+- Pass the role of guesser clockwise
+
+[tool words mystery]
+profile: en
+mode: filters
+
+[tool score]
+mode: rounds
+rounds: 13
+win: highest
+
+[tool timer turn]
+mode: countdown
+duration: 60s
+warn-at: 15s

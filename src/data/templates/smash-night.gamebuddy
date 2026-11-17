@@ -1,0 +1,41 @@
+# smash-night.gamebuddy — brackets, stocks and a shot clock
+
+[game]
+name: Smash Night
+players: 2-8
+time: 60m
+tags: video-game, tournament
+source: Fan-made helper; Super Smash Bros. is a trademark of Nintendo
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Enter every player into the bracket
+- Agree the stock count and the stage list
+- Put the bracket on the display screen if you have a second one
+
+[rules]
+A knockout bracket of one-on-one matches.
+- Report the winner of each match in the bracket
+- Keep the agreed stocks per match
+- The bracket advances itself; use "next up" to call the players
+- The last player standing wins the night
+
+[tool bracket bracket]
+format: single
+best-of: 3
+seeding: random
+
+[tool timer match]
+mode: countdown
+duration: 8m
+warn-at: 1m
+sound: gong
+
+[tool score standings]
+mode: simple
+win: highest
+
+[tool rules]
+quick: Win your match, advance, repeat.

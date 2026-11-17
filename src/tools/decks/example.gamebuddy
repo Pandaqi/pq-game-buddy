@@ -1,0 +1,14 @@
+# decks.example.gamebuddy — a hidden hand of five
+
+[game]
+name: Card Deal
+players: 2-6
+time: 10m
+tags: cards
+
+[tool decks cards]
+deck: standard
+decks: 1
+players: 4
+deal: 5
+hidden: yes

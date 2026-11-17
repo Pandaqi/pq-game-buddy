@@ -1,0 +1,12 @@
+# bracket.example.gamebuddy — an eight-player single elimination
+
+[game]
+name: Tournament
+players: 8
+time: 120m
+tags: tournament, competitive
+
+[tool bracket cup]
+format: single
+best-of: 1
+seeding: random

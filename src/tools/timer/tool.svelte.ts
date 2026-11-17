@@ -4,9 +4,9 @@ import { PLAYER_COLORS } from '../../core/session';
 import { wake } from '../../core/wake';
 import type { PresetValues } from '../../core/template/schema';
 import { formatClock, formatDurationText, parseDuration } from '../../core/template/schema';
+import Timer from './Timer.svelte';
 import meta from './meta';
 import preset from './preset';
-import Timer from './Timer.svelte';
 import {
   applyIncrement,
   clampDuration,

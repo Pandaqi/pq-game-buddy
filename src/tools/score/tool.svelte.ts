@@ -1,7 +1,6 @@
 import type { ToolContext } from '../../core/registry';
 import { PLAYER_COLORS } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
-import Score from './Score.svelte';
 import {
   csvSheet,
   evaluateFormula,
@@ -18,6 +17,7 @@ import {
   type ScorePlayer,
   type ScoreState,
 } from './logic';
+import Score from './Score.svelte';
 import meta from './meta';
 import preset from './preset';
 

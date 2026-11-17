@@ -7,7 +7,7 @@
   import { parseTemplate, resolveTemplate } from '../core/template/parse';
   import { toolsForSession } from '../core/template/session-tools';
   import Sheet from '../core/ui/Sheet.svelte';
-  import { listTemplates, type TemplateSummary } from '../data/templates';
+  import { listTemplates, templateText, type TemplateSummary } from '../data/templates';
 
   const templates = listTemplates();
   const tags = [...new Set(templates.flatMap((template) => template.tags))].sort();
@@ -19,6 +19,7 @@
   let favourites = $state<string[]>(readJson<string[]>(KEYS.favorites, []));
   let recent = $state<string[]>(readJson<string[]>(KEYS.recent, []));
   let chosen = $state<TemplateSummary | null>(null);
+  let chosenText = $state('');
   let seats = $state(2);
   let imports = $state<RecentImport[]>(listRecentImports());
 
@@ -60,6 +61,10 @@
   function choose(template: TemplateSummary): void {
     chosen = template;
     seats = rangeOf(template).min;
+    chosenText = '';
+    void templateText(template.id).then((text) => {
+      if (chosen?.id === template.id) chosenText = text ?? '';
+    });
   }
 
   function chooseImport(entry: RecentImport): void {
@@ -74,8 +79,8 @@
       time: parsed.game.time,
       tags: parsed.game.tags,
       tools,
-      text: entry.text,
     };
+    chosenText = entry.text;
     seats = range?.min ?? 2;
   }
 
@@ -84,17 +89,18 @@
     choose(templates[Math.floor(Math.random() * templates.length)]);
   }
 
-  function startChosen(): void {
+  async function startChosen(): Promise<void> {
     const template = chosen;
-    if (!template) return;
-    const parsed = parseTemplate(template.text);
+    const text = chosenText;
+    if (!template || !text) return;
+    const parsed = parseTemplate(text);
     const resolved = resolveTemplate(parsed.template, (id) => schemas[id]);
     const range = parsed.template.game.players;
     const count = parsed.template.players.length ? parsed.template.players.length : Math.max(1, Math.min(20, seats));
     const names = parsed.template.players.length
       ? parsed.template.players
       : Array.from({ length: count }, (_, index) => `Player ${index + 1}`);
-    store.start({
+    await store.start({
       gameName: parsed.template.game.name || template.name,
       players: names,
       tools: toolsForSession(parsed.template, resolved.tools).map((tool) => ({
@@ -102,7 +108,7 @@
         instanceId: tool.instanceId,
         values: tool.values,
       })),
-      templateText: template.text,
+      templateText: text,
       templateId: template.id,
       notes: parsed.template.notes,
     });
@@ -214,7 +220,9 @@
         <input type="number" min={rangeOf(current).min} max={rangeOf(current).max} bind:value={seats} />
       </label>
     {/if}
-    <button type="button" class="wide" onclick={startChosen}>Start game</button>
+    <button type="button" class="wide" onclick={startChosen} disabled={!chosenText}>
+      {chosenText ? 'Start game' : 'Loading…'}
+    </button>
     <button type="button" class="wide ghost" onclick={() => toggleFavourite(current.id)}>
       {favourites.includes(current.id) ? 'Remove from favourites' : 'Add to favourites'}
     </button>

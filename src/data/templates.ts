@@ -1,40 +1,25 @@
-import { parseTemplate } from '../core/template/parse';
+/** The template index plus an on-demand loader for the template texts. */
+
 import { bundledTemplates } from './templates.generated';
+import type { TemplateSummary } from './template-summary';
 
-export interface TemplateSummary {
-  id: string;
-  name: string;
-  players?: string;
-  time?: string;
-  tags: string[];
-  tools: string[];
-  text: string;
-}
+export type { TemplateSummary };
 
-let cache: TemplateSummary[] | null = null;
+let texts: Map<string, string> | null = null;
 
-/** Parse bundled templates once, lazily. */
+/** Summaries are generated, so this is a plain list: no parsing at start-up. */
 export function listTemplates(): TemplateSummary[] {
-  if (cache) return cache;
-  cache = bundledTemplates.map((item) => {
-    const parsed = parseTemplate(item.text).template;
-    const range = parsed.game.players;
-    const tools = parsed.tools.map((tool) => tool.toolId);
-    // [rules] and [setup] mount a rules tool, so the gallery should say so.
-    if (!tools.includes('rules') && (parsed.rules.trim() || parsed.setup.length)) tools.push('rules');
-    return {
-      id: item.id,
-      name: parsed.game.name || item.id,
-      players: range ? (range.min === range.max ? String(range.min) : `${range.min}-${range.max}`) : undefined,
-      time: parsed.game.time,
-      tags: parsed.game.tags,
-      tools,
-      text: item.text,
-    };
-  });
-  return cache;
+  return bundledTemplates;
 }
 
-export function findTemplate(id: string): TemplateSummary | undefined {
-  return listTemplates().find((item) => item.id === id);
+/**
+ * Full text of one bundled template. All 61 texts live in their own chunk, which
+ * only a real "start this game" (or the gallery and editor) pulls in.
+ */
+export async function templateText(id: string): Promise<string | undefined> {
+  if (!texts) {
+    const module = await import('./template-text.generated');
+    texts = new Map(module.templateTexts.map((item) => [item.id, item.text]));
+  }
+  return texts.get(id);
 }

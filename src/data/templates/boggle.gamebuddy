@@ -1,0 +1,39 @@
+# boggle.gamebuddy — three minutes, then compare lists
+
+[game]
+name: Boggle
+players: 2-8
+time: 15m
+tags: words, party
+source: https://en.wikipedia.org/wiki/Boggle
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shake the letter dice and set the tray
+- Give everyone paper or use the score tool in rounds
+- Agree that only words of three letters or more count
+
+[rules]
+Find as many words as you can in the grid before the timer runs out.
+- Words must join neighbouring letters and may not reuse a die
+- Write your list, then read it out; crossed words score nothing
+- Short words are worth one point, longer words more
+- Highest score after the agreed number of rounds wins
+
+[tool timer round]
+mode: countdown
+duration: 3m
+sound: bell
+warn-at: 20s
+
+[tool words check]
+profile: en
+mode: filters
+length: 3
+
+[tool score]
+mode: rounds
+rounds: 3
+win: highest

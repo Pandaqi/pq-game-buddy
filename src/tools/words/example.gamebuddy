@@ -1,0 +1,13 @@
+# words.example.gamebuddy — a Scrabble rack and a validity check
+
+[game]
+name: Word Helper
+players: 1-4
+time: 30m
+tags: words
+
+[tool words words]
+profile: en
+mode: rack
+letters: RETAINSS
+blanks: 1

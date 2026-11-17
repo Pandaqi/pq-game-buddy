@@ -1,4 +1,7 @@
-/** Dev server: Bun serves index.html with HMR through bun-plugin-svelte. */
+/**
+ * Dev server: Bun serves index.html with HMR, compiling Svelte with the same
+ * plugin as the build (`[serve.static] plugins` in bunfig.toml).
+ */
 
 import { join } from 'node:path';
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { navigate } from '../core/router';
   import { schemas } from '../core/schemas.generated';
   import { store } from '../core/session-store.svelte';
@@ -7,10 +8,11 @@
   import { toolsForSession } from '../core/template/session-tools';
   import { suggestFilename } from '../core/template/serialize';
   import { shareTooLong, templateShareUrl } from '../core/template/share-link';
-  import { listTemplates } from '../data/templates';
+  import { listTemplates, templateText } from '../data/templates';
 
   const starters = listTemplates();
-  let text = $state(starters[0]?.text ?? '[game]\nname: My Game\nplayers: 2-4\n\n[tool score]\nmode: simple\n');
+  const blank = '[game]\nname: My Game\nplayers: 2-4\n\n[tool score]\nmode: simple\n';
+  let text = $state(starters.length ? '' : blank);
   let seats = $state(2);
   let area = $state<HTMLTextAreaElement | null>(null);
   let gutter = $state<HTMLElement | null>(null);
@@ -23,13 +25,18 @@
   const lineCount = $derived(text.split('\n').length);
   const range = $derived(parsed.template.game.players);
 
-  function loadStarter(id: string): void {
+  // Starter texts live in their own chunk, so the first one arrives after mount.
+  onMount(() => {
+    if (picked) void loadStarter(picked);
+  });
+
+  async function loadStarter(id: string): Promise<void> {
     picked = id;
-    const starter = starters.find((item) => item.id === id);
+    if (!starters.some((item) => item.id === id)) return;
+    const starter = await templateText(id);
     if (!starter) return;
-    text = starter.text;
-    const next = parseTemplate(starter.text).template.game.players;
-    seats = next?.min ?? 2;
+    text = starter;
+    seats = parseTemplate(starter).template.game.players?.min ?? 2;
   }
 
   function syncScroll(): void {
@@ -49,11 +56,11 @@
     syncScroll();
   }
 
-  function testDrive(): void {
+  async function testDrive(): Promise<void> {
     const names = parsed.template.players.length
       ? parsed.template.players
       : Array.from({ length: Math.max(1, Math.min(20, seats)) }, (_, index) => `Player ${index + 1}`);
-    store.start({
+    await store.start({
       gameName: parsed.template.game.name || 'Untitled game',
       players: names,
       tools: toolsForSession(parsed.template, resolved.tools).map((tool) => ({
@@ -90,7 +97,7 @@
   <div class="toolbar">
     <label class="field">
       <span>Start from</span>
-      <select bind:value={picked} onchange={() => loadStarter(picked)}>
+      <select bind:value={picked} onchange={() => void loadStarter(picked)}>
         {#each starters as starter (starter.id)}
           <option value={starter.id}>{starter.name}</option>
         {/each}

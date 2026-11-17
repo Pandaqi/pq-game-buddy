@@ -36,6 +36,9 @@ function formatValue(spec: FieldSpec | undefined, value: unknown): string {
   if (typeof value === 'boolean') return value ? 'yes' : 'no';
   if (typeof value === 'number') return String(value);
   if (Array.isArray(value)) return value.map(String).join(', ');
+  // Text and string values are taken whole; quoting would come back as part of
+  // the value on the next parse (the round-trip test catches exactly that).
+  if (spec?.type === 'text' || spec?.type === 'string') return String(value);
   if (typeof value === 'object') {
     return Object.entries(value as Record<string, unknown>)
       .map(([key, val]) => `${key}=${String(val)}`)

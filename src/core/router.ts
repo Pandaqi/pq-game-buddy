@@ -8,6 +8,7 @@ export type Route =
   | { name: 'log' }
   | { name: 'templates' }
   | { name: 'editor' }
+  | { name: 'display'; instanceId: string }
   | { name: 'import'; payload: string }
   | { name: 'notfound'; path: string };
 
@@ -31,6 +32,8 @@ export function parseRoute(hash: string): Route {
       return { name: 'templates' };
     case 'editor':
       return { name: 'editor' };
+    case 'display':
+      return { name: 'display', instanceId: decodeURIComponent(rest.join('/')) };
     case 'import':
       return { name: 'import', payload: rest.join('/') };
     case 'home':
@@ -56,6 +59,8 @@ export function routeTo(route: Route): string {
       return '#/templates';
     case 'editor':
       return '#/editor';
+    case 'display':
+      return `#/display/${encodeURIComponent(route.instanceId)}`;
     case 'import':
       return `#/import/${route.payload}`;
     default:

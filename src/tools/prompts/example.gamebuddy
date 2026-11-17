@@ -1,0 +1,11 @@
+# prompts.example.gamebuddy — design a game from three draws
+
+[game]
+name: Game Ideas
+players: 1-6
+time: 15m
+tags: ideas, party
+
+[tool prompts ideas]
+packs: genres, themes, mechanics
+draw: 3

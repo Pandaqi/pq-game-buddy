@@ -1,0 +1,45 @@
+# trivia-night.gamebuddy — buzzers, a shot clock and a scorepad
+
+[game]
+name: Trivia Night
+players: 2-20
+time: 60m
+tags: party, quiz
+source: Generic pub-quiz format
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Pick a quizmaster who does not score
+- Split the room into teams and enter them in the score sheet
+- Arm the buzzers and agree the points per round
+
+[rules]
+Ask a question, let the first buzz answer, and score each round.
+- Arm the buzzers before reading the question; a false start hands the question over
+- One point for a correct answer, bonus points for a themed round
+- The team with the most points after the last round wins
+
+[tool buzzer buzz]
+players: 4
+delay: 3s
+false-start: yes
+
+[tool timer shot]
+mode: countdown
+duration: 30s
+warn-at: 10s
+sound: buzzer
+
+[tool score teams]
+mode: rounds
+rounds: 6
+win: highest
+
+[tool prompts questions]
+packs: would-you-rather, charades
+draw: 1
+
+[tool rules]
+quick: Most points after six rounds wins.

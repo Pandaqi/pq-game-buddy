@@ -1,0 +1,38 @@
+# uno.gamebuddy — a digital deck when the real one went missing
+
+[game]
+name: Uno
+players: 2-10
+time: 30m
+tags: cards, family
+source: https://en.wikipedia.org/wiki/Uno_(card_game)
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the deck and deal seven cards each, hidden
+- Turn one card to start the discard pile
+- Agree whether stacking draw cards is allowed
+
+[rules]
+Match the top card by colour or number, and empty your hand first.
+- Play one card, then draw if you cannot
+- Skip, reverse and draw cards do what they say
+- Call a colour when you play a wild card
+- The first player with no cards left wins the round
+
+[tool decks cards]
+deck: uno
+decks: 1
+players: 4
+deal: 7
+hidden: yes
+
+[tool score]
+mode: rounds
+rounds: 5
+win: lowest
+
+[tool rules]
+quick: Empty your hand first.

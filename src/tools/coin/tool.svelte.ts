@@ -1,7 +1,7 @@
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import Coin from './Coin.svelte';
 import { flipCoins, tossWinner, type CoinInstance, type CoinSide, type CoinState } from './logic';
+import Coin from './Coin.svelte';
 import meta from './meta';
 import preset from './preset';
 

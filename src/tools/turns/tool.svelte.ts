@@ -1,7 +1,6 @@
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import { wake } from '../../core/wake';
-import Turns from './Turns.svelte';
 import {
   advance,
   currentName,
@@ -14,6 +13,7 @@ import {
   type TurnsInstance,
   type TurnsState,
 } from './logic';
+import Turns from './Turns.svelte';
 import meta from './meta';
 import preset from './preset';
 

@@ -1,0 +1,37 @@
+# codenames.gamebuddy — a 5x5 board with a hidden key
+
+[game]
+name: Codenames
+players: 4-8
+time: 20m
+tags: party, words
+source: https://boardgamegeek.com/boardgame/178900/codenames
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Split into two teams and pick one spymaster per team
+- Generate a board; the spymaster peeks at the key privately
+- Place the red and blue agent cards if you have them, or track guesses here
+
+[rules]
+Two spymasters know which words belong to which team; everyone else guesses.
+- A clue is one word and one number
+- Guess up to that many words; stop whenever you like
+- An innocent bystander ends your turn and the assassin loses the game
+- Clear all your team's words to win
+
+[tool words board]
+profile: en
+mode: codenames
+
+[tool timer turn]
+mode: countdown
+duration: 2m
+warn-at: 20s
+sound: bell
+
+[tool score]
+mode: simple
+win: highest

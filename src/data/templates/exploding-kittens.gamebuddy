@@ -1,0 +1,37 @@
+# exploding-kittens.gamebuddy — draw, defuse, survive
+
+[game]
+name: Exploding Kittens
+players: 2-5
+time: 15m
+tags: cards, party
+source: https://boardgamegeek.com/boardgame/172225/exploding-kittens
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the deck and deal five cards each, hidden
+- Agree the number of defuse cards in play
+- The youngest player starts
+
+[rules]
+Take turns drawing cards. Draw an exploding kitten and you are out, unless you defuse it.
+- Play any number of cards, then draw one
+- Defuse, then put the kitten back anywhere in the deck
+- Survive to the end to win
+
+[tool decks deck]
+deck: standard
+decks: 1
+jokers: 2
+players: 4
+deal: 5
+hidden: yes
+
+[tool score]
+mode: simple
+win: highest
+
+[tool rules]
+quick: Do not draw the kitten.

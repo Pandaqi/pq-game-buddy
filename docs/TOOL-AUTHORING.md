@@ -11,17 +11,34 @@ src/tools/<id>/
 ├─ preset.ts          # preset schema                                (no Svelte)
 ├─ logic.ts           # pure functions + state/action types          (no Svelte)
 ├─ tool.svelte.ts     # create(ctx, values) → ToolInstance + actions
-├─ <Tool>.svelte      # the view
+├─ <Tool>.svelte      # the view, imported by tool.svelte.ts
 └─ example.gamebuddy  # minimal template used by tests and docs
 ```
 
 `meta.ts` must default-export an object whose `id` matches the folder name.
 
+`tool.svelte.ts` default-exports `{ ...meta, preset, component, create }`, where
+`component` is the view imported statically from `./<Tool>.svelte`. The shell never
+imports this file: `src/core/tools.generated.ts` holds one `import()` per tool, so
+the tool's code, view and styles are fetched together, only when a session uses it.
+Never import a tool from the shell: that pulls a screen back into the start-up
+payload, which is the budget with the least room.
+
+Styles stay in the view's own `<style>` block. Views compile with `css: 'injected'`,
+so those rules travel inside the view's chunk and no global stylesheet has to know
+that the tool exists. Shared look and feel belongs in `core/styles/`, or in
+`core/ui/` primitives, not copied into a tool.
+
 ## Contract
 
 ```ts
 create(ctx: ToolContext, values: PresetValues): ToolInstance<TState> & Actions
+component: Component<{ ctx: ToolContext; instance: ToolInstance<TState> }>
 ```
+
+`create` runs synchronously once the module has been imported, so settings are
+available before the view mounts; both live in the same chunk, and a render error
+is caught by the session view's boundary without touching saved state.
 
 - `data` — a `$state` object the view binds to.
 - `state()` — plain JSON clone (`JSON.parse(JSON.stringify(data))`).
@@ -53,7 +70,9 @@ Persist nothing yourself: the session store saves on its own.
 - [ ] Empty state, error state, help blurb.
 - [ ] `example.gamebuddy` parses and round-trips.
 - [ ] `bun test` covers the logic, the actions (including undo steps) and mounts
-      the component.
+      the component via `module.component`.
+- [ ] Styles live in the view's `<style>` block (they ship with its chunk), not in
+      a global stylesheet and not copied from another tool.
 - [ ] Settings, modes and editor changes go through actions, never direct writes.
 - [ ] Hidden information uses `core/ui/PassThePhone.svelte`; a secret is covered
       by default and never survives a change of holder. Give the cover an
@@ -61,7 +80,7 @@ Persist nothing yourself: the session store saves on its own.
 - [ ] `results()` returns standings when the tool can decide a winner.
 - [ ] No `setInterval`/`requestAnimationFrame`; use `ctx.clock`.
 - [ ] No `fetch`, no external assets, no new dependency.
-- [ ] Under 12 KB gzipped.
+- [ ] Under 24 KB gzipped as one chunk (your logic, state, view, styles and data).
 - [ ] `bun run gen && bun run check` passes.
 
 ## Rules of thumb

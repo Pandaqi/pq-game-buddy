@@ -1,0 +1,42 @@
+# escape-room.gamebuddy — phases, script and one big clock
+
+[game]
+name: Escape Room
+players: 2-6
+time: 60m
+tags: party, timed
+source: Generic escape-room kit
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Read the introduction out loud
+- Hide the clue envelopes before anyone enters
+- Start the main clock only when the door closes
+
+[rules]
+Solve the chain of puzzles before the clock runs out.
+- The script walks the host through the introduction and each reveal
+- Hints cost time on the main clock if you play that way
+- Solving the final puzzle stops the clock
+
+[tool timer room]
+mode: sequence
+phases: Intro=5m, Main=45m, Finale=5m
+sound: gong
+warn-at: 5m
+
+[script story]
+1. note: Welcome the players and lock the door.
+2. say: The room is silent except for a clock. Find out why you are here.
+3. timer: room start
+4. wait: 5s
+5. say: Every envelope holds one clue. Read them in order.
+6. note: Hand out the first envelope now.
+7. wait: 30s
+8. say: If you are stuck, ask for a hint. It costs five minutes.
+9. timer: room start
+
+[tool rules]
+quick: Solve the puzzle chain before the clock runs out.

@@ -1,6 +1,5 @@
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import Rules from './Rules.svelte';
 import {
   glossaryFrom,
   setupProgress,
@@ -10,6 +9,7 @@ import {
   type RulesState,
   type ScoringRow,
 } from './logic';
+import Rules from './Rules.svelte';
 import meta from './meta';
 import preset from './preset';
 

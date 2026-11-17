@@ -1,0 +1,23 @@
+# speedrun-practice.gamebuddy — segment times against your best
+
+[game]
+name: Speedrun Practice
+players: 1
+time: 30m
+tags: video-game, speedrun
+source: Generic practice route
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[rules]
+Time each segment of a route and compare against your personal best.
+- Space starts and splits, R resets the attempt
+- Targets are your comparison until a run beats them
+- Gold splits remember your fastest segment ever
+
+[tool splits run]
+game: Practice Route
+category: Any%
+splits: Opening | 45, Middle | 90, Boss | 60, Finale | 30
+keys: yes

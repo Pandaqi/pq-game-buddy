@@ -1,0 +1,12 @@
+# bag.example.gamebuddy — draw seven Scrabble tiles
+
+[game]
+name: Scrabble Draw
+players: 2-4
+time: 60m
+tags: words, tiles
+
+[tool bag tiles]
+set: scrabble
+draw: 7
+tray: per-player

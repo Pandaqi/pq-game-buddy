@@ -66,10 +66,13 @@ export interface ToolResult {
 
 export interface ToolModule<TState extends object = Record<string, unknown>> extends ToolMeta {
   preset: PresetSchema;
+  /**
+   * The view, in the same chunk as this module: one tool is one request. The shell
+   * only ever reaches a tool through `loadTool(id)`, so nothing else is downloaded.
+   */
   component: Component<{ ctx: ToolContext; instance: ToolInstance<TState> }>;
   create(ctx: ToolContext, values?: PresetValues): ToolInstance<TState>;
 }
-
 
 /**
  * Registry storage. Each tool keeps its own concrete state and actions, so the

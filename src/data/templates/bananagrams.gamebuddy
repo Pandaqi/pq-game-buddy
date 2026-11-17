@@ -1,0 +1,43 @@
+# bananagrams.gamebuddy — a shared pile of letters and one race
+
+[game]
+name: Bananagrams
+players: 2-8
+time: 15m
+tags: words, realtime
+source: https://en.wikipedia.org/wiki/Bananagrams
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Tip every tile face down in the middle and mix
+- Everyone takes their starting tiles
+- Agree who calls the start
+
+[rules]
+Everyone builds their own word grid at the same time from the shared pile.
+- Start together; take a new tile whenever you need one
+- When the pile is empty, call it and everyone checks their grid
+- A valid grid uses all your tiles in one connected crossword
+- First valid grid wins the round
+
+[tool bag pile]
+set: bananagrams
+draw: 21
+tray: per-player
+
+[tool timer race]
+mode: countdown
+duration: 5m
+sound: buzzer
+warn-at: 30s
+
+[tool words check]
+profile: en
+mode: check
+
+[tool score]
+mode: rounds
+rounds: 3
+win: highest

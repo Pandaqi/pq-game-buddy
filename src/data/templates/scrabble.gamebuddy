@@ -1,0 +1,37 @@
+# scrabble.gamebuddy — draw tiles, check words, keep the score
+
+[game]
+name: Scrabble
+players: 2-4
+time: 60m
+tags: words, board
+source: https://en.wikipedia.org/wiki/Scrabble
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Put every tile in the bag and mix them
+- Each player draws seven tiles
+- Place the board between you and agree on the dictionary
+- The player who can form a word from their tiles starts
+
+[rules]
+Build words across the board; every letter has a value and premium squares multiply it.
+- Draw back up to seven tiles after your turn
+- Challenge a word if you think it is not allowed; the checking tool is a hint, not a referee
+- The game ends when the bag is empty and one player uses their last tile
+- Highest total wins
+
+[tool bag tiles]
+set: scrabble
+draw: 7
+tray: per-player
+
+[tool words check]
+profile: en
+mode: check
+
+[tool score]
+mode: simple
+win: highest

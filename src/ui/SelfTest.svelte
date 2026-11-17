@@ -5,6 +5,7 @@
   import { t } from '../core/i18n';
   import { manifest } from '../core/manifest.generated';
   import type { ToolContext } from '../core/registry';
+  import { loadTool } from '../core/tools.generated';
   import { createRng } from '../core/rng';
   import { makePlayers } from '../core/session';
   import { clock } from '../core/ticker';
@@ -52,8 +53,13 @@
   async function run(): Promise<void> {
     results = [];
     const host = document.getElementById('selftest-host');
-    for (const module of manifest) {
+    for (const meta of manifest) {
       const ctx = makeContext();
+      const module = await loadTool(meta.id).catch(() => null);
+      if (!module) {
+        results = [...results, { id: meta.id, ok: false, error: 'load: this build has no code for it' }];
+        continue;
+      }
       let instance;
       try {
         instance = module.create(ctx, defaultsFor(module.preset));
@@ -62,7 +68,8 @@
         continue;
       }
       try {
-        const component = mount(module.component as never, {
+        const view = module.component;
+        const component = mount(view as never, {
           target: host as HTMLElement,
           props: { ctx, instance } as never,
         });

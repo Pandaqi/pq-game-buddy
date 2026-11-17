@@ -1,0 +1,218 @@
+import type { ToolContext, ToolInstance } from '../../core/registry';
+import type { PresetValues } from '../../core/template/schema';
+import {
+  parseSteps,
+  progressOf,
+  splitCommand,
+  summaryOf,
+  waitFor,
+  type ScriptState,
+  type ScriptStep,
+} from './logic';
+import Script from './Script.svelte';
+import meta from './meta';
+import preset from './preset';
+
+export interface ScriptActions {
+  next(): void;
+  back(): void;
+  restart(): void;
+  togglePause(): void;
+  setAutoAdvance(value: boolean): void;
+  drawCard(): void;
+  reshuffle(): void;
+  setSteps(text: string): void;
+  remaining(): number;
+}
+
+export type ScriptInstance = ToolInstance<ScriptState> & ScriptActions;
+
+function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
+  const steps = parseSteps((Array.isArray(values.steps) ? (values.steps as string[]) : []).map(String));
+  const events = (Array.isArray(values.events) ? (values.events as string[]) : []).map(String);
+
+  const data = $state<ScriptState>({
+    steps,
+    index: 0,
+    waitUntil: null,
+    paused: false,
+    pausedRemaining: 0,
+    autoAdvance: !!values['auto-advance'],
+    eventDeck: !!values['event-deck'],
+    deck: ctx.rng.shuffle(events),
+    drawn: [],
+    lastCard: '',
+    log: [],
+  });
+
+  function note(text: string): void {
+    data.log = [text, ...data.log].slice(0, 12);
+  }
+
+  function callExternal(arg: string): void {
+    const { target, command } = splitCommand(arg);
+    if (!target) return;
+    const instance = ctx.session.instance(target);
+    if (!instance) {
+      ctx.toast(`This script points at "${target}", which is not in this game`, 'error');
+      return;
+    }
+    const commands = instance.commands ?? {};
+    const chosen = command && commands[command] ? command : !command && commands.deal ? 'deal' : '';
+    if (chosen) {
+      commands[chosen]?.();
+      note(`${target}: ${chosen}`);
+      return;
+    }
+    ctx.toast(`Open the ${target} tool to run this step`);
+  }
+
+  function begin(index: number, run = true): void {
+    data.index = Math.max(0, index);
+    data.waitUntil = null;
+    data.paused = false;
+    const step: ScriptStep | undefined = data.steps[data.index];
+    if (!step) return;
+    if (step.verb === 'wait') {
+      data.waitUntil = ctx.clock.wall() + waitFor(step.arg);
+      return;
+    }
+    if (run && (step.verb === 'timer' || step.verb === 'reveal')) callExternal(step.arg);
+  }
+
+  function remaining(): number {
+    if (!data.waitUntil) return 0;
+    return Math.max(0, data.waitUntil - ctx.clock.wall());
+  }
+
+  const instance: ScriptInstance = {
+    data,
+    state: () => JSON.parse(JSON.stringify(data)) as ScriptState,
+    load(state) {
+      if (!state || typeof state !== 'object') return;
+      const raw = state as Partial<ScriptState>;
+      if (Array.isArray(raw.steps)) {
+        data.steps = raw.steps
+          .filter((step) => step && typeof step.verb === 'string')
+          .map((step) => ({ verb: step.verb, arg: String(step.arg ?? '') }));
+      }
+      if (typeof raw.index === 'number') data.index = Math.max(0, Math.min(raw.index, data.steps.length));
+      data.waitUntil = null;
+      data.paused = false;
+      data.pausedRemaining = 0;
+      if (typeof raw.lastCard === 'string') data.lastCard = raw.lastCard;
+      if (typeof raw.autoAdvance === 'boolean') data.autoAdvance = raw.autoAdvance;
+      if (typeof raw.eventDeck === 'boolean') data.eventDeck = raw.eventDeck;
+      if (Array.isArray(raw.deck)) data.deck = raw.deck.map(String);
+      if (Array.isArray(raw.drawn)) data.drawn = raw.drawn.map(String).slice(0, 20);
+      if (Array.isArray(raw.log)) data.log = raw.log.map(String).slice(0, 12);
+    },
+    presetFromState() {
+      return {
+        steps: data.steps.map((step) => `${step.verb}: ${step.arg}`),
+        events: data.deck.length ? data.deck : data.drawn,
+        'event-deck': data.eventDeck,
+        'auto-advance': data.autoAdvance,
+      };
+    },
+    remaining,
+    commands: {
+      next: () => instance.next(),
+      restart: () => instance.restart(),
+      draw: () => instance.drawCard(),
+      back: () => instance.back(),
+    },
+    summary: () => summaryOf(data),
+    next() {
+      const step = data.steps[data.index];
+      if (!step) {
+        ctx.toast('The script is finished');
+        return;
+      }
+      if (data.waitUntil) {
+        const left = remaining();
+        if (left > 0 && !data.paused) {
+          ctx.toast(`${Math.ceil(left / 1000)}s left in this step`);
+          return;
+        }
+      }
+      if (data.index >= data.steps.length - 1) {
+        note('Script finished');
+        ctx.audio.play('success');
+        data.index = data.steps.length;
+        data.waitUntil = null;
+        return;
+      }
+      ctx.undo.push('script step');
+      begin(data.index + 1);
+    },
+    back() {
+      if (data.index <= 0) return;
+      ctx.undo.push('script back');
+      begin(data.index - 1, false);
+    },
+    restart() {
+      ctx.undo.push('restart script');
+      data.drawn = [];
+      data.log = [];
+      begin(0);
+    },
+    togglePause() {
+      if (!data.waitUntil) {
+        ctx.toast('Only a wait step can be paused');
+        return;
+      }
+      if (data.paused) {
+        data.waitUntil = ctx.clock.wall() + (data.pausedRemaining ?? 0);
+        data.paused = false;
+        data.pausedRemaining = 0;
+      } else {
+        data.pausedRemaining = remaining();
+        data.paused = true;
+        data.waitUntil = null;
+      }
+    },
+    setAutoAdvance(value) {
+      ctx.undo.push('auto advance');
+      data.autoAdvance = value;
+    },
+    drawCard() {
+      if (!data.eventDeck && !data.deck.length) {
+        ctx.toast('This script has no event deck');
+        return;
+      }
+      if (!data.deck.length) {
+        ctx.undo.push('reshuffle the deck');
+        data.deck = ctx.rng.shuffle(data.drawn);
+        data.drawn = [];
+        if (!data.deck.length) {
+          ctx.toast('The event deck is empty', 'error');
+          return;
+        }
+      }
+      ctx.undo.push('draw a card');
+      const [card, ...rest] = data.deck;
+      data.deck = rest;
+      data.drawn = [card, ...data.drawn].slice(0, 20);
+      data.lastCard = card;
+      ctx.audio.play('click');
+      ctx.haptics.buzz('short');
+    },
+    reshuffle() {
+      ctx.undo.push('reshuffle the event deck');
+      data.deck = ctx.rng.shuffle([...data.deck, ...data.drawn]);
+      data.drawn = [];
+      data.lastCard = '';
+    },
+    setSteps(text) {
+      const next = parseSteps(text.split('\n'));
+      ctx.undo.push('script steps');
+      data.steps = next;
+      begin(Math.min(data.index, next.length));
+    },
+  };
+
+  return instance;
+}
+
+export default { ...meta, preset, component: Script, create };

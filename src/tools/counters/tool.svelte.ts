@@ -1,7 +1,7 @@
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import Counters from './Counters.svelte';
 import { denominationsFrom, resultsFor, transfer, type CountersInstance, type CountersState } from './logic';
+import Counters from './Counters.svelte';
 import meta from './meta';
 import preset from './preset';
 

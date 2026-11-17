@@ -1,3 +1,5 @@
+/** Entry point. `data-tool` on <body> marks a single-tool page from the site build. */
+
 import './core/styles/tokens.css';
 import './core/styles/base.css';
 
@@ -11,5 +13,6 @@ store.init();
 
 const target = document.getElementById('app');
 if (target) {
-  mount(App, { target });
+  const bootTool = document.body.dataset.tool ?? '';
+  mount(App, { target, props: { bootTool } });
 }

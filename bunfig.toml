@@ -1,5 +1,5 @@
 [serve.static]
-plugins = ["bun-plugin-svelte"]
+plugins = ["./scripts/svelte-compile.ts"]
 
 [test]
 preload = ["./scripts/svelte-preload.ts"]

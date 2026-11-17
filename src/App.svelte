@@ -13,14 +13,24 @@
   import { allDiagnostics, parseTemplate, resolveTemplate, type Diagnostic, type ResolvedTool } from './core/template/parse';
   import { toolsForSession } from './core/template/session-tools';
   import { decodeTemplateLink } from './core/template/share-link';
+  import LazyView, { lazyView } from './core/ui/LazyView.svelte';
+  import { templateText } from './data/templates';
   import Sheet from './core/ui/Sheet.svelte';
-  import Editor from './ui/Editor.svelte';
-  import Gallery from './ui/Gallery.svelte';
   import Home from './ui/Home.svelte';
-  import Log from './ui/Log.svelte';
-  import SelfTest from './ui/SelfTest.svelte';
-  import SettingsPage from './ui/Settings.svelte';
   import SessionView from './ui/SessionView.svelte';
+
+  // Home and the session are the two screens everyone sees; everything else is
+  // a chunk of its own, so the catalogue can grow without growing the start-up.
+  const pageLoaders = {
+    templates: lazyView(() => import('./ui/Gallery.svelte')),
+    editor: lazyView(() => import('./ui/Editor.svelte')),
+    log: lazyView(() => import('./ui/Log.svelte')),
+    settings: lazyView(() => import('./ui/Settings.svelte')),
+    selftest: lazyView(() => import('./ui/SelfTest.svelte')),
+    display: lazyView(() => import('./ui/Display.svelte')),
+  };
+
+  let { bootTool = '' }: { bootTool?: string } = $props();
 
   let hash = $state(typeof location === 'undefined' ? '#/' : location.hash || '#/');
   const route = $derived(parseRoute(hash));
@@ -44,7 +54,7 @@
 
   $effect(() => {
     if (route.name !== 'session') return;
-    if (!store.session) store.loadLatest();
+    if (!store.session) void store.loadLatest();
   });
 
   $effect(() => {
@@ -72,6 +82,8 @@
     };
     sync();
     window.addEventListener('hashchange', sync);
+    // A page in the site build is that tool: no home screen to click through.
+    if (bootTool) void startTool(bootTool);
     const unlock = (): void => audio.unlock();
     window.addEventListener('pointerdown', unlock, { once: true });
 
@@ -112,8 +124,7 @@
         const parsedJson = JSON.parse(trimmed) as { session?: Session } | Session;
         const record = (parsedJson as { session?: Session }).session ?? (parsedJson as Session);
         if (record && Array.isArray(record.instances) && Array.isArray(record.players)) {
-          store.resume(record);
-          navigate({ name: 'session' });
+          void store.resume(record).then(() => navigate({ name: 'session' }));
           return;
         }
       } catch {
@@ -138,13 +149,21 @@
     pasteText = '';
   }
 
-  function startPending(): void {
+  /** A home tile carries only an id: the template text arrives when it is picked. */
+  function startTemplate(id: string): void {
+    void templateText(id).then((text) => {
+      if (text) beginImport(text);
+      else store.toast('That template is missing from this build', 'error');
+    });
+  }
+
+  async function startPending(): Promise<void> {
     const target = pending;
     if (!target) return;
     const names = target.players.length
       ? target.players
       : Array.from({ length: Math.max(1, Math.min(20, seatCount)) }, (_, index) => `Player ${index + 1}`);
-    store.start({
+    await store.start({
       gameName: target.gameName,
       players: names,
       tools: target.tools.map((tool) => ({
@@ -160,9 +179,11 @@
     navigate({ name: 'session' });
   }
 
-  function startTool(toolId: string): void {
+  async function startTool(toolId: string): Promise<void> {
     const tool = manifest.find((module) => module.id === toolId);
-    store.start({
+    if (!tool) return;
+    // The tool's own chunk arrives here; the shell only knew its name until now.
+    await store.start({
       gameName: tool?.title ?? toolId,
       players: ['Player 1', 'Player 2'],
       tools: [{ toolId, instanceId: toolId, values: {} }],
@@ -171,8 +192,10 @@
   }
 
   function continueSession(): void {
-    if (store.loadLatest()) navigate({ name: 'session' });
-    else store.toast('There is no saved game on this device yet', 'error');
+    void store.loadLatest().then((ok) => {
+      if (ok) navigate({ name: 'session' });
+      else store.toast('There is no saved game on this device yet', 'error');
+    });
   }
 
   function toggleMute(): void {
@@ -228,7 +251,7 @@
         onstart={startTool}
         onimport={showPaste}
         oncontinue={continueSession}
-        ontemplate={beginImport}
+        ontemplate={startTemplate}
       />
     {:else if route.name === 'session'}
       {#if store.session}
@@ -244,15 +267,17 @@
         </section>
       {/if}
     {:else if route.name === 'settings'}
-      <SettingsPage />
+      <LazyView load={pageLoaders.settings} label="settings" />
+    {:else if route.name === 'display'}
+      <LazyView load={pageLoaders.display} props={{ instanceId: route.instanceId }} label="the display view" />
     {:else if route.name === 'selftest'}
-      <SelfTest />
+      <LazyView load={pageLoaders.selftest} label="the self-test" />
     {:else if route.name === 'log'}
-      <Log />
+      <LazyView load={pageLoaders.log} label="the play log" />
     {:else if route.name === 'templates'}
-      <Gallery />
+      <LazyView load={pageLoaders.templates} label="templates" />
     {:else if route.name === 'editor'}
-      <Editor />
+      <LazyView load={pageLoaders.editor} label="the editor" />
     {:else if route.name === 'notfound'}
       <section class="page">
         <h1>That page does not exist</h1>

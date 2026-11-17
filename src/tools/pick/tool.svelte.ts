@@ -1,7 +1,7 @@
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import Pick from './Pick.svelte';
 import { drawFromPool, drawNumbers, seatOrder, splitTeams, type PickInstance, type PickSource, type PickState } from './logic';
+import Pick from './Pick.svelte';
 import meta from './meta';
 import preset from './preset';
 

@@ -1,0 +1,12 @@
+# splits.example.gamebuddy — a three-split practice route
+
+[game]
+name: Speedrun Practice
+players: 1
+time: 20m
+tags: video-game, speedrun
+
+[tool splits run]
+game: Practice Route
+category: Any%
+splits: Forest, Cave | 90, Castle | 150

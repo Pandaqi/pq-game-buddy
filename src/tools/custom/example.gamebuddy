@@ -1,0 +1,14 @@
+# custom.example.gamebuddy — a house-rules score sheet
+
+[game]
+name: House Rules Score Sheet
+players: 2-6
+time: 60m
+tags: tracker
+
+[tool custom sheet]
+counters: wood=0, stone=0, gold=0
+checklist: Place the starting tiles, Deal three cards
+table: 3x3
+formula: wood + stone * 2 + gold * 3
+per-player: yes

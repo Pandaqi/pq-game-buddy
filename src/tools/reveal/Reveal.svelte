@@ -27,9 +27,18 @@
   let holding = $state(false);
   let bidDraft = $state('');
   // Modal covers trap the board on purpose; these let the table step back out.
-  let passing = $state(data.dealt && !data.allRevealed);
+  let passing = $state(false);
   let ballotPassing = $state(true);
   let bidPassing = $state(true);
+  let autoOpened = false;
+
+  // Once roles are dealt, open the first pass screen. Later re-deals do not
+  // reopen it, so the table is never yanked back to the cover mid-game.
+  $effect(() => {
+    if (autoOpened || !data.dealt || data.allRevealed) return;
+    autoOpened = true;
+    passing = true;
+  });
 
   const holder = $derived(data.players[data.holder]);
   const voted = $derived(allVoted(data));
