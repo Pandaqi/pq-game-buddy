@@ -13,7 +13,7 @@ This document used to be a wishlist. It is now the build plan: every tool the th
 The trick to supporting "every tool anyone might want" is not to build a hundred shallow tools. It is:
 
 1. **Six primitives** that every tabletop moment reduces to (randomize, time, track, reveal, look up, run a flow).
-2. **Twenty-two focused tools** built on those primitives.
+2. **Twenty-one focused tools** built on those primitives.
 3. **Composition**: a template can load several tools at once (timer + score + reveal + rules), so complex games are covered by combining simple parts.
 4. **Extensibility**: a plain-text `.gamebuddy` template format, an in-app custom-tool builder, and a plugin contract where a new tool is one folder.
 
@@ -22,9 +22,9 @@ The trick to supporting "every tool anyone might want" is not to build a hundred
 | # | Milestone | Size | What it ships | You can already play |
 |---|-----------|------|---------------|----------------------|
 | M0 | Foundations | S | Build pipeline, app shell, router, registry, storage, test harness | Nothing useful yet |
-| M1 | Core primitives and the vertical slice | L | Players, clock, audio, timer, dice/coin/pick, basic scorepad, template parser, sessions | A simple game night |
-| M2 | Tracking, secrets and turns | L | Full scorepad, lives, counters, turn manager, secret reveal, session log, undo | Most board, card and party games |
-| M3 | Templates 1.0 and the game library | L | Frozen format, editor, gallery, sharing, 30+ templates, linter | "Insert game, press play" |
+| M1 | Core primitives and the vertical slice | L | Players, clock, audio, timer, dice/coin/pick, undo, basic scorepad, template parser, sessions | A simple game night |
+| M2 | Tracking, secrets and turns | L | Full scorepad, lives, counters, turn manager, secret reveal, session log, rules | Most board, card and party games |
+| M3 | Templates 1.0 and the game library | L | Frozen format, editor, gallery, sharing, template library part 1 (about 27), linter | "Insert game, press play" |
 | M4 | Breadth: the long tail | L | Decks, bag, dice lab, dictionary and solvers, brackets, drafts, buzzer, script runner, overlay, splits, custom builder | Anything, including word games, tournaments, RPGs and streams |
 | M5 | Polish, accessibility and release | M | Accessibility audit, performance pass, docs, publish to pandaqi.com | Public v1.0 |
 | M6 | After v1.0 | — | PWA, community gallery, QR sharing, text-to-speech, more languages | — |
@@ -38,10 +38,23 @@ The trick to supporting "every tool anyone might want" is not to build a hundred
 
 ### How to read this document
 
-- **M0.3**, **1.4**, **2.6**, etc. are step IDs. The sequencing table at the end of §6 keeps dependencies straight.
+- **M0.3**, **M1.4**, **M2.6**, etc. are step IDs. The sequencing table at the end of §6 keeps dependencies straight.
 - **S / M / L** are relative effort, not calendar promises. S is a sitting, M is a few sittings, L is a solid chunk of work.
 - "Preset:" lists the keys a tool accepts in a template. Every tool has a schema; §4 is the contract.
 - Every milestone ends with a **definition of done** (DoD). Do not start the next milestone until it is met.
+
+### Implementer contract
+
+This plan is written to be executed by someone (or something) that has not seen the design discussions. These rules override personal preference:
+
+1. **Order is the plan.** Build M0 to M5 in sequence. Do not start a later tool because it looks fun; the schemas and primitives it needs will not exist yet.
+2. **Zero runtime dependencies.** No framework, icon pack, CSS library or polyfill. Adding one is a design decision for §8, not an implementation detail.
+3. **No network, ever.** If a feature seems to need a request, it is the wrong feature. Data ships in the build or is imported by the user.
+4. **Schema first.** A tool is not started until its preset schema, state shape and export format are written down. That schema drives the UI, templates, save files and tests.
+5. **Every tool ships complete.** Default state, mount and unmount, serialize and restore, undo, export, empty state, error state, keyboard path, screen-reader labels, tests and a template example. A half tool is not merged.
+6. **Budgets are gates.** `bun run check` and `bun run size` pass before a step is called done. Never raise a budget to fit code; cut code.
+7. **Ambiguity means smaller.** When two readings exist, implement the one with fewer settings, fewer files and fewer pixels, and record the choice in §8.
+8. **Pillars win.** If a step contradicts §1.2 or §1.3, the step is wrong. Fix the plan here first, then code.
 
 ## 1. Product
 
@@ -56,7 +69,7 @@ Concretely: a static site you can also save as a single `.html` file and double-
 ### 1.2 Design pillars
 
 1. **Offline or bust.** Zero network requests at runtime. No fonts, images, analytics or "check for updates". Works over `file://`.
-2. **Two taps to useful.** Home → tool → doing the thing. No wizards, no onboarding walls, no accounts.
+2. **Two taps to useful.** Home → tool → doing the thing. No wizards, no onboarding walls, no accounts, and no dialog between opening a tool and using it.
 3. **Thumb-first, table-readable.** Big targets, high contrast, one clear action per screen. Designed for a phone lying flat on a table with four people leaning over it.
 4. **Depth on demand.** Sane defaults; advanced settings folded behind a "more" affordance. Nobody should have to configure a die to roll it.
 5. **Forgiving.** Autosave, undo everywhere, confirm only for destructive actions, resume after a refresh or a dropped phone.
@@ -88,7 +101,7 @@ Explicitly out of scope, so the tool stays small and honest:
 | Tournaments and leagues | Brackets, round robin, standings, draft order, session history |
 | Escape rooms and timed events | Multi-phase timers, hint and script runner, countdown display |
 
-Devices: modern Chrome, Edge, Firefox, Safari 16.4+, iOS Safari, Android Chrome. Desktop, tablet, phone, landscape and portrait. A projector or second screen via display mode is a bonus, not a requirement.
+Devices: Chrome/Edge 80+, Firefox 78+, Safari 13.1+, iOS 13.4+, Android 8+; current browsers unlock optional extras such as Wake Lock and display mode. Desktop, tablet, phone, landscape and portrait. A projector or second screen via display mode is a bonus, not a requirement.
 
 ### 1.5 Starting point: the four existing tools
 
@@ -106,9 +119,10 @@ Also kept from the old site: the visual identity (Pandaqi palette, chunky rounde
 ### 1.6 Definition of success for v1.0
 
 - A stranger can open one HTML file, pick a bundled template for a game they own, and start playing in under 30 seconds.
+- A first-time user can tell what three home tiles do and complete one real action without instructions.
 - A game designer can write a first `.gamebuddy` template in under 10 minutes using the docs.
 - Every bundled template passes the linter and loads without console errors.
-- The whole app (all tools, English data) is under 350 KB gzipped.
+- The whole app (all tools, English data) is under 300 KB gzipped.
 - It works from `file://` on Chrome, Firefox, Edge and Safari, with clearly explained limitations.
 - Nothing ever makes a network request.
 
@@ -155,7 +169,7 @@ Use this as the completeness test. If a real game-night need is missing from thi
 | Pick teams fairly | `pick` (teams) |
 | Draft cards or players | `draft` |
 | First-to-tap reaction contest | `buzzer` |
-| Alert and ambience sounds | `sound` |
+| Alert and ambience sounds | core cue sheet (speaker button on every screen) |
 | Narrate a scripted round (Werewolf night) | `script` |
 | Practice speedruns | `splits` |
 | Track history, win rates and streaks | `log` |
@@ -177,7 +191,7 @@ Because templates can combine tools, an "unsupported" game is almost always expr
 
 ### 2.4 Why not a hundred tools
 
-Breadth without depth produces a directory of dead ends. The 22 tools below each carry real behaviour, real edge cases and a schema. Composition, not count, is what makes coverage exhaustive. A new tool is added only when a whole class of needs cannot be met by composing existing ones. That is the review question for every proposal.
+Breadth without depth produces a directory of dead ends. The 21 tools below each carry real behaviour, real edge cases and a schema. Composition, not count, is what makes coverage exhaustive. A new tool is added only when a whole class of needs cannot be met by composing existing ones. That is the review question for every proposal.
 
 ## 3. Tool catalogue
 
@@ -186,14 +200,17 @@ Breadth without depth produces a directory of dead ends. The 22 tools below each
 Non-negotiable, checked at every milestone:
 
 - **Instant default.** Opens in a usable state with zero configuration.
+- **One obvious action.** Each screen has one visually dominant primary action; everything else is quiet or folded.
+- **No dead settings.** Every setting has a default, a UI control and a save path; settings that matter for a preset also have a template key.
 - **Session state.** Serializes to JSON, restores exactly, survives reload.
 - **Undo.** At least the last 50 state-changing actions (snapshot-based where cheap).
 - **Template support.** Declares a preset schema; can be configured from a `.gamebuddy` block; can serialize current settings back to a preset.
-- **Export.** Plain-text or CSV summary of whatever the tool knows, copyable and printable.
+- **Example template.** Ships a minimal `example.gamebuddy` in its folder, used by fixtures and the gallery's "try it" path.
+- **Export.** Plain-text or CSV summary of whatever the tool knows, copyable; print layouts are a cross-cutting M5 deliverable.
 - **Keyboard.** Every control reachable by keyboard; no keyboard traps; visible focus.
 - **Accessibility.** Labels, roles, contrast, 48 px targets, no color-only meaning, reduced motion respected, screen-reader announcements only where meaningful.
 - **No network.** No fetches, no external assets, no fonts, no CDNs.
-- **Budget.** At most 12 KB gzipped code per tool; at most 16 ms to interactive after mount on a mid-range phone.
+- **Budget.** At most 12 KB gzipped code per tool; at most 50 ms to interactive after mount on a mid-range phone, 150 ms on a low-end device.
 - **No dead ends.** Empty states explain the next action; destructive actions confirm; errors say what to do.
 
 ### Tool index
@@ -215,15 +232,14 @@ Non-negotiable, checked at every milestone:
 | Bracket | `bracket` | Tournaments and standings | M4 |
 | Draft | `draft` | Snake and linear drafts, auctions | M4 |
 | Buzzer | `buzzer` | First tap wins, reaction timing | M4 |
-| Sound | `sound` | Synthesized cues and alerts | M4 |
 | Script | `script` | Run a game flow step by step | M4 |
-| Rules | `rules` | Cheat sheets, setup, glossary, scoring refs | M2 (basic) / M3 (full) |
+| Rules | `rules` | Cheat sheets, setup, glossary, scoring refs | M2 |
 | Words | `words` | Dictionary, filters, solvers, Codenames | M4 |
 | Prompts | `prompts` | Random ideas, prompts, random tables | M4 |
 | Custom | `custom` | Build your own tracker | M4 |
 | Splits | `splits` | Speedrun split timer | M4 |
 
-Plus three cross-cutting display modes (§3.23): **Table mode**, **Display/overlay**, **Print**.
+Plus three cross-cutting display modes (§3.22): **Table mode**, **Display/overlay**, **Print**. A **global cue sheet** (bell, buzzer, tick, gong, drumroll, success) lives in the core shell rather than as a tool, since it has no session state.
 
 ---
 
@@ -260,7 +276,7 @@ Plus three cross-cutting display modes (§3.23): **Table mode**, **Display/overl
 - **Standard dice**: d2, d3, d4, d6, d8, d10, d12, d20, d100, dF (Fate), percentile `d%`.
 - **Notation parser**: count, sides, modifier, keep and drop highest or lowest (`4d6kh3`, `2d20kl1`), reroll (`r1`), exploding (`!`), success counting (`8d10>7`), advantage and disadvantage (`2d20kh1`), mixed terms (`2d6+1d8+3`). Invalid input gets a plain-language error, not a crash.
 - **Dice pools**: mixed dice, total or success mode, target number, botch and fumble detection (configurable), pool presets ("attack", "damage").
-- **Dice lab**: define a die with arbitrary faces. A face can be a number, a word, an emoji or symbol, a color, or a weighted entry. Save named dice sets to the session and to templates.
+- **Dice lab** (ships in M4.1): define a die with arbitrary faces. A face can be a number, a word, an emoji or symbol, a color, or a weighted entry. Save named dice sets to the session and to templates.
 - **Visuals**: rendered pips for a d6 (kept from the old tool), numeric faces otherwise, a short roll animation (skipped under reduced motion), and a per-die breakdown so you can see what was rolled.
 - **Fairness**: `crypto.getRandomValues` by default; optional **seed** with a visible seed code so a roll can be replayed or shared. Uniform integer sampling without modulo bias.
 - **History**: last N rolls with totals and timestamps; optional running average and histogram.
@@ -272,7 +288,7 @@ Plus three cross-cutting display modes (§3.23): **Table mode**, **Display/overl
 
 ### 3.3 Coin
 
-**Purpose:** the fastest coin flip on the table, with just enough control for wagers and promise games.
+**Purpose:** the fastest coin flip on the table, with just enough control for wagers and promise games. It keeps its own tile, despite overlapping Dice, because it is the fastest one-tap action in the app.
 
 **Spec:**
 
@@ -297,7 +313,7 @@ Plus three cross-cutting display modes (§3.23): **Table mode**, **Display/overl
 - **Seats and turn order**: random seating arrangement, first player, snake order; drag to adjust manually afterwards.
 - **Secret Santa**: assign givers to receivers with exclusions, no self-assignment and no reciprocal pairs (configurable); reveal privately one at a time.
 - **What to play**: weighted pick from a list filtered by player count and time available.
-- **Views**: plain list, wheel (spinning sectors, weighted), slot machine, face-down cards. Same data, different skin; the view is a setting, not a separate tool.
+- **Views** (wheel and slot machine ship in M4.1): plain list, wheel (spinning sectors, weighted), slot machine, face-down cards. Same data, different skin; the view is a setting, not a separate tool.
 - **Preset:** `source` (list, number or players), `values`, `weights`, `count`, `replacement`, `teams`, `view`, `seed`.
 
 **Edge cases:** empty list, one entry, duplicate entries, weights summing to zero, more teams than players, exclusions that make Secret Santa impossible (detect and explain).
@@ -358,7 +374,7 @@ Plus three cross-cutting display modes (§3.23): **Table mode**, **Display/overl
 - **Denominations**: display big values as chips (1, 5, 10, 50) for poker-style stacks; totals always shown numerically too.
 - **Tallies**: quick click-to-count mode for "how many times did X happen" (deaths, attempts, boss tries).
 - **History** and undo; export totals.
-- **Preset:** `counters` (name, start, min, max, step), `shared`, `denominations`, `tallies`.
+- **Preset:** `counters` (`name=start` pairs; min, max and step stay in the UI), `shared`, `denominations`, `tallies`.
 
 ---
 
@@ -375,6 +391,7 @@ Plus three cross-cutting display modes (§3.23): **Table mode**, **Display/overl
 - **Turn timer** (optional): attaches a `timer` instance and starts it on turn change; warns and optionally auto-advances.
 - **Pass-the-phone overlay**: a full-screen "Hand the phone to Alice" card that must be tapped to continue, so the next player does not see the previous player's state.
 - **Log**: compact history of turns and phases with timestamps.
+- **Initiative view** (optional): order players by a per-player initiative value, next and round reset; used by the D&D template.
 - **Preset:** `order`, `phases`, `rounds`, `timer`, `auto-advance`, `start`.
 
 ---
@@ -387,12 +404,12 @@ Plus three cross-cutting display modes (§3.23): **Table mode**, **Display/overl
 
 - **Deal roles**: a role list with counts (`werewolf=2, seer=1, villager=3`), an optional description per role, and a random private assignment.
 - **Pass-and-reveal flow**: "Alice, take the phone" then hold to reveal (or tap), role shown with a countdown, auto-hide, "pass to Bob". A short confirmation prevents accidental skips.
-- **Anti-peek**: hold-to-view, blur until pressed, screen dims between players, no back navigation into a previous player's card.
+- **Anti-peek**: hold-to-view, an opaque cover until pressed, screen dims between players, no back navigation into a previous player's card.
 - **Reveal all**: for games where roles are public after a phase.
 - **Ballot**: question and options; each player votes privately; anonymous tally; ties; abstentions; results revealed only at the end.
 - **Bids**: each player enters a secret number; simultaneous reveal; highest or lowest wins; tie handling; optional budget tracking across rounds.
 - **Assign from list**: deal secret objectives or missions, one each, no duplicates.
-- **Preset:** `roles`, `counts`, `descriptions`, `hold`, `auto-hide`, `mode` (roles, ballot or bids), `options`, `reveal`.
+- **Preset:** `roles` (name=count pairs), `descriptions`, `hold`, `auto-hide`, `mode` (roles, ballot or bids), `options`, `reveal`.
 
 **Edge cases:** more players than roles, uneven counts, a player joining after dealing (allow re-deal), device rotation during reveal, accidental double-tap.
 
@@ -407,7 +424,7 @@ Plus three cross-cutting display modes (§3.23): **Table mode**, **Display/overl
 - **Record a play**: game name (from template or free text), date, players, winners, final scores, duration, notes, optional rating.
 - **One-tap finish**: any tool can end the session and prefill the log from current state (scores, timer elapsed, template name).
 - **History**: reverse-chronological list, filters by game, player or date, search.
-- **Stats**: plays per game, total playtime, win counts and win rate per player, current streaks, most-played game, "last played X days ago", per-game best scores.
+- **Stats** (leaderboards and filters deepen in M4.4): plays per game, total playtime, win counts and win rate per player, current streaks, most-played game, "last played X days ago", per-game best scores.
 - **Leaderboard**: across a chosen period (all time, year, tonight), per game or overall, with a minimum-plays filter so one lucky win does not top the chart.
 - **"What should we play?"**: filter history by player count and available time; weighted toward games not played recently.
 - **Data**: export and import JSON, CSV of plays, clear a range with confirm.
@@ -500,22 +517,7 @@ Note: the log is per device and browser. That is a feature (privacy) and a limit
 
 ---
 
-### 3.16 Sound
-
-**Purpose:** a tiny soundboard, synthesized in the browser, for cues and atmosphere. No audio files, no downloads.
-
-**Spec:**
-
-- Cues: bell, buzzer, tick, gong, drumroll, coin, dice, success, failure, heartbeat, crowd-ish noise burst.
-- WebAudio synthesis only; short envelopes; no sample assets.
-- Volume, mute, loop for ticking and ambience; stop all.
-- Keyboard and button triggers; each cue has a distinct visual flash so the tool is usable muted.
-- Unlock audio on the first user gesture; respect autoplay policies and iOS quirks.
-- **Preset:** `cues`, `volume`, `loop`.
-
----
-
-### 3.17 Script
+### 3.16 Script
 
 **Purpose:** the narrator and flow engine. Runs an ordered list of things to say, wait for, reveal and time, for social deduction nights, escape rooms, event decks and teach-a-game sequences.
 
@@ -532,7 +534,7 @@ Note: the log is per device and browser. That is a feature (privacy) and a limit
 
 ---
 
-### 3.18 Rules
+### 3.17 Rules
 
 **Purpose:** the cheat sheet, so nobody opens a 28-page PDF mid-turn.
 
@@ -549,7 +551,7 @@ Note: the log is per device and browser. That is a feature (privacy) and a limit
 
 ---
 
-### 3.19 Words
+### 3.18 Words
 
 **Purpose:** settle word validity and help find words, entirely offline, in more than one language.
 
@@ -571,7 +573,7 @@ Note: the log is per device and browser. That is a feature (privacy) and a limit
 
 ---
 
-### 3.20 Prompts
+### 3.19 Prompts
 
 **Purpose:** the "get inspired" engine, upgraded from CATEGORIZER: random ideas, party prompts, story dice and random tables.
 
@@ -587,7 +589,7 @@ Note: the log is per device and browser. That is a feature (privacy) and a limit
 
 ---
 
-### 3.21 Custom
+### 3.20 Custom
 
 **Purpose:** the last resort that prevents "unsupported game". Build a small tracker without code.
 
@@ -604,7 +606,7 @@ Note: the log is per device and browser. That is a feature (privacy) and a limit
 
 ---
 
-### 3.22 Splits
+### 3.21 Splits
 
 **Purpose:** speedrun practice and race timing for video games (or any lap-based activity).
 
@@ -619,7 +621,7 @@ Note: the log is per device and browser. That is a feature (privacy) and a limit
 
 ---
 
-### 3.23 Cross-cutting display modes
+### 3.22 Cross-cutting display modes
 
 These are not tools; they are ways any tool can present itself. They live in the core so every tool gets them for free.
 
@@ -627,9 +629,7 @@ These are not tools; they are ways any tool can present itself. They live in the
 - **Display and overlay** (`#/display/<tool>/<instance>`): read-only, controls hidden, very large output, dark or transparent background, optional auto-hide chrome. Updated from the controlling tab via `BroadcastChannel`, falling back to `storage` events and a 1-second poll. For projectors, second screens and OBS.
 - **Print**: `@media print` styles for score sheets, brackets, rules and session summaries; a Print action in every export menu.
 
-### 3.24 Migration map for the vault tools
 
-See §1.5 for the tool-by-tool upgrade table. During M1 (timer, randomness, dictionary) and M4 (categorizer, prompts), migrated content is checked against the old pages so nothing useful is lost. The old URLs get redirect stubs at release (M5.7).
 
 ## 4. The `.gamebuddy` template system
 
@@ -713,15 +713,16 @@ For an easier game, start with 12 plates instead of 10.
   - colors: palette names (`red`, `orange`, `yellow`, `green`, `teal`, `blue`, `purple`, `pink`, `gray`) or `#rgb` and `#rrggbb`,
   - dice: `2d6+1`, `4dF`, `d%`,
   - weight pairs: `entry=weight` (for example `werewolf=2`),
+  - structured entries: `name=value` pairs (`werewolf=2`, `served=0`); richer per-entry options (min, max, step, descriptions) stay in the UI, so templates configure only the common case,
   - multi-line text: `key: |` followed by indented lines, preserved verbatim.
 - **Unknown sections and keys**: warning, not an error. Preserved and ignored, so newer templates degrade gracefully in older builds.
 - **Duplicates**: last value wins, with a warning listing both line numbers.
 - **Required**: `[game] name`. Everything else has a default.
-- **Free-text sections**: `[rules]`, `[setup]` and `[notes]` accept line items and markdown; `[script]` accepts numbered steps.
+- **Free-text sections**: `[rules]`, `[setup]` and `[notes]` accept line items and markdown; `[script <instance>]` accepts numbered steps.
 
 ### 4.4 Tool preset schemas
 
-Every tool exports a declarative schema, and that one schema drives four things: the settings UI, the template validator, session persistence, and "save as template".
+Every tool exports a declarative schema, and that one schema drives four things: the settings UI, the template validator, settings persistence, and "save as template".
 
 ```ts
 // src/tools/timer/preset.ts (illustrative)
@@ -838,7 +839,7 @@ quick: First to 10 victory points wins.
 
 ### 4.7 The template library
 
-Ship 32 to 40 hand-written templates at launch, each with a source link, author, license and "not an official product" note. The gallery groups them by context (party, strategy, card, word, RPG, video, tournament) and filters by players, time and tools used, reusing the categorizer's taxonomy as metadata.
+Ship 40 hand-written templates in total, each with a source link, author, license and "not an official product" note. The first ~27 use only M1–M2 tools and ship in M3; the rest ship with their tool family in M4. The gallery groups them by context (party, strategy, card, word, RPG, video, tournament) and filters by players, time and tools used, reusing the categorizer's taxonomy as metadata.
 
 | Game | Players | Time | Tools wired |
 |------|---------|------|-------------|
@@ -849,7 +850,7 @@ Ship 32 to 40 hand-written templates at launch, each with a source link, author,
 | Sushi Go! | 2-5 | 20 m | score, rules |
 | Yahtzee | 2-6 | 30 m | score, dice, rules |
 | Phase 10 | 2-6 | 45 m | score, rules |
-| Monopoly | 2-6 | 120 m | counters, lives, rules |
+| Monopoly | 2-6 | 120 m | counters, turns, rules |
 | Risk | 2-6 | 120 m | counters, turns, dice |
 | Scrabble | 2-4 | 60 m | score, words, bag, timer |
 | Boggle | 2-8 | 15 m | timer, words, score |
@@ -883,7 +884,7 @@ Ship 32 to 40 hand-written templates at launch, each with a source link, author,
 | Escape room | 2-6 | 60 m | timer, script, rules |
 | Trivia night | 2-20 | 60 m | score, timer, buzzer, prompts |
 
-Each template includes at least one `rules` block and a `[setup]` checklist where setup is non-trivial. All content is our own summary; no copied rules text.
+Every game template includes a `rules` block and a `[setup]` checklist where setup is non-trivial; utility templates (speedrun practice) may skip both. All content is our own summary; no copied rules text.
 
 ### 4.8 Versioning and compatibility
 
@@ -984,6 +985,7 @@ pq-game-buddy/
 Rules:
 
 - `core/` knows nothing about specific tools; `tools/` never import each other. They talk through the session and core services.
+- Every tool folder also contains `example.gamebuddy`, so fixtures, docs and the gallery share one canonical example.
 - A tool folder is self-contained: metadata, preset schema, view, styles, tests. Removing the folder removes the tool.
 - `manifest.generated.ts` and `templates.generated.ts` are committed so typecheck works without a prior build, and `bun run gen --check` fails if they are stale.
 
@@ -1009,9 +1011,9 @@ export interface ToolInstance {
   unmount(): void;
   state(): unknown;                       // serialisable snapshot
   load(state: unknown): void;             // tolerant; ignores unknown fields
-  presetFromState?(): PresetValues;       // "save as template"
+  presetFromState(): PresetValues;        // "save as template"
   commands?: Record<string, (arg?: string) => void>;  // script, overlay, keys
-  summary?(): string;                     // plain-text export
+  summary(): string;                      // plain-text export
 }
 
 export interface ToolContext {
@@ -1042,6 +1044,7 @@ Notes:
 - **Storage**: `localStorage`, then `sessionStorage`, then an in-memory adapter, chosen at boot with a feature probe. Versioned keys (`pqgb:v1:...`) and a migration function. Quota errors surface an actionable message ("export your session and clear old ones").
 - **i18n**: every string via `t('key')`; English dictionary only for now; pseudo-locale build for layout testing; `Intl` for numbers and dates; logical CSS properties for future RTL.
 - **Theme**: light, dark and system via CSS custom properties; palette from the Pandaqi look; player colors from a fixed, colorblind-safe set with initials as a fallback.
+- **Cue sheet**: a core overlay with the synthesized cues from the former soundboard (bell, buzzer, tick, gong, drumroll, success), available from every screen. No tool state, no template schema; it is a utility, not a tool.
 
 ### 5.5 Discovery and codegen
 
@@ -1087,11 +1090,22 @@ Known browser realities, handled explicitly:
 - No service worker is required for offline use; the single HTML file is the offline story. A PWA is optional and hosted-only (M6).
 - No network calls exist to fail. The self-test stubs `fetch` to assert this.
 
+**Compatibility baseline (be honest, not hopeful):**
+
+| Tier | Browsers | Experience |
+|------|----------|------------|
+| A. Baseline (required) | Chrome/Edge 80+, Firefox 78+, Safari 13.1+, Android 8+, iOS 13.4+ (2020) | The full app; optional APIs are feature-detected and explained when missing |
+| B. Extras | Current Chrome, Safari 16.4+, Firefox 113+ | Wake Lock, BroadcastChannel, CompressionStream, Web Speech |
+| C. Unsupported | Anything below tier A | Static banner: "This browser is too old; use a current browser." Never a half-broken UI |
+
+The limit is the browser, not the device: 2015-era hardware runs the app fine with a current browser. Output target is **ES2020**; no `structuredClone`, `Array.prototype.at`, `:has()`, container queries as a dependency, or subgrid. If a zero-cost ES2017 emit ever exists, lower the target and widen tier A; do not add a transpiler dependency for it. No `backdrop-filter` or large `filter: blur()` (the reveal cover is an opaque layer). Every optional API degrades with a visible explanation, never a silent failure.
+
 ### 5.10 Accessibility requirements
 
 Target WCAG 2.2 AA:
 
 - 48x48 px minimum targets (56 in table mode), with spacing that avoids mis-taps.
+- Primary actions sit in the lower third of the screen, within one-handed thumb reach on a 360 px phone.
 - Contrast at least 4.5:1 for text and 3:1 for large text and UI edges; verify player colors and dark mode.
 - Full keyboard operation, visible focus, logical order, Escape closes overlays, no traps.
 - `aria-live="polite"` for score and turn changes; timers announce only at meaningful thresholds (1 minute, 30 seconds, 0), never every second.
@@ -1101,40 +1115,57 @@ Target WCAG 2.2 AA:
 - Support 200 percent zoom and 320 px width without horizontal scrolling.
 - Screen-reader-friendly score table semantics (`table`, headers, row and column scopes) and labeled controls everywhere.
 - No flashing above 3 Hz, ever.
+- Focus returns to the control that opened a sheet; re-renders and state changes never drop focus.
+- Disabled controls keep 3:1 contrast and explain why they are unavailable.
+- No hover-only affordances; everything works with touch and keyboard alone.
+- Type scales with the browser's font setting; use rem for text.
+- Announce at most one update per user action, and never interrupt a running timer.
+- Test at 200 percent text size, not only 200 percent zoom.
 
-### 5.11 Performance budgets
+### 5.11 Performance, size and legacy devices
 
-Measured at every build; `bun run size` fails the build on regressions.
+**Budgets** (measured at every build; `bun run size` fails on regressions):
 
 | Budget | Limit |
 |--------|-------|
 | Core JS and CSS, gzipped | 45 KB |
 | Per tool, gzipped | 12 KB (median target 6 KB) |
-| Full single-file with English data | 350 KB gz (hard fail at 500 KB) |
-| Time to interactive, mid-range phone, `file://` | 1 s |
+| Full single-file with English data | 300 KB gz target, 350 KB hard fail |
+| Time to interactive, mid-range phone, `file://` | 1 s (3 s on a 2018-era low-end device) |
 | Home screen paint | 100 ms |
 | Any solver or dictionary query | 50 ms |
 | Idle memory | 80 MB |
 | Network requests at runtime | 0 |
 
-Techniques: no framework, no fonts, inline SVG icons, event delegation, `content-visibility` for long lists, compressed data decoded on demand, one ticker, and a hard rule against top-level work in tool modules.
+**Engineering rules (non-negotiable):**
+
+- Only the active tool is mounted. Switching unmounts it, cancels its timers and releases listeners.
+- One rAF ticker drives all timing; timers compute from timestamps, never decrement a counter.
+- Batch DOM writes per frame. Never read layout in a loop. Use `textContent` for user data, never `innerHTML`.
+- Animate only `transform` and `opacity`, under 200 ms. No animated blur, shadow or filter.
+- Passive listeners for touch, wheel and scroll; delegate events at the tool root.
+- Cap histories at 50 entries; render at most 200 table rows at once and virtualize beyond that (`content-visibility` is an enhancement, never a dependency).
+- Inline SVG only; no raster images, icon fonts or web fonts. System font stack.
+- Decode data packs asynchronously on first use, cache the result, and never block first paint.
+- Minify production builds, ship no source maps, and report raw plus gzipped sizes.
+- Log a development warning when a tool mount exceeds 50 ms.
 
 ### 5.12 Testing and CI
 
 - **Unit tests** (`bun test`): template parser (valid, invalid, weird), unit parsing, preset validation, RNG determinism, dice notation, scoring formulas, timer arithmetic with a fake clock, deck and bag draw invariants, solver correctness on fixed word lists.
-- **Round-trip tests**: every bundled template parses, validates, loads into a headless session, serializes and reparses identically.
+- **Round-trip tests**: every bundled template and every tool's `example.gamebuddy` parses, validates, loads into a headless session, serializes and reparses identically.
 - **DOM smoke tests**: each tool mounts with default state and with a template state under `happy-dom`; no exceptions, expected root nodes.
 - **Self-test route** (`#/selftest`): boots every tool with defaults, runs a tiny interaction, collects console errors; usable manually on a real device and in CI.
 - **No-network assertion**: stub `fetch` and `XMLHttpRequest` to throw; any call fails the self-test.
 - **Template lint**: unknown keys, missing names, duplicate instances, invalid durations, illegal role counts, impossible brackets.
-- **Manual matrix** before release: Chrome, Firefox, Edge and Safari desktop, iOS Safari, Android Chrome, `file://` and hosted, portrait and landscape, reduced motion on and off, 200 percent zoom, VoiceOver and NVDA spot-checks on timer and score.
+- **Manual matrix** before release: Chrome, Firefox, Edge and Safari desktop, iOS Safari, Android Chrome, including one browser at the Tier A floor, `file://` and hosted, portrait and landscape, reduced motion on and off, 200 percent zoom, VoiceOver and NVDA spot-checks on timer and score.
 - **One command**: `bun run check` equals typecheck, unit tests, DOM tests, template lint, size check and stale-manifest check.
 
 ### 5.13 Build artifacts and deployment
 
 Two artifacts from one source:
 
-1. **`dist/`**: `index.html`, `app.js`, `app.css` (or inlined CSS). Cacheable, hostable, used on pandaqi.com.
+1. **`dist/`**: `index.html`, `app.js`, and `app.css` or CSS inlined into the HTML. Cacheable, hostable, used on pandaqi.com.
 2. **`dist/pq-game-buddy.html`**: one self-contained file, everything inlined. This is the "double-click, works offline" artifact and the one to attach in a group chat.
 
 Deployment (M5): copy `dist/` into the pandaqi.com `tools` folder, keep old paths working with tiny redirect HTML files (`/tools/timer/` goes to `/tools/#/tool/timer`), and verify hosted and `file://` builds separately. Never ship source maps or dev-only assets.
@@ -1155,7 +1186,7 @@ Each milestone is shippable. Do not open the next one before its definition of d
 6. **M0.6 Storage and session.** Adapter chain, feature probe, versioned keys, settings and sessions, debounced autosave, resume prompt, storage-unavailable banner.
 7. **M0.7 Settings and theme.** Light, dark and system; table mode; reduced-motion override; sound volume and mute; haptics; reset all data with typed confirmation.
 8. **M0.8 Build scripts.** `build.ts` emits `dist/` and the single-file HTML, prints a per-file size table and exits non-zero over budget. Inline CSS. No source maps in production builds.
-9. **M0.9 Test harness.** `bun test` configured, `happy-dom` (dev-only) registered, first tests for router, storage, RNG and ticker, plus the `bun run check` script.
+9. **M0.9 Test harness.** `bun test` configured, `happy-dom` (dev-only) registered, first tests for router, storage, RNG and ticker. `bun run check` starts with typecheck, tests, size and stale-manifest checks; template lint joins it in M3.
 10. **M0.10 Docs skeleton.** README run instructions; `TEMPLATE-FORMAT.md` stub; tool-authoring checklist stub.
 
 **DoD:** `bun run build` produces both artifacts; both open over `file://` and show the shell plus the demo tool; adding a folder makes a tool appear without editing imports; `bun run check` passes; core is at most 45 KB gzipped; the self-test sees zero network requests; no console errors.
@@ -1166,35 +1197,34 @@ Each milestone is shippable. Do not open the next one before its definition of d
 
 1. **M1.1 Players and seats.** Player list with name, color, initial and active state; add, remove, rename, reorder; persisted; exposed to every tool through `ToolContext`. This is the most-used primitive in the app; get it right.
 2. **M1.2 Ticker and clock.** One rAF loop, one coarse interval, `now()`, monotonic timestamps, visibility and focus resync. Fake-clock test helper.
-3. **M1.3 Timer engine.** The modes from §3.1 (`countdown`, `up`, `flip`, minimal `chess`, `interval`, `sequence`), drift-free arithmetic, pause and resume, alarm queue, serialize and restore from wall-clock time. Unit tests for every mode and for sleep catch-up.
-4. **M1.4 Audio, haptics and wake lock.** WebAudio synth cues (bell, buzzer, tick), unlock on first gesture, volume and mute, vibration patterns, Wake Lock service with a graceful fallback.
+3. **M1.3 Timer engine.** The modes from §3.1 (`countdown`, `up`, `flip`, `chess` with increment, delay and Bronstein, `interval`, `sequence`), drift-free arithmetic, pause and resume, alarm queue, serialize and restore from wall-clock time. Unit tests for every mode and for sleep catch-up.
+4. **M1.4 Audio, haptics and wake lock.** WebAudio synth cues (bell, buzzer, tick, gong, drumroll, success), unlock on first gesture, volume and mute, vibration patterns, Wake Lock service with a graceful fallback, and the global cue sheet accessible from every screen.
 5. **M1.5 UI kit.** BigTap, Stepper, NumberPad, Sheet, Toast, Confirm, Toolbar, EmptyState, PlayerChip, PlayerPicker. Keyboard and screen-reader behavior built in, not bolted on.
 6. **M1.6 Timer tool UI.** Single timer (digits, scrub-to-set, plus and minus 30 seconds, presets); multi-timer grid (tap to flip or pause, long-press menu, add and remove, start, pause and reset all); chess layout; sequence view. Layout must survive four players on a 360 px phone.
 7. **M1.7 Randomness MVP.** RNG service (crypto plus seed); dice with notation parser and pip visuals; coin; pick (numbers, lists, teams, seats, first player). Shared result animation and history.
-8. **M1.8 Basic scorepad.** Simple totals, plus and minus steps, leaderboard, edit, clear, undo. Enough to finish a game; the full version lands in M2.
-9. **M1.9 Template parser MVP.** `[game]`, `[players]`, `[tool <id>]`, keys, units, lists and comments; defaults; warnings versus errors with line numbers; `parse()` and `validate()`. No rules rendering yet. At least 20 unit tests, including malformed files.
-10. **M1.10 Session bootstrap and start-from-template.** Import by drag and drop, file picker or paste; create a session with players and tool instances; tab bar for multiple tools; "save as template" from the current session (state to text).
-11. **M1.11 Undo service.** Snapshot stack per instance, shared undo bar, coalescing, restore correctness after reload.
-12. **M1.12 Demo content.** `kitchen-rush.gamebuddy`, `poker-night.gamebuddy` and `chess-blitz.gamebuddy`; a "Try a template" card on home.
+8. **M1.8 Undo service.** Snapshot stack per instance, shared undo bar, coalescing, restore correctness after reload.
+9. **M1.9 Basic scorepad.** Simple totals, plus and minus steps, leaderboard, edit and clear. Enough to finish a game; the full version lands in M2.
+10. **M1.10 Template parser MVP.** `[game]`, `[players]`, `[tool <id>]`, keys, units, lists and comments; defaults; warnings versus errors with line numbers; `parse()` and `validate()`. No rules rendering yet. At least 20 unit tests, including malformed files.
+11. **M1.11 Session bootstrap and start-from-template.** Import by drag and drop, file picker or paste; create a session with players and tool instances; tab bar for multiple tools; "save as template" from the current session (state to text).
+12. **M1.12 Demo content.** `kitchen-rush-timers.gamebuddy`, `yahtzee-lite.gamebuddy` and `chess-blitz.gamebuddy`, using only M1 tools; a "Try a template" card on home.
 
-**DoD:** four flip timers for Kitchen Rush survive a reload, a phone rotation and a tab switch with correct remaining time; dice, coin and pick produce reproducible results with a seed; a session created from a template persists and resumes; every control is keyboard-operable; core plus tools stay at or below 120 KB gzipped; the three demo templates pass the linter and round-trip tests.
+**DoD:** the Kitchen Rush timer template (four flip timers) survives a reload, a phone rotation and a tab switch with correct remaining time; dice, coin and pick produce reproducible results with a seed; a session created from a template persists and resumes; every control is keyboard-operable; a first-time user can start a timer without instructions; core plus tools stay at or below 120 KB gzipped; each M1 tool ships an example template; the three demos pass the linter and round-trip tests.
 
 ### M2 — Tracking, secrets and turns (L)
 
 **Goal:** cover most of board, card and party game night with real tools, not placeholders.
 
-1. **M2.1 Scorepad v2.** The modes from §3.5 (simple, rounds, categories, ledger), formulas, targets, ties, hidden mode, per-cell notes, CSV and summary export, print view. Unit tests for formulas and tie ranking.
-2. **M2.2 Score presets and references.** Category schemas for templates; optional bundled "typical winning score" hints; Catan, Yahtzee and 7 Wonders templates proving the model.
+1. **M2.1 Scorepad v2.** The modes from §3.5 (simple, rounds, categories, ledger), formulas, targets, ties, hidden mode, per-cell notes, CSV and summary export. Unit tests for formulas and tie ranking.
+2. **M2.2 Score presets and references.** Category schemas for templates; optional bundled "typical winning score" hints; three demo templates prove the model before the full library lands in M3.
 3. **M2.3 Lives tool.** Big totals, extra tracks, conditions, elimination, game-over detection, hidden mode.
 4. **M2.4 Counters tool.** Named counters, shared bank, transfers, denominations, tallies, history.
-5. **M2.5 Turns tool.** Order, rounds, phases, turn timer integration, pass-the-phone overlay, log.
-6. **M2.6 Reveal tool.** Role dealing with counts and descriptions, hold-to-reveal, auto-hide, ballots, blind bids, reveal-all.
-7. **M2.7 Hidden-information UX.** Shared pass-the-phone component, anti-peek patterns, "who is holding the device" state, blur between players, no back navigation into another player's secret.
-8. **M2.8 Session log v1.** Record a play from any tool on finish; history list; basic stats (plays, wins, streaks); JSON and CSV export.
-9. **M2.9 Finish flow and summary.** "Finish game" collects results, offers log, save and share, then returns home with a clean state. Never auto-delete without an explicit choice.
-10. **M2.10 Rules tool (basic).** Quick card, setup checklist, markdown sections, scoring reference shared with the scorepad.
+5. **M2.5 Hidden-information UX.** Shared pass-the-phone component, anti-peek patterns, "who is holding the device" state, an opaque cover between players, no back navigation into another player's secret.
+6. **M2.6 Turns tool.** Order, rounds, phases, turn timer integration, pass-the-phone overlay, log.
+7. **M2.7 Reveal tool.** Role dealing with counts and descriptions, hold-to-reveal, auto-hide, ballots, blind bids, reveal-all.
+8. **M2.8 Session log and finish flow.** Record a play from any tool; history list; basic stats (plays, wins, streaks); JSON and CSV export. "Finish game" collects results, offers log and save, then returns home with a clean state; never auto-delete without an explicit choice.
+9. **M2.9 Rules tool.** Quick card, setup checklist, markdown sections, scoring reference shared with the scorepad, glossary search and source links. Print lands in M5.
 
-**DoD:** a full Catan game, a Werewolf round, a poker night, an MTG duel and a D&D combat can each be run end-to-end with templates; hidden information never appears twice or to the wrong player; every state survives reload and undo; the log records correct winners from score and lives; all tests green and budgets held.
+**DoD:** a full Catan game, a poker night, an MTG duel and a D&D combat can each be run end-to-end with templates; hidden information never appears twice or to the wrong player; every state survives reload and undo; the log records correct winners from score and lives; all tests green and budgets held.
 
 ### M3 — Templates 1.0 and the game library (L)
 
@@ -1205,37 +1235,36 @@ Each milestone is shippable. Do not open the next one before its definition of d
 3. **M3.3 In-app template editor.** Raw text editing with line numbers, live validation, jump-to-error, preview of the resulting session and a "Test drive" button. No rich text; plain text is the point.
 4. **M3.4 Import, export and share.** Drag and drop, picker, paste, recent imports, `.gamebuddy` download, copy to clipboard, URL fragment sharing with a size warning, session JSON export and import.
 5. **M3.5 Template gallery.** Search and filters (players, time, tags, tools), favorites, recently used, "surprise me", and a detail sheet showing what the template configures before loading.
-6. **M3.6 Template linter and fixtures.** `lint-templates.ts` with the checks from §5.12; a fixture test that loads every bundled template headlessly; CI fails on warnings that matter.
-7. **M3.7 Author the launch library.** The 32 to 40 templates from §4.7, each with source, author, license, disclaimer, rules summary and setup checklist. Verification per template: does the scorepad model match the real game, are player counts and win conditions right.
+6. **M3.6 Template linter and fixtures.** `lint-templates.ts` with the checks from §5.12; a fixture test that loads every bundled template and every tool's `example.gamebuddy` headlessly; CI fails on warnings that matter.
+7. **M3.7 Author the launch library (part 1).** The roughly 27 templates from §4.7 whose tools exist after M2 (everything except decks, bag, words, bracket, buzzer, script and splits), each with source, author, license, disclaimer, rules summary and setup checklist. Verification per template: does the scorepad model match the real game, are player counts and win conditions right.
 8. **M3.8 Save current game as template.** Serialize players and every tool instance (including custom settings) into clean, commented template text; strip session data; suggest a filename.
 9. **M3.9 Authoring docs and contribution guide.** Ten-minute tutorial, annotated examples (timer-only, score-only, reveal plus script), naming conventions, attribution rules and a reviewer checklist.
-10. **M3.10 Template QA on devices.** Import five representative templates over `file://` in Chrome, Firefox, Edge and Safari; fix storage and import edge cases; record the matrix in `docs/`.
+10. **M3.10 Template import smoke test.** Import five representative templates over `file://` in Chrome and Safari; fix storage and import edge cases. The full device matrix is M5.4.
 
-**DoD:** all bundled templates lint, round-trip and load with zero console errors; a first-time user can go home, template, play in at most 3 taps; a new author can follow the docs and produce a valid template without asking questions; format v1 is documented as frozen; budgets still met.
+**DoD:** all templates bundled at this milestone lint, round-trip and load with zero console errors; a first-time user can go home, template, play in at most 3 taps; a new author can follow the docs and produce a valid template without asking questions; format v1 is documented as frozen; budgets still met.
 
 ### M4 — Breadth: the long tail (L, ship per family)
 
-**Goal:** nothing realistic is left uncovered. Each family is independently shippable, so cut or defer whole families rather than half-building tools.
+**Goal:** nothing realistic is left uncovered. Each family is independently shippable, so cut or defer whole families rather than half-building tools. Each family also authors the §4.7 templates that depend on its tools.
 
-1. **M4.1 Family A: randomness depth.** Dice lab (custom faces, saved sets), decks (standard, UNO, tarot, custom; deal and hidden hands), bag (tiles with values), the wheel and slot views for pick, weighted lists and teams. DoD: a full Scrabble opening (bag draw plus rack solver plus score) and an Uno round can be played with templates; 10,000-draw distribution tests stay within tolerance; deck and bag state restores exactly.
-2. **M4.2 Family B: words and content.** Word packs for English, Dutch, German, French and Spanish with license notes; validity lookup; filters; anagram and rack solvers; letter picker; Codenames board; migration of the categorizer into prompt packs; custom pack import; random tables. DoD: lookup under 50 ms; anagram and rack solver correct on a fixed test set; each pack licensed and documented; home size budget still met with English included.
-3. **M4.3 Family C: table and party.** Buzzer, soundboard, script runner, display and overlay mode, table-mode polish for every tool. DoD: a Werewolf night runs entirely from a template (reveal, script, timer); overlay updates a second tab within 1 s; all cues work muted through visual feedback.
+1. **M4.1 Family A: randomness depth.** Dice lab (custom faces, saved sets), decks (standard, UNO, tarot, custom; deal and hidden hands), bag (tiles with values), the wheel and slot views for pick, weighted lists and teams. DoD: a bag draw and an Uno round play end to end with templates; seeded 10,000-draw distribution checks with fixed expected buckets; deck and bag state restores exactly.
+2. **M4.2 Family B: words and content.** Word packs for English, Dutch, German, French and Spanish with license notes; validity lookup; filters; anagram and rack solvers; letter picker; Codenames board; migration of the categorizer into prompt packs; custom pack import; random tables. DoD: lookup under 50 ms; anagram and rack solver correct on a fixed test set; a full Scrabble turn (bag, words, score) plays end to end; each pack licensed and documented; the full build's size budget still met with English included.
+3. **M4.3 Family C: table and party.** Buzzer, script runner, display and overlay mode, and table-mode polish for every tool. DoD: a Werewolf night runs entirely from a template (reveal, script, timer); overlay updates a second tab within 1 s; buzzer and alerts have visual equivalents.
 4. **M4.4 Family D: competition.** Bracket (single, double, round robin, groups, Swiss), draft and auction, log v2 (stats, streaks, leaderboard filters), splits timer. DoD: an 8-player double-elimination tournament and a snake draft run start to finish; standings recompute correctly after an undone result; splits compare against a stored PB.
-5. **M4.5 Family E: custom and RPG.** Custom tool builder, initiative view for turns, condition chips, dice macros, note fields. DoD: a Gloomhaven scenario and a D&D combat run with a custom template; a custom layout survives save, export and reload; formula cells recalculate without drift.
-6. **M4.6 Family F: utility polish.** Print layouts for every exportable surface, canvas image export for score sheets and brackets, optional scratchpad for disputes and doodles, and the stretch QR share. DoD: printed sheets are legible in black and white; image export needs no network; no tool depends on Family F to function.
-7. **M4.7 Cross-family gate.** All 22 tools live, each reachable in at most two taps from home, each with a preset schema, empty state, help blurb, export and undo. Run the self-test on a low-end phone; no tool exceeds its 12 KB gzipped code budget; the full single-file build stays under 350 KB with English data.
+5. **M4.5 Family E: custom and RPG.** Custom tool builder, initiative view for turns, condition chips, dice macros, note fields. DoD: a Gloomhaven scenario and a D&D combat (with the initiative view) run end to end; a custom layout survives save, export and reload; formula cells recalculate without drift.
+6. **M4.6 Cross-family gate.** All 21 tools (each with its `example.gamebuddy` fixture) and all 40 templates from §4.7 are live and lint, each tool reachable in at most two taps from home, each with a preset schema, empty state, help blurb, export and undo. Run the self-test on a low-end phone; no tool exceeds its 12 KB gzipped code budget; the full single-file build stays under 300 KB with English data.
 
-**DoD:** the catalogue table in §3 is fully implemented and every tool has at least one template exercising it; the "Need to solution" table in §2.2 has no dead entries; a complete game night (word game, party game, tournament, speedrun practice) runs offline with no console errors.
+**DoD:** the catalogue table in §3 is fully implemented (21 tools) and every tool ships its example fixture, with the 40-game library covering the common combinations; the "Need to solution" table in §2.2 has no dead entries; a complete game night (word game, party game, tournament, speedrun practice) runs offline with no console errors.
 
 ### M5 — Polish, accessibility and release (M)
 
 **Goal:** turn a feature-complete app into something a stranger can trust.
 
 1. **M5.1 Accessibility audit.** Keyboard map, screen-reader pass (VoiceOver and NVDA) on timer, score, reveal and turns; contrast audit in both themes; 200 percent zoom; 320 px width; reduced-motion pass; fix everything found and add the checks to the release checklist.
-2. **M5.2 Performance and low-end pass.** Profile on a low-end Android device; measure time to interactive, memory and long tasks; lazy-decode data; eliminate layout thrash in the ticker; confirm budgets with the size script and record the numbers in the review notes.
+2. **M5.2 Performance and low-end pass.** Profile on a 2018-era low-end Android device in a Tier A browser with 4x CPU throttling; measure time to interactive, memory and long tasks; lazy-decode data; eliminate layout thrash in the ticker; confirm budgets with the size script and record the numbers in the review notes.
 3. **M5.3 Localization scaffolding.** `t()` everywhere (no literal UI strings), plural helper, `Intl` formatting, pseudo-locale for layout testing, logical CSS properties for RTL. English content only; no translated copy shipped yet.
-4. **M5.4 Browser and `file://` matrix.** Test the hosted build and the single-file build in Chrome, Firefox, Edge and Safari desktop, iOS Safari and Android Chrome; write the known-limitations section (Safari storage, wake lock, audio unlock, tab suspension) and verify the fallback banners.
-5. **M5.5 Copy and delight pass.** Microcopy review for clarity and personality; empty states; onboarding for the first 60 seconds; table-mode typography; sound and haptic balance; confirm nothing nags, nothing flashes and nothing blocks the score.
+4. **M5.4 Browser and `file://` matrix.** Test the hosted build and the single-file build in Chrome, Firefox, Edge and Safari desktop, iOS Safari and Android Chrome, plus one browser at the Tier A floor (Chrome 80 or Safari 13.1); write the known-limitations section (Safari storage, wake lock, audio unlock, tab suspension) and verify the fallback banners.
+5. **M5.5 Copy, print and delight pass.** Microcopy review for clarity and personality; empty states; onboarding for the first 60 seconds; table-mode typography; sound and haptic balance; print layouts for every exportable surface; canvas image export for score sheets and brackets; confirm nothing nags, nothing flashes and nothing blocks the score. Run a five-person first-use test (find a timer, start it, score a round, load a template) and fix every stumble.
 6. **M5.6 Documentation set.** README, user guide, template format reference, tool authoring guide, accessibility notes, license and attribution page, changelog, versioning policy, and a "what to do when a template fails" page.
 7. **M5.7 Release and publish.** Tag v1.0, build both artifacts, copy `dist/` into the pandaqi.com `tools` folder, add redirect stubs for the old tool URLs, verify the live site over HTTPS and a downloaded copy over `file://`, and check that the About panel credits every data source.
 8. **M5.8 Post-launch checklist.** A feedback link (contact page, no tracking), an issue template for broken templates, a triage rule (broken template beats new tool), and a short post-release smoke list to run after any content change.
@@ -1254,7 +1283,7 @@ Each item needs its own mini-plan and must keep the offline, no-account, no-netw
 - **House-rule variants** as first-class template sections (`[variant]`), selectable at load time.
 - **Themes** beyond light and dark, without hurting contrast or the size budget.
 - **Plugin authoring kit**: a documented example tool and a conformance test others can run.
-- **Remote play without a server**: exchange session codes manually (copy, paste, QR) for games played apart.
+- **Remote play without a server**: exchange session codes manually (copy and paste) for games played apart.
 - **Accessibility extras**: a "huge mode" beyond table mode, switch-access-friendly layouts, and a screen-reader tutorial for the reveal flow.
 
 ### Sequencing and gates
@@ -1266,8 +1295,8 @@ Each item needs its own mini-plan and must keep the offline, no-account, no-netw
 | M2 | M1 | Timer and scorepad survive reload and rotation; undo works |
 | M3 | M2 | Every shipped tool has a preset schema and a passing round-trip test |
 | M4 | M3 | Format v1 frozen and documented; linter and fixtures in CI |
-| M5 | M4 | All 22 tools in the index; the need table has no dead entries |
-| M6 | M5 | v1.0 tagged, published and documented |
+| M5 | M4 | All 21 tools in the index; the need table has no dead entries |
+| M6 | M5 | v1.0 stable with no open release blockers |
 
 Ship a preview after M1 (internal), a second after M3 (usable by friends), and the public build at M5. Do not skip the M3 freeze: every later tool inherits the schema and the format.
 
@@ -1275,7 +1304,7 @@ Ship a preview after M1 (internal), a second after M3 (usable by friends), and t
 
 | Risk | Why it hurts | Mitigation |
 |------|--------------|------------|
-| Scope creep across 22 tools | Each tool is a small product; half-built tools are worse than absent ones | Ship per family, cut whole families rather than half-building, and enforce the §2.4 review question |
+| Scope creep across 21 tools | Each tool is a small product; half-built tools are worse than absent ones | Ship per family, cut whole families rather than half-building, and enforce the §2.4 review question |
 | Single-file size versus data | Word packs and templates can dwarf the code | Hard budgets, gzip plus base64, lazy decode, English included by default, "all data" as a separate build |
 | `file://` storage differences | Safari may not persist anything | Adapter chain, explicit export, one-time banner, hosted build as the recommended path for saving |
 | Timer accuracy under tab suspension | Users will trust it with real games | Monotonic clock, wall-clock resume, visibility resync, Wake Lock, and honest limitation text |
@@ -1286,7 +1315,7 @@ Ship a preview after M1 (internal), a second after M3 (usable by friends), and t
 | Too many settings | Contradicts "fun and easy" | Defaults first, presets above knobs, progressive disclosure, no required configuration |
 | Browser API gaps | Wake Lock, BroadcastChannel and compression vary | Feature-detect, degrade to polling or plain encodings, test the matrix at M5 |
 | Old URL breakage on pandaqi.com | Bookmarks and search traffic | Redirect stubs for every old tool path, stable hashes, live link check in the release checklist |
-| One developer, long tail | Motivation and consistency | Milestones are shippable; content work (templates, prompts) can be batched; no deadline-driven shortcuts on the core |
+| Single implementer, long tail | Motivation and consistency | Milestones are shippable; content work (templates, prompts) can be batched; no deadline-driven shortcuts on the core |
 
 ## 8. Open decisions
 
@@ -1299,15 +1328,14 @@ Settle these during M0 and M1; each has a recommended default so work never bloc
 | System font stack or bundled font | System stack | Zero bytes, no licensing, instant render; the old site's fonts are not required |
 | Languages in the full build | English only | Other packs ship separately or load on demand when hosted |
 | Bundled templates in the single file | Yes, the curated launch set | User templates are imported, never baked in |
-| Hard cap of 22 tools for v1.0 | Yes | New ideas go to M6 unless they replace an existing tool |
+| Hard cap of 21 tools for v1.0 | Yes | New ideas go to M6 unless they replace an existing tool |
 | URL sharing enabled by default | Yes, with a size warning | Files remain the primary path |
 | User-selectable themes | No for v1.0 | Light, dark and system only |
-| Scratchpad tool | Optional, Family F | Only if it stays under budget and does not clutter home |
 | Analytics | Never | Not even "anonymous"; it contradicts the offline promise |
 
 ## 9. Global definition of done
 
-Every feature, at every milestone, must satisfy all of these before it is considered finished:
+Every tool and mode, at every milestone, must satisfy all of these before it is considered finished:
 
 - [ ] Works offline over `file://` and when hosted.
 - [ ] Makes zero network requests (verified by the self-test stub).
@@ -1318,14 +1346,14 @@ Every feature, at every milestone, must satisfy all of these before it is consid
 - [ ] Targets are at least 48 px; layout works at 320 px width and 200 percent zoom.
 - [ ] Contrast meets AA in light and dark modes; no color-only meaning.
 - [ ] Reduced motion and muted sound are respected; every audio cue has a visual twin.
-- [ ] Has a preset schema, validates from a template, and can serialize back to one.
+- [ ] Has a preset schema and an `example.gamebuddy`; validates from it and serializes back to one.
 - [ ] Has an export path (text, CSV or print).
 - [ ] Has an empty state, an error state and a help blurb.
 - [ ] Stays within its byte and time budgets.
 - [ ] Has unit tests for its logic and a smoke test for its mount.
 - [ ] Has no console errors or warnings in normal use.
 - [ ] Documents any new data source and its license.
-- [ ] Is listed in the tool index, the need table (§2.2) and at least one template.
+- [ ] Is listed in the tool index and the need table (§2.2); by M4, at least one template uses it.
 
 ## 10. Keeping this roadmap honest
 
