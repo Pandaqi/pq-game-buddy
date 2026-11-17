@@ -3,9 +3,12 @@ import type { PresetValues } from '../../core/template/schema';
 import Score from './Score.svelte';
 import {
   csvSheet,
+  evaluateFormula,
+  normaliseName,
   scoreSheet,
   standingsFor,
   totalFor,
+  type ScoreCategory,
   type ScoreInstance,
   type ScoreMode,
   type ScorePlayer,
@@ -16,9 +19,20 @@ import preset from './preset';
 
 const COLORS = ['#c0392b', '#2f6fc0', '#3d8b55', '#c2631b', '#7550c8', '#23807f', '#bd4d8c', '#b58a12'];
 
+function categoriesFrom(pairs: unknown): ScoreCategory[] {
+  if (!pairs || typeof pairs !== 'object') return [];
+  return Object.entries(pairs as Record<string, unknown>).map(([name, points]) => ({
+    name: name.trim(),
+    points: Number(points) || 0,
+  }));
+}
+
 function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
   const mode = (values.mode as ScoreMode) ?? 'simple';
   const start = Number(values.start ?? 0);
+  const categories = categoriesFrom(values.categories);
+  const formula = String(values.formula ?? '').trim();
+  const hidden = !!values.hidden;
   const sessionPlayers = ctx.session.players();
 
   function buildPlayers(): ScorePlayer[] {
@@ -38,9 +52,11 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
   const players = buildPlayers();
   const totals: Record<string, number> = {};
   const rounds: Record<string, number[]> = {};
+  const counts: Record<string, Record<string, number>> = {};
   for (const player of players) {
     totals[player.id] = start;
     rounds[player.id] = [];
+    counts[player.id] = Object.fromEntries(categories.map((category) => [category.name, 0]));
   }
 
   const requestedRounds = Math.max(0, Number(values.rounds ?? 0));
@@ -50,11 +66,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     players,
     totals,
     rounds,
+    counts,
+    categories,
+    formula,
     roundCount: requestedRounds,
     step: Math.max(1, Number(values.step ?? 1)),
     target: Math.max(0, Number(values.target ?? 0)),
     win: (values.win as ScoreState['win']) ?? 'highest',
     start,
+    hidden,
+    revealed: !hidden,
   });
 
   if (data.mode === 'rounds' && data.roundCount > 0) {
@@ -65,30 +86,14 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     }
   }
 
-  function adjust(id: string, delta: number): void {
-    ctx.undo.push('score change', `score-${id}`);
-    if (data.mode === 'rounds' && data.roundCount > 0) {
-      const row = data.rounds[id] ?? [];
-      const index = Math.max(0, data.roundCount - 1);
-      while (row.length <= index) row.push(0);
-      row[index] = (row[index] ?? 0) + delta;
-      data.rounds[id] = row;
-    } else {
-      data.totals[id] = (data.totals[id] ?? data.start) + delta;
-    }
-    announceScore(id);
-  }
-
   function announceScore(id: string): void {
     const player = data.players.find((item) => item.id === id);
     if (!player) return;
     ctx.haptics.buzz('short');
     const total = totalFor(data, id);
-    const target = data.target;
-    if (target) {
-      if (data.win === 'highest' && total >= target) ctx.toast(`${player.name} reached ${total} — game over?`);
-      if (data.win === 'lowest' && total <= target) ctx.toast(`${player.name} reached ${total} — game over?`);
-    }
+    if (!data.target) return;
+    if (data.win === 'highest' && total >= data.target) ctx.toast(`${player.name} reached ${total} — game over?`);
+    if (data.win === 'lowest' && total <= data.target) ctx.toast(`${player.name} reached ${total} — game over?`);
   }
 
   const instance: ScoreInstance = {
@@ -97,7 +102,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     load(state) {
       if (!state || typeof state !== 'object') return;
       const raw = state as Partial<ScoreState>;
-      if (raw.mode === 'simple' || raw.mode === 'rounds') data.mode = raw.mode;
+      if (raw.mode === 'simple' || raw.mode === 'rounds' || raw.mode === 'categories') data.mode = raw.mode;
       if (Array.isArray(raw.players) && raw.players.length) {
         data.players = raw.players
           .filter((player) => player && typeof player.id === 'string')
@@ -107,6 +112,14 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
             color: typeof player.color === 'string' ? player.color : COLORS[index % COLORS.length],
           }));
       }
+      if (Array.isArray(raw.categories)) {
+        data.categories = raw.categories
+          .filter((category) => category && typeof category.name === 'string')
+          .map((category) => ({ name: category.name, points: Number(category.points) || 0 }));
+      }
+      if (typeof raw.formula === 'string') data.formula = raw.formula;
+      if (typeof raw.hidden === 'boolean') data.hidden = raw.hidden;
+      data.revealed = raw.revealed === true ? true : !data.hidden;
       if (raw.totals && typeof raw.totals === 'object') {
         const next: Record<string, number> = {};
         for (const player of data.players) next[player.id] = Number(raw.totals[player.id] ?? data.start) || 0;
@@ -120,19 +133,34 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
         }
         data.rounds = next;
       }
+      if (raw.counts && typeof raw.counts === 'object') {
+        const next: Record<string, Record<string, number>> = {};
+        for (const player of data.players) {
+          const saved = raw.counts[player.id];
+          const row: Record<string, number> = {};
+          for (const category of data.categories) {
+            row[category.name] = Math.max(0, Number(saved?.[category.name]) || 0);
+          }
+          next[player.id] = row;
+        }
+        data.counts = next;
+      }
       if (typeof raw.roundCount === 'number') data.roundCount = Math.max(0, raw.roundCount);
       if (typeof raw.step === 'number') data.step = Math.max(1, raw.step);
       if (typeof raw.target === 'number') data.target = Math.max(0, raw.target);
       if (raw.win === 'highest' || raw.win === 'lowest') data.win = raw.win;
     },
     presetFromState() {
+      const categoriesOut: Record<string, number> = {};
+      for (const category of data.categories) categoriesOut[category.name] = category.points;
       return {
         mode: data.mode,
         rounds: data.roundCount,
-        categories: {},
-        formula: '',
+        categories: categoriesOut,
+        formula: data.formula,
         win: data.win,
         target: data.target,
+        hidden: data.hidden,
         start: data.start,
         step: data.step,
       };
@@ -140,11 +168,30 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     commands: {
       add: (arg) => {
         const [id, delta] = String(arg ?? '').split(',');
-        if (id) adjust(id, Number(delta ?? 1) || 1);
+        if (id) instance.adjust(id, Number(delta ?? 1) || 1);
       },
+      reveal: () => instance.reveal(),
     },
     summary: () => scoreSheet(data),
-    adjust,
+    adjust(id, delta) {
+      ctx.undo.push('score change', `score-${id}`);
+      if (data.mode === 'rounds' && data.roundCount > 0) {
+        const row = data.rounds[id] ?? [];
+        const index = Math.max(0, data.roundCount - 1);
+        while (row.length <= index) row.push(0);
+        row[index] = (row[index] ?? 0) + delta;
+        data.rounds[id] = row;
+      } else if (data.mode === 'categories') {
+        const first = data.categories[0];
+        if (!first) return;
+        const row = data.counts[id] ?? {};
+        row[first.name] = Math.max(0, (row[first.name] ?? 0) + delta);
+        data.counts[id] = row;
+      } else {
+        data.totals[id] = (data.totals[id] ?? data.start) + delta;
+      }
+      announceScore(id);
+    },
     setTotal(id, value) {
       ctx.undo.push('set score');
       if (data.mode === 'rounds' && data.roundCount > 0) {
@@ -191,6 +238,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
       data.players.push({ id, name: trimmed, color: COLORS[data.players.length % COLORS.length] });
       data.totals[id] = data.start;
       data.rounds[id] = Array.from({ length: data.roundCount }, () => 0);
+      data.counts[id] = Object.fromEntries(data.categories.map((category) => [category.name, 0]));
     },
     renamePlayer(id, name) {
       const player = data.players.find((item) => item.id === id);
@@ -212,23 +260,75 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
       }));
       const totals: Record<string, number> = {};
       const rounds: Record<string, number[]> = {};
+      const counts: Record<string, Record<string, number>> = {};
       for (const player of data.players) {
         totals[player.id] = data.totals[player.id] ?? data.start;
         rounds[player.id] = data.rounds[player.id] ?? Array.from({ length: data.roundCount }, () => 0);
+        counts[player.id] = data.counts[player.id] ?? Object.fromEntries(data.categories.map((c) => [c.name, 0]));
       }
       data.totals = totals;
       data.rounds = rounds;
+      data.counts = counts;
     },
     clearAll() {
       ctx.undo.push('clear scores');
       for (const player of data.players) {
         data.totals[player.id] = data.start;
         data.rounds[player.id] = Array.from({ length: data.roundCount }, () => 0);
+        data.counts[player.id] = Object.fromEntries(data.categories.map((category) => [category.name, 0]));
       }
     },
     setMode(mode) {
       ctx.undo.push('score mode');
       data.mode = mode;
+    },
+    setCategoryCount(id, category, value) {
+      ctx.undo.push('category count', `count-${id}-${category}`);
+      const row = data.counts[id] ?? {};
+      row[category] = Math.max(0, Number.isFinite(value) ? Math.round(value) : 0);
+      data.counts[id] = row;
+      announceScore(id);
+    },
+    setCategories(next) {
+      ctx.undo.push('categories');
+      const clean: ScoreCategory[] = [];
+      const seen = new Set<string>();
+      for (const entry of next) {
+        const name = entry.name.trim();
+        if (!name || seen.has(name)) continue;
+        seen.add(name);
+        clean.push({ name, points: Number(entry.points) || 0 });
+      }
+      data.categories = clean;
+      for (const player of data.players) {
+        const previous = data.counts[player.id] ?? {};
+        const row: Record<string, number> = {};
+        for (const category of clean) row[category.name] = Math.max(0, Number(previous[category.name]) || 0);
+        data.counts[player.id] = row;
+      }
+    },
+    setFormula(text) {
+      const trimmed = text.trim();
+      if (trimmed) {
+        const scope: Record<string, number> = {};
+        for (const category of data.categories) scope[normaliseName(category.name)] = 0;
+        const check = evaluateFormula(trimmed, scope);
+        if (!check.ok) {
+          ctx.toast(check.message, 'error');
+          return;
+        }
+      }
+      ctx.undo.push('formula');
+      data.formula = trimmed;
+    },
+    setHidden(value) {
+      ctx.undo.push('hidden scores');
+      data.hidden = value;
+      data.revealed = !value;
+    },
+    reveal() {
+      data.revealed = true;
+      ctx.audio.play('success');
     },
     totalFor(id) {
       return totalFor(data, id);

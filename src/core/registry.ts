@@ -53,6 +53,8 @@ export interface ToolInstance<TState extends object = Record<string, unknown>> {
   commands?: Record<string, (arg?: string) => void>;
   /** Plain-text export of whatever the tool knows. */
   summary(): string;
+  /** Release timers, wake locks and listeners when the session drops this tool. */
+  dispose?(): void;
 }
 
 export interface ToolModule<TState extends object = Record<string, unknown>> extends ToolMeta {

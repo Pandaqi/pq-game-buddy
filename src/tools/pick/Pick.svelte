@@ -38,6 +38,11 @@
     {/each}
   </div>
 
+  <div class="views" role="group" aria-label="Result view">
+    <button type="button" class:active={data.view === 'list'} onclick={() => instance.setView('list')} aria-pressed={data.view === 'list'}>List</button>
+    <button type="button" class:active={data.view === 'cards'} onclick={() => instance.setView('cards')} aria-pressed={data.view === 'cards'}>Cards</button>
+  </div>
+
   {#if data.source === 'number'}
     <div class="grid-two">
       <label class="field">
@@ -129,11 +134,31 @@
         {/each}
       </div>
     {:else if data.result.length}
-      <div class="results">
-        {#each data.result as item, index (index)}
-          <span class="result">{item}</span>
-        {/each}
-      </div>
+      {#if data.view === 'cards'}
+        <div class="results">
+          {#each data.result as item, index (index)}
+            {#if data.revealed[index]}
+              <span class="result card">{item}</span>
+            {:else}
+              <button
+                type="button"
+                class="result card back"
+                onclick={() => instance.revealAt(index)}
+                aria-label="Reveal card {index + 1} of {data.result.length}"
+              >?</button>
+            {/if}
+          {/each}
+        </div>
+      {:else}
+        <div class="results">
+          {#each data.result as item, index (index)}
+            <span class="result">{item}</span>
+          {/each}
+        </div>
+      {/if}
+      {#if data.view === 'cards' && data.revealed.some((value) => !value)}
+        <button type="button" class="ghost reveal-all" onclick={() => instance.revealAll()}>Reveal all</button>
+      {/if}
     {:else}
       <p class="placeholder">
         {data.source === 'seats' ? 'Tap draw for a seating order.' : data.source === 'teams' ? 'Tap draw to split into teams.' : 'Tap draw to pick.'}
@@ -295,6 +320,45 @@
     padding: var(--space-1) var(--space-3);
     border-radius: var(--radius);
     background: var(--accent-soft);
+  }
+  .result.card {
+    min-width: 4.5rem;
+    min-height: 6rem;
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--accent);
+    background: var(--surface);
+  }
+  .result.card.back {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-color: var(--accent);
+    font-size: var(--text-xl);
+    cursor: pointer;
+  }
+  .views {
+    display: flex;
+    gap: var(--space-1);
+    width: fit-content;
+    padding: var(--space-1);
+    border-radius: 999px;
+    background: var(--surface-2);
+  }
+  .views button {
+    min-height: 40px;
+    padding: 0 var(--space-3);
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .views button.active {
+    background: var(--surface);
+    font-weight: 700;
+  }
+  .reveal-all {
+    margin-top: var(--space-2);
   }
   .placeholder {
     color: var(--text-dim);

@@ -19,6 +19,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
     teamResult: null,
     history: [],
     view: (values.view as PickState['view']) ?? 'list',
+    revealed: [],
     seed: String(values.seed ?? ''),
   });
 
@@ -28,6 +29,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
 
   function remember(items: string[]): void {
     data.result = items;
+    data.revealed = items.map(() => false);
     data.history = [{ at: Date.now(), items }, ...data.history].slice(0, 20);
     ctx.audio.play('click');
     ctx.haptics.buzz('short');
@@ -112,6 +114,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
       if (typeof raw.seed === 'string') data.seed = raw.seed;
       data.drawn = [];
       data.result = [];
+      data.revealed = [];
       data.teamResult = null;
     },
     presetFromState() {
@@ -136,6 +139,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
     setSource(source) {
       data.source = source;
       data.result = [];
+      data.revealed = [];
       data.teamResult = null;
     },
     addValue(value) {
@@ -176,6 +180,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
     setRange(min, max) {
       data.min = Number.isFinite(min) ? min : data.min;
       data.max = Number.isFinite(max) ? max : data.max;
+    },
+    setView(view) {
+      data.view = view;
+    },
+    revealAt(index) {
+      if (index < 0 || index >= data.result.length) return;
+      data.revealed[index] = true;
+    },
+    revealAll() {
+      data.revealed = data.result.map(() => true);
     },
     setTeams(count) {
       data.teams = Math.max(2, Math.min(12, Math.round(count)));

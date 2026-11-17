@@ -7,23 +7,44 @@
 
   const QUICK = ['1d6', '2d6', '1d20', '4d6kh3', '2d20kh1', '1d100', '8d10>7', '4dF'];
 
-  let draft = $state('');
-
-  // Follow the tool's notation without capturing a stale initial value.
-  $effect(() => {
-    draft = data.notation;
-  });
-
   function submit(event: SubmitEvent): void {
     event.preventDefault();
-    instance.roll(draft);
+    instance.roll();
   }
 </script>
 
 <div class="dice">
+  <div class="modes" role="group" aria-label="Roll mode">
+    <button type="button" class:active={data.mode === 'single'} onclick={() => instance.setMode('single')}>
+      Dice
+    </button>
+    <button type="button" class:active={data.mode === 'pool'} onclick={() => instance.setMode('pool')}>
+      Pool
+    </button>
+  </div>
+
   <form class="entry" onsubmit={submit}>
-    <label class="sr-only" for="dice-notation">Dice notation</label>
-    <input id="dice-notation" bind:value={draft} placeholder="2d6+1" autocomplete="off" spellcheck="false" />
+    {#if data.mode === 'pool'}
+      <label class="sr-only" for="dice-pool">Dice pool</label>
+      <input
+        id="dice-pool"
+        value={data.pool}
+        placeholder="4d6+2d8"
+        autocomplete="off"
+        spellcheck="false"
+        oninput={(event) => instance.setPool((event.currentTarget as HTMLInputElement).value)}
+      />
+    {:else}
+      <label class="sr-only" for="dice-notation">Dice notation</label>
+      <input
+        id="dice-notation"
+        value={data.notation}
+        placeholder="2d6+1"
+        autocomplete="off"
+        spellcheck="false"
+        oninput={(event) => instance.setNotation((event.currentTarget as HTMLInputElement).value)}
+      />
+    {/if}
     <button type="submit" class="roll">Roll</button>
   </form>
 
@@ -58,34 +79,59 @@
       {/if}
     {:else}
       <p class="total">—</p>
-      <p class="breakdown">Press roll for a {data.notation}.</p>
+      <p class="breakdown">
+        {data.mode === 'pool' ? 'Roll the pool.' : `Press roll for ${data.notation || 'a die'}.`}
+      </p>
     {/if}
   </div>
 
-  <div class="quick">
-    {#each QUICK as notation (notation)}
-      <button type="button" onclick={() => { draft = notation; instance.roll(notation); }}>{notation}</button>
-    {/each}
-  </div>
+  {#if data.mode === 'single'}
+    <div class="quick">
+      {#each QUICK as notation (notation)}
+        <button type="button" onclick={() => instance.roll(notation)}>{notation}</button>
+      {/each}
+    </div>
+  {/if}
+
+  {#if Object.keys(data.macros).length}
+    <div class="quick">
+      {#each Object.entries(data.macros) as [name, notation] (name)}
+        <button type="button" class="macro" onclick={() => instance.roll(notation)}>{name}</button>
+      {/each}
+    </div>
+  {/if}
 
   <div class="options">
+    {#if data.mode === 'single'}
+      <label>
+        <span>Advantage</span>
+        <select
+          value={data.advantage}
+          onchange={(event) => instance.setAdvantage((event.currentTarget as HTMLSelectElement).value as typeof data.advantage)}
+        >
+          <option value="none">None</option>
+          <option value="advantage">Advantage</option>
+          <option value="disadvantage">Disadvantage</option>
+        </select>
+      </label>
+    {/if}
     <label>
-      <span>Advantage</span>
-      <select
-        value={data.advantage}
-        onchange={(event) => instance.setAdvantage((event.currentTarget as HTMLSelectElement).value as typeof data.advantage)}
-      >
-        <option value="none">None</option>
-        <option value="advantage">Advantage</option>
-        <option value="disadvantage">Disadvantage</option>
-      </select>
+      <span>Success at</span>
+      <input
+        type="number"
+        min="0"
+        max="100"
+        value={data.successAt}
+        onchange={(event) => instance.setSuccessAt(Number((event.currentTarget as HTMLInputElement).value))}
+        placeholder="0 = off"
+      />
     </label>
     <label>
       <span>Seed (optional)</span>
       <input
         type="text"
         value={data.seed}
-        placeholder="for repeatable rolls"
+        placeholder="repeatable rolls"
         onchange={(event) => instance.setSeed((event.currentTarget as HTMLInputElement).value)}
       />
     </label>
@@ -115,6 +161,28 @@
     flex-direction: column;
     gap: var(--space-3);
     padding: var(--space-3);
+  }
+  .modes {
+    display: flex;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    width: fit-content;
+  }
+  .modes button {
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-sm);
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .modes button.active {
+    background: var(--surface);
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
   }
   .entry {
     display: flex;
@@ -224,10 +292,15 @@
     font-family: var(--font-mono);
     cursor: pointer;
   }
+  .quick button.macro {
+    font-family: var(--font);
+    font-weight: 600;
+    border-color: var(--accent);
+  }
   .options {
     display: grid;
     gap: var(--space-2);
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
   }
   .options label {
     display: flex;
@@ -245,6 +318,7 @@
     color: var(--text);
     padding: 0 var(--space-2);
     font-size: var(--text-base);
+    font-family: var(--font);
   }
   .history header {
     display: flex;

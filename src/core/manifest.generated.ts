@@ -2,10 +2,12 @@
 // Run `bun run gen` after adding, removing or renaming a tool folder.
 import type { AnyToolModule } from './registry';
 import tool_coin from '../tools/coin/tool.svelte.ts';
+import tool_counters from '../tools/counters/tool.svelte.ts';
 import tool_demo from '../tools/demo/tool.svelte.ts';
 import tool_dice from '../tools/dice/tool.svelte.ts';
+import tool_lives from '../tools/lives/tool.svelte.ts';
 import tool_pick from '../tools/pick/tool.svelte.ts';
 import tool_score from '../tools/score/tool.svelte.ts';
 import tool_timer from '../tools/timer/tool.svelte.ts';
 
-export const manifest: AnyToolModule[] = [tool_coin, tool_demo, tool_dice, tool_pick, tool_score, tool_timer];
+export const manifest: AnyToolModule[] = [tool_coin, tool_counters, tool_demo, tool_dice, tool_lives, tool_pick, tool_score, tool_timer];

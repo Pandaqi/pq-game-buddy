@@ -438,7 +438,7 @@
   }
   .card.active {
     border-color: var(--clock);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--clock) 30%, transparent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
   }
   .card.warn {
     border-color: var(--warning);
@@ -479,7 +479,7 @@
     display: block;
     height: 6px;
     border-radius: 999px;
-    background: color-mix(in srgb, var(--clock) 20%, transparent);
+    background: var(--surface-2);
     overflow: hidden;
   }
   .bar i {

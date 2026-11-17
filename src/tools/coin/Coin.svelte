@@ -11,7 +11,10 @@
 
 <div class="coin">
   <div class="stage" aria-live="polite">
-    {#if data.results.length === 0}
+    {#if data.seriesWinner}
+      <p class="big">{data.seriesWinner === 'heads' ? 'Heads' : 'Tails'} wins</p>
+      <p class="sub">Best of {data.target} · {data.series.heads}–{data.series.tails}</p>
+    {:else if data.results.length === 0}
       <p class="big">Ready</p>
       <p class="sub">Tap flip to toss {data.coins === 1 ? 'the coin' : `${data.coins} coins`}.</p>
     {:else if data.coins === 1}
@@ -28,7 +31,30 @@
     {/if}
   </div>
 
-  <button type="button" class="flip" onclick={() => instance.flip()}>Flip</button>
+  <button type="button" class="flip" onclick={() => instance.flip()}>
+    {data.seriesWinner ? 'Flip again' : 'Flip'}
+  </button>
+
+  <div class="modes" role="group" aria-label="Coin format">
+    <button type="button" class:active={data.mode === 'single'} onclick={() => instance.setMode('single')}>Single toss</button>
+    <button type="button" class:active={data.mode === 'best'} onclick={() => instance.setMode('best')}>Best of</button>
+  </div>
+
+  {#if data.mode === 'best'}
+    <div class="series">
+      <span class="tally">Heads {data.series.heads} · Tails {data.series.tails}</span>
+      <label class="field">
+        <span>First to</span>
+        <input
+          type="number"
+          min="1"
+          max="20"
+          value={data.target}
+          onchange={(event) => instance.setTarget(Number((event.currentTarget as HTMLInputElement).value))}
+        />
+      </label>
+    </div>
+  {/if}
 
   <div class="call">
     <span class="label">Call it</span>
@@ -145,6 +171,40 @@
     color: var(--accent-text);
     cursor: pointer;
   }
+  .modes {
+    display: flex;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border-radius: var(--radius);
+    background: var(--surface-2);
+  }
+  .modes button {
+    flex: 1;
+    min-height: 48px;
+    border-radius: var(--radius-sm);
+    border: 0;
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+  }
+  .modes button.active {
+    background: var(--surface);
+    font-weight: 700;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+  }
+  .series {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+  .series .tally {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .series .field {
+    width: 6rem;
+  }
   .call .label {
     font-size: var(--text-sm);
     color: var(--text-dim);
@@ -185,6 +245,15 @@
     gap: var(--space-1);
     font-size: var(--text-sm);
     color: var(--text-dim);
+  }
+  .field input[type='number'] {
+    min-height: 48px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--text);
+    padding: 0 var(--space-2);
+    font-size: var(--text-base);
   }
   .field strong {
     color: var(--text);

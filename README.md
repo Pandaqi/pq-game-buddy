@@ -1,7 +1,8 @@
 # pq-game-buddy
 
 Offline tools for game night: timers, dice, a coin, a random picker, a scorepad,
-and a plain-text template format that sets them up for a specific game.
+lives, counters, and a plain-text template format that sets them up for a
+specific game.
 
 One HTML file. No install, no account, no network, no build step for the player.
 

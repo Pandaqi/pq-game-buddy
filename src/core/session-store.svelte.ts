@@ -122,6 +122,18 @@ class SessionStore {
     renamePlayer: (id, name) => this.renamePlayer(id, name),
   };
 
+  /** Release wake locks and listeners held by tool instances we are dropping. */
+  private disposeEntries(): void {
+    for (const entry of this.entriesList) {
+      try {
+        entry.instance.dispose?.();
+      } catch (error) {
+        console.error(`[tool:${entry.toolId}] dispose failed`, error);
+      }
+    }
+    this.entriesList = [];
+  }
+
   private createEntry(module: AnyToolModule, instanceId: string, values?: PresetValues): ToolEntry {
     const entry: ToolEntry = {
       id: instanceId,
@@ -176,7 +188,7 @@ class SessionStore {
   }
 
   start(input: StartInput): void {
-    this.entriesList = [];
+    this.disposeEntries();
     this.unavailable = [];
     const now = Date.now();
     const session: Session = {
@@ -212,7 +224,7 @@ class SessionStore {
   }
 
   resume(record: Session): void {
-    this.entriesList = [];
+    this.disposeEntries();
     this.unavailable = [];
     for (const saved of record.instances) {
       const module = toolById.get(saved.toolId);
@@ -255,7 +267,7 @@ class SessionStore {
     if (this.session) {
       this.lastSession = { id: this.session.id, game: this.session.gameName, updatedAt: this.session.updatedAt };
     }
-    this.entriesList = [];
+    this.disposeEntries();
     this.session = null;
     this.activeId = null;
     this.version += 1;

@@ -21,6 +21,8 @@ export interface PickState {
   teamResult: string[][] | null;
   history: PickRecord[];
   view: 'list' | 'cards';
+  /** Which result cards have been turned face up. */
+  revealed: boolean[];
   seed: string;
 }
 
@@ -35,6 +37,9 @@ export interface PickActions {
   setCount(count: number): void;
   setTeams(count: number): void;
   setRange(min: number, max: number): void;
+  setView(view: 'list' | 'cards'): void;
+  revealAt(index: number): void;
+  revealAll(): void;
   setReplacement(value: boolean): void;
   setSeed(value: string): void;
 }

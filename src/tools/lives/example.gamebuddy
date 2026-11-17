@@ -1,0 +1,15 @@
+# lives.example.gamebuddy — three hearts each, last one standing
+
+[game]
+name: Last One Standing
+players: 2-8
+time: 20m
+tags: track, elimination
+
+[tool lives]
+mode: players
+lives: 3
+max: 5
+step: 1
+elimination: yes
+conditions: poisoned, shielded

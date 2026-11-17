@@ -1,0 +1,13 @@
+# counters.example.gamebuddy — coins, wood and a shared bank
+
+[game]
+name: Market Day
+players: 1-6
+time: 45m
+tags: track, economy
+
+[tool counters]
+bank: 20
+counters: coins=5, wood=3, gems=0
+denominations: 1, 5, 10, 25
+step: 1

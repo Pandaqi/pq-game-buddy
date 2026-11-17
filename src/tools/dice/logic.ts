@@ -205,9 +205,11 @@ export interface DiceRollRecord {
 export interface DiceState {
   notation: string;
   pool: string;
+  mode: 'single' | 'pool';
   advantage: 'none' | 'advantage' | 'disadvantage';
   successAt: number;
   seed: string;
+  macros: Record<string, string>;
   result: DiceResult | null;
   error: string;
   history: DiceRollRecord[];
@@ -217,12 +219,35 @@ export interface DiceState {
 export interface DiceActions {
   roll(notation?: string): void;
   setNotation(notation: string): void;
+  setPool(pool: string): void;
+  setMode(mode: DiceState['mode']): void;
   setAdvantage(mode: DiceState['advantage']): void;
+  setSuccessAt(value: number): void;
   setSeed(code: string): void;
   clearHistory(): void;
 }
 
+/** Count every kept die at or above the target. */
+export function successesAt(result: DiceResult, target: number): number {
+  if (target <= 0) return 0;
+  let total = 0;
+  for (const term of result.terms) {
+    total += term.kept.filter((value) => value >= target).length;
+  }
+  return total;
+}
+
 export type DiceInstance = ToolInstance<DiceState> & DiceActions;
+
+export function normaliseMacros(input: unknown): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!input || typeof input !== 'object') return out;
+  for (const [name, value] of Object.entries(input as Record<string, unknown>)) {
+    const notation = String(value ?? '').trim();
+    if (name.trim() && notation) out[name.trim()] = notation;
+  }
+  return out;
+}
 
 export function facesFor(value: number, sides: number): string {
   if (sides === 6) {

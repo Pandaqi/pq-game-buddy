@@ -1,5 +1,6 @@
 import { announce } from '../../core/dom';
 import type { ToolContext } from '../../core/registry';
+import { wake } from '../../core/wake';
 import type { PresetValues } from '../../core/template/schema';
 import { formatClock, formatDurationText, parseDuration } from '../../core/template/schema';
 import meta from './meta';
@@ -87,6 +88,20 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
     active: 0,
   });
 
+  let wakeHeld = false;
+
+  /** Keep the screen awake while anything runs; let go when nothing does. */
+  function syncWake(): void {
+    const running = data.timers.some((clock) => clock.running);
+    if (running && !wakeHeld) {
+      wakeHeld = true;
+      wake.retain();
+    } else if (!running && wakeHeld) {
+      wakeHeld = false;
+      wake.release();
+    }
+  }
+
   function cue(): void {
     if (data.sound === 'none') return;
     ctx.audio.play(data.sound);
@@ -159,6 +174,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
     ctx.undo.push('reset all');
     for (const clock of data.timers) resetClock(clock);
     data.active = 0;
+    syncWake();
   }
 
   function startAll(): void {
@@ -169,9 +185,11 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
     if (data.mode === 'chess' || data.mode === 'sequence') {
       const clock = data.timers[data.active];
       if (clock) startClock(clock, mono, wall);
+      syncWake();
       return;
     }
     for (const clock of data.timers) startClock(clock, mono, wall);
+    syncWake();
   }
 
   function pauseAll(): void {
@@ -179,6 +197,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
     const mono = ctx.clock.now();
     const wall = ctx.clock.wall();
     for (const clock of data.timers) pauseClock(clock, mono, wall);
+    syncWake();
   }
 
   function flip(index = 0): void {
@@ -309,6 +328,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
         data.active = index;
       }
     }
+    syncWake();
   }
 
   function applySettings(patch: Partial<TimerState>): void {
@@ -447,7 +467,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
     applySettings,
     usePlayers,
     clockLabel,
+    dispose() {
+      if (wakeHeld) {
+        wakeHeld = false;
+        wake.release();
+      }
+    },
   };
+
+  if (data.autoStart) startAll();
 
   return instance;
 }

@@ -1410,6 +1410,20 @@ Settle these during M0 and M1; each has a recommended default so work never bloc
 - Tests compile Svelte themselves with `css: 'injected'` in `scripts/svelte-preload.ts`; `bun-plugin-svelte`'s virtual CSS modules do not survive the test runner's module graph. Dev server and build still use the plugin.
 - No `color-mix()`, `:has()`, container queries or `structuredClone`, per the Tier A floor.
 
+**Status after the M2 session** (paused for review, not a milestone gate):
+
+- Shipped: M2.1 scorepad v2 (simple, rounds and categories; count x points; formula
+  language with `+ - * /`, brackets and min/max/sum/if; ties; hidden totals; CSV),
+  M2.2 score category presets, M2.3 lives (shared or per-player tracks, extra tracks,
+  conditions, elimination, game over, hidden mode) and M2.4 counters (named counters,
+  shared bank, transfers, denominations, log).
+- Also fixed dead settings from M1: dice pool / success-at / macros, coin best-of,
+  pick cards view, and Wake Lock now follows running timers (released on close).
+- Still open in M2: ledger mode and per-cell notes in the scorepad, M2.5 shared
+  pass-the-phone overlay, M2.6 turns, M2.7 reveal, M2.8 session log/finish, M2.9 rules.
+- Formula names resolve to the points earned in that category (count x points), not the
+  raw count; a formula that fails to parse falls back to plain category totals.
+
 ## 9. Global definition of done
 
 Every tool and mode, at every milestone, must satisfy all of these before it is considered finished:

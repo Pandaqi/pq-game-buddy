@@ -24,6 +24,9 @@ export interface CoinState {
   losses: number;
   streak: number;
   bestStreak: number;
+  /** Best-of series tally. */
+  series: { heads: number; tails: number };
+  seriesWinner: CoinSide | null;
 }
 
 export interface CoinActions {
@@ -31,6 +34,8 @@ export interface CoinActions {
   setCoins(count: number): void;
   setFairness(percent: number): void;
   setCall(side: CoinSide | 'none'): void;
+  setMode(mode: CoinState['mode']): void;
+  setTarget(value: number): void;
   reset(): void;
 }
 
@@ -52,4 +57,12 @@ export function sideName(heads: boolean): CoinSide {
 
 export function countOf(results: boolean[], heads: boolean): number {
   return results.filter((value) => value === heads).length;
+}
+
+/** Winner of one toss, or null on a tie. */
+export function tossWinner(results: boolean[]): CoinSide | null {
+  const heads = countOf(results, true);
+  const tails = results.length - heads;
+  if (heads === tails) return null;
+  return heads > tails ? 'heads' : 'tails';
 }

@@ -2,16 +2,20 @@
 // Svelte-free: used by the template linter, scripts and tests.
 import type { PresetSchema } from './template/schema';
 import tool_coinPreset from '../tools/coin/preset.ts';
+import tool_countersPreset from '../tools/counters/preset.ts';
 import tool_demoPreset from '../tools/demo/preset.ts';
 import tool_dicePreset from '../tools/dice/preset.ts';
+import tool_livesPreset from '../tools/lives/preset.ts';
 import tool_pickPreset from '../tools/pick/preset.ts';
 import tool_scorePreset from '../tools/score/preset.ts';
 import tool_timerPreset from '../tools/timer/preset.ts';
 
 export const schemas: Record<string, PresetSchema> = {
   coin: tool_coinPreset,
+  counters: tool_countersPreset,
   demo: tool_demoPreset,
   dice: tool_dicePreset,
+  lives: tool_livesPreset,
   pick: tool_pickPreset,
   score: tool_scorePreset,
   timer: tool_timerPreset,
