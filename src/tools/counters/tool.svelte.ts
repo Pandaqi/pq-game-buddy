@@ -1,12 +1,15 @@
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import { denominationsFrom, resultsFor, transfer, type CountersInstance, type CountersState } from './logic';
+import { denominationsFrom, resultsFor, scoreDelta, transfer, type CountersInstance, type CountersState } from './logic';
 import Counters from './Counters.svelte';
 import meta from './meta';
 import preset from './preset';
 
 function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
   const step = Math.max(1, Number(values.step ?? 1));
+  const down = Math.max(0, Number(values.down ?? 0));
+  // Counting has no pool to move values from, so a starting bank is ignored.
+  const mode = values.mode === 'count' ? 'count' : 'bank';
   const pairs = (values.counters as Record<string, unknown>) ?? {};
   const denominations = denominationsFrom(
     (Array.isArray(values.denominations) ? (values.denominations as string[]) : []).map((value) => Number(value)),
@@ -18,13 +21,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
     name,
     value: Math.max(0, Number(value) || 0),
     step,
+    down,
   }));
 
   const data = $state<CountersState>({
+    mode,
     counters,
-    bank: Math.max(0, Number(values.bank ?? 0)),
+    bank: mode === 'count' ? 0 : Math.max(0, Number(values.bank ?? 0)),
     denominations: denominations.length ? denominations : [1, 5, 10, 25, 100],
     step,
+    down,
     hidden,
     revealed: !hidden,
     history: [],
@@ -40,6 +46,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
     load(state) {
       if (!state || typeof state !== 'object') return;
       const raw = state as Partial<CountersState>;
+      data.mode = raw.mode === 'count' ? 'count' : 'bank';
+      if (typeof raw.down === 'number') data.down = Math.max(0, raw.down);
       if (Array.isArray(raw.counters)) {
         data.counters = raw.counters
           .filter((counter) => counter && typeof counter.id === 'string')
@@ -48,6 +56,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
             name: typeof counter.name === 'string' ? counter.name : `Counter ${index + 1}`,
             value: Math.max(0, Number(counter.value) || 0),
             step: Math.max(1, Number(counter.step) || data.step),
+            down: Math.max(0, Number(counter.down) || 0),
           }));
       }
       if (typeof raw.bank === 'number') data.bank = Math.max(0, raw.bank);
@@ -64,10 +73,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
       const out: Record<string, number> = {};
       for (const counter of data.counters) out[counter.name] = counter.value;
       return {
+        mode: data.mode,
         counters: out,
         bank: data.bank,
         denominations: data.denominations.map(String),
         step: data.step,
+        down: data.down,
         hidden: data.hidden,
       };
     },
@@ -76,14 +87,26 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
       reveal: () => instance.reveal(),
     },
     summary() {
-      const lines = [`Bank: ${data.bank}`];
+      const lines = data.mode === 'count' ? [] : [`Bank: ${data.bank}`];
       for (const counter of data.counters) lines.push(`${counter.name}: ${counter.value}`);
-      return lines.join('\n');
+      return lines.length ? lines.join('\n') : 'No counters';
     },
     results: () => resultsFor(data),
     adjust(id, delta) {
       const counter = data.counters.find((item) => item.id === id);
       if (!counter) return;
+      if (data.mode === 'count') {
+        const gained = scoreDelta(counter, delta);
+        if (gained === 0) {
+          ctx.toast(`${counter.name} is already at 0`, 'error');
+          return;
+        }
+        ctx.undo.push('counter change', `counter-${id}`);
+        counter.value = Math.max(0, counter.value + gained);
+        log(`${counter.name} ${gained > 0 ? '+' : ''}${gained} → ${counter.value}`);
+        ctx.haptics.buzz('short');
+        return;
+      }
       const moved = transfer(counter, data.bank, delta);
       if (moved === 0) {
         ctx.toast(delta > 0 ? 'The bank is empty' : `${counter.name} is already empty`, 'error');
@@ -121,6 +144,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
         name: trimmed,
         value: Math.max(0, Number.isFinite(start) ? start : 0),
         step: data.step,
+        down: data.down,
       });
     },
     renameCounter(id, name) {

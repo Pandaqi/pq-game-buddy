@@ -1,0 +1,28 @@
+# feed-the-beast.gamebuddy — empty your food storage first
+
+[game]
+name: Feed the Beast
+players: 2-6
+time: 30m
+tags: pandaqi, board, family
+icon: feed-the-beast
+source: https://pandaqi.com/feed-the-beast/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Pick a beast and place it faceup in the centre; start with a level 1 beast
+- Shuffle the Tier 1 food (one dot on each side) and deal 10 to each player
+- Shuffle the menu cards, place one next to the beast, and lay 4 more faceup as the market
+- Put the rest of the food supply within reach
+
+[rules]
+Keep the beast satisfied with apples, pie and bread, and be the first to empty your food storage.
+- On your turn, place one food token on the beast
+- If it is part of the menu, take the reward or upgrade one of your food tokens
+- If it is not, you paid the wrong food: downgrade one food and draw a new Tier 1 food
+- A higher tier can stand in for any lower tier
+- At 10 food on the beast, it resets: swap in a new menu from the market and clear the food
+- If you end your turn with no food, you win at once
+- The game's page has the rulebook and every beast

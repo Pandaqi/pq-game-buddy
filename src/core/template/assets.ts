@@ -45,6 +45,11 @@ export function isTemplateFile(name: string): boolean {
   return /\.(gamebuddy|txt)$/i.test(name);
 }
 
+/** An exported session resumes a game; it is never parsed as a template. */
+export function isSessionFile(name: string): boolean {
+  return /\.json$/i.test(name);
+}
+
 export function listAssets(): TemplateAsset[] {
   const raw = readJson<unknown[]>(KEYS.templateAssets, []);
   return raw.filter((item): item is TemplateAsset => {

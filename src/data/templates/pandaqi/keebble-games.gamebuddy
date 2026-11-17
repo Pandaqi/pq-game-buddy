@@ -1,0 +1,38 @@
+# keebble-games.gamebuddy — word games on one sheet of paper
+
+[game]
+name: Keebble Games
+players: 2-6
+time: 20-60m
+tags: pandaqi, word, paper
+icon: keebble-games
+source: https://pandaqi.com/keebble-games/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Fold a blank sheet in half six times to make 64 cells, or print a generated starting board
+- Each player claims one edge cell as their letter hand and grabs a pen
+- Agree the word direction and the dictionary before the first word
+- For Domino, print the domino set; for Knickknack, bring one phone with internet
+
+[rules]
+Scrabble-like word games played on one sheet of paper, with no tiles to lose.
+- Keebble: play a word on the grid using letters from your hand, following Scrabble placement
+- Vowels score 1, consonants 3, and a letter nobody else holds scores 5
+- Then call two letters; every other player takes one or draws a wall on an empty edge
+- The hand limit is 7; once 10 edge cells hold letters, only play words; the game ends when someone runs out
+- Keebble: Domino uses dominoes printed with an ambigram font, so each tile reads as several letters (2-6, 40m)
+- Keebble: Knickknack runs the board and extras in a phone app and needs internet (2-5, 60m)
+- Only base Keebble is pure paper; the other two need their own material
+- Highest score wins
+
+[tool words]
+profile: en
+mode: check
+
+[tool score]
+mode: simple
+win: highest
+hint: Add each word as it scores; the highest total wins

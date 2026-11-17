@@ -1,0 +1,30 @@
+# throneless-games.gamebuddy — simultaneous votes and seat swaps
+
+[game]
+name: Throneless Games
+players: 4-10
+time: 20-30m
+tags: pandaqi, card, hidden-roles, party
+icon: throneless-games
+source: https://pandaqi.com/throneless-games/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Pick one of the four games: Smallseat, Queenseat, Kingseat or Kaizerseat, and print its Princes
+- Choose at least as many Princes as players; add all their cards, shuffle, and deal the deck equally
+- Put any leftover cards faceup in the Tell, and choose the Kingseat position
+- Trade two cards to the right, two to the left, then set one card aside as your secret Loyalty
+- Keep a facedown Tell for winning votes and a faceup Discard
+
+[rules]
+Four games built on one shared vote: everyone secretly backs a Prince while swapping seats to control the count.
+- Each round, first give one card to your neighbour; the direction alternates left and right
+- Then everyone secretly picks a vote card and reveals together
+- The Prince with the most votes wins the round; a tie goes to the Prince closest to the Kingseat clockwise
+- Winning cards go to the Tell; every other player either uses their card's action or swaps seats and one hand card
+- The game ends when all hands are empty; reveal the Tell and count the votes
+- The Prince with the most votes wins, and every player whose secret Loyalty matches that Prince also wins
+- Smallseat is the simplest, Queenseat adds a throne card, Kingseat is the middle game, Kaizerseat the longest
+- Each game has its own Princes and twists; read that game's rulebook

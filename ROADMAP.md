@@ -2,23 +2,27 @@
 
 **PQ-GAME-BUDDY** is a small library of tools that help people while playing _board games_, _video games_, or game-like activities in general.
 
-> Doc version 5 · 2026-11-17 · Owner: Tiamo / Pandaqi
+> Doc version 6 · 2026-11-17 · Owner: Tiamo / Pandaqi
 >
-> **Status: M0–M7 code shipped. M7 closed with theme files, dice lab, initiative
-> order, log filters and stats, pick wheel/slot views, house-rule variants, per-game
-> marks, narrator voice, huge and switch-access modes, the PWA, QR sharing, the
-> community template folder, the conformance test and the voice pass. M8 (Pandaqi's
-> games), M9 (marks beyond the bundled catalogue) and M10 (localization) are planned.**
-> `bun run check` passes end to end: stale-manifest check, `tsc`, `svelte-check`
-> with 0 warnings, the full test suite, template lint (61 files · 0 errors · 0
-> warnings) and a build inside budget (132 KB gzipped first visit, 290 KB single
-> file). 21 tools are live and 40 game templates plus 21 tool examples ship. M6
-> replaced the visual language twice: the second pass is the woodland lantern table
-> in `docs/STYLE.md`, with self-hosted Dosis and Raleway, borderless fills, folds and
-> bouncy one-shot motion. The release gates
-> that need a human — hosting, the device matrix, screen-reader passes, the
-> five-person first-use test, low-end profiling, the daylight visual audit and the
-> screenshot set — are listed in §7 and are **not** done.
+> **Status: M0–M9 code shipped. M10 (localization) is the only planned milestone.**
+> M7 closed with theme files, dice lab, initiative order, log filters and stats, pick
+> wheel/slot views, house-rule variants, per-game marks, narrator voice, huge and
+> switch-access modes, the PWA, QR sharing, the community template folder, the
+> conformance test and the voice pass. M8 added nine first-party templates for the
+> pandaqi.com catalogue, one for each of nine collections, in their own folder with a gallery filter;
+> M9 drew a mark for each of them on the same 24 px grid. A later catalogue audit
+> added ten more templates and a named reason for every remaining entry, and a counters pass added I Bid You Not: twenty
+> templates now cover 47 of the 100 catalogue entries. `bun run check` passes end
+> to end: stale-manifest check, `tsc`, `svelte-check` with 0 warnings, the full test
+> suite (515 tests), template lint (81 files · 0 errors · 0 warnings) and a build
+> inside budget (133 KB gzipped first visit, 301 KB single file). 21 tools are live,
+> and 60 game templates plus 21 tool examples ship, with 60 marks. M6 replaced the
+> visual language twice: the second pass is the woodland lantern table in
+> `docs/STYLE.md`, with self-hosted Dosis and Raleway, borderless fills, folds and
+> bouncy one-shot motion. The release gates that need a human — hosting, the device
+> matrix, screen-reader passes, the five-person first-use test, low-end profiling,
+> the Pandaqi play tests, the daylight visual audit and the screenshot set — are
+> listed in §7 and are **not** done.
 
 This document is the build plan: what the thing must contain, the template system that makes it extensible, the architecture that keeps it tiny, and the milestones that get us to v1.0 and beyond. Detailed reference material lives in `docs/` and is not repeated here.
 
@@ -54,7 +58,8 @@ The trick to supporting "every tool anyone might want" is not to build a hundred
 | M5 | Polish, accessibility and release | Code shipped, human gates open | Docs, print, i18n statement, a11y/device/profiling checklist |
 | M6 | Style: the lantern table | Shipped | Woodland tokens, Dosis/Raleway, borderless hierarchy, folds, motion |
 | M7 | After v1.0 | Shipped | Theme files, dice lab, initiative, log stats, pick views, variants, icons, conformance test, PWA, QR, community templates, switch access, voice pass |
-| M8 | Pandaqi's own games | Planned | First-party templates for the pandaqi.com catalogue |
+| M8 | Pandaqi's own games | Shipped | Twenty first-party templates for the pandaqi.com catalogue (nine at M8, eleven added by the catalogue audit) |
+| M9 | Marks for the rest of the catalogue | Shipped | A drawn mark beside every template, on the same grid, none a letter in a box |
 
 ### How to read this document
 
@@ -187,7 +192,7 @@ Every tool already meets the per-tool requirements: instant default, one obvious
 | Pick | `pick` | Numbers, lists, teams, seats | `source`, `values`, `count`, `replacement`, `teams`, `view`, `seed` |
 | Score | `score` | Totals, rounds, categories, ledger, formulas | `mode`, `rounds`, `categories`, `formula`, `win`, `target`, `hint`, `hidden`, `start`, `step` |
 | Lives | `lives` | HP, lives, tracks, conditions, elimination | `lives`, `max`, `step`, `mode`, `elimination`, `extras`, `conditions`, `hidden` |
-| Counters | `counters` | Tokens, money, bank, denominations, tallies | `counters`, `shared`, `bank`, `denominations` |
+| Counters | `counters` | Tokens, money, bank, denominations, or a straight count | `mode`, `counters`, `bank`, `denominations`, `step`, `down`, `hidden` |
 | Turns | `turns` | Order, rounds, phases, turn clock, pass cover | `order`, `phases`, `timer`, `pass`, `auto-start` |
 | Reveal | `reveal` | Roles, inspect, ballots, blind bids | `mode`, `roles`, `descriptions`, `auto-hide`, `ballot`, `options`, `min-bid`, `max-bid` |
 | Rules | `rules` | Cheat sheet, setup checklist, glossary, scoring | `quick`, `glossary`, `scoring`, `links` |
@@ -222,7 +227,7 @@ Three properties matter for planning:
 
 ### 4.1 The library
 
-40 game templates ship, plus one `example.gamebuddy` per tool. The gallery groups them by context (party, strategy, card, word, RPG, video, tournament) and filters by players, time and tools used.
+60 game templates ship: 40 for published games and twenty first-party templates for Tiamo's own catalogue, plus one `example.gamebuddy` per tool. The gallery groups them by context (party, strategy, card, word, RPG, video, tournament, Pandaqi) and filters by players, length and tag, with a Pandaqi chip of its own.
 
 | Family | Games |
 |--------|-------|
@@ -234,6 +239,7 @@ Three properties matter for planning:
 | Video game and tournament | Mario Kart night, Smash night, Speedrun practice |
 | RPG and cooperative | D&D 5e, Gloomhaven, Kitchen Rush |
 | Utility | Kitchen Rush timers, D&D session, house-rule sheets |
+| Pandaqi catalogue | Bidding Blocks, Mapped Out, Death by Digits, Fiddlefoo, The Luck Legends, Naivigation, Chiptales, Feed the Beast, Maybe Games, Throneless Games, Keebble Games, Captain Flip, Magnetmen, Waterfall, Firecrackers, Hasty Accusations, The Game of Dilemmas, Slippery Slopes, Mammoth Messages |
 
 Every game template carries a `rules` block and a `[setup]` checklist where setup is non-trivial; utility templates may skip both. All content is our own summary; no copied rules text.
 
@@ -250,60 +256,18 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 | Budget | Limit | Current |
 |--------|-------|---------|
 | One chunk, gzipped | 24 KB | 21 KB (words: view, logic and five language packs) |
-| All deferred chunks, gzipped | 250 KB | 182 KB |
+| All deferred chunks, gzipped | 250 KB | 186 KB |
 | Core JS and CSS, gzipped | 45 KB | inside |
 | First visit (entry + shared chunk + CSS), gzipped | 150 KB | 132 KB |
-| Single file, gzipped | no ceiling: the whole app in one file | 290 KB |
+| Single file, gzipped | no ceiling: the whole app in one file | 294 KB |
 
-**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the 61 template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (60 KB gzipped, 56 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 21 KB (its view, logic and five language packs) and the next largest chunk is the 61 template texts at 11 KB, so a tool that passes it is one to split rather than a budget to raise. A total ceiling of 250 KB on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat; the deferred total is 182 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 47 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 22 KB of headroom left. M7 has added about 3 KB to the first visit (theme parsing and template icons in the core) and about 10 KB to the single file, with no new dependency. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. These are ceilings, not targets.
+**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (60 KB gzipped, 56 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 21 KB (its view, logic and five language packs) and the next largest chunk is the template-text chunk (59 texts), so a tool that passes it is one to split rather than a budget to raise. A total ceiling of 250 KB on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat; the deferred total is 186 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 47 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 18 KB of headroom left. M7 has added about 3 KB to the first visit (theme parsing and template icons in the core) and about 10 KB to the single file, with no new dependency. M8 and M9 add nine templates and nine marks, which land in the deferred chunks: the first visit stays at 132 KB and the single file grows to 294 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. These are ceilings, not targets.
 
 ### 5.3 Gates
 
 `bun run check` runs: stale-manifest check (`bun run gen --check`), `tsc --noEmit`, `svelte-check` (0 warnings), the full `bun test` suite, `bun run lint:templates`, and `bun run build` (which enforces the budgets above: the first visit, the largest chunk and the deferred total). Deployment and the manual matrix are in `docs/RELEASING.md`.
 
 ## 6. Milestones
-
-
-
-### M8 — Pandaqi's own games (L, planned)
-
-**Why:** the shipping target is the `tools` folder at pandaqi.com, which already hosts
-nearly a hundred of Tiamo's own board games. A first-party template per game turns that
-catalogue into two-tap setups and gives the app a reason to live on the same site.
-
-**Plan**
-
-1. **Audit the catalogue** (`pandaqi.com/categories/board-game/`, by series: Bidding
-   Blocks, Mapped Out, Death by Digits, Fiddlefoo, The Luck Legends, Naivigation,
-   Chiptales, Feed the Beast, …). For each game record player count, length, whether a
-   device adds anything (scorepad, timer, secret deal, dice, word check) and which
-   primitives it needs. A game a phone cannot help is skipped, not forced.
-2. **Series first.** One template per series that composes the shared parts (timer +
-   score + rules), with per-game overrides only where the scoring really differs. A
-   series with one good template beats ten near-duplicates.
-3. **Keep them separate.** Store them in `src/data/templates/pandaqi/` with
-   `tags: pandaqi` plus the usual family tags, and give the gallery a "Pandaqi" filter.
-   The generator scans both folders, and the linter and round-trip test cover both.
-4. **Content rules unchanged.** Original summaries, a source link to the game's page, a
-   license field on every file; no copied rules text, art or logos.
-5. **Batches of ten**, each ending in `bun run check`, a template-lint pass, one real
-   play test and a CHANGELOG line. Do not start the next batch until the last is clean.
-6. **Not blocked on new tools.** If a game needs a primitive the app lacks, note it in
-   M7 instead of half-building a tool inside a template.
-
-**DoD:** every chosen game has a template that starts clean, passes lint and is reachable
-from the gallery's Pandaqi filter; the skipped games and the reason are listed in the
-template folder's README.
-
-### M9 — Marks for the rest of the catalogue (M, planned)
-
-Every bundled template now ships its own mark beside the file. M9 draws marks for the
-wider catalogue, one batch at a time, led by the templates that people actually load:
-each mark is a stylised SVG on the 24 px grid, recognisable at 20 px, drawn from
-`currentColor`, and checked beside its title in the gallery in both themes.
-
-**DoD:** every template outside the bundled forty either names its own game mark or
-borrows a house mark on purpose, and no mark is a letter in a box.
 
 ### M10 — Localization (L, planned)
 
@@ -339,6 +303,7 @@ These cannot be done from this environment and are **not** claimed as done anywh
 8. **Visual audit in daylight.** Table mode on a phone at 2 m in a bright room: one primary action per screen, nothing orphaned or grey, no scrollbar inside a scrollbar. Checklist in `docs/STYLE.md` §9.
 9. **Screenshot set.** Capture home, a session, the gallery and the reveal cover in light, dark and table mode for the release page and the pandaqi.com tools index; replace the old screenshots and delete stale visual claims.
 10. **A second person restyles a tool** from `docs/STYLE.md` alone and reports where it was ambiguous.
+11. **The Pandaqi templates and marks.** Play each new template next to its physical game; a real play test was not possible from this environment. Check each new mark beside its title in the gallery, at 20 px, in light and dark.
 
 ## 8. Risks and mitigations
 
@@ -370,7 +335,10 @@ M6 choices: one accent per tool family resolved from `data-family` and the `--fa
 
 M7 choices (first pass): a theme is a validated *token* file, not CSS — keys come from a fixed map, values must match a colour, length or font-stack pattern, and the result is one generated `<style>` element plus a `data-hide` flag, so a theme cannot inject rules. `dark-` keys exist because a theme that set only light values would lose its contrast in dark mode. Custom dice faces are text rather than SVG or images: they read aloud, print in black and white and cost no bytes. Initiative is a pure ranking function over `initiative: number[]`, so ties keep turn order and the tool keeps one source of truth; switching back to fixed order loses nothing. Finish-game duration is rounded up so a four-minute game is not logged as nothing, and the log exports whatever the filters show rather than quietly exporting everything. The gallery's suggestion uses the filtered list, because a twenty-minute window that offers Gloomhaven is not an answer. Settings is deliberately not hideable by a theme: it is the page that removes a theme, so a theme that could hide it could lock the player out, and `hide-chrome: settings` warns instead. Custom faces keep empty slots while editing so clearing one label cannot collapse the set; only named faces roll and save. `icon:` is validated where the summary is built rather than in the parser, so an unknown mark is ignored (never an error) and no image file is ever shipped. Narrator voice is optional, never fetched, and always paired with the written step; huge mode is a token scale, not a second layout.
 
+
 M7 choices (second pass): the version is written once in `package.json` and copied by `gen`, because two hand-kept copies plus a test only proved they could drift. Template marks moved out of the start-up chunk: the gallery reserves the slot, house marks paint at once and the 40 game drawings arrive after first paint. Modes became separate pills because six options inside one pill wrapper read as a slab; chrome rows fold and wrap instead of scrolling, which is also why the shared fold lost its `overflow: hidden`. QR uses a vendored MIT encoder rather than a new dependency or a home-made Reed-Solomon table, and it loads only when a code is asked for; its symbols stay black on white because a theme could otherwise make them unscannable. Community templates are files in `src/data/community` compiled at build time: a static index without a runtime fetch. Switch access is a token and target-size mode, not a second navigation model. Marks became owner-local files because a central drawing table is a second place to forget; the generated map is disposable and the lazy chunk is unchanged in shape. Imported images are stored as data URLs rather than object URLs so they survive a reload, and they render only through `<img>` so a contributed SVG cannot execute. The home shelf is curated plus recent rather than ranked from analytics, because there are no analytics and never will be.
+
+M8 and M9 choices: Pandaqi's catalogue is templated per collection, not per game, because the sub-games share a collection and usually their core material, and one checked reference beats seven drifting copies; the folder is `src/data/templates/pandaqi/`, every file carries `tags: pandaqi` (the linter fails one that does not), and the gallery has one collection chip instead of a second tag in the dropdown. A template carries only the trackers its published rules support: a scorepad where the collection keeps one running score, turn phases where the round has them, a damage tally for Naivigation, and no scorepad for Death by Digits, The Luck Legends or Feed the Beast, which end on a correct accusation, a race to a card or point total, or an empty food storage. Each one links the game's own page rather than paraphrasing a rulebook we do not ship; a game that needs a board or hidden cards gets a reference sheet, never a simulation. The audit lists all 100 entries in the board-game category: eleven collections and nine standalone games (47 entries) are templated, and five collections and 26 standalone titles are explicitly marked as having no template, each with a named reason (no shared core, already runs on pandaqi.com, the table is the game, no verified rulebook, or an older project). Jam Games is skipped because it is a shelf of video games with no tabletop setup to help. Marks stay owner-local files, so the twenty drawings sit beside their templates and the generated map is disposable. A test asserts every shipping template resolves a mark and that each drawing stays on the 24 px grid, in `currentColor`, at 1.8 px, with no text or image element: the "no letter in a box" rule as far as a machine can check it. The play test and the both-themes look are human gates in §7.
 
 ## 10. Global definition of done
 

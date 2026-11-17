@@ -8,10 +8,11 @@ import { allDiagnostics, hasErrors, parseTemplate, resolveTemplate } from '../sr
 const root = join(import.meta.dir, '..');
 
 const files: { label: string; path: string }[] = [];
-const templatesDir = join(root, 'src/data/templates');
-if (existsSync(templatesDir)) {
-  for (const file of readdirSync(templatesDir).filter((name) => name.endsWith('.gamebuddy')).sort()) {
-    files.push({ label: `templates/${file}`, path: join(templatesDir, file) });
+for (const folder of ['templates', 'templates/pandaqi']) {
+  const dir = join(root, 'src/data', folder);
+  if (!existsSync(dir)) continue;
+  for (const file of readdirSync(dir).filter((name) => name.endsWith('.gamebuddy')).sort()) {
+    files.push({ label: `${folder}/${file}`, path: join(dir, file) });
   }
 }
 
@@ -50,6 +51,11 @@ for (const file of files) {
   if (parsed.template.players.length === 0 && !parsed.template.game.players) {
     console.log(`  warn ${file.label}: no players list and no players range`);
     warnings += 1;
+  }
+  // The gallery's Pandaqi chip filters on the tag, so the folder must carry it.
+  if (file.label.startsWith('templates/pandaqi/') && !parsed.template.game.tags.includes('pandaqi')) {
+    console.log(`  FAIL ${file.label}: a first-party template needs the pandaqi tag`);
+    errors += 1;
   }
 }
 

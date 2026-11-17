@@ -1,0 +1,32 @@
+# chiptales.gamebuddy — poker patterns without the poker table
+
+[game]
+name: Chiptales
+players: 2-9
+time: 30m
+tags: pandaqi, card, betting
+icon: chiptales
+source: https://pandaqi.com/chiptales/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Pick one game from the series and print its cards; Noble Flood also needs its contracts, Six of Sparrows its bid cards
+- Shuffle and deal the opening hands, and keep a pen and paper for the score
+- Put the draw pile and any shared row of cards where everyone can reach them
+- Read that game's rulebook; the three games score differently
+
+[rules]
+Three poker-inspired card games; each keeps the patterns and drops a different part of poker.
+- Six of Sparrows (2-5): bid on a pattern while the cards are still arriving; an exact pattern scores its value divided by the cards you held, a miss costs 10 points
+- Noble Flood (2-6): pick contracts, build a shared 5x5 map and complete their patterns; met contracts score plus, missed ones minus
+- Pietenpoker (3-9): a simpler Sinterklaas poker with two combinations, same suit or same number; the Dutch rulebook has the full rules
+- Six of Sparrows plays to a recommended 500 points
+- Noble Flood ends when the contract deck runs out; Pietenpoker ends when the deck can no longer deal a round
+- In every game the highest total wins
+
+[tool score]
+mode: rounds
+win: highest
+hint: 500 for Six of Sparrows; the other two end when their deck runs out

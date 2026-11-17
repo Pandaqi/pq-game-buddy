@@ -6,13 +6,13 @@
   import { rememberImport } from './core/recent-imports';
   import { navigate, parseRoute, routeTo } from './core/router';
   import { schemas } from './core/schemas.generated';
+  import { parseSessionFile } from './core/session';
   import { store } from './core/session-store.svelte';
   import { settings } from './core/settings.svelte';
-  import type { Session } from './core/session';
   import { readFileText } from './core/share';
   import { storage, storagePersistent } from './core/storage';
   import { allDiagnostics, parseTemplate, resolveTemplate, type Diagnostic, type ResolvedTool, type TemplateVariant } from './core/template/parse';
-  import { assetName, isImageFile, isTemplateFile, isThemeFile, rememberAsset } from './core/template/assets';
+  import { assetName, isImageFile, isSessionFile, isTemplateFile, isThemeFile, rememberAsset } from './core/template/assets';
   import { applyVariant, toolsForSession } from './core/template/session-tools';
   import { decodeTemplateLink } from './core/template/share-link';
   import { parseTheme } from './core/theme';
@@ -149,13 +149,14 @@
   });
 
   /**
-   * One drop or one file picker can carry a template, its images and a theme.
-   * Images are stored under their base name, so the template's `icon:` finds
-   * one, and a template with no `icon:` falls back to its own file name.
+   * One drop or one file picker can carry a template, a saved game, its images
+   * and a theme. Images are stored under their base name, so the template's
+   * `icon:` finds one, and a template with no `icon:` falls back to its own name.
    */
   async function importFiles(files: File[]): Promise<void> {
     const images = files.filter((file) => isImageFile(file));
     const themes = files.filter((file) => isThemeFile(file.name));
+    const sessions = files.filter((file) => isSessionFile(file.name));
     const templates = files.filter((file) => isTemplateFile(file.name) && !isThemeFile(file.name));
 
     let imagesSaved = 0;
@@ -175,12 +176,30 @@
       }
     }
 
+    // Only one game can be open, so the first session file wins.
+    let openedSession = false;
+    for (const file of sessions) {
+      if (openedSession) break;
+      try {
+        const record = parseSessionFile(await readFileText(file));
+        if (!record) {
+          store.toast(`${file.name} is not a saved game. Export one from a running game.`, 'error');
+          continue;
+        }
+        await store.resume(record);
+        openedSession = true;
+      } catch {
+        store.toast(`${file.name} would not open. Try saving it again.`, 'error');
+      }
+    }
+
     let extra = 0;
     for (const [index, file] of templates.entries()) {
       try {
         const text = await readFileText(file);
         const source = assetName(file.name);
-        if (index === 0) {
+        // A session already took the screen: keep the rest for the gallery.
+        if (!openedSession && index === 0) {
           beginImport(text, source);
         } else {
           const parsed = parseTemplate(text);
@@ -192,12 +211,24 @@
       }
     }
 
+    if (openedSession) {
+      const notes: string[] = [];
+      if (imagesSaved) notes.push(imagesSaved === 1 ? '1 image' : `${imagesSaved} images`);
+      if (themeName) notes.push(`theme “${themeName}”`);
+      if (extra) notes.push(`${extra} kept in Recently imported`);
+      store.toast(notes.length ? `Saved game opened. Also: ${notes.join(', ')}.` : 'Saved game opened.');
+      navigate({ name: 'session' });
+      return;
+    }
+
     const parts: string[] = [];
     if (templates.length) parts.push(templates.length === 1 ? '1 template' : `${templates.length} templates`);
     if (imagesSaved) parts.push(imagesSaved === 1 ? '1 image' : `${imagesSaved} images`);
     if (themeName) parts.push(`theme “${themeName}”`);
     if (!parts.length) {
-      store.toast('Nothing to import. Add a .gamebuddy, an image or a theme.', 'error');
+      if (!sessions.length) {
+        store.toast('Nothing to import. Add a .gamebuddy, a session .json, an image or a theme.', 'error');
+      }
       return;
     }
     if (!templates.length) flow = 'none';
@@ -206,18 +237,10 @@
   }
 
   function beginImport(text: string, source = ''): void {
-    const trimmed = text.trim();
-    if (trimmed.startsWith('{')) {
-      try {
-        const parsedJson = JSON.parse(trimmed) as { session?: Session } | Session;
-        const record = (parsedJson as { session?: Session }).session ?? (parsedJson as Session);
-        if (record && Array.isArray(record.instances) && Array.isArray(record.players)) {
-          void store.resume(record).then(() => navigate({ name: 'session' }));
-          return;
-        }
-      } catch {
-        /* not a session file: try it as a template */
-      }
+    const record = parseSessionFile(text.trim());
+    if (record) {
+      void store.resume(record).then(() => navigate({ name: 'session' }));
+      return;
     }
     const parsed = parseTemplate(text);
     const resolved = resolveTemplate(parsed.template, (id) => schemas[id]);
@@ -404,7 +427,7 @@
   </main>
 
   {#if dragActive}
-    <div class="dropzone" aria-hidden="true"><p>Drop a template, images or a theme</p></div>
+    <div class="dropzone" aria-hidden="true"><p>Drop a template, a saved game, images or a theme</p></div>
   {/if}
 
   {#if store.notice}
@@ -441,7 +464,8 @@
 {#if flow === 'paste'}
   <Sheet title="Import your own" onclose={() => (flow = 'none')}>
     <p class="dim">
-      Pick a template, its images and a theme together. Everything stays on this device; nothing is uploaded.
+      Pick a template, a saved game, its images and a theme together. Everything stays on this device;
+      nothing is uploaded.
     </p>
     <label class="field">
       <span>Files</span>
@@ -459,6 +483,7 @@
     </label>
     <p class="hint">
       An image named like the template's <code>icon:</code> value — or like the template file — becomes its mark.
+      A session <code>.json</code> resumes that game where it left off.
     </p>
     <label class="field">
       <span>Or paste a template</span>

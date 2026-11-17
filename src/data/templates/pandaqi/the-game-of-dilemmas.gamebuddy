@@ -1,0 +1,34 @@
+# the-game-of-dilemmas.gamebuddy — five rounds of controversial choices
+
+[game]
+name: The Game of Dilemmas
+players: 3-6
+time: 30m
+tags: pandaqi, party, voting
+icon: the-game-of-dilemmas
+source: https://pandaqi.com/the-game-of-dilemmas/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Sort the cards into positive and negative piles; ignore neutral cards for the base game
+- Shuffle both piles and place them facedown
+- Deal each player 4 positive and 4 negative cards
+- Put out yes and no tokens: half the number of dilemmas, rounded up, of each
+
+[rules]
+Build the most controversial dilemma, then collect the yes votes it earns.
+- Each round, everyone secretly combines one positive and one negative card
+- Reveal all dilemmas, then everyone places yes/no tokens facedown on every dilemma
+- The dilemma with the smallest difference between yes and no is the most controversial and wins the round
+- Its creator scores one point per yes token on it; ties go to the dilemma with more no tokens
+- Everyone draws a new positive and negative card
+- The game ends after 5 rounds; highest score wins
+- Neutral cards, supervotes and co-op dilemmas are optional upgrades in the rulebook
+
+[tool score]
+mode: rounds
+rounds: 5
+win: highest
+hint: One point per yes token on your winning dilemma

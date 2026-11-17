@@ -1,0 +1,41 @@
+# hasty-accusations.gamebuddy — keep one secret suspect alive
+
+[game]
+name: Hasty Accusations
+players: 2-7
+time: 30m
+tags: pandaqi, card, deduction, bluffing
+icon: hasty-accusations
+source: https://pandaqi.com/hasty-accusations/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Pick a card set; the base set is best for a first game
+- Choose at least 5 suspects, and more suspects than players
+- Lay the suspects faceup in a row and put the loupe above the middle one
+- Deal each player one secret suspect card, then deal 4 playing cards each
+- Put 4 cards faceup beside the deck as the market
+
+[rules]
+Keep one secret suspect alive while the evidence piles around the others grow.
+- On your turn, play as many cards as you like under living suspects
+- A faceup card runs its action and moves the loupe forward; a facedown card moves it back
+- If you play nothing, discard your hand and move the loupe forward
+- When the loupe wraps around, review the largest evidence pile
+- Reveal that pile top to bottom; a murdered suspect is turned facedown, and a player whose secret suspect dies is out
+- Refill hands to 4 from the market, then refill the market
+- The last player left wins; the traitor variant lets one player win by outlasting everyone else
+- The rulebook has the full card actions and variants
+
+[tool lives]
+lives: 1
+max: 1
+mode: players
+elimination: yes
+hidden: no
+
+[tool turns]
+phases: Play cards, Review, Refill
+pass: no

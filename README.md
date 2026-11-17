@@ -3,7 +3,7 @@
 Offline tools for game night: timers, dice, a coin, a random picker, a scorepad,
 lives, counters, turns, secret reveals, a rules sheet, a play log, decks, a token
 bag, brackets, drafts, buzzers, a narrator script, word tools, prompt packs, a custom
-tracker, speedrun splits, and a plain-text template format with 40 ready-to-play
+tracker, speedrun splits, and a plain-text template format with 49 ready-to-play
 games.
 
 One HTML file. No install, no account, no network, no build step for the player.
@@ -40,7 +40,7 @@ bun run lint:templates
 bun run gen          # regenerate manifest/schemas/templates after adding a tool
 ```
 
-## What exists today (M0–M7, in progress)
+## What exists today (M0–M9)
 
 - App shell, hash router, error boundary, settings, light/dark/system themes,
   table mode, reduced-motion override, storage adapter chain with honest banners.
@@ -50,14 +50,15 @@ bun run gen          # regenerate manifest/schemas/templates after adding a tool
   golden-file test, line-numbered diagnostics, drag and drop / picker / paste
   import, URL-fragment sharing, seat stepper and template gallery.
 - In-app template editor with live validation, jump-to-error, preview and test
-  drive; 40 bundled templates plus one example per tool, grouped by family: board
+  drive; 60 bundled templates plus one example per tool, grouped by family: board
   and strategy (Catan, Ticket to Ride, 7 Wonders, Wingspan, Sushi Go, Azul,
   Splendor, Dominion, Monopoly, Risk, Pandemic, Gloomhaven), card and deduction
   (Uno, Exploding Kittens, Love Letter, Coup, The Mind, Hanabi, Skull, Decrypto,
   Dixit, poker, Perudo, chess), dice (Yahtzee, Phase 10), word (Scrabble, Boggle,
   Bananagrams, Codenames, Just One), party (Werewolf, Trivia Night, Escape Room),
-  video game and tournament (Mario Kart night, Smash night, Speedrun practice) and
-  RPG (D&D 5e, Kitchen Rush).
+  video game and tournament (Mario Kart night, Smash night, Speedrun practice),
+  RPG (D&D 5e, Kitchen Rush) and twenty first-party Pandaqi templates for Tiamo's own
+  catalogue, with its own gallery chip and a drawn mark beside each.
 - Tools: **timer** (countdown, stopwatch, flip, chess with increment and delay,
   interval, sequence, multi-timer grid, wake lock), **dice** (notation, keep/drop,
   reroll, exploding, success counting, pools, macros, Fate, percentile), **coin**
@@ -99,9 +100,9 @@ without an explicit choice.
   is `docs/STYLE.md`.
 - `#/selftest` boots every tool headlessly and asserts zero network requests.
 
-`ROADMAP.md` is the source of truth for what comes next (the rest of the M7 stretch
-list, then M8 Pandaqi templates) and for the release gates that need a human. Finished milestone detail is
-compressed there as it ships. The development contract is `AGENTS.md`; player and
+`ROADMAP.md` is the source of truth for what comes next (M10 localization) and for
+the release gates that need a human. Finished milestone detail is compressed there
+as it ships. The development contract is `AGENTS.md`; player and
 author docs are in `docs/`.
 
 ## Layout

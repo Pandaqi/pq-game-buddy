@@ -1,0 +1,44 @@
+# i-bid-you-not.gamebuddy — build an offer, then auction it
+
+[game]
+name: I Bid You Not
+players: 3-6
+time: 45m
+tags: pandaqi, card, bidding, numbers
+icon: i-bid-you-not
+source: https://pandaqi.com/i-bid-you-not/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the deck and place the top card faceup: it is the opening offer
+- Deal the remaining cards until the deck is empty
+- For a shorter game, remove the extreme numbers before shuffling
+- Put the used cards within reach: every player keeps a score pile
+
+[rules]
+Take turns building an offer of ascending cards, then auction it; whoever takes the offer keeps every card in it.
+- On your turn, add a card with a higher number than the last offer card, or declare an auction
+- An auction: everyone secretly picks one card from their hand, then all bids are revealed at once
+- Sort the bids from highest to lowest; if every bid falls inside the offer's number range, the order inverts
+- Ask in that order who wants the offer; the first player to take it adds every offer card to their score pile
+- A player who does not want it discards a random card from their score pile, then adds one card from their hand to the offer anywhere in the row
+- The last player in the order must take the offer, and so must anyone who cannot pay to skip
+- The lowest bid starts the next offer, and every other bid is discarded
+- The game ends when all players are out of cards; add up the price value of your score pile and the highest total wins
+
+[tool reveal]
+mode: bid
+min-bid: 0
+max-bid: 100
+
+[tool score]
+mode: ledger
+win: highest
+
+[notes]
+Add each offer you win as one ledger entry with the total price of its cards.
+The bid tool covers 0 to 100: the base deck and Double Devices stay inside that, but
+the Odd Inventions expansion adds negative numbers, which have to be noted by hand.
+Expansions also add card actions; they change no other rule.

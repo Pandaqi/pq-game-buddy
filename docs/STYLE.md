@@ -130,8 +130,10 @@ An imported template may pair an image instead, named like `icon:` or like the t
 file; that image renders through `<img>` and never inlines.
 
 The template marks are their own chunk (`core/ui/marks.svelte.ts`): a list paints the
-name and the reserved slot immediately, and the 40 drawings arrive after the first
+name and the reserved slot immediately, and the 49 drawings arrive after the first
 paint from `template-icons.generated.ts`. Nothing in the start-up payload imports them.
+First-party Pandaqi templates keep their drawings in `src/data/templates/pandaqi/`, one
+for each covered collection, under the same grid and stroke rules.
 
 **Layout:** on a gallery card and on home, the mark and the name are one flex row,
 centred on each other (`align-items: center`), so the title sits *beside* the mark and

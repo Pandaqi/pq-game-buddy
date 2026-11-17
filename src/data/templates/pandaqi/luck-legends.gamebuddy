@@ -1,0 +1,32 @@
+# luck-legends.gamebuddy — cards that behave like dice
+
+[game]
+name: The Luck Legends
+players: 2-8
+time: 30m
+tags: pandaqi, dice, strategy
+icon: luck-legends
+source: https://pandaqi.com/the-luck-legends/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Pick one game from the series and print its material
+- Read that game's own rulebook before the first roll; the seven games play differently
+- Shuffle the cards that stand in for the dice
+- Keep a pen and paper nearby only if the rulebook you chose asks for a score
+
+[rules]
+A series of games where a shuffled deck stands in for the dice.
+- A roll is a shuffle and the top card, so the deck is the die
+- You can customise a die by adding or removing cards, and choose how you draw
+- Each game has its own ending and its own win condition:
+- Champions of Chance (3-6): the first player out of cards wins
+- A Little White Die (2-6): the most cards when someone runs out, or the last player holding cards
+- Lucky Lions (3-6): the first to 10 points
+- Tossing Tiger, Rolling Dragon (2-6): the most cards when someone drops below 2
+- Folly & Fortune (2-6): the most health when every hand is empty
+- Chaos Contract (2-5): the first to 6 contracts
+- Deceptidice (2-8): the most cards left when someone is down to 3
+- The series page lists every title, its rulebook and the material

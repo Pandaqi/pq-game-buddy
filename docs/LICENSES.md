@@ -35,7 +35,8 @@ request).
 
 ## Game templates
 
-Every file in `src/data/templates/` follows the same rules:
+Every file in `src/data/templates/` and `src/data/templates/pandaqi/` follows the same
+rules:
 
 - The rules summary is **original prose**, written for this project. No rulebook text
   is copied, paraphrased line by line, or translated from a publisher's file.
@@ -45,6 +46,9 @@ Every file in `src/data/templates/` follows the same rules:
   `license:`. The default is **CC BY-SA 4.0**.
 - Templates are fan-made helpers. They do not replace owning the game, and they are
   not affiliated with or endorsed by any publisher.
+- The Pandaqi folder holds first-party templates for Tiamo's own games. They link
+  pandaqi.com, and the same originality, attribution and licence rules apply: the
+  summary is ours, no rulebook text or art is copied, and every file carries `source:`.
 
 If you are a rights holder and want a template changed or removed, that request wins
 immediately; the file is content, not architecture.

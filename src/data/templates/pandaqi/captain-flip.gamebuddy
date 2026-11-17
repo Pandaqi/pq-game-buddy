@@ -1,0 +1,33 @@
+# captain-flip.gamebuddy — one flip, one action, one score pile
+
+[game]
+name: Captain Flip
+players: 2-6
+time: 30m
+tags: pandaqi, tile, memory
+icon: captain-flip
+source: https://pandaqi.com/captain-flip/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the tile deck and lay a 5x5 grid facedown
+- Turn the two main diagonals faceup
+- For an easier game, use a 4x4 grid
+- Keep the deck and a score pile within reach
+
+[rules]
+Flip one tile on your turn and use the action on the side you turned up.
+- A heart action triggers when a tile turns faceup; a skull action when it turns facedown
+- Score a facedown tile by taking it to your score pile, then refill the gap faceup
+- You cannot score the tile you just flipped unless an action says so
+- A fully faceup row or column clears and refills with facedown tiles
+- The game ends when the map is empty; add the values of the tiles you scored
+- Highest score wins
+- The rulebook's expansions add colour patterns, negative types and a three-tile hand
+
+[tool score]
+mode: simple
+win: highest
+hint: Add the value of every tile in your score pile

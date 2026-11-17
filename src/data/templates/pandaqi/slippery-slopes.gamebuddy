@@ -1,0 +1,40 @@
+# slippery-slopes.gamebuddy — describe a word with sliders and a timer
+
+[game]
+name: Slippery Slopes
+players: 2-10
+time: 20m
+tags: pandaqi, party, guessing
+icon: slippery-slopes
+source: https://pandaqi.com/slippery-slopes/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the slider deck and draw 4 sliders in front of the start player
+- Shuffle the word deck and keep it within reach
+- Agree on 10 rounds and a 1-2 minute talking limit
+- For the competitive variant, split into two teams and alternate turns
+
+[rules]
+Communicate a secret word using only a set of sliders, while the table guesses.
+- On your turn, first change the sliders; use a sideways facedown card to mark where your word ranks
+- Then start the timer and communicate using only the sliders; no words, gestures or other hints
+- Anyone may guess or ask questions during the turn
+- A correct guess scores 5 points; if time runs out, the turn scores 0
+- The default game is cooperative: add the table's points over 10 rounds
+- The competitive variant gives each team its own score after 10 rounds
+- Glidy Gifts actions are optional and each one reduces that word's score by 1
+
+[tool timer]
+mode: countdown
+duration: 2m
+start: manual
+sound: bell
+
+[tool counters]
+mode: count
+counters: Points=0
+step: 5
+down: 1

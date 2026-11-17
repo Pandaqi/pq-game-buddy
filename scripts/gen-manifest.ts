@@ -1,7 +1,8 @@
 /**
- * Scans src/tools/* and src/data/templates/*, then writes the tool registry, a
- * Svelte-free schema map for the linter, the template summaries the lists render
- * and the template texts behind a dynamic import. `--check` fails when stale.
+ * Scans src/tools/*, src/data/templates/* and src/data/templates/pandaqi/*, then
+ * writes the tool registry, a Svelte-free schema map for the linter, the template
+ * summaries the lists render and the template texts behind a dynamic import.
+ * `--check` fails when stale.
  */
 
 import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
@@ -99,30 +100,51 @@ const { summariseTemplate: summarise } = (await import(
 )) as { summariseTemplate: typeof summariseTemplate };
 
 const templatesDir = join(root, 'src', 'data', 'templates');
-const templateFiles = existsSync(templatesDir)
-  ? readdirSync(templatesDir)
-      .filter((file) => file.endsWith('.gamebuddy'))
-      .sort()
-  : [];
+const pandaqiDir = join(templatesDir, 'pandaqi');
 
-const templates = templateFiles.map((file) => {
-  const text = readFileSync(join(templatesDir, file), 'utf8');
-  const id = file.replace(/\.gamebuddy$/, '');
-  return { id, text, summary: summarise(id, text) };
-});
+function readTemplates(dir: string) {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((file) => file.endsWith('.gamebuddy'))
+    .sort()
+    .map((file) => {
+      const text = readFileSync(join(dir, file), 'utf8');
+      const id = file.replace(/\.gamebuddy$/, '');
+      return { id, text, summary: summarise(id, text) };
+    });
+}
+
+const templates = readTemplates(templatesDir);
+const pandaqi = readTemplates(pandaqiDir);
+// First-party Pandaqi games keep their own folder but ship with the bundled set:
+// one gallery, one list, one Pandaqi filter. The tag is checked by the linter.
+const bundled = [...templates, ...pandaqi];
+const bundledIds = new Set<string>();
+for (const item of bundled) {
+  if (bundledIds.has(item.id)) {
+    console.error(`[gen] duplicate template id "${item.id}"`);
+    process.exit(1);
+  }
+  bundledIds.add(item.id);
+}
 
 // A template's mark lives beside it as `<id>.icon.svg`; several templates may
 // name the same mark with `icon:`, so the map carries both the id and the name.
 const iconMap: Record<string, string> = {};
-for (const item of templates) {
-  const iconPath = join(templatesDir, `${item.id}.icon.svg`);
-  if (!existsSync(iconPath)) continue;
-  const svg = readFileSync(iconPath, 'utf8').trim();
-  if (!svg.startsWith('<svg')) continue;
-  // Index by the name a template asks for; the id is the fallback for a file
-  // with no `icon:` line at all.
-  const name = item.text.match(/^icon:\s*(\S+)/m)?.[1];
-  iconMap[name || item.id] = svg;
+for (const [dir, items] of [
+  [templatesDir, templates],
+  [pandaqiDir, pandaqi],
+] as const) {
+  for (const item of items) {
+    const iconPath = join(dir, `${item.id}.icon.svg`);
+    if (!existsSync(iconPath)) continue;
+    const svg = readFileSync(iconPath, 'utf8').trim();
+    if (!svg.startsWith('<svg')) continue;
+    // Index by the name a template asks for; the id is the fallback for a file
+    // with no `icon:` line at all.
+    const name = item.text.match(/^icon:\s*(\S+)/m)?.[1];
+    iconMap[name || item.id] = svg;
+  }
 }
 
 // Community files arrive by pull request in src/data/community. They are compiled
@@ -167,7 +189,7 @@ const summaryLines: string[] = [
   "import type { TemplateSummary } from './template-summary';",
   '',
   'export const bundledTemplates: TemplateSummary[] = [',
-  ...templates.map((item) => `  ${JSON.stringify(item.summary)},`),
+  ...bundled.map((item) => `  ${JSON.stringify(item.summary)},`),
   '];',
   '',
   '/** Templates contributed through src/data/community, compiled in at build time. */',
@@ -182,7 +204,7 @@ const textLines: string[] = [
   '// Compiled in as strings, but only behind a dynamic import: never fetched, and',
   '// never part of the first visit.',
   'export const templateTexts: { id: string; text: string }[] = [',
-  ...[...templates, ...community].map(
+  ...[...bundled, ...community].map(
     (item) => `  { id: ${JSON.stringify(item.id)}, text: ${JSON.stringify(item.text)} },`,
   ),
   '];',
@@ -221,5 +243,5 @@ if (checkOnly && stale) {
 }
 
 console.log(
-  `[gen] ${entries.length} tools, ${templateFiles.length} templates, ${Object.keys(iconMap).length} marks${checkOnly ? ' (up to date)' : ''}`,
+  `[gen] ${entries.length} tools, ${bundled.length} templates, ${Object.keys(iconMap).length} marks${checkOnly ? ' (up to date)' : ''}`,
 );

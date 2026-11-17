@@ -1,0 +1,32 @@
+# waterfall.gamebuddy — fall down the waterfall for gemstones
+
+[game]
+name: Waterfall
+players: 2-6
+time: 30m
+tags: pandaqi, tile, push-your-luck
+icon: waterfall
+source: https://pandaqi.com/waterfall/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Place one add (+) tile faceup to start the waterfall
+- Give every player 4 tiles and 1 pawn; place each pawn above the waterfall
+- Put the rest of the tiles facedown as the draw pile
+
+[rules]
+Build the waterfall downward, then fall as far as your cards let you to collect gemstones.
+- On your turn, play any number of hand cards; their numbers sum to the spaces you may fall
+- For each space, choose down-left or down-right and execute the tile you land on
+- An empty space means you exit the waterfall and reset to the top
+- Score actions let you bank hand tiles whose gemstone matches your path
+- You may not enter an occupied tile unless both choices are blocked
+- The game ends at 20 or more waterfall tiles, or when the deck runs out
+- Add the values of your scored tiles; highest score wins
+
+[tool score]
+mode: simple
+win: highest
+hint: Add the numbers on the tiles in your score pile

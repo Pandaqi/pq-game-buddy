@@ -3,6 +3,117 @@
 All notable changes to Game Buddy. The template format is versioned separately
 (`format: 1`) and only changes with a compatibility note.
 
+## Unreleased — counting mode, I Bid You Not and the gallery grid
+
+### Added
+
+- **Counting mode for counters.** `[tool counters]` takes `mode: count` beside the
+  default `mode: bank`. Counting has no pool: `+` adds `step` straight to a counter and
+  `−` takes `down` away (0 means "the same as `step`"), never below zero. Bank mode is
+  unchanged: `+` and `−` both move `step` between the bank and a counter, so `down`
+  applies only while counting. The view shows both amounts on each row and hides the
+  bank while counting.
+- **I Bid You Not.** A twentieth first-party template, with blind bids from
+  `[tool reveal] mode: bid` and the score pile kept as a ledger. Its rule page now
+  carries setup, so the "no verified rulebook" reason recorded in the audit no longer
+  applies; the set covers 47 of the 100 catalogue entries (11 collections, 9 standalone
+  games). Its auction paddle mark ships beside the file.
+
+### Changed
+
+- `bun run gen` indexes 60 templates, 60 marks and 81 files for the template lint.
+- The Slippery Slopes counter uses counting mode: `+5` for a correct guess and `−1` for
+  each Glidy Gifts action, as its rulebook says. Mammoth Messages and Naivigation use
+  counting mode too, after bank-mode counters could not add anything with an empty bank.
+
+### Fixed
+
+- **The gallery no longer scrolls sideways.** The two-column template grid used `1fr`
+  tracks, whose automatic minimum is the widest card's content, so between 34rem and
+  roughly 40rem the list was wider than the page. The tracks are now `minmax(0, 1fr)`,
+  which keeps the gallery inside the viewport down to 320 px, as `docs/STYLE.md`
+  requires.
+
+### Known limits
+
+- A real play test of each template beside its physical game, and the look of each mark
+  in both themes, are human checks in `ROADMAP.md` §7 and are not claimed.
+- Blind bids record 0 to 100, which covers the base deck and Double Devices; the
+  negative numbers in Odd Inventions have to be noted by hand.
+
+## Unreleased — catalogue audit
+
+### Added
+
+- **Ten more Pandaqi templates.** Throneless Games and Keebble Games as collection
+  templates, plus Captain Flip, Magnetmen, Waterfall, Firecrackers, Hasty Accusations,
+  The Game of Dilemmas, Slippery Slopes and Mammoth Messages. Nineteen first-party
+  templates then covered 46 of the 100 catalogue entries: 11 collections and 8 standalone
+  games. Tools follow the verified rules: a one-life elimination track for Hasty
+  Accusations, a five-round score for Dilemmas, a word checker and score for Keebble,
+  a 2-minute timer and 5-point counter for Slippery Slopes, and a 60-second timer and
+  shared counter for Mammoth Messages.
+- **Named audit reasons for the other 54 entries.** The folder README now lists every
+  remaining game under one of five causes: no shared core, already runs on
+  pandaqi.com, the table is the game, no verified rulebook, or an older project or
+  expansion. No entry is omitted and no rule is inferred.
+
+### Changed
+
+- `bun run gen` indexed 59 templates, 59 marks and 80 files for the template lint at
+  that point.
+- The roadmap, root README and folder ledger carry the new counts and the narrowed
+  template scope.
+
+### Fixed
+
+- **Bag warning.** The Bag tool now reads `instance.assignedTo()` through `untrack`,
+  so the intentional one-time read no longer warns during `svelte-check`; behaviour is
+  unchanged. `svelte-check` reports 0 errors and 0 warnings.
+
+### Known limits
+
+- A real play test of each new template beside its physical game, and the look of each
+  new mark in both themes, are human checks in `ROADMAP.md` §7 and are not claimed.
+
+## Unreleased — M8 and M9
+
+### Added
+
+- **Pandaqi's own games.** Nine first-party templates in
+  `src/data/templates/pandaqi/`, one for each of nine collections in the pandaqi.com
+  catalogue: Bidding Blocks, Mapped Out, Death by Digits, Fiddlefoo, The Luck Legends,
+  Naivigation, Chiptales, Feed the Beast and Maybe Games. Each carries the rules sheet
+  and only the trackers its published rules support: scorepads for Bidding Blocks,
+  Mapped Out, Fiddlefoo, Chiptales and Maybe Games, turn phases where the round has
+  them, a damage tally for Naivigation, and no scorepad for Death by Digits, The Luck
+  Legends or Feed the Beast, whose endings are a correct accusation, a race to a card
+  or point total, or an empty food storage. The folder's README records the 100-entry catalogue audit, which
+  collections are templated and which are not, and the rule pages each summary was
+  checked against.
+- **Pandaqi gallery filter.** A collection chip beside All, Favourites and Recent
+  narrows the gallery to the first-party set; the tag dropdown keeps the family tags.
+  Every file in the folder carries `tags: pandaqi`, and the linter fails one that does
+  not.
+- **Nine new marks.** One drawn SVG per new template, beside it on the 24 px grid,
+  in `currentColor` at 1.8 px. A test asserts every shipping template resolves a mark
+  and that no drawing uses text, an image or a different grid, which is the “no letter
+  in a box” rule as far as a machine can check it.
+
+### Changed
+
+- `bun run gen` scans `src/data/templates/` and its `pandaqi/` folder, refuses a
+  duplicate template id, and indexes marks from both folders; `lint:templates` lints
+  both, so the round-trip and lint counts now cover 49 templates and 70 files.
+- The user guide, template format, style guide, licensing notes and roadmap describe
+  the first-party folder, the filter and the new mark set.
+
+### Known limits
+
+- A real play test of each Pandaqi template beside its physical game, and the look of
+  each new mark beside its title in both themes, are human checks listed in
+  `ROADMAP.md` §7. They are not claimed here.
+
 ## Unreleased — M7 (partly)
 
 ### Added
@@ -51,6 +162,10 @@ All notable changes to Game Buddy. The template format is versioned separately
 - **Narrator voice.** The script tool can read `say` steps aloud with the device's own
   voice (`voice: yes` in a template). It is always paired with the written step, and a
   device without speech stays silent instead of failing.
+- **Session files return to the upload panel.** The picker accepted `.json` and the old
+  import path read it, but the upload panel and drag-and-drop only counted `.gamebuddy`
+  and `.txt` as importable, so an exported session was silently ignored. A session now
+  resumes from either path; templates in the same batch stay in Recently imported.
 - **Template icons.** `[game]` accepts `icon: catan` (a bundled mark name) and the gallery and
   home draw it beside the game. Unknown names are ignored rather than becoming an
   error, so older and newer files both open.
@@ -117,9 +232,8 @@ All notable changes to Game Buddy. The template format is versioned separately
 
 ### Known limitations
 
-- The rest of M7 is not in this pass: the writing pass, full string extraction and
-  translation (M10 plan), marks for games beyond the bundled forty (M9), the community
-  gallery, QR sharing and single-switch layouts. They stay listed in `ROADMAP.md` §6.
+- Translation (M10) is not in this pass: string extraction, a language switcher and
+  a Dutch build are still planned in `ROADMAP.md` §6.
 - The service worker is network-first, not a full precache, so the very first offline
   visit needs the app to have been opened once online. Offline install verification
   needs a real hosted HTTPS origin; the offline single file remains the sure path.

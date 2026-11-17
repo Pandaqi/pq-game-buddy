@@ -143,8 +143,10 @@ other budgets. Sizes are reported raw and gzipped; `dist/size.json` is read by
 `bun run size`.
 
 Template data is split the same way: `src/data/templates.generated.ts` holds only
-the summaries the lists render, and all 61 texts live in
+the summaries the lists render, and all 49 texts live in
 `template-text.generated.ts` behind `templateText(id)` (`src/data/templates.ts`).
+Bundled, first-party Pandaqi and community files are compiled into the same two
+modules; only the summaries are read before a game is chosen.
 Parsing happens at generation time in `bun run gen`, never at start-up.
 
 ## Known limits

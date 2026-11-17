@@ -1,0 +1,28 @@
+# death-by-digits.gamebuddy — find the numbers nobody is holding
+
+[game]
+name: Death by Digits
+players: 2-6
+time: 30m
+tags: pandaqi, card, deduction
+icon: death-by-digits
+source: https://pandaqi.com/death-by-digits/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Count the players and multiply by 3; use cards 1 to that number, three of each
+- Deal each player twice as many cards as there are players
+- Put 3 cards facedown to one side: these are the Murder
+- Leave the rest facedown as shared Evidence
+
+[rules]
+Be a math detective and name the three numbers that are in nobody's hand.
+- On your turn, either guess another player's highest or lowest card, or play a combo to the Evidence
+- A single card steals 3 random cards unless someone shows the same number to stop it
+- Two cards that add or subtract to the Midnumber (half the top number, rounded) take 2 from the Evidence
+- Three of a kind lets you look at one Murder card
+- At the end of your turn you may name the three Murder numbers; a correct answer wins at once, a wrong one puts you out
+- The base game is kid-friendly; Dastardly Digits adds six special cards
+- The game's page has the full rulebook

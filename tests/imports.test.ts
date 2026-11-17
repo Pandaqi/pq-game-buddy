@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
 import { clearRecentImports, listRecentImports, rememberImport } from '../src/core/recent-imports';
+import { parseSessionFile } from '../src/core/session';
 
 beforeEach(() => {
   clearRecentImports();
@@ -29,5 +30,20 @@ describe('recent imports', () => {
     }
     expect(listRecentImports()).toHaveLength(5);
     expect(listRecentImports()[0].name).toBe('Game 7');
+  });
+});
+
+describe('session files', () => {
+  const record = { id: 's1', gameName: 'Catan', players: [{ name: 'Ada' }], instances: [] };
+
+  test('reads the wrapped export and a bare record', () => {
+    expect(parseSessionFile(JSON.stringify({ version: 1, session: record }))?.gameName).toBe('Catan');
+    expect(parseSessionFile(JSON.stringify(record))?.gameName).toBe('Catan');
+  });
+
+  test('junk and other JSON are refused, not thrown', () => {
+    expect(parseSessionFile('[game]\nname: Catan')).toBeNull();
+    expect(parseSessionFile('{"hello":1}')).toBeNull();
+    expect(parseSessionFile('{ broken')).toBeNull();
   });
 });

@@ -1,0 +1,41 @@
+# maybe-games.gamebuddy — one proposal, everyone votes at once
+
+[game]
+name: Maybe Games
+players: 3-6
+time: 30-60m
+tags: pandaqi, party, voting
+icon: maybe-games
+source: https://pandaqi.com/maybe-games/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Pick one of the three games and print its material
+- Maybe Movies and Maybe Missions: build the vote deck (5 yes and 5 no per player), deal 10 each, and redeal a hand that is all one kind
+- Maybe Minister: deal 5 cards each and give everyone a Support card with 2 votes on it
+- Lay out that game's faceup market if it has one, and read its rulebook before the first proposal
+- Agree who proposes first
+
+[rules]
+Every game here runs on the Maybe Mechanic: one player proposes, everyone votes yes or no at the same time, and the result pays some players and costs others.
+- Maybe Movies (3-6): pitch a film from the market; yes votes pay its budget, no votes sink it, and a successful film pays the yes voters
+- Maybe Missions (3-6): prepare a mission; the majority decides success, and every yes voter collects a card, green on success, red on failure
+- Maybe Minister (3-6): propose laws; accepted laws become scoring rules, and the first player to 25 points wins
+- Votes are secret: pick your card, then reveal together. The ballot below records the direction; the number on your card is what counts
+- Maybe Movies and Maybe Missions end when the votes run out; the highest total wins
+- The series page has every rulebook and the printable material
+
+[tool turns]
+phases: Propose, Vote, Resolve
+
+[tool reveal]
+mode: ballot
+ballot: Yes or no?
+options: Yes, No
+
+[tool score]
+mode: simple
+win: highest
+hint: 25 for Maybe Minister; the other two end when the votes run out

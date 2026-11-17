@@ -5,6 +5,8 @@ export interface Counter {
   name: string;
   value: number;
   step: number;
+  /** Amount one press of the minus key takes away; 0 means "the same as step". */
+  down: number;
 }
 
 export interface CounterEntry {
@@ -12,11 +14,16 @@ export interface CounterEntry {
   text: string;
 }
 
+/** `bank` moves values between a shared pool and the counters; `count` adds straight to them. */
+export type CountersMode = 'bank' | 'count';
+
 export interface CountersState {
+  mode: CountersMode;
   counters: Counter[];
   bank: number;
   denominations: number[];
   step: number;
+  down: number;
   hidden: boolean;
   revealed: boolean;
   history: CounterEntry[];
@@ -54,6 +61,18 @@ export function transfer(counter: Counter, bank: number, delta: number): number 
   if (delta > 0) return Math.max(0, Math.min(delta, bank));
   const moved = Math.max(0, Math.min(-delta, counter.value));
   return moved === 0 ? 0 : -moved;
+}
+
+/** How much one press of the minus key takes away while counting; bank mode always moves `step`. */
+export function downStep(counter: Counter): number {
+  const down = Math.round(counter.down);
+  return Math.max(1, Number.isFinite(down) && down > 0 ? down : Math.round(counter.step));
+}
+
+/** A counting move: straight onto the counter, never below zero. Returns what moved. */
+export function scoreDelta(counter: Counter, delta: number): number {
+  if (!Number.isFinite(delta) || delta === 0) return 0;
+  return delta > 0 ? delta : -Math.min(-delta, counter.value);
 }
 
 /** Everything the table holds: bank plus every counter. */

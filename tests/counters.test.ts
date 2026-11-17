@@ -3,6 +3,7 @@ import type { ToolContext } from '../src/core/registry';
 import { createRng } from '../src/core/rng';
 import {
   denominationsFrom,
+  downStep,
   grandTotal,
   resultsFor,
   transfer,
@@ -15,12 +16,14 @@ import countersTool from '../src/tools/counters/tool.svelte';
 function state(overrides: Partial<CountersState> = {}): CountersState {
   return {
     counters: [
-      { id: 'c1', name: 'Coins', value: 4, step: 1 },
-      { id: 'c2', name: 'Wood', value: 2, step: 1 },
+      { id: 'c1', name: 'Coins', value: 4, step: 1, down: 0 },
+      { id: 'c2', name: 'Wood', value: 2, step: 1, down: 0 },
     ],
+    mode: 'bank',
     bank: 7,
     denominations: [1, 5, 10],
     step: 1,
+    down: 0,
     hidden: false,
     revealed: true,
     history: [],
@@ -60,7 +63,7 @@ function makeContext(): { ctx: ToolContext; labels: string[]; toasts: string[] }
 }
 
 describe('counter transfers', () => {
-  const counter: Counter = { id: 'c1', name: 'Coins', value: 4, step: 1 };
+  const counter: Counter = { id: 'c1', name: 'Coins', value: 4, step: 1, down: 0 };
 
   test('takes at most what the bank holds', () => {
     expect(transfer(counter, 7, 5)).toBe(5);
@@ -87,8 +90,8 @@ describe('counter totals', () => {
 
   test('results sort counters by value', () => {
     expect(resultsFor(state({ counters: [
-      { id: 'c1', name: 'Coins', value: 1, step: 1 },
-      { id: 'c2', name: 'Gems', value: 9, step: 1 },
+      { id: 'c1', name: 'Coins', value: 1, step: 1, down: 0 },
+      { id: 'c2', name: 'Gems', value: 9, step: 1, down: 0 },
     ] }))).toEqual([
       { name: 'Gems', score: 9 },
       { name: 'Coins', score: 1 },
@@ -155,5 +158,80 @@ describe('counter actions', () => {
 
     instance.reset();
     expect(labels).toEqual(['reset counters']);
+  });
+
+  test('bank mode returns the step, even when a counting decrease step is set', () => {
+    const { ctx } = makeContext();
+    const instance = countersTool.create(ctx, {
+      counters: { Coins: 8 },
+      bank: 2,
+      step: 5,
+      down: 1,
+    }) as CountersInstance;
+    instance.adjust('c1', -5);
+    expect(instance.data.counters[0].value).toBe(3);
+    expect(instance.data.bank).toBe(7);
+  });
+});
+
+describe('counting mode', () => {
+  test('adds and takes away points without a bank', () => {
+    const { ctx, labels } = makeContext();
+    const instance = countersTool.create(ctx, {
+      mode: 'count',
+      counters: { Points: 0 },
+      step: 5,
+      down: 1,
+    }) as CountersInstance;
+    instance.adjust('c1', 5);
+    expect(instance.data.counters[0].value).toBe(5);
+    expect(instance.data.bank).toBe(0);
+
+    instance.adjust('c1', -1);
+    expect(instance.data.counters[0].value).toBe(4);
+    expect(instance.data.bank).toBe(0);
+    expect(labels).toEqual(['counter change', 'counter change']);
+  });
+
+  test('stops at zero and says so', () => {
+    const { ctx, toasts } = makeContext();
+    const instance = countersTool.create(ctx, {
+      mode: 'count',
+      counters: { Points: 0 },
+      step: 5,
+      down: 1,
+    }) as CountersInstance;
+    instance.adjust('c1', -1);
+    expect(instance.data.counters[0].value).toBe(0);
+    expect(toasts[0]).toContain('already at 0');
+  });
+
+  test('a counting pad keeps no bank', () => {
+    const { ctx } = makeContext();
+    const instance = countersTool.create(ctx, { mode: 'count', counters: { Points: 2 }, bank: 50 }) as CountersInstance;
+    expect(instance.data.bank).toBe(0);
+    expect(instance.summary()).toBe('Points: 2');
+  });
+
+  test('a zero decrease step follows the step', () => {
+    expect(downStep({ id: 'c1', name: 'Points', value: 0, step: 5, down: 0 })).toBe(5);
+    expect(downStep({ id: 'c1', name: 'Points', value: 0, step: 5, down: 1 })).toBe(1);
+  });
+
+  test('mode and decrease step survive a reload and a save', () => {
+    const { ctx } = makeContext();
+    const instance = countersTool.create(ctx, {
+      mode: 'count',
+      counters: { Points: 3 },
+      step: 5,
+      down: 2,
+    }) as CountersInstance;
+    const next = countersTool.create(ctx, {}) as CountersInstance;
+    next.load(instance.state());
+    expect(next.data.mode).toBe('count');
+    expect(next.data.counters[0].down).toBe(2);
+    expect(downStep(next.data.counters[0])).toBe(2);
+    expect((next.presetFromState() as unknown as Record<string, unknown>).mode).toBe('count');
+    expect((next.presetFromState() as unknown as Record<string, unknown>).down).toBe(2);
   });
 });

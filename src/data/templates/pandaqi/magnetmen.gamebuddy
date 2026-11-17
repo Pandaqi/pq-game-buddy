@@ -1,0 +1,32 @@
+# magnetmen.gamebuddy — collect icons before they repel you
+
+[game]
+name: Magnetmen
+players: 2-4
+time: 20m
+tags: pandaqi, paper, puzzle
+icon: magnetmen
+source: https://pandaqi.com/magnetmen/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Print one game board per player and hand out pens
+- Each player picks one inventory at the edge of the board
+- Keep the board where everyone can reach it
+
+[rules]
+Collect Magnetmen while their growing repulsion cuts off the board around you.
+- On your turn, pick an unused square, cross it out and draw its icon in an empty inventory slot
+- The more copies you hold of an icon, the more squares around it you may not collect
+- One copy blocks horizontal neighbours; two blocks horizontal and vertical; three or more blocks all eight neighbours
+- A full inventory means no more turns
+- The game ends when nobody can move; add the values of all collected Magnetmen
+- Highest score wins
+- Advanced rules add a destroy action and stop you at four copies of one icon
+
+[tool score]
+mode: simple
+win: highest
+hint: Add the printed value of every Magnetman you collected

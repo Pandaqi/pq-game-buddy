@@ -1,0 +1,35 @@
+# fiddlefoo.gamebuddy — open a range, let the others throw their music in
+
+[game]
+name: Fiddlefoo
+players: 2-6
+time: 30m
+tags: pandaqi, card, family
+icon: fiddlefoo
+source: https://pandaqi.com/fiddlefoo/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Place one random card of each colour in a 2x2 square: the start of the shared map
+- Shuffle the rest into a draw pile
+- Deal each player 8 cards
+- Agree who plays first
+
+[rules]
+Empty your hand without letting the others throw their music at you.
+- On your turn, add one card to the map; it must connect, share a row (horizontal, vertical or diagonal) with another card of its colour, and not sit next to one of that colour
+- Each new pair sets a number range and a music-note difference
+- Everyone may then give you cards of that colour whose number is inside the range, or cards with that note difference
+- The cards you receive go into your hand; if you end your turn with none, the game ends and you win
+- At the end, the music notes left in each hand are negative points; play several games and the least negative total wins
+- This sheet counts the notes left and treats the lowest total as best
+
+[tool turns]
+phases: Play, Pairs, Throw in
+
+[tool score]
+mode: rounds
+win: lowest
+hint: 0 (an empty hand); enter the music notes left in each hand

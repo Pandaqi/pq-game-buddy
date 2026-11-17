@@ -1,0 +1,33 @@
+# firecrackers.gamebuddy — push your luck, then build a better deck
+
+[game]
+name: Firecrackers
+players: 2-10
+time: 60m
+tags: pandaqi, card, push-your-luck, deck-building
+icon: firecrackers
+source: https://pandaqi.com/firecrackers/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Build the deck: all black cards plus one coloured set per player
+- Give each player a starting deck of one card from each of three colours and two black cards
+- Shuffle each starting deck and place it facedown
+- Lay the remaining cards faceup in the shop, one pile per colour and one for cards without actions
+
+[rules]
+Reveal cards to earn coins, stop before a colour explodes, and build a more valuable deck.
+- On your turn, reveal the top card of your deck or stop
+- Resolve any action, then add the numbers of revealed cards of the same colour
+- A colour total of 10 or more explodes and takes you out of the round
+- When you stop, every revealed card is worth 1 coin; buy cards from the shop into your discard
+- The round ends when everyone has stopped or exploded; the last player left becomes Firemaster
+- The game ends after the round in which the shop runs out
+- Add the numbers of all cards in your deck, including purchases; highest score wins
+
+[tool score]
+mode: simple
+win: highest
+hint: Add the numbers of every card in your final deck

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { untrack } from 'svelte';
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { BAG_SETS, totalOf, trayTotal, type BagSet } from './logic';
@@ -15,7 +16,8 @@
   // The seat strip and the bag's own row are the same choice, so both read the
   // session's active player instead of keeping a second, drifting copy.
   const activeWho = $derived(players.find((player) => player.active)?.name ?? players[0]?.name ?? '');
-  let assigned = instance.assignedTo();
+  // A one-time read of the tool's current seat, not a tracked dependency.
+  let assigned = untrack(() => instance.assignedTo());
   let left = $derived(totalOf(data.remaining));
   const types = $derived(Object.keys(data.remaining).sort());
 

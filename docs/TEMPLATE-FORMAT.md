@@ -156,7 +156,7 @@ template”. The generated, Svelte-free copy lives in
 | `pick` | `source`, `values`, `count`, `replacement`, `teams`, `view` (`list`/`cards`/`wheel`/`slot`), `seed` |
 | `score` | `mode` (`simple`/`rounds`/`categories`/`ledger`), `rounds`, `categories`, `formula`, `win`, `target`, `hidden`, `start`, `step` |
 | `lives` | `lives`, `max`, `step`, `mode`, `elimination`, `extras`, `conditions`, `hidden` |
-| `counters` | `counters`, `bank`, `denominations`, `step`, `hidden` |
+| `counters` | `mode` (`bank`/`count`), `counters`, `bank`, `denominations`, `step`, `down`, `hidden` |
 | `turns` | `order`, `phases`, `timer`, `pass`, `auto-start`, `mode`, `initiative` |
 | `reveal` | `mode`, `roles`, `descriptions`, `auto-hide`, `ballot`, `options`, `min-bid`, `max-bid` |
 | `rules` | `quick`, `rules`, `setup`, `glossary`, `scoring`, `source` |
@@ -165,6 +165,13 @@ Two tools have a little extra shape. `turns` takes `mode: initiative` with
 `initiative: Ada=18, Bo=12`; the highest value acts first and a new round clears the
 values. `dice` takes `faces: Hit, Miss, Crit` for a custom die and saved sets as
 `sets: combat=Hit|Miss|Crit`; `lab-count` sets how many custom dice roll at once.
+
+`counters` has two modes. The default, `mode: bank`, is a shared pool: `+` moves `step`
+from the bank into a counter and `−` moves the same `step` back out, so nothing appears
+or disappears. `mode: count` has no pool at all: `+` adds `step` straight to the counter
+and `−` takes `down` away, never below zero. `down: 0` means "the same as `step`", so a
+plain counter only needs `step`, and `down` only matters while counting. Use `count` for
+a running score or a tally, and `bank` when the table is moving chips between piles.
 
 Score formula language: names come from category names, lowercased with spaces
 turned into hyphens. A name evaluates to the points earned in that category
@@ -197,7 +204,9 @@ Every problem carries a line number and a severity.
 A bundled template keeps its drawing **next to itself**: `src/data/templates/catan.gamebuddy`
 and `src/data/templates/catan.icon.svg`. The `icon:` line names it; the file is what
 the app draws. There is no central icon catalogue to update, and deleting a template
-takes its mark with it. Community templates may do the same in `src/data/community/`.
+takes its mark with it. Community templates may do the same in `src/data/community/`,
+and first-party templates for Tiamo's own games do it in
+`src/data/templates/pandaqi/` (the gallery's Pandaqi filter).
 
 For a template you bring yourself, upload the images with the `.gamebuddy` file (the
 upload panel on the templates page, or drag and drop). Names decide the pairing:
@@ -208,6 +217,8 @@ upload panel on the templates page, or drag and drop). Names decide the pairing:
 - Images stay on the device as data URLs, under 350 KB each and 1.5 MB in total. SVG is
   drawn through `<img>`, so a script inside one cannot run.
 - A `.gamebuddy-theme` uploaded in the same batch is applied immediately.
+- A session `.json` (from **Export session JSON**) is not a template: it resumes that
+  game. Other templates in the same batch are kept in Recently imported.
 
 The drawing should read at 20 px: a single object, thick strokes, no text. Bundled
 marks use a 24 px grid, 1.8 stroke width, round caps and joins.

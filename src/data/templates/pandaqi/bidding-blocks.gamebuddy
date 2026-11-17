@@ -1,0 +1,33 @@
+# bidding-blocks.gamebuddy — bid between cards, then play out the challenges
+
+[game]
+name: Bidding Blocks
+players: 3-6
+time: 30m
+tags: pandaqi, card, trick-taking
+icon: bidding-blocks
+source: https://pandaqi.com/bidding-blocks/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Grab a pen and paper for the score
+- Shuffle all cards into a single deck and pick the first dealer
+- Plan for eight cards each; cards are dealt one at a time, with a chance to bid after every card
+- Agree the target; the rulebook recommends 100 points
+
+[rules]
+Play out challenges to build a house together, but an early bid can bring it down.
+- The dealer gives everyone one card, then anyone may bid on how many challenges they will win
+- Write the bid and how many cards you held when you made it; a bid can't be changed
+- Deal on until everyone has eight cards; the first bid was made with the least information and is divided by the smallest number
+- The dealer starts each challenge, either together (everyone plays facedown, highest number of the dealer's type wins) or in turn (cards must fit on top, last card wins)
+- An exact bid is worth 100 points, one off is worth 50, anything else 0, all divided by the cards you held when bidding and rounded
+- The rulebook recommends 100 points for the evening; the first player to reach it wins
+
+[tool score]
+mode: rounds
+win: highest
+target: 100
+hint: 100 for an exact bid, 50 if off by one, divided by the cards you held when you bid

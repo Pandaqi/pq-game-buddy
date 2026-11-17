@@ -1,0 +1,40 @@
+# mammoth-messages.gamebuddy — two words, cave drawings, sixty seconds
+
+[game]
+name: Mammoth Messages
+players: 2-8
+time: 30m
+tags: pandaqi, party, drawing, cooperative
+icon: mammoth-messages
+source: https://pandaqi.com/mammoth-messages/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Print the word tiles, cave drawings and choice tiles
+- Draw one word tile and show its ten numbered words
+- Draw ten cave drawings and one choice tile
+- The choice tile names two words by number and colour
+- Keep the rest of the decks within reach for the next turn
+
+[rules]
+Communicate two secret words using only cave drawings, while the table guesses.
+- The choice tile gives one number and one colour; those are your two words
+- You may reveal up to five cave drawings, in any arrangement, and may not move them once placed
+- Start the 60-second timer; no words, gestures or other hints
+- The others say and tap both words; both correct scores 10 points minus the drawings you revealed
+- A wrong guess or an expired timer scores 0 for that turn
+- Play 10 rounds and add the table's points; the group is trying for the highest shared total
+- If number and colour point to the same word, communicate that single word and win on the first matching guess
+
+[tool timer]
+mode: countdown
+duration: 60s
+start: manual
+sound: bell
+
+[tool counters]
+mode: count
+counters: Points=0
+step: 1

@@ -1,0 +1,34 @@
+# naivigation.gamebuddy — one vehicle, everyone steering at once
+
+[game]
+name: Naivigation
+players: 2-10
+time: 60m
+tags: pandaqi, party, cooperative
+icon: naivigation
+source: https://pandaqi.com/naivigation/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Pick a vehicle; the five major games need the shared core set as well as that vehicle's material
+- Build the 5x5 map: 25 tiles including 5 collectibles and a starting tile, then put the vehicle on the start
+- Combine the default and vehicle cards, shuffle them faceup, and give everyone 3
+- Shuffle the health cards and take 5 as the health deck
+- Lay out 5 instruction tokens and pick a start player
+
+[rules]
+Everyone steers one vehicle together, and the trick is keeping it in one piece.
+- Play happens in rounds: take clockwise turns putting a vehicle card facedown under an empty instruction token
+- Then reveal the instructions left to right and move; the player who filled the first slot starts the next round
+- Visit all 5 collectibles to win; lose at once when the health deck is empty
+- Taking damage reveals the next health card, and its handicap stays in force
+- No table talk by default; the Discuss card is the way to buy some
+- The five major games share this core and change the vehicle; the two specials are standalone spin-offs
+- Track damage here; when the health deck runs out, the vehicle is lost
+
+[tool counters]
+mode: count
+counters: damage=0
+step: 1

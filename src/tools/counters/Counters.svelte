@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
-  import { grandTotal, type CountersInstance } from './logic';
+  import { downStep, grandTotal, type CountersInstance } from './logic';
 
   let { ctx, instance }: { ctx: ToolContext; instance: CountersInstance } = $props();
   const data = $derived(instance.data);
@@ -26,31 +26,34 @@
 </script>
 
 <div class="counters">
-  <div class="bank">
-    <div class="bank-head">
-      <span>Shared bank</span>
-      {#if !hiddenNow}<span class="all">all {total}</span>{/if}
+  {#if data.mode !== 'count'}
+    <div class="bank">
+      <div class="bank-head">
+        <span>Shared bank</span>
+        {#if !hiddenNow}<span class="all">all {total}</span>{/if}
+      </div>
+      <p class="big" aria-live="polite">{shown(data.bank)}</p>
+      <div class="denoms">
+        {#each data.denominations as value (value)}
+          <button type="button" onclick={() => instance.tapDenomination(value)} aria-label="Add {value} to the bank">+{value}</button>
+        {/each}
+      </div>
+      <div class="bank-actions">
+        <button type="button" onclick={() => instance.adjustBank(-data.step)} aria-label="Take {data.step} from the bank">−{data.step}</button>
+        <button type="button" onclick={() => instance.adjustBank(data.step)} aria-label="Add {data.step} to the bank">+{data.step}</button>
+      </div>
     </div>
-    <p class="big" aria-live="polite">{shown(data.bank)}</p>
-    <div class="denoms">
-      {#each data.denominations as value (value)}
-        <button type="button" onclick={() => instance.tapDenomination(value)} aria-label="Add {value} to the bank">+{value}</button>
-      {/each}
-    </div>
-    <div class="bank-actions">
-      <button type="button" onclick={() => instance.adjustBank(-data.step)} aria-label="Take {data.step} from the bank">−{data.step}</button>
-      <button type="button" onclick={() => instance.adjustBank(data.step)} aria-label="Add {data.step} to the bank">+{data.step}</button>
-    </div>
-  </div>
+  {/if}
 
   <ul class="list">
     {#each data.counters as counter (counter.id)}
+      {@const back = data.mode === 'count' ? downStep(counter) : counter.step}
       <li>
         <span class="name">{counter.name}</span>
         <p class="value">{shown(counter.value)}</p>
         <div class="row-actions">
-          <button type="button" onclick={() => instance.adjust(counter.id, -counter.step)} aria-label="Take {counter.step} from {counter.name}">−</button>
-          <button type="button" class="plus" onclick={() => instance.adjust(counter.id, counter.step)} aria-label="Move {counter.step} to {counter.name}">+</button>
+          <button type="button" onclick={() => instance.adjust(counter.id, -back)} aria-label="Take {back} from {counter.name}">−{back}</button>
+          <button type="button" class="plus" onclick={() => instance.adjust(counter.id, counter.step)} aria-label="Add {counter.step} to {counter.name}">+{counter.step}</button>
           <button type="button" class="remove" onclick={() => instance.removeCounter(counter.id)} aria-label="Remove {counter.name}">✕</button>
         </div>
       </li>

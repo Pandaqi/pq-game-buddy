@@ -11,13 +11,14 @@
   import { listTemplates, templateText, type TemplateSummary } from '../data/templates';
 
   const templates = listTemplates();
-  const tags = [...new Set(templates.flatMap((template) => template.tags))].sort();
+  // Pandaqi has its own collection chip, so it is not repeated in the tag list.
+  const tags = [...new Set(templates.flatMap((template) => template.tags))].filter((tag) => tag !== 'pandaqi').sort();
 
   let query = $state('');
   let playersFilter = $state('any');
   let timeFilter = $state('any');
   let tagFilter = $state('any');
-  let mode = $state<'all' | 'favourites' | 'recent'>('all');
+  let mode = $state<'all' | 'pandaqi' | 'favourites' | 'recent'>('all');
   let favourites = $state<string[]>(readJson<string[]>(KEYS.favorites, []));
   let recent = $state<string[]>(readJson<string[]>(KEYS.recent, []));
   let chosen = $state<TemplateSummary | null>(null);
@@ -35,6 +36,7 @@
   const shown = $derived(
     templates
       .filter((template) => {
+        if (mode === 'pandaqi' && !template.tags.includes('pandaqi')) return false;
         if (mode === 'favourites' && !favourites.includes(template.id)) return false;
         if (mode === 'recent' && !recent.includes(template.id)) return false;
         if (tagFilter !== 'any' && !template.tags.includes(tagFilter)) return false;
@@ -190,7 +192,7 @@
       <input type="search" bind:value={query} placeholder="Search games or tools" />
     </label>
     <div class="chips" role="group" aria-label="Template collection">
-      {#each [['all', 'All'], ['favourites', 'Favourites'], ['recent', 'Recent']] as item (item[0])}
+      {#each [['all', 'All'], ['pandaqi', 'Pandaqi'], ['favourites', 'Favourites'], ['recent', 'Recent']] as item (item[0])}
         <button type="button" class:active={mode === item[0]} onclick={() => (mode = item[0] as typeof mode)}>{item[1]}</button>
       {/each}
     </div>
@@ -273,8 +275,8 @@
   <section class="upload" aria-labelledby="upload-title">
     <h2 id="upload-title">Bring your own</h2>
     <p>
-      Upload a <code>.gamebuddy</code> template, its images and a <code>.gamebuddy-theme</code> in one go.
-      Everything stays on this device.
+      Upload a <code>.gamebuddy</code> template, a saved game's <code>.json</code>, its images and a
+      <code>.gamebuddy-theme</code> in one go. Everything stays on this device.
     </p>
     <label class="field">
       <span>Files</span>
@@ -292,7 +294,7 @@
     </label>
     <p class="hint">
       An image named like the template's <code>icon:</code> value — or like the template file — becomes its
-      mark. A theme is applied straight away.
+      mark. A theme is applied straight away. A session <code>.json</code> resumes that game.
     </p>
   </section>
 </div>
@@ -485,7 +487,7 @@
   }
   @media (min-width: 34rem) {
     .list {
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   .list li {

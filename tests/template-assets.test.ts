@@ -3,6 +3,7 @@ import {
   assetMark,
   assetName,
   isImageFile,
+  isSessionFile,
   isTemplateFile,
   isThemeFile,
   listAssets,
@@ -23,14 +24,21 @@ describe('template assets', () => {
     expect(assetName('  --Odd__Name!!.WEBP')).toBe('odd__name');
   });
 
-  test('only images and the two template kinds are recognised', () => {
+  test('images, templates, themes and saved games each have one kind', () => {
     expect(isImageFile({ type: 'image/svg+xml', name: 'x' })).toBe(true);
     expect(isImageFile({ type: '', name: 'x.jpeg' })).toBe(true);
     expect(isImageFile({ type: 'text/plain', name: 'x.txt' })).toBe(false);
+    expect(isImageFile({ type: 'application/json', name: 'session.json' })).toBe(false);
     expect(isTemplateFile('game.gamebuddy')).toBe(true);
+    expect(isTemplateFile('game.txt')).toBe(true);
     expect(isTemplateFile('session.json')).toBe(false);
+    expect(isSessionFile('catan-session.json')).toBe(true);
+    expect(isSessionFile('Catan.JSON')).toBe(true);
+    expect(isSessionFile('game.gamebuddy')).toBe(false);
+    expect(isSessionFile('game.txt')).toBe(false);
     expect(isThemeFile('paper.gamebuddy-theme')).toBe(true);
     expect(isThemeFile('paper.css')).toBe(false);
+    expect(isSessionFile('paper.gamebuddy-theme')).toBe(false);
   });
 
   test('an image is stored under its name and drawn through an img', () => {

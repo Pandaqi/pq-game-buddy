@@ -78,9 +78,28 @@ export function serializeSession(session: Session): string {
 /** Tolerant JSON import: returns null instead of throwing. */
 export function parseSession(text: string): Session | null {
   try {
-    const data = JSON.parse(text) as Partial<Session>;
-    if (!data || typeof data !== 'object') return null;
-    if (typeof data.id !== 'string' || typeof data.gameName !== 'string') return null;
+    return normalizeSession(JSON.parse(text));
+  } catch {
+    return null;
+  }
+}
+
+/** An exported file wraps the record as `{ version, session }`; a bare record works too. */
+export function parseSessionFile(text: string): Session | null {
+  let data: unknown;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    return null;
+  }
+  const wrapped = data !== null && typeof data === 'object' && 'session' in data;
+  return normalizeSession(wrapped ? (data as { session: unknown }).session : data);
+}
+
+function normalizeSession(value: unknown): Session | null {
+  if (!value || typeof value !== 'object') return null;
+  const data = value as Partial<Session>;
+  if (typeof data.id !== 'string' || typeof data.gameName !== 'string') return null;
     const players = Array.isArray(data.players) ? data.players : [];
     const instances = Array.isArray(data.instances) ? data.instances : [];
     return {
@@ -97,7 +116,4 @@ export function parseSession(text: string): Session | null {
       createdAt: Number(data.createdAt) || Date.now(),
       updatedAt: Number(data.updatedAt) || Date.now(),
     };
-  } catch {
-    return null;
-  }
 }

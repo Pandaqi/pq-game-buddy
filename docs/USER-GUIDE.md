@@ -28,7 +28,7 @@ Your game is saved automatically. Closing the tab and coming back offers to resu
 | Pick | Random numbers, lists, teams, seats; list, card, wheel and slot views |
 | Score | Running totals, rounds, categories (with formulas), a money ledger |
 | Lives | HP, lives, stocks; extra tracks; conditions; elimination |
-| Counters | Wood, coins, tokens, a shared bank, chip denominations |
+| Counters | Wood, coins, tokens, a shared bank, or a straight points counter |
 | Turns | Whose turn, round number, phases, optional turn clock, initiative order |
 | Reveal | Secret roles, inspecting one player, anonymous ballots, blind bids |
 | Rules | The quick explanation, setup checklist, glossary, scoring reference |
@@ -102,24 +102,33 @@ ink borders. To keep a copy, print to PDF.
 
 ## Games and templates
 
-40 games ship as plain-text templates: Catan, Ticket to Ride, 7 Wonders, Wingspan,
+60 games ship as plain-text templates: Catan, Ticket to Ride, 7 Wonders, Wingspan,
 Sushi Go, Azul, Splendor, Dominion, Monopoly, Risk, Pandemic, Gloomhaven, Uno,
 Exploding Kittens, Love Letter, Coup, The Mind, Hanabi, Skull, Decrypto, Dixit, poker,
 Perudo, chess, Yahtzee, Phase 10, Scrabble, Boggle, Bananagrams, Codenames, Just One,
 Werewolf, Trivia Night, Escape Room, Mario Kart night, Smash night, Speedrun practice,
 D&D 5e, Kitchen Rush and house-rule sheets.
 
-- **The gallery** filters by players, length and tag. **What should we play?** picks a
-  game from whatever the filters currently show, so it never offers a four-hour game to
-  a table with twenty minutes.
+Twenty of them are first-party templates for Tiamo's own games: Bidding Blocks, Mapped
+Out, Death by Digits, Fiddlefoo, The Luck Legends, Naivigation, Chiptales, Feed the
+Beast, Maybe Games, Throneless Games, Keebble Games, Captain Flip, Magnetmen, Waterfall,
+Firecrackers, Hasty Accusations, The Game of Dilemmas, Slippery Slopes, Mammoth
+Messages and I Bid You Not. A collection gets one template: setup, a short summary, a
+link to each sub-game's rulebook, and only the tracker its rules actually use.
+
+- **The gallery** filters by players, length and tag. The **Pandaqi** chip narrows the
+  list to those first-party games. **What should we play?** picks a game from whatever
+  the filters currently show, so it never offers a four-hour game to a table with
+  twenty minutes.
 - **A template can carry an icon.** Bundled templates keep their drawing in a file next
   to themselves, so the gallery can show it without downloading anything. For your own
   template, upload an image named like its `icon:` value (or like the template file);
   that drawing then sits beside its name in your imports.
 - **Bring your own, at the bottom of the templates page.** Choose a `.gamebuddy` file,
-  its images and a `.gamebuddy-theme` together. The theme is applied straight away and
-  the images stay on this device; nothing is uploaded to a server. You can also drop
-  the same files anywhere on the page.
+  a saved game's `.json` (from **Export session JSON**), its images and a
+  `.gamebuddy-theme` together. A session resumes where it left off, the theme is
+  applied straight away and the images stay on this device; nothing is uploaded to a
+  server. You can also drop the same files anywhere on the page.
 - **Some templates carry house-rule variants.** When one does, the start sheet offers
   "Base rules" plus each variant (a quicker game, a friendlier scoring rule). Picking
   one adds its text to the rules sheet; it never changes the tools themselves.

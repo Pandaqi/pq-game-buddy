@@ -1,0 +1,35 @@
+# mapped-out.gamebuddy — build the map around the route you were dealt
+
+[game]
+name: Mapped Out
+players: 2-5
+time: 30m
+tags: pandaqi, board, tile
+icon: mapped-out
+source: https://pandaqi.com/mapped-out/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Deal each player 8 random movement cards, facedown in a row; nobody looks at them
+- Give each player a pawn and 5 map tiles for their hand
+- Place a random starting tile in the centre and put every pawn on it
+- Agree who plays the first tile
+
+[rules]
+Design the treasure map so the route you were dealt is worth the most at the end.
+- On your turn, play one map tile from your hand onto the shared map
+- The tile's place action then resolves: reveal a movement card, swap one with another, or study several (yours or another player's)
+- Draw a new tile; the map phase ends when someone has revealed all eight of their movement cards, or the tiles run out
+- Then walk your row of cards left to right and find the fish type you visited most; repeat visits don't count
+- Each fish of that type scores 1 point; highest score wins
+- The game's page has the rulebook and a generator for your own material
+
+[tool score]
+mode: simple
+win: highest
+hint: 1 point per fish of the type you visited most
+
+[tool turns]
+phases: Play tile, Place action, Draw

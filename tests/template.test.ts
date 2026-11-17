@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { schemas } from '../src/core/schemas.generated';
 import { listTemplates } from '../src/data/templates';
 import { summariseTemplate } from '../src/data/template-summary';
+import { templateIcons } from '../src/data/template-icons.generated';
 import { templateTexts } from '../src/data/template-text.generated';
 import {
   allDiagnostics,
@@ -298,6 +299,27 @@ describe('template icons', () => {
     const text = '[game]\nname: X\nicon: hologram\n';
     expect(parseTemplate(text).template.game.icon).toBe('hologram');
     expect(summariseTemplate('x', text).icon).toBe('hologram');
+  });
+});
+
+describe('template marks', () => {
+  test('every shipping template names a drawing that ships beside it', () => {
+    for (const item of templateTexts) {
+      const parsed = parseTemplate(item.text).template;
+      const drawing = templateIcons[parsed.game.icon ?? ''] ?? templateIcons[item.id];
+      expect(drawing, `${item.id} has no mark`).toBeDefined();
+    }
+  });
+
+  test('marks stay on the 24 px grid, in currentColor, with no text or images', () => {
+    for (const [name, svg] of Object.entries(templateIcons)) {
+      expect(svg.startsWith('<svg'), name).toBe(true);
+      expect(svg.includes('viewBox="0 0 24 24"'), name).toBe(true);
+      expect(svg.includes('currentColor'), name).toBe(true);
+      expect(svg.includes('stroke-width="1.8"'), name).toBe(true);
+      expect(svg.includes('<text'), name).toBe(false);
+      expect(svg.includes('<image'), name).toBe(false);
+    }
   });
 });
 
