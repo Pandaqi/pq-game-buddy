@@ -1,3 +1,4 @@
+import './helpers/language';
 import { describe, expect, test } from 'bun:test';
 import type { ToolContext } from '../src/core/registry';
 import { createRng } from '../src/core/rng';

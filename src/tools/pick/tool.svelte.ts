@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import {
@@ -55,13 +56,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
       }
       case 'list': {
         if (!data.values.length) {
-          ctx.toast('Add a few options first');
+          ctx.toast(translate('pick.toast-no-options'));
           return;
         }
         const pool = data.replacement ? data.values : data.values.filter((value) => !data.drawn.includes(value));
         if (!pool.length) {
           data.drawn = [];
-          ctx.toast('List exhausted; starting over');
+          ctx.toast(translate('pick.toast-exhausted'));
           draw();
           return;
         }
@@ -75,7 +76,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
       case 'seats': {
         const names = playerNames();
         if (!names.length) {
-          ctx.toast('Add players to the session first');
+          ctx.toast(translate('pick.toast-no-players'));
           return;
         }
         if (data.source === 'seats') {
@@ -91,11 +92,11 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
       case 'teams': {
         const names = playerNames();
         if (names.length < 2) {
-          ctx.toast('Teams need at least two players');
+          ctx.toast(translate('pick.toast-teams-two'));
           return;
         }
         if (data.teams > names.length) {
-          ctx.toast('More teams than players; some teams will be empty');
+          ctx.toast(translate('pick.toast-teams-many'));
         }
         data.teamResult = splitTeams(names, data.teams, ctx.rng);
         data.result = [];
@@ -142,9 +143,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
     commands: { draw: () => draw() },
     summary() {
       if (data.source === 'teams' && data.teamResult) {
-        return data.teamResult.map((team, index) => `Team ${index + 1}: ${team.join(', ')}`).join('\n');
+        return data.teamResult
+          .map((team, index) =>
+            translate('pick.summary-team', {
+              team: translate('pick.team-number', { count: index + 1 }),
+              names: team.join(', '),
+            }),
+          )
+          .join('\n');
       }
-      return data.result.join(', ') || 'Nothing picked yet.';
+      return data.result.join(', ') || translate('pick.summary-none');
     },
     draw,
     setSource(source) {
@@ -156,30 +164,30 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
     addValue(value) {
       const trimmed = value.trim();
       if (!trimmed) return;
-      ctx.undo.push('add option');
+      ctx.undo.push(translate('pick.undo-add'));
       data.values.push(trimmed);
     },
     removeValue(value) {
-      ctx.undo.push('remove option');
+      ctx.undo.push(translate('pick.undo-remove'));
       data.values = data.values.filter((item) => item !== value);
     },
     usePlayers() {
       const names = playerNames();
       if (!names.length) {
-        ctx.toast('Add players to the session first');
+        ctx.toast(translate('pick.toast-no-players'));
         return;
       }
-      ctx.undo.push('use players');
+      ctx.undo.push(translate('pick.undo-use-players'));
       data.values = names;
       data.source = 'list';
     },
     clearValues() {
-      ctx.undo.push('clear options');
+      ctx.undo.push(translate('pick.undo-remove'));
       data.values = [];
       data.drawn = [];
     },
     reset() {
-      ctx.undo.push('reset pick');
+      ctx.undo.push(translate('pick.undo-reset'));
       data.result = [];
       data.teamResult = null;
       data.drawn = [];

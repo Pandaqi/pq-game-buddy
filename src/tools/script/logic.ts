@@ -1,5 +1,6 @@
 /** Ordered game flow: say, wait, reveal, timer and note steps. No Svelte here. */
 
+import { translate } from '../../core/i18n';
 import { parseDuration } from '../../core/template/schema';
 
 export interface ScriptStep {
@@ -9,12 +10,13 @@ export interface ScriptStep {
 
 export const SCRIPT_VERBS = ['say', 'wait', 'reveal', 'timer', 'note'] as const;
 
-export const VERB_HINTS: Record<string, string> = {
-  say: 'Read this out loud',
-  wait: 'Hold the table for a moment',
-  reveal: 'Hand the phone over for a secret',
-  timer: 'Controls another tool',
-  note: 'Host note, not read aloud',
+/** One locale key per verb; the words themselves live in the tool's locale files. */
+export const VERB_KEYS: Record<string, string> = {
+  say: 'script.step-say',
+  wait: 'script.step-wait',
+  reveal: 'script.step-reveal',
+  timer: 'script.step-timer',
+  note: 'script.step-note',
 };
 
 /** Turn "say: text" lines into steps; unknown verbs are kept so they can be fixed. */
@@ -44,8 +46,9 @@ export function splitCommand(arg: string): { target: string; command: string } {
 }
 
 export function stepLabel(step: ScriptStep | undefined): string {
-  if (!step) return 'End of the script';
-  return VERB_HINTS[step.verb] ?? `Unknown step "${step.verb}"`;
+  if (!step) return translate('script.step-end');
+  const key = VERB_KEYS[step.verb];
+  return key ? translate(key) : translate('script.step-unknown', { verb: step.verb });
 }
 
 export interface ScriptState {
@@ -73,9 +76,14 @@ export function progressOf(state: ScriptState): { done: number; total: number; p
 }
 
 export function summaryOf(state: ScriptState): string {
-  const lines = [`Step ${Math.min(state.index + 1, state.steps.length)} of ${state.steps.length}`];
+  const lines = [
+    translate('script.summary-step', {
+      index: Math.min(state.index + 1, state.steps.length),
+      total: state.steps.length,
+    }),
+  ];
   const step = state.steps[state.index];
-  if (step) lines.push(`${step.verb}: ${step.arg}`);
-  for (const card of state.drawn) lines.push(`Drawn: ${card}`);
+  if (step) lines.push(translate('script.summary-verb', { verb: step.verb, arg: step.arg }));
+  for (const card of state.drawn) lines.push(translate('script.summary-drawn', { card }));
   return lines.join('\n');
 }

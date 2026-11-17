@@ -1,4 +1,4 @@
-import { t } from '../../src/core/i18n';
+import { t } from '../../src/core/i18n.svelte';
 import type { ToolContext } from '../../src/core/registry';
 import { createRng } from '../../src/core/rng';
 import { makePlayers } from '../../src/core/session';

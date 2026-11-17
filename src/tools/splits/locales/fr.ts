@@ -1,0 +1,47 @@
+/** Les mots propres de l'outil splits. */
+
+const fr = {
+  title: 'Splits',
+  blurb: 'Cours contre le chrono, puis compare les splits : ton meilleur run et les or.',
+  edit: 'Modifier',
+  'edit-aria': 'Modifier les splits',
+  attempt: 'Essai {count}',
+  best: '· meilleur {time}',
+  sum: '· somme des meilleurs {time}',
+  resume: 'Reprendre',
+  start: 'Démarrer le run',
+  split: 'Split',
+  pause: 'Pause',
+  reset: 'Réinitialiser le run',
+  'save-best': 'Enregistrer comme meilleur',
+  'clear-best': 'Effacer le meilleur',
+  'reset-attempts': 'Réinitialiser les essais',
+  'keys-hint': 'Espace fait un split, R réinitialise. Gros chiffres, sans décor.',
+  'empty-title': 'Pas encore de splits',
+  'empty-body':
+    'Ajoute des noms de segments, avec un temps cible facultatif, pour chronométrer une route.',
+  'add-splits': 'Ajouter des splits',
+  sheet: 'Splits',
+  game: 'Jeu',
+  category: 'Catégorie',
+  'category-placeholder': 'Any%',
+  'splits-label': 'Splits (un par ligne, « | secondes cibles » facultatif)',
+  'save-splits': 'Enregistrer les splits',
+  'targets-hint':
+    'Les cibles sont les chiffres auxquels tu te compares jusqu’à ce que tu fixes un record.',
+  'default-game': 'Mon jeu',
+  'toast-pb': 'Nouveau record personnel',
+  'toast-add-first': 'Ajoute d’abord quelques splits',
+  'toast-finish': 'Termine d’abord un run',
+  'toast-one-per-line': 'Écris un split par ligne',
+  'undo-reset-all': 'tout réinitialiser',
+  'undo-clear-pb': 'effacer le meilleur run',
+  'undo-save-pb': 'enregistrer comme record',
+  'undo-splits': 'liste des splits',
+  'summary-split': '{name} : {time}',
+  'summary-total': 'Total : {time}s',
+  'summary-best': 'Meilleur : {time}s',
+  'summary-attempts': 'Essais : {count}',
+};
+
+export default fr;

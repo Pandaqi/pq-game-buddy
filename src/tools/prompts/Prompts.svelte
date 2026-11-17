@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import EmptyState from '../../core/ui/EmptyState.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
@@ -11,16 +12,24 @@
   let importOpen = $state(false);
   let importDraft = $state('');
 
-  const packs = $derived([...PROMPT_PACKS, ...data.custom.map((pack) => ({ id: pack.name, name: pack.name, blurb: `${pack.items.length} entries`, items: pack.items }))]);
+  const packs = $derived([
+    ...PROMPT_PACKS,
+    ...data.custom.map((pack) => ({
+      id: pack.name,
+      name: pack.name,
+      blurb: t('prompts.entries', { count: pack.items.length }),
+      items: pack.items,
+    })),
+  ]);
 </script>
 
 <div class="prompts">
   <div class="controls">
     <label class="field">
-      <span>Cards</span>
+      <span>{t('prompts.cards')}</span>
       <input type="number" min="1" max="10" value={data.draw} onchange={(event) => instance.setDraw(Number((event.currentTarget as HTMLInputElement).value))} />
     </label>
-    <button type="button" class="primary" onclick={() => instance.draw()}>Draw</button>
+    <button type="button" class="primary" onclick={() => instance.draw()}>{t('prompts.draw')}</button>
   </div>
 
   <div class="packs">
@@ -33,7 +42,7 @@
 
   <label class="check">
     <input type="checkbox" checked={data.designer} onchange={(event) => instance.setDesigner((event.currentTarget as HTMLInputElement).checked)} />
-    <span>Designer mode: one genre, two mechanics, one theme, one constraint</span>
+    <span>{t('prompts.designer')}</span>
   </label>
 
   {#if data.cards.length}
@@ -43,25 +52,25 @@
           <span class="pack">{card.pack}</span>
           <p class="item">{card.item}</p>
           <div class="actions">
-            <button type="button" onclick={() => instance.reroll(index)} aria-label="Replace {card.item}">Reroll</button>
+            <button type="button" onclick={() => instance.reroll(index)} aria-label={t('prompts.replace', { item: card.item })}>{t('prompts.reroll')}</button>
             <button type="button" class:on={data.locked.includes(card.item)} onclick={() => instance.toggleLock(card.item)} aria-pressed={data.locked.includes(card.item)}>
-              {data.locked.includes(card.item) ? 'Locked' : 'Lock'}
+              {data.locked.includes(card.item) ? t('prompts.locked') : t('prompts.lock')}
             </button>
             <button type="button" onclick={() => instance.toggleFavorite(card.item)} aria-pressed={data.favorites.includes(card.item)}>
               {data.favorites.includes(card.item) ? '★' : '☆'}
             </button>
-            <button type="button" onclick={() => instance.exclude(card.item)}>Hide</button>
+            <button type="button" onclick={() => instance.exclude(card.item)}>{t('prompts.hide')}</button>
           </div>
         </li>
       {/each}
     </ul>
   {:else}
-    <EmptyState title="Nothing drawn yet" body="Pick a few packs and tap Draw. Lock the cards you like before drawing again." />
+    <EmptyState title={t('prompts.empty-title')} body={t('prompts.empty-body')} />
   {/if}
 
   {#if data.favorites.length}
     <section class="panel">
-      <h2>Favourites</h2>
+      <h2>{t('prompts.favourites')}</h2>
       <ul class="faves">
         {#each data.favorites as item (item)}
           <li>{item}</li>
@@ -73,21 +82,21 @@
   {#if data.excluded.length}
     <section class="panel">
       <header>
-        <h2>Hidden ({data.excluded.length})</h2>
-        <button type="button" onclick={() => { data.excluded = []; }}>Show again</button>
+        <h2>{t('prompts.hidden', { count: data.excluded.length })}</h2>
+        <button type="button" onclick={() => { data.excluded = []; }}>{t('prompts.show-again')}</button>
       </header>
       <p class="dim small">{data.excluded.join(' · ')}</p>
     </section>
   {/if}
 
   <label class="inline">
-    <span>Seed (optional)</span>
-    <input type="text" value={data.seed} placeholder="repeatable draws" onchange={(event) => instance.setSeed((event.currentTarget as HTMLInputElement).value)} />
+    <span>{t('prompts.seed')}</span>
+    <input type="text" value={data.seed} placeholder={t('prompts.seed-placeholder')} onchange={(event) => instance.setSeed((event.currentTarget as HTMLInputElement).value)} />
   </label>
 
   <div class="row">
-    <button type="button" onclick={() => (importOpen = true)}>Import packs</button>
-    <button type="button" onclick={() => instance.clear()}>Clear the table</button>
+    <button type="button" onclick={() => (importOpen = true)}>{t('prompts.import-packs')}</button>
+    <button type="button" onclick={() => instance.clear()}>{t('prompts.clear-table')}</button>
   </div>
 
   {#if data.history.length}
@@ -100,13 +109,13 @@
 </div>
 
 {#if importOpen}
-  <Sheet title="Import prompt packs" onclose={() => (importOpen = false)}>
-    <p class="dim small">One pack per block: a name in [brackets], then one entry per line.</p>
+  <Sheet title={t('prompts.import-title')} onclose={() => (importOpen = false)}>
+    <p class="dim small">{t('prompts.import-hint')}</p>
     <label class="field">
-      <span>Pack text</span>
+      <span>{t('prompts.pack-text')}</span>
       <textarea rows="10" bind:value={importDraft} spellcheck="false" placeholder="[Snacks]&#10;toast&#10;olives&#10;cold pizza"></textarea>
     </label>
-    <button type="button" class="wide primary" onclick={() => { instance.importPacks(importDraft); importOpen = false; }}>Add packs</button>
+    <button type="button" class="wide primary" onclick={() => { instance.importPacks(importDraft); importOpen = false; }}>{t('prompts.add-packs')}</button>
   </Sheet>
 {/if}
 

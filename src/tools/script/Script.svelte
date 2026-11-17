@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import EmptyState from '../../core/ui/EmptyState.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
@@ -43,73 +44,76 @@
 <div class="script">
   {#if !data.steps.length}
     <EmptyState
-      title="No script yet"
-      body="Write steps like “say: Everyone, close your eyes.” A template can supply them too."
+      title={t('script.empty-title')}
+      body={t('script.empty-body')}
     >
       {#snippet action()}
-        <button type="button" onclick={openEditor}>Write the first step</button>
+        <button type="button" onclick={openEditor}>{t('script.write-first')}</button>
       {/snippet}
     </EmptyState>
   {:else}
     <div class="progress" aria-hidden="true"><div style="width: {progress.percent}%"></div></div>
-    <p class="counter">Step {Math.min(data.index + 1, data.steps.length)} of {data.steps.length}{#if step} · {stepLabel(step)}{/if}</p>
+    <p class="counter">{t('script.step-counter', {
+        index: Math.min(data.index + 1, data.steps.length),
+        total: data.steps.length,
+      })}{#if step} · {stepLabel(step)}{/if}</p>
 
     <section class="narration" aria-live={data.voice && speechReady ? 'off' : 'polite'}>
       {#if finished}
-        <p class="big">That is the whole script.</p>
-        <p class="dim">Restart it, or go back a step to repeat something.</p>
+        <p class="big">{t('script.done')}</p>
+        <p class="dim">{t('script.done-hint')}</p>
       {:else if waiting}
         <p class="big">{formatClock(left, true)}</p>
-        <p class="dim">{data.paused ? 'Paused' : 'Waiting…'}</p>
+        <p class="dim">{data.paused ? t('script.paused') : t('script.waiting')}</p>
       {:else if step}
         <p class="big">{step.arg || stepLabel(step)}</p>
         {#if step.verb === 'note'}
-          <p class="host">Host note: not read aloud.</p>
+          <p class="host">{t('script.host-note')}</p>
         {:else if step.verb === 'timer' || step.verb === 'reveal'}
-          <p class="host">Controls the “{step.arg.split(/\s+/)[0]}” tool in this game.</p>
+          <p class="host">{t('script.host-controls', { tool: step.arg.split(/\s+/)[0] })}</p>
         {/if}
       {/if}
     </section>
 
     <div class="row">
-      <button type="button" onclick={() => instance.back()} disabled={data.index === 0}>Back</button>
+      <button type="button" onclick={() => instance.back()} disabled={data.index === 0}>{t('script.back')}</button>
       <button type="button" class="primary" onclick={() => instance.next()}>
-        {#if waiting && left > 0}Skip wait{:else if finished}Finish{:else}Next{/if}
+        {#if waiting && left > 0}{t('script.skip-wait')}{:else if finished}{t('script.finish')}{:else}{t('script.next')}{/if}
       </button>
     </div>
     <div class="row">
       {#if waiting}
-        <button type="button" onclick={() => instance.togglePause()}>{data.paused ? 'Resume wait' : 'Pause wait'}</button>
+        <button type="button" onclick={() => instance.togglePause()}>{data.paused ? t('script.resume-wait') : t('script.pause-wait')}</button>
       {/if}
-      <button type="button" onclick={() => instance.restart()}>Restart</button>
-      <button type="button" onclick={openEditor}>Edit steps</button>
+      <button type="button" onclick={() => instance.restart()}>{t('script.restart')}</button>
+      <button type="button" onclick={openEditor}>{t('script.edit-steps')}</button>
     </div>
 
     <label class="check">
       <input type="checkbox" checked={data.autoAdvance} onchange={(event) => instance.setAutoAdvance((event.currentTarget as HTMLInputElement).checked)} />
-      <span>Continue automatically when a wait ends</span>
+      <span>{t('script.auto-check')}</span>
     </label>
     <label class="check">
       <input type="checkbox" checked={data.voice} onchange={(event) => instance.setVoice((event.currentTarget as HTMLInputElement).checked)} />
-      <span>Read “say” steps aloud</span>
+      <span>{t('script.voice-check')}</span>
     </label>
     {#if !speechReady}
-      <p class="host">This device has no voice. Every step stays on screen anyway.</p>
+      <p class="host">{t('script.no-voice')}</p>
     {/if}
   {/if}
 
   {#if data.eventDeck || data.deck.length}
     <section class="panel">
       <header>
-        <h2>Event deck</h2>
-        <span class="dim small">{data.deck.length} left</span>
+        <h2>{t('script.event-deck')}</h2>
+        <span class="dim small">{t('script.left', { count: data.deck.length })}</span>
       </header>
       {#if data.lastCard}
         <p class="card" role="status">{data.lastCard}</p>
       {/if}
       <div class="row">
-        <button type="button" onclick={() => instance.drawCard()}>Draw a card</button>
-        <button type="button" onclick={() => instance.reshuffle()}>Reshuffle</button>
+        <button type="button" onclick={() => instance.drawCard()}>{t('script.draw-card')}</button>
+        <button type="button" onclick={() => instance.reshuffle()}>{t('script.reshuffle')}</button>
       </div>
       {#if data.drawn.length > 1}
         <ol class="drawn">
@@ -123,7 +127,7 @@
 
   {#if data.steps.length > 1}
     <details class="panel">
-      <summary>Every step</summary>
+      <summary>{t('script.every-step')}</summary>
       <ol class="all">
         {#each data.steps as item, index (index)}
           <li class:current={index === data.index}>
@@ -137,15 +141,15 @@
 </div>
 
 {#if editorOpen}
-  <Sheet title="Script steps" onclose={() => (editorOpen = false)}>
-    <p class="dim small">One step per line: <code>say:</code>, <code>wait: 5s</code>, <code>reveal: roles</code>, <code>timer: clock start</code>, <code>note:</code>.</p>
+  <Sheet title={t('script.steps-title')} onclose={() => (editorOpen = false)}>
+    <p class="dim small">{t('script.steps-hint')}</p>
     <label class="field">
-      <span>Steps</span>
+      <span>{t('script.steps')}</span>
       <textarea rows="12" bind:value={stepsDraft} spellcheck="true"></textarea>
     </label>
-    <button type="button" class="wide primary" onclick={() => { instance.setSteps(stepsDraft); editorOpen = false; }}>Save steps</button>
+    <button type="button" class="wide primary" onclick={() => { instance.setSteps(stepsDraft); editorOpen = false; }}>{t('script.save-steps')}</button>
     {#if data.steps.some((item) => item.verb === 'wait' && waitFor(item.arg) === 0)}
-      <p class="dim small">A wait step needs a duration like 5s or 90s.</p>
+      <p class="dim small">{t('script.wait-needs')}</p>
     {/if}
   </Sheet>
 {/if}

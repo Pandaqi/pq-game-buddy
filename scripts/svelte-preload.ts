@@ -13,3 +13,4 @@ if (typeof globalThis.document === 'undefined') {
   const { GlobalRegistrator } = await import('@happy-dom/global-registrator');
   GlobalRegistrator.register({ url: 'http://localhost/' });
 }
+

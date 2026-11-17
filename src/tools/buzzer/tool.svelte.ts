@@ -1,9 +1,13 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance, ToolResult } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import { BUZZER_KEYS, delayFor, summaryOf, type BuzzerState } from './logic';
 import Buzzer from './Buzzer.svelte';
+import en from './locales/en';
 import meta from './meta';
 import preset from './preset';
+
+registerToolStrings('buzzer', en);
 
 export interface BuzzerActions {
   arm(): void;
@@ -19,7 +23,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BuzzerInstance {
   const sessionPlayers = ctx.session.players();
   const names = sessionPlayers.length
     ? sessionPlayers.map((player) => player.name).slice(0, seats)
-    : Array.from({ length: seats }, (_, index) => `Player ${index + 1}`);
+    : Array.from({ length: seats }, (_, index) => translate('players.default', { count: index + 1 }));
   const colors = sessionPlayers.length
     ? sessionPlayers.map((player) => player.color).slice(0, seats)
     : Array.from({ length: seats }, () => '#c0392b');
@@ -133,7 +137,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BuzzerInstance {
           data.liveAt = null;
           data.rounds = [{ winner: player.id, ms: 0, falseStart: player.name }, ...data.rounds].slice(0, 50);
           ctx.audio.play('buzzer');
-          ctx.toast(`${player.name} jumped the start`, 'error');
+          ctx.toast(translate('buzzer.toast-jump', { name: player.name }), 'error');
         }
         return;
       }
@@ -155,7 +159,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BuzzerInstance {
     },
     clearHistory() {
       if (!data.rounds.length) return;
-      ctx.undo.push('clear reactions');
+      ctx.undo.push(translate('buzzer.undo-clear'));
       data.rounds = [];
       data.round = 0;
     },

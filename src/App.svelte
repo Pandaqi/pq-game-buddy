@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { audio } from './core/audio';
   import { scrollToStart } from './core/dom';
+  import { availableLanguages, language, t, toolTitle } from './core/i18n.svelte';
   import { manifest } from './core/manifest.generated';
   import { rememberImport } from './core/recent-imports';
   import { navigate, parseRoute, routeTo } from './core/router';
@@ -73,6 +74,7 @@
   let handledImport = $state('');
   let dragActive = $state(false);
   let cueOpen = $state(false);
+  let langOpen = $state(false);
   let diagnostics = $state<Diagnostic[]>([]);
   let variantId = $state('');
   let pending = $state<{
@@ -102,7 +104,7 @@
     handledImport = payload;
     const text = decodeTemplateLink(payload);
     if (!text) {
-      store.toast('This share link is incomplete. Ask for the template file instead.', 'error');
+      store.toast(t('toast.link-incomplete'), 'error');
       return;
     }
     beginImport(text);
@@ -172,7 +174,7 @@
         settings.setTheme(text);
         themeName = theme.name || themes[0].name.replace(/\.(gamebuddy-theme|theme)$/i, '');
       } catch {
-        store.toast('That theme file would not open. Try saving it again.', 'error');
+        store.toast(t('toast.theme-broken'), 'error');
       }
     }
 
@@ -183,13 +185,13 @@
       try {
         const record = parseSessionFile(await readFileText(file));
         if (!record) {
-          store.toast(`${file.name} is not a saved game. Export one from a running game.`, 'error');
+          store.toast(t('toast.not-session', { name: file.name }), 'error');
           continue;
         }
         await store.resume(record);
         openedSession = true;
       } catch {
-        store.toast(`${file.name} would not open. Try saving it again.`, 'error');
+        store.toast(t('toast.would-not-open', { name: file.name }), 'error');
       }
     }
 
@@ -207,33 +209,44 @@
           extra += 1;
         }
       } catch {
-        store.toast(`${file.name} would not open. Try saving it again.`, 'error');
+        store.toast(t('toast.would-not-open', { name: file.name }), 'error');
       }
     }
 
     if (openedSession) {
       const notes: string[] = [];
-      if (imagesSaved) notes.push(imagesSaved === 1 ? '1 image' : `${imagesSaved} images`);
-      if (themeName) notes.push(`theme “${themeName}”`);
-      if (extra) notes.push(`${extra} kept in Recently imported`);
-      store.toast(notes.length ? `Saved game opened. Also: ${notes.join(', ')}.` : 'Saved game opened.');
+      if (imagesSaved) notes.push(countOf('images', imagesSaved));
+      if (themeName) notes.push(t('count.theme', { name: themeName }));
+      if (extra) notes.push(countOf('imported', extra));
+      store.toast(
+        notes.length ? t('toast.saved-opened-also', { notes: notes.join(', ') }) : t('toast.saved-opened'),
+      );
       navigate({ name: 'session' });
       return;
     }
 
     const parts: string[] = [];
-    if (templates.length) parts.push(templates.length === 1 ? '1 template' : `${templates.length} templates`);
-    if (imagesSaved) parts.push(imagesSaved === 1 ? '1 image' : `${imagesSaved} images`);
-    if (themeName) parts.push(`theme “${themeName}”`);
+    if (templates.length) parts.push(countOf('templates', templates.length));
+    if (imagesSaved) parts.push(countOf('images', imagesSaved));
+    if (themeName) parts.push(t('count.theme', { name: themeName }));
     if (!parts.length) {
       if (!sessions.length) {
-        store.toast('Nothing to import. Add a .gamebuddy, a session .json, an image or a theme.', 'error');
+        store.toast(t('toast.nothing'), 'error');
       }
       return;
     }
     if (!templates.length) flow = 'none';
-    if (extra) parts.push(`${extra} kept in Recently imported`);
-    store.toast(`${parts.join(', ')} ready.`);
+    if (extra) parts.push(countOf('imported', extra));
+    store.toast(t('toast.ready', { parts: parts.join(', ') }));
+  }
+
+  /** "1 image" / "4 images": a count that reads right in every language. */
+  function countOf(what: 'images' | 'templates' | 'imported', count: number): string {
+    if (what === 'images') return count === 1 ? t('count.images-one') : t('count.images-many', { count });
+    if (what === 'templates') {
+      return count === 1 ? t('count.templates-one') : t('count.templates-many', { count });
+    }
+    return count === 1 ? t('count.imported-one') : t('count.imported-many', { count });
   }
 
   function beginImport(text: string, source = ''): void {
@@ -266,7 +279,7 @@
   function startTemplate(id: string): void {
     void templateText(id).then((text) => {
       if (text) beginImport(text);
-      else store.toast('That template is missing from this build', 'error');
+      else store.toast(t('toast.template-missing'), 'error');
     });
   }
 
@@ -275,7 +288,9 @@
     if (!target) return;
     const names = target.players.length
       ? target.players
-      : Array.from({ length: Math.max(1, Math.min(20, seatCount)) }, (_, index) => `Player ${index + 1}`);
+      : Array.from({ length: Math.max(1, Math.min(20, seatCount)) }, (_, index) =>
+          t('players.default', { count: index + 1 }),
+        );
     const variant = target.variants.find((item) => item.id === variantId);
     const tools = variant ? applyVariant(target.tools, variant) : target.tools;
     await store.start({
@@ -299,11 +314,14 @@
     if (!tool) return;
     // A bag, a timer or a coin does not get better with a second player, so only
     // a tool that seats everyone starts with two.
-    const players = tool.seats === 'multi' ? ['Player 1', 'Player 2'] : ['Player 1'];
+    const players =
+      tool.seats === 'multi'
+        ? [t('players.default', { count: 1 }), t('players.default', { count: 2 })]
+        : [t('players.default', { count: 1 })];
     // The tool's own chunk arrives here; the shell only knew its name until now.
     rememberTool(toolId);
     await store.start({
-      gameName: tool?.title ?? toolId,
+      gameName: toolTitle(tool.id, tool.title) ?? toolId,
       players,
       tools: [{ toolId, instanceId: toolId, values: {} }],
     });
@@ -313,7 +331,7 @@
   function continueSession(): void {
     void store.loadLatest().then((ok) => {
       if (ok) navigate({ name: 'session' });
-      else store.toast('No saved game on this device yet. Start a tool or import a template.', 'error');
+      else store.toast(t('toast.no-saved'), 'error');
     });
   }
 
@@ -328,26 +346,33 @@
     flow = 'paste';
   }
 
-  const CUES: { id: 'bell' | 'buzzer' | 'tick' | 'gong' | 'drumroll' | 'success'; label: string }[] = [
-    { id: 'bell', label: 'Bell' },
-    { id: 'buzzer', label: 'Buzzer' },
-    { id: 'tick', label: 'Tick' },
-    { id: 'gong', label: 'Gong' },
-    { id: 'drumroll', label: 'Drumroll' },
-    { id: 'success', label: 'Success' },
-  ];
+  function playCue(id: 'bell' | 'buzzer' | 'tick' | 'gong' | 'drumroll' | 'success'): void {
+    audio.unlock();
+    audio.play(id);
+  }
 </script>
 
 <svelte:boundary>
-  <a class="skip" href="#main">Skip to content</a>
+  <a class="skip" href="#main">{t('app.skip')}</a>
 
   <header class="top no-print">
-    <a class="brand" href="#/">
+    <a class="brand" href="#/" aria-label={t('app.name')}>
       <span class="brand-mark" aria-hidden="true">{@html doodle('acorn')}</span>
-      Game Buddy
+      <span class="brand-text">{t('app.name')}</span>
     </a>
     <div class="top-actions">
-      <button type="button" class="icon chrome-sound" onclick={() => (cueOpen = true)} aria-label="Sound board">
+      {#if availableLanguages().length > 1}
+        <button
+          type="button"
+          class="icon chrome-lang"
+          onclick={() => (langOpen = true)}
+          aria-label={t('app.language')}
+          aria-haspopup="dialog"
+        >
+          {@html mark('language')}
+        </button>
+      {/if}
+      <button type="button" class="icon chrome-sound" onclick={() => (cueOpen = true)} aria-label={t('app.sound-board')}>
         {@html mark('notes')}
       </button>
       <button
@@ -355,14 +380,14 @@
         class="icon chrome-mute"
         onclick={toggleMute}
         aria-pressed={settings.values.muted}
-        aria-label={settings.values.muted ? 'Unmute sounds' : 'Mute sounds'}
+        aria-label={settings.values.muted ? t('app.unmute') : t('app.mute')}
       >
         {@html mark(settings.values.muted ? 'muted' : 'sound')}
       </button>
       <a
         class="icon"
         href={route.name === 'settings' ? returnHash : '#/settings'}
-        aria-label={route.name === 'settings' ? 'Close settings' : 'Settings'}
+        aria-label={route.name === 'settings' ? t('app.close-settings') : t('app.settings')}
         aria-current={route.name === 'settings' ? 'page' : undefined}
       >{@html mark('gear')}</a>
     </div>
@@ -370,7 +395,7 @@
 
   {#if !storagePersistent}
     <p class="banner no-print" role="status">
-      This browser cannot save on this device ({storage.kind}). Export your game, or host the file.
+      {t('app.storage', { kind: storage.kind })}
     </p>
   {/if}
 
@@ -387,11 +412,11 @@
         <SessionView />
       {:else}
         <section class="page">
-          <h1>No game is running</h1>
-          <p class="dim">Pick a tool or a template to start, or resume a saved game.</p>
+          <h1>{t('session.none-title')}</h1>
+          <p class="dim">{t('session.none-hint')}</p>
           <div class="actions">
-            <button type="button" class="primary" onclick={() => navigate({ name: 'home' })}>Go home</button>
-            <button type="button" onclick={continueSession}>Resume last game</button>
+            <button type="button" class="primary" onclick={() => navigate({ name: 'home' })}>{t('app.home')}</button>
+            <button type="button" onclick={continueSession}>{t('session.resume')}</button>
           </div>
         </section>
       {/if}
@@ -413,62 +438,83 @@
       <LazyView load={pageLoaders.editor} label="the editor" />
     {:else if route.name === 'notfound'}
       <section class="page">
-        <h1>That page does not exist</h1>
-        <p class="dim">The link "{route.path}" points nowhere.</p>
-        <a class="primary link" href="#/">Go home</a>
+        <h1>{t('notfound.title')}</h1>
+        <p class="dim">{t('notfound.hint', { path: route.path })}</p>
+        <a class="primary link" href="#/">{t('notfound.home')}</a>
       </section>
     {:else}
       <section class="page">
-        <h1>Reading that link…</h1>
-        <p class="dim">If nothing happens, the link was cut short. Import the template text instead.</p>
-        <a class="primary link" href="#/">Go home</a>
+        <h1>{t('app.loading')}</h1>
+        <p class="dim">{t('app.loading-hint')}</p>
+        <a class="primary link" href="#/">{t('app.home')}</a>
       </section>
     {/if}
   </main>
 
   {#if dragActive}
-    <div class="dropzone" aria-hidden="true"><p>Drop a template, a saved game, images or a theme</p></div>
+    <div class="dropzone" aria-hidden="true"><p>{t('app.drop')}</p></div>
   {/if}
 
   {#if store.notice}
     <div class="toast" class:error={store.notice.kind === 'error'} role="status">
       <span>{store.notice.message}</span>
-      <button type="button" onclick={() => store.dismissNotice()} aria-label="Dismiss">✕</button>
+      <button type="button" onclick={() => store.dismissNotice()} aria-label={t('app.dismiss')}>✕</button>
     </div>
   {/if}
 
   {#snippet failed(error, reset)}
     <section class="page">
-      <h1>Something broke</h1>
-      <p class="dim">The screen failed to render. Your saved game is still on this device.</p>
+      <h1>{t('app.broke')}</h1>
+      <p class="dim">{t('app.broke-hint')}</p>
       <pre class="detail">{String(error)}</pre>
       <div class="actions">
-        <button type="button" class="primary" onclick={reset}>Try again</button>
-        <button type="button" onclick={() => navigate({ name: 'home' })}>Back to home</button>
+        <button type="button" class="primary" onclick={reset}>{t('app.try-again')}</button>
+        <button type="button" onclick={() => navigate({ name: 'home' })}>{t('app.back-home')}</button>
       </div>
     </section>
   {/snippet}
 </svelte:boundary>
 
-{#if cueOpen}
-  <Sheet title="Sound board" onclose={() => (cueOpen = false)}>
-    <p class="dim">Six cues for the table. Each one has a visual twin, so muted sound loses nothing.</p>
-    <div class="cues">
-      {#each CUES as cue (cue.id)}
-        <button type="button" onclick={() => { audio.unlock(); audio.play(cue.id); }}>{cue.label}</button>
+{#if langOpen}
+  <Sheet title={t('app.language')} onclose={() => (langOpen = false)}>
+    <div class="langs">
+      {#each availableLanguages() as item (item.id)}
+        <button
+          type="button"
+          class:active={language() === item.id}
+          aria-pressed={language() === item.id}
+          onclick={() =>
+            void settings.useLanguage(item.id).then((ok) => {
+              if (ok) langOpen = false;
+            })}
+        >
+          <span class="lang-label">{item.label}</span>
+          {#if item.english !== item.label}<span class="lang-english">{item.english}</span>{/if}
+        </button>
       {/each}
     </div>
   </Sheet>
 {/if}
 
+{#if cueOpen}
+  <Sheet title={t('cue.title')} onclose={() => (cueOpen = false)}>
+    <p class="dim">{t('cue.hint')}</p>
+    <div class="cues">
+      <button type="button" onclick={() => playCue('bell')}>{t('cue.bell')}</button>
+      <button type="button" onclick={() => playCue('buzzer')}>{t('cue.buzzer')}</button>
+      <button type="button" onclick={() => playCue('tick')}>{t('cue.tick')}</button>
+      <button type="button" onclick={() => playCue('gong')}>{t('cue.gong')}</button>
+      <button type="button" onclick={() => playCue('drumroll')}>{t('cue.drumroll')}</button>
+      <button type="button" onclick={() => playCue('success')}>{t('cue.success')}</button>
+    </div>
+  </Sheet>
+{/if}
+
 {#if flow === 'paste'}
-  <Sheet title="Import your own" onclose={() => (flow = 'none')}>
-    <p class="dim">
-      Pick a template, a saved game, its images and a theme together. Everything stays on this device;
-      nothing is uploaded.
-    </p>
+  <Sheet title={t('import.own')} onclose={() => (flow = 'none')}>
+    <p class="dim">{t('import.hint')}</p>
     <label class="field">
-      <span>Files</span>
+      <span>{t('import.files')}</span>
       <input
         type="file"
         multiple
@@ -481,26 +527,23 @@
         }}
       />
     </label>
-    <p class="hint">
-      An image named like the template's <code>icon:</code> value — or like the template file — becomes its mark.
-      A session <code>.json</code> resumes that game where it left off.
-    </p>
+    <p class="hint">{t('import.image-hint')}</p>
     <label class="field">
-      <span>Or paste a template</span>
+      <span>{t('import.paste-label')}</span>
       <textarea rows="7" bind:value={pasteText} placeholder="[game]&#10;name: My Game&#10;…" spellcheck="false"></textarea>
     </label>
-    <button type="button" class="primary" onclick={() => beginImport(pasteText)}>Check pasted template</button>
+    <button type="button" class="primary" onclick={() => beginImport(pasteText)}>{t('import.check')}</button>
   </Sheet>
 {/if}
 
 {#if flow === 'start' && pending}
-  <Sheet title={pending.gameName || 'Template'} onclose={() => (flow = 'none')}>
+  <Sheet title={pending.gameName || t('seats.template')} onclose={() => (flow = 'none')}>
     {#if pending.players.length}
-      <p class="dim">Players from the template: {pending.players.join(', ')}</p>
+      <p class="dim">{t('seats.from-template', { names: pending.players.join(', ') })}</p>
     {:else if pending.range}
-      <p class="dim">This game takes {pending.range.min}–{pending.range.max} players.</p>
+      <p class="dim">{t('seats.range', { min: pending.range.min, max: pending.range.max })}</p>
       <label class="field">
-        <span>Seats</span>
+        <span>{t('seats.label')}</span>
         <input
           type="number"
           min={pending.range.min}
@@ -510,14 +553,14 @@
       </label>
     {:else}
       <label class="field">
-        <span>Seats</span>
+        <span>{t('seats.label')}</span>
         <input type="number" min="1" max="20" bind:value={seatCount} />
       </label>
     {/if}
 
     {#if pending.variants.length}
-      <div class="variants" role="group" aria-label="House-rule variant">
-        <button type="button" class:active={variantId === ''} onclick={() => (variantId = '')}>Base rules</button>
+      <div class="variants" role="group" aria-label={t('seats.variant')}>
+        <button type="button" class:active={variantId === ''} onclick={() => (variantId = '')}>{t('seats.base')}</button>
         {#each pending.variants as variant (variant.id)}
           <button type="button" class:active={variantId === variant.id} onclick={() => (variantId = variant.id)}>
             {variant.name}
@@ -527,15 +570,23 @@
     {/if}
 
     <p class="dim">
-      {pending.tools.length} tool{pending.tools.length === 1 ? '' : 's'}:
-      {pending.tools.map((tool) => tool.toolId).join(', ') || 'none'}
+      {#if pending.tools.length === 0}
+        {t('seats.tools-empty')}
+      {:else if pending.tools.length === 1}
+        {t('seats.tools-one', { count: 1, tools: pending.tools[0].toolId })}
+      {:else}
+        {t('seats.tools-many', {
+          count: pending.tools.length,
+          tools: pending.tools.map((tool) => tool.toolId).join(', '),
+        })}
+      {/if}
     </p>
 
     {#if diagnostics.length}
       <ul class="diags">
         {#each diagnostics as item, index (index)}
           <li class:error={item.severity === 'error'}>
-            <span class="line">line {item.line}</span>
+            <span class="line">{t('settings.line', { line: item.line })}</span>
             <span>{item.message}</span>
           </li>
         {/each}
@@ -543,7 +594,7 @@
     {/if}
 
     <button type="button" class="primary" onclick={startPending}>
-      {diagnostics.some((item) => item.severity === 'error') ? 'Start anyway with defaults' : 'Start game'}
+      {diagnostics.some((item) => item.severity === 'error') ? t('seats.start-anyway') : t('seats.start')}
     </button>
   </Sheet>
 {/if}
@@ -607,6 +658,16 @@
   .brand-mark :global(svg) {
     width: 26px;
     height: 26px;
+  }
+  .brand-text {
+    white-space: nowrap;
+  }
+  /* Four chrome buttons plus the mark are wider than a 320 px phone, so the
+     wordmark folds away and the acorn keeps the way home. */
+  @media (max-width: 26rem) {
+    .brand-text {
+      display: none;
+    }
   }
   .top-actions {
     display: flex;
@@ -747,6 +808,36 @@
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: var(--space-3);
+  }
+  .langs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .langs button {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--space-3);
+    min-height: 56px;
+    padding: 0 var(--space-4);
+    text-align: left;
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .langs button.active {
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    font-weight: 800;
+  }
+  .lang-label {
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 800;
+  }
+  .lang-english {
+    font-size: var(--text-sm);
+    color: var(--text-dim);
   }
   .cues button {
     min-height: 62px;

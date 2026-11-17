@@ -1,3 +1,4 @@
+import './helpers/language';
 import { describe, expect, test } from 'bun:test';
 import { readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';

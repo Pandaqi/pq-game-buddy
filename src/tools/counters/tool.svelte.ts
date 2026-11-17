@@ -1,9 +1,14 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import { denominationsFrom, resultsFor, scoreDelta, transfer, type CountersInstance, type CountersState } from './logic';
 import Counters from './Counters.svelte';
 import meta from './meta';
 import preset from './preset';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('counters', en);
 
 function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
   const step = Math.max(1, Number(values.step ?? 1));
@@ -53,7 +58,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
           .filter((counter) => counter && typeof counter.id === 'string')
           .map((counter, index) => ({
             id: counter.id,
-            name: typeof counter.name === 'string' ? counter.name : `Counter ${index + 1}`,
+            name: typeof counter.name === 'string' ? counter.name : translate('counters.counter-name', { count: index + 1 }),
             value: Math.max(0, Number(counter.value) || 0),
             step: Math.max(1, Number(counter.step) || data.step),
             down: Math.max(0, Number(counter.down) || 0),
@@ -87,9 +92,11 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
       reveal: () => instance.reveal(),
     },
     summary() {
-      const lines = data.mode === 'count' ? [] : [`Bank: ${data.bank}`];
-      for (const counter of data.counters) lines.push(`${counter.name}: ${counter.value}`);
-      return lines.length ? lines.join('\n') : 'No counters';
+      const lines = data.mode === 'count' ? [] : [translate('counters.summary-bank', { value: data.bank })];
+      for (const counter of data.counters) {
+        lines.push(translate('counters.summary-counter', { name: counter.name, value: counter.value }));
+      }
+      return lines.length ? lines.join('\n') : translate('counters.summary-none');
     },
     results: () => resultsFor(data),
     adjust(id, delta) {
@@ -98,47 +105,63 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
       if (data.mode === 'count') {
         const gained = scoreDelta(counter, delta);
         if (gained === 0) {
-          ctx.toast(`${counter.name} is already at 0`, 'error');
+          ctx.toast(translate('counters.toast-at-zero', { name: counter.name }), 'error');
           return;
         }
-        ctx.undo.push('counter change', `counter-${id}`);
+        ctx.undo.push(translate('counters.undo-change'), `counter-${id}`);
         counter.value = Math.max(0, counter.value + gained);
-        log(`${counter.name} ${gained > 0 ? '+' : ''}${gained} → ${counter.value}`);
+        log(
+          translate('counters.log-change', {
+            name: counter.name,
+            delta: `${gained > 0 ? '+' : ''}${gained}`,
+            value: counter.value,
+          }),
+        );
         ctx.haptics.buzz('short');
         return;
       }
       const moved = transfer(counter, data.bank, delta);
       if (moved === 0) {
-        ctx.toast(delta > 0 ? 'The bank is empty' : `${counter.name} is already empty`, 'error');
+        ctx.toast(
+          delta > 0
+            ? translate('counters.toast-bank-empty')
+            : translate('counters.toast-counter-empty', { name: counter.name }),
+          'error',
+        );
         return;
       }
-      ctx.undo.push('counter change', `counter-${id}`);
+      ctx.undo.push(translate('counters.undo-change'), `counter-${id}`);
       counter.value = Math.max(0, counter.value + moved);
       data.bank = Math.max(0, data.bank - moved);
-      log(`${moved > 0 ? 'Moved' : 'Returned'} ${Math.abs(moved)} ${moved > 0 ? 'to' : 'from'} ${counter.name}`);
+      log(
+        translate(moved > 0 ? 'counters.log-moved' : 'counters.log-returned', {
+          amount: Math.abs(moved),
+          name: counter.name,
+        }),
+      );
       ctx.haptics.buzz('short');
     },
     adjustBank(delta) {
       if (!Number.isFinite(delta) || delta === 0) return;
       const next = Math.max(0, data.bank + delta);
       if (next === data.bank) return;
-      ctx.undo.push('bank change', 'bank');
+      ctx.undo.push(translate('counters.undo-bank'), 'bank');
       const moved = next - data.bank;
       data.bank = next;
-      log(`Bank ${moved > 0 ? '+' : ''}${moved}`);
+      log(translate('counters.log-bank', { delta: `${moved > 0 ? '+' : ''}${moved}` }));
       ctx.haptics.buzz('short');
     },
     tapDenomination(value) {
       if (!Number.isFinite(value) || value <= 0) return;
-      ctx.undo.push('add denomination', 'bank');
+      ctx.undo.push(translate('counters.undo-denomination'), 'bank');
       data.bank += value;
-      log(`Bank +${value}`);
+      log(translate('counters.log-bank-add', { amount: value }));
       ctx.audio.play('click');
     },
     addCounter(name, start) {
       const trimmed = name.trim();
       if (!trimmed) return;
-      ctx.undo.push('add counter');
+      ctx.undo.push(translate('counters.undo-add'));
       data.counters.push({
         id: `x${Date.now().toString(36)}`,
         name: trimmed,
@@ -150,25 +173,25 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
     renameCounter(id, name) {
       const counter = data.counters.find((item) => item.id === id);
       if (!counter) return;
-      ctx.undo.push('rename counter');
+      ctx.undo.push(translate('counters.undo-rename'));
       counter.name = name.trim() || counter.name;
     },
     removeCounter(id) {
       const counter = data.counters.find((item) => item.id === id);
       if (!counter) return;
-      ctx.undo.push('remove counter');
+      ctx.undo.push(translate('counters.undo-remove'));
       data.bank += counter.value;
       data.counters = data.counters.filter((item) => item.id !== id);
     },
     setStep(value) {
       const next = Math.max(1, Math.round(Number.isFinite(value) ? value : 1));
       if (next === data.step) return;
-      ctx.undo.push('counter step');
+      ctx.undo.push(translate('counters.undo-step'));
       data.step = next;
       for (const counter of data.counters) counter.step = next;
     },
     setHidden(value) {
-      ctx.undo.push('hidden counters');
+      ctx.undo.push(translate('counters.undo-hidden'));
       data.hidden = value;
       data.revealed = !value;
     },
@@ -180,7 +203,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
       const untouched =
         data.bank === 0 && data.history.length === 0 && data.counters.every((counter) => counter.value === 0);
       if (untouched) return;
-      ctx.undo.push('reset counters');
+      ctx.undo.push(translate('counters.undo-reset'));
       for (const counter of data.counters) counter.value = 0;
       data.bank = 0;
       data.history = [];

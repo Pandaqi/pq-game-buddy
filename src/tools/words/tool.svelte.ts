@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import { wordPack, type WordLang } from '../../data/words/packs';
@@ -15,6 +16,10 @@ import {
   type WordMode,
 } from './logic';
 import Words from './Words.svelte';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('words', en);
 import meta from './meta';
 import preset from './preset';
 
@@ -152,19 +157,29 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
     },
     summary() {
       if (data.mode === 'check' && data.check) {
-        return data.check.valid
-          ? `"${data.check.word}" is in the ${wordPack(data.lang).name} list.`
-          : `"${data.check.word}" is not in this list.${data.check.close.length ? ` Close: ${data.check.close.join(', ')}` : ''}`;
+        const checked = translate(
+          data.check.valid ? 'words.summary-in' : 'words.summary-not-in',
+          { word: data.check.word, pack: wordPack(data.lang).name },
+        );
+        const close =
+          !data.check.valid && data.check.close.length
+            ? ` ${translate('words.summary-close', { words: data.check.close.join(', ') })}`
+            : '';
+        return checked + close;
       }
-      if (data.scored.length) return data.scored.map((row) => `${row.word} (${row.score})`).join(', ');
+      if (data.scored.length)
+        return data.scored
+          .map((row) => translate('words.summary-scored', { word: row.word, score: row.score }))
+          .join(', ');
       if (data.results.length) return data.results.join(', ');
-      if (data.picked.length) return `Letters: ${data.picked.join(' ')}`;
-      if (data.mode === 'codenames') return `Codenames board: ${data.board.words.join(', ')}`;
-      return 'No word result yet.';
+      if (data.picked.length) return translate('words.summary-letters', { letters: data.picked.join(' ') });
+      if (data.mode === 'codenames')
+        return translate('words.summary-codenames', { words: data.board.words.join(', ') });
+      return translate('words.summary-none');
     },
     setLang(next) {
       if (next === data.lang) return;
-      ctx.undo.push('word pack');
+      ctx.undo.push(translate('words.undo-lang'));
       data.lang = next;
       data.results = [];
       data.scored = [];
@@ -200,7 +215,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
       else data.filters[key] = String(value);
     },
     setExtra(text) {
-      ctx.undo.push('extra words');
+      ctx.undo.push(translate('words.undo-extra'));
       data.extra = text
         .split(/[\s,\n]+/)
         .map((word) => normalise(word))
@@ -216,7 +231,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
         case 'check': {
           const word = normalise(data.query);
           if (!word) {
-            ctx.toast('Type a word to check');
+            ctx.toast(translate('words.toast-type'));
             return;
           }
           const set = new Set(words);
@@ -249,10 +264,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
       ctx.haptics.buzz('short');
     },
     newBoard() {
-      ctx.undo.push('new board');
+      ctx.undo.push(translate('words.undo-board'));
       data.board = codenamesBoard(ctx.rng, allWords());
       data.showKey = false;
-      note('New Codenames board');
+      note(translate('words.note-board'));
     },
     toggleKey() {
       data.showKey = !data.showKey;

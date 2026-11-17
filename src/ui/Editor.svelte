@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { t } from '../core/i18n.svelte';
   import { navigate } from '../core/router';
   import { schemas } from '../core/schemas.generated';
   import { store } from '../core/session-store.svelte';
@@ -59,9 +60,11 @@
   async function testDrive(): Promise<void> {
     const names = parsed.template.players.length
       ? parsed.template.players
-      : Array.from({ length: Math.max(1, Math.min(20, seats)) }, (_, index) => `Player ${index + 1}`);
+      : Array.from({ length: Math.max(1, Math.min(20, seats)) }, (_, index) =>
+          t('players.default', { count: index + 1 }),
+        );
     await store.start({
-      gameName: parsed.template.game.name || 'Untitled game',
+      gameName: parsed.template.game.name || t('editor.untitled'),
       players: names,
       tools: toolsForSession(parsed.template, resolved.tools).map((tool) => ({
         toolId: tool.toolId,
@@ -76,11 +79,11 @@
 
   function share(): void {
     if (shareTooLong(text)) {
-      store.toast('This template is too big for a link. Share the file instead.', 'error');
+      store.toast(t('toast.template-too-big'), 'error');
       return;
     }
     void copyText(templateShareUrl(text)).then((ok) => {
-      store.toast(ok ? 'Share link copied' : 'Could not copy', ok ? 'info' : 'error');
+      store.toast(ok ? t('toast.share-copied') : t('toast.could-not-copy'), ok ? 'info' : 'error');
     });
   }
 </script>
@@ -88,23 +91,23 @@
 <div class="editor">
   <header class="head">
     <div>
-      <h1>Template editor</h1>
-      <p class="dim">Plain text, checked as you type. Test drive it before you share.</p>
+      <h1>{t('editor.title')}</h1>
+      <p class="dim">{t('editor.hint')}</p>
     </div>
-    <a class="back" href="#/templates">Gallery</a>
+    <a class="back" href="#/templates">{t('editor.gallery')}</a>
   </header>
 
   <div class="toolbar">
     <label class="field">
-      <span>Start from</span>
+      <span>{t('editor.start-from')}</span>
       <select bind:value={picked} onchange={() => void loadStarter(picked)}>
         {#each starters as starter (starter.id)}
           <option value={starter.id}>{starter.name}</option>
         {/each}
       </select>
     </label>
-    <button type="button" onclick={() => download(suggestFilename(parsed.template.game.name || 'game'), text)}>Download</button>
-    <button type="button" onclick={share}>Copy link</button>
+    <button type="button" onclick={() => download(suggestFilename(parsed.template.game.name || t('editor.filename')), text)}>{t('editor.download')}</button>
+    <button type="button" onclick={share}>{t('editor.copy-link')}</button>
   </div>
 
   <div class="code" class:bad={fatal}>
@@ -113,14 +116,20 @@
       bind:this={area}
       bind:value={text}
       spellcheck="false"
-      aria-label="Template text"
+      aria-label={t('editor.text')}
       onscroll={syncScroll}
     ></textarea>
   </div>
 
   <div class="status">
-    <span class="pill" class:error={fatal}>{fatal ? 'Has errors' : 'Valid'}</span>
-    <span class="dim small">{parsed.template.game.name || 'No name yet'} · {resolved.tools.length} tools · {lineCount} lines</span>
+    <span class="pill" class:error={fatal}>{fatal ? t('editor.has-errors') : t('editor.valid')}</span>
+    <span class="dim small">
+      {t('editor.status', {
+        name: parsed.template.game.name || t('editor.no-name'),
+        tools: resolved.tools.length,
+        lines: lineCount,
+      })}
+    </span>
   </div>
 
   {#if diagnostics.length}
@@ -128,18 +137,18 @@
       {#each diagnostics as item, index (index)}
         <li class:error={item.severity === 'error'}>
           <button type="button" onclick={() => jump(item.line)}>
-            <span class="line">line {item.line}</span>
+            <span class="line">{t('editor.line', { line: item.line })}</span>
             <span>{item.message}</span>
           </button>
         </li>
       {/each}
     </ul>
   {:else}
-    <p class="ok">No warnings. This template parses and every tool setting is known.</p>
+    <p class="ok">{t('editor.ok')}</p>
   {/if}
 
   <div class="preview">
-    <h2>What starts</h2>
+    <h2>{t('editor.what-starts')}</h2>
     {#if resolved.tools.length}
       <ul>
         {#each resolved.tools as tool (tool.instanceId)}
@@ -150,24 +159,24 @@
         {/each}
       </ul>
     {:else}
-      <p class="dim">No tools yet. Add a `[tool score]`-style section.</p>
+      <p class="dim">{t('editor.no-tools')}</p>
     {/if}
     {#if parsed.template.players.length}
-      <p class="dim">Players: {parsed.template.players.join(', ')}</p>
+      <p class="dim">{t('editor.players', { names: parsed.template.players.join(', ') })}</p>
     {:else if range}
       <label class="field">
-        <span>Seats ({range.min}–{range.max})</span>
+        <span>{t('editor.seats-range', { range: `${range.min}–${range.max}` })}</span>
         <input type="number" min={range.min} max={range.max} bind:value={seats} />
       </label>
     {:else}
       <label class="field">
-        <span>Seats</span>
+        <span>{t('gallery.seats')}</span>
         <input type="number" min="1" max="20" bind:value={seats} />
       </label>
     {/if}
   </div>
 
-  <button type="button" class="primary" onclick={testDrive}>{fatal ? 'Test drive with defaults' : 'Test drive'}</button>
+  <button type="button" class="primary" onclick={testDrive}>{fatal ? t('editor.test-drive-anyway') : t('editor.test-drive')}</button>
 </div>
 
 <style>

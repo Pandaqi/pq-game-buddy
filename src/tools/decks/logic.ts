@@ -1,5 +1,6 @@
 /** Card decks: build, shuffle, draw, deal and hide. No Svelte here. */
 
+import { translate } from '../../core/i18n';
 import type { Rng } from '../../core/rng';
 
 export interface Card {
@@ -126,9 +127,19 @@ export function deckSize(state: DeckState): number {
 }
 
 export function summaryOf(state: DeckState): string {
-  const lines = [`Deck: ${state.pool.length} left, ${state.discard.length} discarded`];
-  for (const hand of state.hands) lines.push(`${hand.player}: ${hand.cards.map((item) => item.label).join(' ') || '—'}`);
-  if (state.table.length) lines.push(`Table: ${state.table.map((item) => item.label).join(' ')}`);
-  if (state.lastDraw.length) lines.push(`Drawn: ${state.lastDraw.map((item) => item.label).join(' ')}`);
+  const lines = [
+    translate('decks.summary-deck', { left: state.pool.length, discarded: state.discard.length }),
+  ];
+  for (const hand of state.hands)
+    lines.push(
+      translate('decks.summary-hand', {
+        name: hand.player,
+        cards: hand.cards.map((item) => item.label).join(' ') || '—',
+      }),
+    );
+  if (state.table.length)
+    lines.push(translate('decks.summary-table', { cards: state.table.map((item) => item.label).join(' ') }));
+  if (state.lastDraw.length)
+    lines.push(translate('decks.summary-drawn', { cards: state.lastDraw.map((item) => item.label).join(' ') }));
   return lines.join('\n');
 }

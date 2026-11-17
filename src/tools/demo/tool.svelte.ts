@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import Demo from './Demo.svelte';
@@ -11,7 +12,7 @@ export interface DemoState {
 
 function create(ctx: ToolContext, values: PresetValues = {}) {
   const data = $state<DemoState>({
-    label: String(values.label ?? 'Taps'),
+    label: String(values.label ?? translate('demo.demo-label')),
     count: Number(values.start ?? 0),
   });
 

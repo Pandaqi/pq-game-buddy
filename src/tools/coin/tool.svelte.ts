@@ -1,9 +1,14 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import { flipCoins, tossWinner, type CoinInstance, type CoinSide, type CoinState } from './logic';
 import Coin from './Coin.svelte';
+import en from './locales/en';
 import meta from './meta';
 import preset from './preset';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('coin', en);
 
 function create(ctx: ToolContext, values: PresetValues = {}): CoinInstance {
   const data = $state<CoinState>({
@@ -48,11 +53,23 @@ function create(ctx: ToolContext, values: PresetValues = {}): CoinInstance {
       if (data.series.heads >= data.target) {
         data.seriesWinner = 'heads';
         ctx.audio.play('success');
-        ctx.toast(`Heads takes the series ${data.series.heads}–${data.series.tails}`);
+        ctx.toast(
+          translate('coin.toast-series', {
+            side: translate('coin.heads'),
+            own: data.series.heads,
+            other: data.series.tails,
+          }),
+        );
       } else if (data.series.tails >= data.target) {
         data.seriesWinner = 'tails';
         ctx.audio.play('success');
-        ctx.toast(`Tails takes the series ${data.series.tails}–${data.series.heads}`);
+        ctx.toast(
+          translate('coin.toast-series', {
+            side: translate('coin.tails'),
+            own: data.series.tails,
+            other: data.series.heads,
+          }),
+        );
       }
     }
 
@@ -91,15 +108,25 @@ function create(ctx: ToolContext, values: PresetValues = {}): CoinInstance {
     },
     commands: { flip: () => flip() },
     summary() {
-      if (!data.results.length) return 'No flips yet.';
+      if (!data.results.length) return translate('coin.summary-none');
       const heads = data.results.filter(Boolean).length;
-      const series =
-        data.mode === 'best'
-          ? ` Series (best of ${data.target}): heads ${data.series.heads}, tails ${data.series.tails}${
-              data.seriesWinner ? ` — ${data.seriesWinner} won` : ''
-            }.`
-          : '';
-      return `Heads ${heads}, tails ${data.results.length - heads}. Call-it: ${data.wins} won, ${data.losses} lost.${series}`;
+      const main = translate('coin.summary-main', {
+        heads,
+        tails: data.results.length - heads,
+        won: data.wins,
+        lost: data.losses,
+      });
+      if (data.mode !== 'best') return main;
+      const series = translate(
+        data.seriesWinner ? 'coin.summary-series-won' : 'coin.summary-series',
+        {
+          target: data.target,
+          heads: data.series.heads,
+          tails: data.series.tails,
+          side: data.seriesWinner ? translate(`coin.${data.seriesWinner}`) : '',
+        },
+      );
+      return `${main} ${series}`;
     },
     flip,
     setCoins(count) {
@@ -122,7 +149,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): CoinInstance {
       data.seriesWinner = null;
     },
     reset() {
-      ctx.undo.push('reset coin');
+      ctx.undo.push(translate('coin.undo-reset'));
       data.results = [];
       data.wins = 0;
       data.losses = 0;

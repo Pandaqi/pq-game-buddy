@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import { formatDurationText, parseDuration } from '../../core/template/schema';
   import { clock } from '../../core/ticker';
@@ -24,14 +25,14 @@
   let moved = false;
   let scrub: { index: number; startX: number; startDuration: number } | null = null;
 
-  const MODE_LABELS: Record<TimerMode, string> = {
-    countdown: 'Countdown',
-    up: 'Stopwatch',
-    flip: 'Flip timer',
-    chess: 'Chess clock',
-    interval: 'Interval',
-    sequence: 'Sequence',
-  };
+  const MODE_LABELS = $derived<Record<TimerMode, string>>({
+    countdown: t('timer.countdown'),
+    up: t('timer.up'),
+    flip: t('timer.flip'),
+    chess: t('timer.chess'),
+    interval: t('timer.interval'),
+    sequence: t('timer.sequence'),
+  });
 
   const QUICK = [30000, 60000, 120000, 180000, 300000, 600000];
 
@@ -56,7 +57,7 @@
     const input = event.currentTarget as HTMLInputElement;
     const ms = parseDuration(input.value);
     if (ms === null) {
-      ctx.toast('That is not a duration. Try 3m or 180s.', 'error');
+      ctx.toast(t('timer.toast-duration'), 'error');
       input.value = formatDurationText(activeClock?.duration ?? 300000);
       return;
     }
@@ -125,9 +126,9 @@
     <span class="mode-label">{MODE_LABELS[data.mode]}</span>
     <div class="top-actions">
       {#if data.mode === 'chess'}
-        <span class="hint">Tap a clock to pass the turn</span>
+        <span class="hint">{t('timer.chess-hint')}</span>
       {/if}
-      <button type="button" class="ghost" onclick={openSettings} aria-label="Timer settings">Settings</button>
+      <button type="button" class="ghost" onclick={openSettings} aria-label={t('timer.settings')}>{t('timer.settings')}</button>
     </div>
   </div>
 
@@ -141,9 +142,11 @@
         <button
           type="button"
           class="digits"
-          aria-label="{clock.name}: {instance.clockLabel(index, nowMono, nowWall)}. {clock.running
-            ? 'Tap to pause'
-            : 'Tap to start'}"
+          aria-label={t('timer.clock-aria', {
+            name: clock.name,
+            time: instance.clockLabel(index, nowMono, nowWall),
+            action: clock.running ? t('timer.tap-pause') : t('timer.tap-start'),
+          })}
           onpointerdown={(event) => {
             pressStart(index);
             scrubStart(event, index);
@@ -166,17 +169,17 @@
             <i style="width: {Math.round(progressOf(clock, nowMono, nowWall) * 100)}%"></i>
           </span>
           {#if clock.alarmed}
-            <span class="flag">{data.mode === 'chess' ? 'Flag' : 'Time up'}</span>
+            <span class="flag">{data.mode === 'chess' ? t('timer.flag') : t('timer.time-up')}</span>
           {:else if clock.laps.length}
-            <span class="flag quiet">{clock.laps.length} intervals</span>
+            <span class="flag quiet">{t('timer.intervals', { count: clock.laps.length })}</span>
           {/if}
         </button>
 
         <div class="row">
-          <button type="button" onclick={() => instance.shift(index, -30000)} aria-label="Minus 30 seconds">−30s</button>
-          <button type="button" onclick={() => instance.shift(index, 30000)} aria-label="Plus 30 seconds">+30s</button>
-          <button type="button" onclick={() => instance.reset(index)} aria-label="Reset {clock.name}">Reset</button>
-          <button type="button" onclick={() => (menuIndex = index)} aria-label="More for {clock.name}">⋯</button>
+          <button type="button" onclick={() => instance.shift(index, -30000)} aria-label={t('timer.minus-30')}>−30s</button>
+          <button type="button" onclick={() => instance.shift(index, 30000)} aria-label={t('timer.plus-30')}>+30s</button>
+          <button type="button" onclick={() => instance.reset(index)} aria-label={t('timer.reset-name', { name: clock.name })}>{t('timer.reset')}</button>
+          <button type="button" onclick={() => (menuIndex = index)} aria-label={t('timer.more', { name: clock.name })}>⋯</button>
         </div>
       </div>
     {/each}
@@ -200,11 +203,11 @@
 
   <div class="controls">
     <button type="button" class="primary" onclick={() => (anyRunning ? instance.pauseAll() : instance.startAll())}>
-      {anyRunning ? 'Pause' : 'Start'}
+      {anyRunning ? t('timer.pause') : t('timer.start')}
     </button>
-    <button type="button" onclick={() => instance.resetAll()}>Reset</button>
+    <button type="button" onclick={() => instance.resetAll()}>{t('timer.reset')}</button>
     {#if data.mode !== 'chess' && data.mode !== 'sequence'}
-      <button type="button" onclick={() => instance.addTimer()}>Add timer</button>
+      <button type="button" onclick={() => instance.addTimer()}>{t('timer.add-timer')}</button>
     {/if}
   </div>
 
@@ -217,14 +220,14 @@
   {/if}
 
   {#if !data.timers.length}
-    <p class="hint">Add a timer to get going.</p>
+    <p class="hint">{t('timer.empty')}</p>
   {/if}
 </div>
 
 {#if settingsOpen}
-  <Sheet title="Timer settings" onclose={() => (settingsOpen = false)}>
+  <Sheet title={t('timer.settings')} onclose={() => (settingsOpen = false)}>
     <label class="field">
-      <span>Mode</span>
+      <span>{t('timer.mode')}</span>
       <select
         value={data.mode}
         onchange={(event) => instance.applySettings({ mode: (event.currentTarget as HTMLSelectElement).value as TimerMode })}
@@ -236,63 +239,63 @@
     </label>
 
     <label class="field">
-      <span>Duration</span>
+      <span>{t('timer.duration')}</span>
       <input type="text" inputmode="text" value={durationText} onchange={applyDurationText} />
     </label>
 
     <label class="field">
-      <span>Warn at</span>
+      <span>{t('timer.warn-at')}</span>
       <input
         type="text"
         value={formatDurationText(data.warnAt)}
         onchange={(event) => {
           const ms = parseDuration((event.currentTarget as HTMLInputElement).value);
-          if (ms === null) ctx.toast('That reads as no time at all. Try 30s or 2m.', 'error');
+          if (ms === null) ctx.toast(t('timer.toast-warn'), 'error');
           else instance.applySettings({ warnAt: ms });
         }}
       />
     </label>
 
     <label class="field">
-      <span>Sound</span>
+      <span>{t('timer.sound')}</span>
       <select
         value={data.sound}
         onchange={(event) => instance.applySettings({ sound: (event.currentTarget as HTMLSelectElement).value as TimerState['sound'] })}
       >
-        <option value="bell">Bell</option>
-        <option value="buzzer">Buzzer</option>
-        <option value="gong">Gong</option>
-        <option value="none">Silent</option>
+        <option value="bell">{t('timer.bell')}</option>
+        <option value="buzzer">{t('timer.buzzer')}</option>
+        <option value="gong">{t('timer.gong')}</option>
+        <option value="none">{t('timer.silent')}</option>
       </select>
     </label>
 
     <label class="field">
-      <span>Vibration</span>
+      <span>{t('timer.vibration')}</span>
       <select
         value={data.haptic}
         onchange={(event) => instance.applySettings({ haptic: (event.currentTarget as HTMLSelectElement).value as TimerState['haptic'] })}
       >
-        <option value="short">Short</option>
-        <option value="long">Long</option>
-        <option value="none">Off</option>
+        <option value="short">{t('timer.short')}</option>
+        <option value="long">{t('timer.long')}</option>
+        <option value="none">{t('timer.off')}</option>
       </select>
     </label>
 
     <label class="field">
-      <span>Layout</span>
+      <span>{t('timer.layout')}</span>
       <select
         value={data.layout}
         onchange={(event) => instance.applySettings({ layout: (event.currentTarget as HTMLSelectElement).value as TimerState['layout'] })}
       >
-        <option value="single">Single</option>
-        <option value="grid">Grid</option>
-        <option value="list">List</option>
+        <option value="single">{t('timer.single')}</option>
+        <option value="grid">{t('timer.grid')}</option>
+        <option value="list">{t('timer.list')}</option>
       </select>
     </label>
 
     {#if data.mode === 'chess'}
       <label class="field">
-        <span>Increment</span>
+        <span>{t('timer.increment')}</span>
         <input
           type="text"
           value={formatDurationText(data.increment)}
@@ -303,7 +306,7 @@
         />
       </label>
       <label class="field">
-        <span>Delay</span>
+        <span>{t('timer.delay')}</span>
         <input
           type="text"
           value={formatDurationText(data.delay)}
@@ -317,7 +320,7 @@
 
     {#if data.mode === 'interval'}
       <label class="field">
-        <span>Every</span>
+        <span>{t('timer.every')}</span>
         <input
           type="text"
           value={formatDurationText(data.interval)}
@@ -329,15 +332,15 @@
       </label>
     {/if}
 
-    <button type="button" class="wide" onclick={() => instance.usePlayers()}>Use player names</button>
-    <button type="button" class="wide" onclick={() => instance.addTimer()}>Add timer</button>
+    <button type="button" class="wide" onclick={() => instance.usePlayers()}>{t('timer.use-players')}</button>
+    <button type="button" class="wide" onclick={() => instance.addTimer()}>{t('timer.add-timer')}</button>
   </Sheet>
 {/if}
 
 {#if menuIndex !== null && data.timers[menuIndex]}
   <Sheet title={data.timers[menuIndex].name} onclose={() => (menuIndex = null)}>
     <label class="field">
-      <span>Name</span>
+      <span>{t('timer.name')}</span>
       <input
         type="text"
         value={data.timers[menuIndex].name}
@@ -348,14 +351,14 @@
       />
     </label>
     <label class="field">
-      <span>Duration</span>
+      <span>{t('timer.duration')}</span>
       <input
         type="text"
         value={formatDurationText(data.timers[menuIndex].duration)}
         onchange={(event) => {
           if (menuIndex === null) return;
           const ms = parseDuration((event.currentTarget as HTMLInputElement).value);
-          if (ms === null) ctx.toast('That reads as no time at all. Try 30s or 2m.', 'error');
+          if (ms === null) ctx.toast(t('timer.toast-warn'), 'error');
           else instance.setDuration(menuIndex, ms);
         }}
       />
@@ -369,7 +372,7 @@
         menuIndex = null;
       }}
     >
-      Remove this timer
+      {t('timer.remove')}
     </button>
   </Sheet>
 {/if}

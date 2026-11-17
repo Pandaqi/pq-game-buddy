@@ -6,6 +6,7 @@
  * The spa and site builds also write dist/pq-game-buddy.html, the offline copy.
  */
 
+import type { BunPlugin } from 'bun';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -23,10 +24,29 @@ const shellFile = join(root, 'index.html');
 // The single file has no ceiling: it is the whole app in one file.
 const BUDGET_APP_GZ = 150 * 1024;
 const BUDGET_CHUNK_GZ = 24 * 1024;
-const BUDGET_CHUNKS_TOTAL_GZ = 250 * 1024;
+// M10 raised this ceiling once, from 250 KB, when German, Spanish and French
+// landed beside English and Dutch: five languages at about 22 KB each are
+// 302.6 KB across 42 chunks, so the ceiling is 320 KB. A sixth language needs its
+// own arithmetic in ROADMAP.md §5.2 before it moves again.
+const BUDGET_CHUNKS_TOTAL_GZ = 320 * 1024;
 
 const MODES = ['spa', 'site', 'single'] as const;
 type Mode = (typeof MODES)[number];
+
+/**
+ * `--langs=nl` (or `nl,de`) drops every other language chunk from the build, so a
+ * hosted copy or a single file can carry one language and be smaller for it.
+ * Every language is a chunk, so a build carries exactly what it is asked for; the
+ * app boots into whatever arrived and only offers the languages actually shipped.
+ */
+const langsArg = process.argv.find((arg) => arg.startsWith('--langs='));
+const requestedLangs = langsArg
+  ? langsArg
+      .slice('--langs='.length)
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean)
+  : null;
 
 const sizeOnly = process.argv.includes('--size-only');
 const modeArg = process.argv.find((arg) => arg.startsWith('--mode='));
@@ -45,6 +65,7 @@ interface SizeReport {
   single: number;
   singleGz: number;
   tools: number;
+  langs: string[];
 }
 
 function gzipSize(text: string): number {
@@ -101,6 +122,30 @@ function baseName(path: string): string {
   return path.split(/[\\/]/).pop() ?? path;
 }
 
+/**
+ * Drops the language loaders a `--langs` build does not ask for. The registry is
+ * one line per language, so a filtered copy is a rewrite of those lines and every
+ * unshipped chunk disappears from the output.
+ */
+function localeFilter(keep: string[]): BunPlugin {
+  return {
+    name: 'pqgb-locales',
+    setup(build) {
+      build.onLoad({ filter: /core[\\/]locales[\\/]registry\.generated\.ts$/ }, async (args) => {
+        const source = await Bun.file(args.path).text();
+        const contents = source
+          .split('\n')
+          .filter((line) => {
+            const match = line.match(/^ {2}([a-z]{2}): \(\) => import\(/);
+            return !match || keep.includes(match[1]);
+          })
+          .join('\n');
+        return { contents, loader: 'ts' };
+      });
+    },
+  };
+}
+
 async function bundle(outdir: string, splitting: boolean): Promise<Output[]> {
   const result = await Bun.build({
     entrypoints: [join(root, 'src', 'main.ts')],
@@ -110,7 +155,7 @@ async function bundle(outdir: string, splitting: boolean): Promise<Output[]> {
       chunk: 'chunks/[name]-[hash].[ext]',
       asset: 'assets/[name]-[hash].[ext]',
     },
-    plugins: [svelteCompile()],
+    plugins: [...(requestedLangs ? [localeFilter(requestedLangs)] : []), svelteCompile()],
     minify: true,
     sourcemap: 'none',
     target: 'browser',
@@ -180,6 +225,23 @@ function embedded(js: string, css: string): string {
     .replace(scriptTag, `<script type="module">${js.replace(/<\/script/gi, '<\\/script')}</script>`)
     .replace('</head>', `  <style>${css}</style>\n  </head>`);
 }
+
+// What this build can offer, read from the same registry the bundle uses.
+const registryText = await Bun.file(join(root, 'src', 'core', 'locales', 'registry.generated.ts')).text();
+// Both loader maps list languages (the shell's and the tools'); one id each.
+const shippedLangs = [
+  ...new Set(
+    [...registryText.matchAll(/^ {2}([a-z]{2}): \(\) => import\(/gm)].map((match) => match[1]),
+  ),
+];
+if (requestedLangs) {
+  const unknown = requestedLangs.filter((id) => !shippedLangs.includes(id));
+  if (unknown.length) {
+    console.error(`[build] unknown language ${unknown.join(', ')}; this build has ${shippedLangs.join(', ')}`);
+    process.exit(1);
+  }
+}
+const buildLangs = requestedLangs ?? shippedLangs;
 
 const manifest = await Bun.file(join(root, 'src', 'core', 'manifest.generated.ts')).text();
 const toolCount = (manifest.match(/^import meta_/gm) ?? []).length;
@@ -283,6 +345,7 @@ const report: SizeReport = {
   single: rawSize(inline),
   singleGz: gzipSize(inline),
   tools: toolCount,
+  langs: buildLangs,
 };
 
 writeFileSync(sizeFile, JSON.stringify(report, null, 2));
@@ -297,7 +360,7 @@ console.log(`${'first visit (js+css)'.padEnd(30)}  ${kb(report.js + report.css).
 console.log(`${`${report.chunks.count} lazy chunks`.padEnd(30)}  ${kb(report.chunks.totalGz).padEnd(10)} largest ${kb(report.chunks.largestGz)}`);
 console.log(`${'pq-game-buddy.html'.padEnd(30)}  ${kb(report.single).padEnd(10)} ${kb(report.singleGz)}`);
 console.log('');
-console.log(`[build] ${toolCount} tools · mode ${mode} · dist ready`);
+console.log(`[build] ${toolCount} tools · ${buildLangs.join('+')} · mode ${mode} · dist ready`);
 console.log('[build] offline copy: dist/pq-game-buddy.html');
 
 process.exit(verify(report) ? 0 : 1);

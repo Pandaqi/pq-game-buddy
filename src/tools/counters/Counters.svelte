@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { downStep, grandTotal, type CountersInstance } from './logic';
@@ -29,18 +30,18 @@
   {#if data.mode !== 'count'}
     <div class="bank">
       <div class="bank-head">
-        <span>Shared bank</span>
-        {#if !hiddenNow}<span class="all">all {total}</span>{/if}
+        <span>{t('counters.shared-bank')}</span>
+        {#if !hiddenNow}<span class="all">{t('counters.all', { total })}</span>{/if}
       </div>
       <p class="big" aria-live="polite">{shown(data.bank)}</p>
       <div class="denoms">
         {#each data.denominations as value (value)}
-          <button type="button" onclick={() => instance.tapDenomination(value)} aria-label="Add {value} to the bank">+{value}</button>
+          <button type="button" onclick={() => instance.tapDenomination(value)} aria-label={t('counters.add-to-bank', { value })}>+{value}</button>
         {/each}
       </div>
       <div class="bank-actions">
-        <button type="button" onclick={() => instance.adjustBank(-data.step)} aria-label="Take {data.step} from the bank">−{data.step}</button>
-        <button type="button" onclick={() => instance.adjustBank(data.step)} aria-label="Add {data.step} to the bank">+{data.step}</button>
+        <button type="button" onclick={() => instance.adjustBank(-data.step)} aria-label={t('counters.take-from-bank', { value: data.step })}>−{data.step}</button>
+        <button type="button" onclick={() => instance.adjustBank(data.step)} aria-label={t('counters.add-to-bank', { value: data.step })}>+{data.step}</button>
       </div>
     </div>
   {/if}
@@ -52,27 +53,27 @@
         <span class="name">{counter.name}</span>
         <p class="value">{shown(counter.value)}</p>
         <div class="row-actions">
-          <button type="button" onclick={() => instance.adjust(counter.id, -back)} aria-label="Take {back} from {counter.name}">−{back}</button>
-          <button type="button" class="plus" onclick={() => instance.adjust(counter.id, counter.step)} aria-label="Add {counter.step} to {counter.name}">+{counter.step}</button>
-          <button type="button" class="remove" onclick={() => instance.removeCounter(counter.id)} aria-label="Remove {counter.name}">✕</button>
+          <button type="button" onclick={() => instance.adjust(counter.id, -back)} aria-label={t('counters.take-from', { value: back, name: counter.name })}>−{back}</button>
+          <button type="button" class="plus" onclick={() => instance.adjust(counter.id, counter.step)} aria-label={t('counters.add-to', { value: counter.step, name: counter.name })}>+{counter.step}</button>
+          <button type="button" class="remove" onclick={() => instance.removeCounter(counter.id)} aria-label={t('counters.remove', { name: counter.name })}>✕</button>
         </div>
       </li>
     {/each}
   </ul>
 
   <div class="row">
-    <button type="button" onclick={() => (adding = true)}>Add counter</button>
+    <button type="button" onclick={() => (adding = true)}>{t('counters.add-counter')}</button>
     {#if hiddenNow}
-      <button type="button" class="reveal" onclick={() => instance.reveal()}>Reveal</button>
+      <button type="button" class="reveal" onclick={() => instance.reveal()}>{t('counters.reveal')}</button>
     {:else}
-      <button type="button" onclick={() => instance.setHidden(true)}>Hide values</button>
+      <button type="button" onclick={() => instance.setHidden(true)}>{t('counters.hide')}</button>
     {/if}
   </div>
-  <button type="button" class="ghost" onclick={() => instance.reset()}>Reset counters</button>
+  <button type="button" class="ghost" onclick={() => instance.reset()}>{t('counters.reset')}</button>
 
   {#if data.history.length}
     <details class="log">
-      <summary>Log ({data.history.length})</summary>
+      <summary>{t('counters.log', { count: data.history.length })}</summary>
       <ol>
         {#each data.history as entry, index (index)}
           <li>{entry.text}</li>
@@ -83,16 +84,16 @@
 </div>
 
 {#if adding}
-  <Sheet title="Add counter" onclose={() => (adding = false)}>
+  <Sheet title={t('counters.add-counter')} onclose={() => (adding = false)}>
     <label class="field">
-      <span>Name</span>
+      <span>{t('counters.name')}</span>
       <input type="text" bind:value={newName} />
     </label>
     <label class="field">
-      <span>Starting value</span>
+      <span>{t('counters.start-value')}</span>
       <input type="number" min="0" bind:value={newStart} />
     </label>
-    <button type="button" class="wide" onclick={addNow}>Add</button>
+    <button type="button" class="wide" onclick={addNow}>{t('counters.add')}</button>
   </Sheet>
 {/if}
 

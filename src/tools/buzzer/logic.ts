@@ -1,5 +1,7 @@
 /** Reaction buzzers: fair timing, false starts and keyboard lanes. No Svelte here. */
 
+import { translate } from '../../core/i18n';
+
 export const BUZZER_KEYS = ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'];
 
 export interface BuzzPlayer {
@@ -44,14 +46,18 @@ export function isLive(state: BuzzerState, now: number): boolean {
 export function summaryOf(state: BuzzerState): string {
   const lines: string[] = [];
   for (const round of state.rounds) {
-    const player = state.players.find((item) => item.id === round.winner);
-    lines.push(`${player?.name ?? round.winner}: ${round.ms} ms${round.falseStart ? ` (false start: ${round.falseStart})` : ''}`);
+    const name = state.players.find((item) => item.id === round.winner)?.name ?? round.winner;
+    lines.push(
+      round.falseStart
+        ? translate('buzzer.summary-round-false', { name, ms: round.ms, flagged: round.falseStart })
+        : translate('buzzer.summary-round', { name, ms: round.ms }),
+    );
   }
   const wins = new Map<string, number>();
   for (const round of state.rounds) wins.set(round.winner, (wins.get(round.winner) ?? 0) + 1);
   const tally = [...wins.entries()]
     .map(([id, count]) => `${state.players.find((player) => player.id === id)?.name ?? id}: ${count}`)
     .join(', ');
-  if (tally) lines.push(`Wins: ${tally}`);
-  return lines.length ? lines.join('\n') : 'No rounds yet.';
+  if (tally) lines.push(translate('buzzer.summary-wins', { tally }));
+  return lines.length ? lines.join('\n') : translate('buzzer.summary-none');
 }

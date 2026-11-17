@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import type { ToolInstance } from '../../core/registry';
 
@@ -13,7 +14,7 @@
 
 <div class="demo">
   <p class="count" aria-live="polite">{data.count}</p>
-  <button type="button" onclick={() => { ctx.undo.push('tap'); data.count += 1; ctx.audio.play('click'); }}>
+  <button type="button" onclick={() => { ctx.undo.push(t('demo.tap')); data.count += 1; ctx.audio.play('click'); }}>
     {data.label}
   </button>
 </div>

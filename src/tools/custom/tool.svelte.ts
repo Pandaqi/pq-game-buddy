@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance, ToolResult } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import {
@@ -17,6 +18,10 @@ import {
 import Custom from './Custom.svelte';
 import meta from './meta';
 import preset from './preset';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('custom', en);
 
 export interface CustomActions {
   setFieldValue(id: string, value: string | number | boolean): void;
@@ -172,25 +177,25 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
         });
       }
       const result = evaluateFormula(data.formula, formulaVars(data));
-      return result === null ? [] : [{ name: 'Sheet', score: result }];
+      return result === null ? [] : [{ name: translate('custom.results-sheet'), score: result }];
     },
     setFieldValue(id, value) {
       const field = data.fields.find((item) => item.id === id);
       if (!field) return;
-      ctx.undo.push('field value', `field-${id}`);
+      ctx.undo.push(translate('custom.undo-field-value'), `field-${id}`);
       field.value = value;
     },
     addField(label, type) {
       const trimmed = label.trim();
       if (!trimmed) return;
-      ctx.undo.push('add field');
+      ctx.undo.push(translate('custom.undo-add-field'));
       data.fields = [
         ...data.fields,
         { id: `f${Date.now().toString(36)}`, label: trimmed, type, options: [], value: type === 'checkbox' ? false : type === 'number' ? 0 : '' },
       ];
     },
     removeField(id) {
-      ctx.undo.push('remove field');
+      ctx.undo.push(translate('custom.undo-remove-field'));
       data.fields = data.fields.filter((field) => field.id !== id);
     },
     adjustCounter(id, amount) {
@@ -198,7 +203,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
       if (!counter) return;
       const next = Math.max(counter.min, Math.min(counter.max, counter.value + amount));
       if (next === counter.value) return;
-      ctx.undo.push('counter', `counter-${id}`);
+      ctx.undo.push(translate('custom.undo-counter'), `counter-${id}`);
       counter.value = next;
       for (const player of data.players) {
         if (!(id in player.values)) player.values[id] = counter.value;
@@ -208,19 +213,19 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
     setCounterValue(id, value) {
       const counter = data.counters.find((item) => item.id === id);
       if (!counter) return;
-      ctx.undo.push('counter value');
+      ctx.undo.push(translate('custom.undo-counter-value'));
       counter.value = Math.max(counter.min, Math.min(counter.max, Math.round(value)));
     },
     addCounter(label) {
       const trimmed = label.trim();
       if (!trimmed) return;
-      ctx.undo.push('add counter');
+      ctx.undo.push(translate('custom.undo-add-counter'));
       const id = `c${Date.now().toString(36)}`;
       data.counters = [...data.counters, { id, label: trimmed, value: 0, step: 1, min: -999, max: 9999 }];
       data.players = data.players.map((player) => ({ ...player, values: { ...player.values, [id]: 0 } }));
     },
     removeCounter(id) {
-      ctx.undo.push('remove counter');
+      ctx.undo.push(translate('custom.undo-remove-counter'));
       data.counters = data.counters.filter((counter) => counter.id !== id);
       data.players = data.players.map((player) => {
         const values = { ...player.values };
@@ -231,39 +236,39 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
     toggleChecklist(index) {
       const item: ChecklistItem | undefined = data.checklist[index];
       if (!item) return;
-      ctx.undo.push('checklist');
+      ctx.undo.push(translate('custom.undo-checklist'));
       item.done = !item.done;
       ctx.haptics.buzz('short');
     },
     addChecklist(text) {
       const trimmed = text.trim();
       if (!trimmed) return;
-      ctx.undo.push('add checklist item');
+      ctx.undo.push(translate('custom.undo-add-check'));
       data.checklist = [...data.checklist, { id: `k${Date.now().toString(36)}`, text: trimmed, done: false }];
     },
     resetChecklist() {
       if (!data.checklist.some((item) => item.done)) return;
-      ctx.undo.push('reset checklist');
+      ctx.undo.push(translate('custom.undo-reset-checklist'));
       for (const item of data.checklist) item.done = false;
     },
     setTableSize(rows, cols) {
-      ctx.undo.push('table size');
+      ctx.undo.push(translate('custom.undo-table-size'));
       data.table = makeTable(rows, cols, data.table);
     },
     setCell(row, col, value) {
       if (row < 0 || col < 0 || row >= data.table.rows || col >= data.table.cols) return;
-      ctx.undo.push('cell value', `cell-${row}-${col}`);
+      ctx.undo.push(translate('custom.undo-cell'), `cell-${row}-${col}`);
       const cells = data.table.cells.slice();
       cells[row * data.table.cols + col] = Number.isFinite(value) ? value : 0;
       data.table = { ...data.table, cells };
     },
     setFormula(value) {
-      ctx.undo.push('formula');
+      ctx.undo.push(translate('custom.undo-formula'));
       data.formula = value;
     },
     setPerPlayer(value) {
       if (value === data.perPlayer) return;
-      ctx.undo.push('per-player sheets');
+      ctx.undo.push(translate('custom.undo-per-player'));
       data.perPlayer = value;
       if (value && !data.players.length) {
         data.players = ctx.session.players().map((player) => ({
@@ -275,13 +280,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
     setPlayerValue(player, key, value) {
       const sheet = playerByName(player);
       if (!sheet) return;
-      ctx.undo.push('player value', `player-${player}-${key}`);
+      ctx.undo.push(translate('custom.undo-player-value'), `player-${player}-${key}`);
       sheet.values = { ...sheet.values, [key]: Math.round(value) };
     },
     adjustPlayerValue(player, key, amount) {
       const sheet = playerByName(player);
       if (!sheet) return;
-      ctx.undo.push('player value', `player-${player}-${key}`);
+      ctx.undo.push(translate('custom.undo-player-value'), `player-${player}-${key}`);
       sheet.values = { ...sheet.values, [key]: (sheet.values[key] ?? 0) + amount };
       ctx.haptics.buzz('short');
     },

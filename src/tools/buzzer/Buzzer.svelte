@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { ToolContext } from '../../core/registry';
   import { isEditingTarget } from '../../core/dom';
+  import { t } from '../../core/i18n.svelte';
+  import type { ToolContext } from '../../core/registry';
   import { isLive } from './logic';
   import type { BuzzerInstance } from './tool.svelte';
 
@@ -31,15 +32,15 @@
 <div class="buzzer">
   <div class="status" class:live class:waiting role="status" aria-live="polite">
     {#if data.falseStart}
-      False start: <strong>{data.falseStart}</strong>
+      {t('buzzer.false-start', { name: data.falseStart })}
     {:else if winnerName}
-      <strong>{winnerName}</strong> wins · {data.reactionMs} ms
+      <strong>{winnerName}</strong> {t('buzzer.wins', { ms: data.reactionMs ?? 0 })}
     {:else if waiting}
-      Get ready…
+      {t('buzzer.ready')}
     {:else if live}
-      Buzz!
+      {t('buzzer.buzz')}
     {:else}
-      Round {data.round + 1} · press Arm
+      {t('buzzer.round', { count: data.round + 1 })}
     {/if}
   </div>
 
@@ -61,22 +62,22 @@
 
   <div class="row">
     <button type="button" class="primary" onclick={() => instance.arm()} disabled={data.armed}>
-      {data.armed ? 'Armed' : 'Arm buzzers'}
+      {data.armed ? t('buzzer.armed') : t('buzzer.arm')}
     </button>
-    <button type="button" onclick={() => instance.reset()} disabled={!data.armed}>Disarm</button>
+    <button type="button" onclick={() => instance.reset()} disabled={!data.armed}>{t('buzzer.disarm')}</button>
   </div>
 
   {#if data.rounds.length}
     <section class="panel">
       <header>
-        <h2>Reactions</h2>
-        <button type="button" onclick={() => instance.clearHistory()}>Clear</button>
+        <h2>{t('buzzer.reactions')}</h2>
+        <button type="button" onclick={() => instance.clearHistory()}>{t('buzzer.clear')}</button>
       </header>
       <ol>
         {#each data.rounds as round, index (index)}
           <li>
             <span>{data.players.find((player) => player.id === round.winner)?.name ?? '—'}</span>
-            <span class="ms">{round.falseStart ? 'false start' : `${round.ms} ms`}</span>
+            <span class="ms">{round.falseStart ? t('buzzer.false-start-short') : t('buzzer.ms', { ms: round.ms })}</span>
           </li>
         {/each}
       </ol>

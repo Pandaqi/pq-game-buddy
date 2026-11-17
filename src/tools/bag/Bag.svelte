@@ -1,5 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte';
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { BAG_SETS, totalOf, trayTotal, type BagSet } from './logic';
@@ -50,13 +51,13 @@
 
 <div class="bag">
   <div class="stats">
-    <div class="stat"><span class="num">{left}</span><span class="label">in the bag</span></div>
-    <div class="stat"><span class="num">{data.tokens.length + data.trays.reduce((sum, tray) => sum + tray.tokens.length, 0)}</span><span class="label">drawn</span></div>
-    <div class="stat"><span class="num">{data.drawCount}</span><span class="label">per draw</span></div>
+    <div class="stat"><span class="num">{left}</span><span class="label">{t('bag.in-bag')}</span></div>
+    <div class="stat"><span class="num">{data.tokens.length + data.trays.reduce((sum, tray) => sum + tray.tokens.length, 0)}</span><span class="label">{t('bag.drawn')}</span></div>
+    <div class="stat"><span class="num">{data.drawCount}</span><span class="label">{t('bag.per-draw')}</span></div>
   </div>
 
   {#if data.trayMode === 'per-player' && players.length}
-    <div class="who" role="group" aria-label="Who is drawing">
+    <div class="who" role="group" aria-label={t('bag.who-drawing')}>
       {#each players as player (player.id)}
         <button type="button" class:active={activeWho === player.name} onclick={() => choosePlayer(player.name)}>
           {player.name}
@@ -67,7 +68,7 @@
 
   <div class="controls">
     <label class="field">
-      <span>Tokens</span>
+      <span>{t('bag.tokens')}</span>
       <input
         type="number"
         min="1"
@@ -76,40 +77,40 @@
         onchange={(event) => instance.setDraw(Number((event.currentTarget as HTMLInputElement).value))}
       />
     </label>
-    <button type="button" class="primary" onclick={() => instance.draw()}>Draw</button>
+    <button type="button" class="primary" onclick={() => instance.draw()}>{t('bag.draw')}</button>
   </div>
 
   {#if data.trayMode === 'shared'}
     <section class="block">
       <header>
-        <h2>Shared tray</h2>
+        <h2>{t('bag.shared-tray')}</h2>
         {#if data.tokens.length}
-          <span class="dim small">{trayTotal(data.tokens)} points</span>
+          <span class="dim small">{t('bag.points', { count: trayTotal(data.tokens) })}</span>
         {/if}
       </header>
       {#if data.tokens.length}
         <ul class="tokens">
           {#each data.tokens as token, index (token.id)}
             <li>
-              <button type="button" onclick={() => instance.returnAt(index)} aria-label="Return {token.type} to the bag">
+              <button type="button" onclick={() => instance.returnAt(index)} aria-label={t('bag.return-token', { type: token.type })}>
                 {token.type}{#if token.value}<span class="points">{token.value}</span>{/if}
               </button>
             </li>
           {/each}
         </ul>
       {:else}
-        <p class="dim small">Nothing drawn yet. Tap Draw to pull {data.drawCount} from the bag.</p>
+        <p class="dim small">{t('bag.empty-tray', { count: data.drawCount })}</p>
       {/if}
     </section>
   {:else}
     <section class="block">
-      <h2>Trays</h2>
+      <h2>{t('bag.trays')}</h2>
       {#if data.trays.length}
         {#each data.trays as tray (tray.player)}
           <div class="tray">
             <header>
               <span class="player">{tray.player}</span>
-              <span class="dim small">{tray.tokens.length} tiles · {trayTotal(tray.tokens)} pts</span>
+              <span class="dim small">{t('bag.tray-summary', { count: tray.tokens.length, points: trayTotal(tray.tokens) })}</span>
             </header>
             <ul class="tokens">
               {#each tray.tokens as token (token.id)}
@@ -118,18 +119,18 @@
                 </li>
               {/each}
             </ul>
-            <button type="button" class="ghost" onclick={() => instance.returnPlayer(tray.player)}>Return {tray.player}'s tiles</button>
+            <button type="button" class="ghost" onclick={() => instance.returnPlayer(tray.player)}>{t('bag.return-tiles', { player: tray.player })}</button>
           </div>
         {/each}
       {:else}
-        <p class="dim small">Pick a player above, then draw.</p>
+        <p class="dim small">{t('bag.pick-player')}</p>
       {/if}
     </section>
   {/if}
 
   <section class="block">
     <header>
-      <h2>Left in the bag</h2>
+      <h2>{t('bag.left-in-bag')}</h2>
       <span class="dim small">{data.set}</span>
     </header>
     <ul class="counts">
@@ -138,14 +139,14 @@
           <span class="tile">{type}</span>
           <span class="n">{data.remaining[type] ?? 0}</span>
           <span class="steppers">
-            <button type="button" onclick={() => instance.adjustType(type, 1)} aria-label="Add one {type}">+</button>
-            <button type="button" onclick={() => instance.adjustType(type, -1)} aria-label="Remove one {type}" disabled={(data.remaining[type] ?? 0) === 0}>−</button>
+            <button type="button" onclick={() => instance.adjustType(type, 1)} aria-label={t('bag.add-one', { type })}>+</button>
+            <button type="button" onclick={() => instance.adjustType(type, -1)} aria-label={t('bag.remove-one', { type })} disabled={(data.remaining[type] ?? 0) === 0}>−</button>
           </span>
         </li>
       {/each}
     </ul>
     {#if !types.length}
-      <p class="dim small">This bag is empty. Set a tile set or write custom counts.</p>
+      <p class="dim small">{t('bag.bag-empty')}</p>
     {/if}
   </section>
 
@@ -158,16 +159,16 @@
   {/if}
 
   <div class="row">
-    <button type="button" onclick={openSettings}>Bag settings</button>
-    <button type="button" onclick={() => instance.returnAll()}>Return all</button>
-    <button type="button" onclick={() => instance.refill()}>Refill</button>
+    <button type="button" onclick={openSettings}>{t('bag.settings')}</button>
+    <button type="button" onclick={() => instance.returnAll()}>{t('bag.return-all')}</button>
+    <button type="button" onclick={() => instance.refill()}>{t('bag.refill')}</button>
   </div>
 </div>
 
 {#if settingsOpen}
-  <Sheet title="Bag settings" onclose={() => (settingsOpen = false)}>
+  <Sheet title={t('bag.settings')} onclose={() => (settingsOpen = false)}>
     <label class="field">
-      <span>Tile set</span>
+      <span>{t('bag.tile-set')}</span>
       <select value={data.set} onchange={(event) => instance.setSet((event.currentTarget as HTMLSelectElement).value as BagSet)}>
         {#each BAG_SETS as set (set)}
           <option value={set}>{set}</option>
@@ -175,32 +176,32 @@
       </select>
     </label>
     <label class="field">
-      <span>Tray</span>
+      <span>{t('bag.tray')}</span>
       <select value={data.trayMode} onchange={(event) => instance.setTrayMode((event.currentTarget as HTMLSelectElement).value as 'shared' | 'per-player')}>
-        <option value="shared">One shared tray</option>
-        <option value="per-player">A tray per player</option>
+        <option value="shared">{t('bag.tray-shared')}</option>
+        <option value="per-player">{t('bag.tray-per-player')}</option>
       </select>
     </label>
     {#if data.set === 'custom'}
       <label class="field">
-        <span>Counts (one per line: "A = 9")</span>
+        <span>{t('bag.counts')}</span>
         <textarea rows="6" bind:value={countsDraft} spellcheck="false"></textarea>
       </label>
       <label class="field">
-        <span>Points (one per line: "A = 1")</span>
+        <span>{t('bag.values')}</span>
         <textarea rows="4" bind:value={valuesDraft} spellcheck="false"></textarea>
       </label>
-      <button type="button" class="wide primary" onclick={() => instance.setCustom(countsDraft, valuesDraft)}>Save custom bag</button>
+      <button type="button" class="wide primary" onclick={() => instance.setCustom(countsDraft, valuesDraft)}>{t('bag.save-custom')}</button>
     {/if}
     <label class="field">
-      <span>Add a type</span>
+      <span>{t('bag.add-type')}</span>
       <div class="add">
         <input type="text" bind:value={newType} placeholder="star" />
-        <button type="button" onclick={() => { instance.addType(newType, 1); newType = ''; }}>Add</button>
+        <button type="button" onclick={() => { instance.addType(newType, 1); newType = ''; }}>{t('bag.add')}</button>
       </div>
     </label>
-    <button type="button" class="wide" onclick={() => (settingsOpen = false)}>Done</button>
-    <p class="dim small">Changing the set builds a fresh bag. Draws are weighted by what is left, never fixed odds.</p>
+    <button type="button" class="wide" onclick={() => (settingsOpen = false)}>{t('bag.done')}</button>
+    <p class="dim small">{t('bag.hint')}</p>
   </Sheet>
 {/if}
 

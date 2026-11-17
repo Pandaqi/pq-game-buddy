@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import Fold from '../../core/ui/Fold.svelte';
   import { facesFor, type DiceInstance } from './logic';
@@ -22,7 +23,7 @@
 
   function addFace(): void {
     if (data.faces.length >= 12) return;
-    instance.setFaces([...data.faces, 'New face']);
+    instance.setFaces([...data.faces, t('dice.face-new')]);
   }
 
   function removeFace(index: number): void {
@@ -37,15 +38,15 @@
 </script>
 
 <div class="dice">
-  <div class="modes" role="group" aria-label="Roll mode">
+  <div class="modes" role="group" aria-label={t('dice.roll-mode')}>
     <button type="button" class:active={data.mode === 'single'} onclick={() => instance.setMode('single')}>
-      Dice
+      {t('dice.dice')}
     </button>
     <button type="button" class:active={data.mode === 'pool'} onclick={() => instance.setMode('pool')}>
-      Pool
+      {t('dice.pool')}
     </button>
     <button type="button" class:active={data.mode === 'lab'} onclick={() => instance.setMode('lab')}>
-      Faces
+      {t('dice.faces')}
     </button>
   </div>
 
@@ -55,7 +56,7 @@
         {#each data.faces as face, index (index)}
           <div class="face-row">
             <label>
-              <span class="sr-only">Face {index + 1}</span>
+              <span class="sr-only">{t('dice.face', { count: index + 1 })}</span>
               <input
                 value={face}
                 maxlength="20"
@@ -67,41 +68,41 @@
               type="button"
               onclick={() => removeFace(index)}
               disabled={data.faces.length <= 2}
-              aria-label="Remove the face {face}"
+              aria-label={t('dice.remove-face', { face })}
             >✕</button>
           </div>
         {/each}
       </div>
       {#if data.faces.length < 12}
-        <button type="button" class="add-face" onclick={addFace}>Add a face</button>
+        <button type="button" class="add-face" onclick={addFace}>{t('dice.add-face')}</button>
       {/if}
-      <p class="breakdown">Two named faces are the minimum. A blank face is skipped.</p>
+      <p class="breakdown">{t('dice.faces-hint')}</p>
 
       <div class="lab-roll">
-        <div class="lab-count" role="group" aria-label="Custom dice per roll">
+        <div class="lab-count" role="group" aria-label={t('dice.custom-dice')}>
           <button
             type="button"
-            aria-label="One fewer die"
+            aria-label={t('dice.one-fewer')}
             onclick={() => instance.setLabCount(data.labCount - 1)}
             disabled={data.labCount <= 1}
           >−</button>
-          <span>{data.labCount} {data.labCount === 1 ? 'die' : 'dice'}</span>
+          <span>{t(data.labCount === 1 ? 'dice.count-one' : 'dice.count-many', { count: data.labCount })}</span>
           <button
             type="button"
-            aria-label="One more die"
+            aria-label={t('dice.one-more')}
             onclick={() => instance.setLabCount(data.labCount + 1)}
             disabled={data.labCount >= 12}
           >+</button>
         </div>
-        <button type="button" class="roll" onclick={() => instance.rollLab()}>Roll</button>
+        <button type="button" class="roll" onclick={() => instance.rollLab()}>{t('dice.roll')}</button>
       </div>
 
       <div class="sets">
         <label>
-          <span class="sr-only">Name for this face set</span>
-          <input bind:value={setName} placeholder="Name this face set" autocomplete="off" />
+          <span class="sr-only">{t('dice.set-label')}</span>
+          <input bind:value={setName} placeholder={t('dice.set-placeholder')} autocomplete="off" />
         </label>
-        <button type="button" onclick={saveSet}>Save set</button>
+        <button type="button" onclick={saveSet}>{t('dice.save-set')}</button>
       </div>
       {#if Object.keys(data.sets).length}
         <div class="quick">
@@ -110,7 +111,7 @@
               <button type="button" class="macro" onclick={() => instance.loadSet(name)} title={faces.join(' · ')}>
                 {name}
               </button>
-              <button type="button" class="drop" aria-label="Delete the face set {name}" onclick={() => instance.deleteSet(name)}>✕</button>
+              <button type="button" class="drop" aria-label={t('dice.delete-set', { name })} onclick={() => instance.deleteSet(name)}>✕</button>
             </span>
           {/each}
         </div>
@@ -119,27 +120,27 @@
   {:else}
     <form class="entry" onsubmit={submit}>
       {#if data.mode === 'pool'}
-        <label class="sr-only" for="dice-pool">Dice pool</label>
+        <label class="sr-only" for="dice-pool">{t('dice.pool-label')}</label>
         <input
           id="dice-pool"
           value={data.pool}
-          placeholder="4d6+2d8"
+          placeholder={t('dice.pool-placeholder')}
           autocomplete="off"
           spellcheck="false"
           oninput={(event) => instance.setPool((event.currentTarget as HTMLInputElement).value)}
         />
       {:else}
-        <label class="sr-only" for="dice-notation">Dice notation</label>
+        <label class="sr-only" for="dice-notation">{t('dice.notation-label')}</label>
         <input
           id="dice-notation"
           value={data.notation}
-          placeholder="2d6+1"
+          placeholder={t('dice.notation-placeholder')}
           autocomplete="off"
           spellcheck="false"
           oninput={(event) => instance.setNotation((event.currentTarget as HTMLInputElement).value)}
         />
       {/if}
-      <button type="submit" class="roll">Roll</button>
+      <button type="submit" class="roll">{t('dice.roll')}</button>
     </form>
   {/if}
 
@@ -160,13 +161,13 @@
         </p>
       {:else}
         <p class="total idle">—</p>
-        <p class="breakdown">Set the faces, then roll. Saved sets are one tap away.</p>
+        <p class="breakdown">{t('dice.lab-empty')}</p>
       {/if}
     {:else if data.result}
       <p class="total">
         {data.result.total}
         {#if data.result.successes}
-          <span class="successes">{data.result.successes} successes</span>
+          <span class="successes">{t('dice.successes', { count: data.result.successes })}</span>
         {/if}
       </p>
       <div class="faces">
@@ -189,7 +190,9 @@
     {:else}
       <p class="total idle">—</p>
       <p class="breakdown">
-        {data.mode === 'pool' ? 'Roll the pool.' : `Press roll for ${data.notation || 'a die'}.`}
+        {data.mode === 'pool'
+          ? t('dice.pool-hint')
+          : t('dice.single-hint', { notation: data.notation || t('dice.a-die') })}
       </p>
     {/if}
   </div>
@@ -210,38 +213,38 @@
     </div>
   {/if}
 
-  <Fold title="Roll options">
+  <Fold title={t('dice.options')}>
     <div class="options">
     {#if data.mode === 'single'}
       <label>
-        <span>Advantage</span>
+        <span>{t('dice.advantage')}</span>
         <select
           value={data.advantage}
           onchange={(event) => instance.setAdvantage((event.currentTarget as HTMLSelectElement).value as typeof data.advantage)}
         >
-          <option value="none">None</option>
-          <option value="advantage">Advantage</option>
-          <option value="disadvantage">Disadvantage</option>
+          <option value="none">{t('dice.none')}</option>
+          <option value="advantage">{t('dice.advantage-full')}</option>
+          <option value="disadvantage">{t('dice.disadvantage')}</option>
         </select>
       </label>
     {/if}
     <label>
-      <span>Success at</span>
+      <span>{t('dice.success-at')}</span>
       <input
         type="number"
         min="0"
         max="100"
         value={data.successAt}
         onchange={(event) => instance.setSuccessAt(Number((event.currentTarget as HTMLInputElement).value))}
-        placeholder="0 = off"
+        placeholder={t('dice.success-off')}
       />
     </label>
     <label>
-      <span>Seed (optional)</span>
+      <span>{t('dice.seed')}</span>
       <input
         type="text"
         value={data.seed}
-        placeholder="repeatable rolls"
+        placeholder={t('dice.seed-placeholder')}
         onchange={(event) => instance.setSeed((event.currentTarget as HTMLInputElement).value)}
       />
     </label>
@@ -249,10 +252,10 @@
   </Fold>
 
   {#if data.history.length}
-    <Fold title="Recent rolls">
+    <Fold title={t('dice.recent-rolls')}>
       <header>
-        <h2>History</h2>
-        <button type="button" onclick={() => instance.clearHistory()}>Clear</button>
+        <h2>{t('dice.history')}</h2>
+        <button type="button" onclick={() => instance.clearHistory()}>{t('dice.clear')}</button>
       </header>
       <ol>
         {#each data.history as item, index (index)}

@@ -3,7 +3,7 @@
 import type { Component } from 'svelte';
 import type { AudioApi } from './audio';
 import type { HapticsApi } from './haptics';
-import type { Translate } from './i18n';
+import type { Translate } from './i18n.svelte';
 import type { Rng } from './rng';
 import type { Player } from './session';
 import type { PresetSchema, PresetValues } from './template/schema';

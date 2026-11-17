@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import type { ToolContext } from '../../core/registry';
   import { isEditingTarget } from '../../core/dom';
+  import { t } from '../../core/i18n.svelte';
+  import type { ToolContext } from '../../core/registry';
   import EmptyState from '../../core/ui/EmptyState.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { formatClock } from '../../core/template/schema';
@@ -47,12 +48,14 @@
 <div class="splits">
   <header class="head">
     <h1>{data.game}{#if data.category}<span class="cat"> · {data.category}</span>{/if}</h1>
-    <button type="button" onclick={openSettings} aria-label="Edit splits">Edit</button>
+    <button type="button" onclick={openSettings} aria-label={t('splits.edit-aria')}>{t('splits.edit')}</button>
   </header>
 
   <p class="clock" aria-live="off">{formatClock(total, true)}</p>
   <p class="sub">
-    Attempt {Math.max(1, data.attempts)}{#if best} · best {formatClock(best)} · sum of best {formatClock(sumBest)}{/if}
+    {t('splits.attempt', { count: Math.max(1, data.attempts) })}{#if best}
+      {t('splits.best', { time: formatClock(best) })}
+      {t('splits.sum', { time: formatClock(sumBest) })}{/if}
   </p>
 
   {#if data.splits.length}
@@ -79,46 +82,46 @@
     <div class="row">
       {#if !data.running}
         <button type="button" class="primary" onclick={() => (data.run.length ? instance.resume() : instance.start())}>
-          {data.run.length ? 'Resume' : 'Start run'}
+          {data.run.length ? t('splits.resume') : t('splits.start')}
         </button>
       {:else}
-        <button type="button" class="primary" onclick={() => instance.split()}>Split</button>
-        <button type="button" onclick={() => instance.stop()}>Pause</button>
+        <button type="button" class="primary" onclick={() => instance.split()}>{t('splits.split')}</button>
+        <button type="button" onclick={() => instance.stop()}>{t('splits.pause')}</button>
       {/if}
-      <button type="button" onclick={() => instance.reset()}>Reset run</button>
+      <button type="button" onclick={() => instance.reset()}>{t('splits.reset')}</button>
     </div>
 
     <div class="row small-row">
-      <button type="button" onclick={() => instance.savePB()} disabled={!data.run.length}>Save as best</button>
-      <button type="button" onclick={() => instance.clearPB()} disabled={!data.pb.length}>Clear best</button>
-      <button type="button" onclick={() => instance.resetAll()}>Reset attempts</button>
+      <button type="button" onclick={() => instance.savePB()} disabled={!data.run.length}>{t('splits.save-best')}</button>
+      <button type="button" onclick={() => instance.clearPB()} disabled={!data.pb.length}>{t('splits.clear-best')}</button>
+      <button type="button" onclick={() => instance.resetAll()}>{t('splits.reset-attempts')}</button>
     </div>
-    <p class="dim small">Space splits, R resets. Big numbers, no clutter.</p>
+    <p class="dim small">{t('splits.keys-hint')}</p>
   {:else}
-    <EmptyState title="No splits yet" body="Add segment names, with an optional target time, to time a route.">
+    <EmptyState title={t('splits.empty-title')} body={t('splits.empty-body')}>
       {#snippet action()}
-        <button type="button" onclick={openSettings}>Add splits</button>
+        <button type="button" onclick={openSettings}>{t('splits.add-splits')}</button>
       {/snippet}
     </EmptyState>
   {/if}
 </div>
 
 {#if settingsOpen}
-  <Sheet title="Splits" onclose={() => (settingsOpen = false)}>
+  <Sheet title={t('splits.sheet')} onclose={() => (settingsOpen = false)}>
     <label class="field">
-      <span>Game</span>
+      <span>{t('splits.game')}</span>
       <input type="text" value={data.game} onchange={(event) => instance.setGame((event.currentTarget as HTMLInputElement).value)} />
     </label>
     <label class="field">
-      <span>Category</span>
-      <input type="text" value={data.category} placeholder="Any%" onchange={(event) => instance.setCategory((event.currentTarget as HTMLInputElement).value)} />
+      <span>{t('splits.category')}</span>
+      <input type="text" value={data.category} placeholder={t('splits.category-placeholder')} onchange={(event) => instance.setCategory((event.currentTarget as HTMLInputElement).value)} />
     </label>
     <label class="field">
-      <span>Splits (one per line, optional "| target seconds")</span>
+      <span>{t('splits.splits-label')}</span>
       <textarea rows="8" bind:value={splitsDraft} spellcheck="false" placeholder="Forest&#10;Cave | 90"></textarea>
     </label>
-    <button type="button" class="wide primary" onclick={() => { instance.setSplits(splitsDraft); settingsOpen = false; }}>Save splits</button>
-    <p class="dim small">Targets are the numbers you compare against until you set a personal best.</p>
+    <button type="button" class="wide primary" onclick={() => { instance.setSplits(splitsDraft); settingsOpen = false; }}>{t('splits.save-splits')}</button>
+    <p class="dim small">{t('splits.targets-hint')}</p>
   </Sheet>
 {/if}
 

@@ -1,5 +1,6 @@
 /** Prompt packs: draw, lock, exclude, favourite and designer-mode combinations. */
 
+import { translate } from '../../core/i18n';
 import type { Rng } from '../../core/rng';
 
 export interface PromptCard {
@@ -48,7 +49,7 @@ export function parseCustomPacks(text: string): CustomPack[] {
 }
 
 export function summaryOf(cards: PromptCard[], favorites: string[]): string {
-  const lines = cards.map((card) => `${card.item} (${card.pack})`);
-  if (favorites.length) lines.push(`Favourites: ${favorites.join(', ')}`);
-  return lines.length ? lines.join('\n') : 'Nothing drawn yet.';
+  const lines = cards.map((card) => translate('prompts.summary-card', { item: card.item, pack: card.pack }));
+  if (favorites.length) lines.push(translate('prompts.summary-favourites', { list: favorites.join(', ') }));
+  return lines.length ? lines.join('\n') : translate('prompts.summary-none');
 }

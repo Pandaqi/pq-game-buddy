@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { colTotal, rowTotal, type FieldType } from './logic';
@@ -29,7 +30,7 @@
   }
 
   function saveBuilder(): void {
-    ctx.undo.batch('sheet setup', () => {
+    ctx.undo.batch(t('custom.undo-setup'), () => {
       instance.setFormula(formulaDraft);
       const match = sizeDraft.match(/^\s*(\d+)\s*[x×]\s*(\d+)\s*$/i);
       if (match) instance.setTableSize(Number(match[1]), Number(match[2]));
@@ -39,7 +40,7 @@
           .map((line) => line.trim())
           .filter(Boolean);
         if (names.length) {
-          ctx.undo.push('player sheets');
+          ctx.undo.push(t('custom.undo-player-sheets'));
           data.players = names.map((name) => ({
             name,
             values: Object.fromEntries(data.counters.map((counter) => [counter.id, counter.value])),
@@ -47,14 +48,14 @@
         }
       }
     });
-    ctx.toast('Sheet saved');
+    ctx.toast(t('custom.toast-saved'));
   }
 </script>
 
 <div class="custom">
   {#if data.fields.length}
     <section class="block">
-      <h2>Fields</h2>
+      <h2>{t('custom.fields')}</h2>
       <div class="fields">
         {#each data.fields as field (field.id)}
           <label class="field" class:wide={field.type === 'note'}>
@@ -83,15 +84,15 @@
 
   {#if data.counters.length}
     <section class="block">
-      <h2>Counters</h2>
+      <h2>{t('custom.counters')}</h2>
       <ul class="counters">
         {#each data.counters as counter (counter.id)}
           <li>
             <span class="label">{counter.label}</span>
             <span class="value" aria-live="polite">{counter.value}</span>
             <span class="steppers">
-              <button type="button" onclick={() => instance.adjustCounter(counter.id, -counter.step)} aria-label="Decrease {counter.label}">−</button>
-              <button type="button" onclick={() => instance.adjustCounter(counter.id, counter.step)} aria-label="Increase {counter.label}">+</button>
+              <button type="button" onclick={() => instance.adjustCounter(counter.id, -counter.step)} aria-label={t('custom.decrease', { name: counter.label })}>−</button>
+              <button type="button" onclick={() => instance.adjustCounter(counter.id, counter.step)} aria-label={t('custom.increase', { name: counter.label })}>+</button>
             </span>
           </li>
         {/each}
@@ -101,16 +102,16 @@
 
   {#if data.perPlayer && data.players.length && data.counters.length}
     <section class="block">
-      <h2>Per player</h2>
+      <h2>{t('custom.per-player')}</h2>
       <div class="scroll">
         <table>
           <thead>
             <tr>
-              <th scope="col">Player</th>
+              <th scope="col">{t('custom.player')}</th>
               {#each data.counters as counter (counter.id)}
                 <th scope="col">{counter.label}</th>
               {/each}
-              <th scope="col">Score</th>
+              <th scope="col">{t('custom.score')}</th>
             </tr>
           </thead>
           <tbody>
@@ -119,9 +120,9 @@
                 <th scope="row">{player.name}</th>
                 {#each data.counters as counter (counter.id)}
                   <td class="cell">
-                    <button type="button" onclick={() => instance.adjustPlayerValue(player.name, counter.id, -1)} aria-label="Decrease {counter.label} for {player.name}">−</button>
+                    <button type="button" onclick={() => instance.adjustPlayerValue(player.name, counter.id, -1)} aria-label={t('custom.decrease-for', { name: counter.label, player: player.name })}>−</button>
                     <span>{player.values[counter.id] ?? 0}</span>
-                    <button type="button" onclick={() => instance.adjustPlayerValue(player.name, counter.id, 1)} aria-label="Increase {counter.label} for {player.name}">+</button>
+                    <button type="button" onclick={() => instance.adjustPlayerValue(player.name, counter.id, 1)} aria-label={t('custom.increase-for', { name: counter.label, player: player.name })}>+</button>
                   </td>
                 {/each}
                 <td class="score">{instance.formulaResult(player.name) ?? '—'}</td>
@@ -135,7 +136,7 @@
 
   {#if data.checklist.length}
     <section class="block">
-      <h2>Checklist</h2>
+      <h2>{t('custom.checklist')}</h2>
       <ul class="checklist">
         {#each data.checklist as item, index (item.id)}
           <li>
@@ -150,7 +151,7 @@
   {/if}
 
   <section class="block">
-    <h2>Table</h2>
+    <h2>{t('custom.table')}</h2>
     <div class="scroll">
       <table class="sheet">
         <tbody>
@@ -159,7 +160,7 @@
               {#each Array.from({ length: data.table.cols }, (_, col) => col) as col (col)}
                 <td>
                   <label>
-                    <span class="sr-only">Row {row + 1}, column {col + 1}</span>
+                    <span class="sr-only">{t('custom.row-col', { row: row + 1, column: col + 1 })}</span>
                     <input
                       type="number"
                       value={data.table.cells[row * data.table.cols + col] ?? 0}
@@ -183,17 +184,17 @@
   </section>
 
   <section class="block">
-    <h2>Formula</h2>
+    <h2>{t('custom.formula')}</h2>
     {#if data.formula}
       <p class="formula"><code>{data.formula}</code> = <strong>{result ?? '—'}</strong></p>
-      {#if result === null}<p class="dim small">That formula cannot be read. Use counter names, numbers, + − * / and min/max/round.</p>{/if}
+      {#if result === null}<p class="dim small">{t('custom.formula-bad')}</p>{/if}
     {:else}
-      <p class="dim small">No formula yet. Open the builder to add one.</p>
+      <p class="dim small">{t('custom.no-formula')}</p>
     {/if}
   </section>
 
   <div class="row">
-    <button type="button" class="primary" onclick={openBuilder}>Build the sheet</button>
+    <button type="button" class="primary" onclick={openBuilder}>{t('custom.build')}</button>
   </div>
 
   {#if data.history.length}
@@ -206,69 +207,69 @@
 </div>
 
 {#if builderOpen}
-  <Sheet title="Build the sheet" onclose={() => (builderOpen = false)}>
-    <h3>Add a field</h3>
+  <Sheet title={t('custom.build-title')} onclose={() => (builderOpen = false)}>
+    <h3>{t('custom.add-field')}</h3>
     <div class="inline-form">
-      <input type="text" bind:value={fieldLabel} placeholder="label" aria-label="New field label" />
-      <select bind:value={fieldType} aria-label="Field type">
-        <option value="text">text</option>
-        <option value="number">number</option>
-        <option value="checkbox">checkbox</option>
-        <option value="note">note</option>
+      <input type="text" bind:value={fieldLabel} placeholder={t('custom.label-placeholder')} aria-label={t('custom.new-field-label')} />
+      <select bind:value={fieldType} aria-label={t('custom.field-type')}>
+        <option value="text">{t('custom.type-text')}</option>
+        <option value="number">{t('custom.type-number')}</option>
+        <option value="checkbox">{t('custom.type-checkbox')}</option>
+        <option value="note">{t('custom.type-note')}</option>
       </select>
-      <button type="button" onclick={() => { instance.addField(fieldLabel, fieldType); fieldLabel = ''; }}>Add</button>
+      <button type="button" onclick={() => { instance.addField(fieldLabel, fieldType); fieldLabel = ''; }}>{t('custom.add')}</button>
     </div>
     {#if data.fields.length}
       <ul class="chips">
         {#each data.fields as field (field.id)}
-          <li>{field.label} <button type="button" onclick={() => instance.removeField(field.id)} aria-label="Remove {field.label}">✕</button></li>
+          <li>{field.label} <button type="button" onclick={() => instance.removeField(field.id)} aria-label={t('custom.remove', { name: field.label })}>✕</button></li>
         {/each}
       </ul>
     {/if}
 
-    <h3>Add a counter</h3>
+    <h3>{t('custom.add-counter')}</h3>
     <div class="inline-form">
-      <input type="text" bind:value={counterLabel} placeholder="label" aria-label="New counter label" />
-      <button type="button" onclick={() => { instance.addCounter(counterLabel); counterLabel = ''; }}>Add</button>
+      <input type="text" bind:value={counterLabel} placeholder={t('custom.label-placeholder')} aria-label={t('custom.new-counter-label')} />
+      <button type="button" onclick={() => { instance.addCounter(counterLabel); counterLabel = ''; }}>{t('custom.add')}</button>
     </div>
     {#if data.counters.length}
       <ul class="chips">
         {#each data.counters as counter (counter.id)}
-          <li>{counter.label} <button type="button" onclick={() => instance.removeCounter(counter.id)} aria-label="Remove {counter.label}">✕</button></li>
+          <li>{counter.label} <button type="button" onclick={() => instance.removeCounter(counter.id)} aria-label={t('custom.remove', { name: counter.label })}>✕</button></li>
         {/each}
       </ul>
     {/if}
 
-    <h3>Checklist</h3>
+    <h3>{t('custom.checklist')}</h3>
     <div class="inline-form">
-      <input type="text" bind:value={checkLabel} placeholder="step" aria-label="New checklist item" />
-      <button type="button" onclick={() => { instance.addChecklist(checkLabel); checkLabel = ''; }}>Add</button>
+      <input type="text" bind:value={checkLabel} placeholder={t('custom.step-placeholder')} aria-label={t('custom.new-check-item')} />
+      <button type="button" onclick={() => { instance.addChecklist(checkLabel); checkLabel = ''; }}>{t('custom.add')}</button>
     </div>
 
     <label class="field">
-      <span>Table size (rows x columns)</span>
+      <span>{t('custom.table-size')}</span>
       <input type="text" bind:value={sizeDraft} placeholder="3x3" />
     </label>
 
     <label class="field">
-      <span>Formula</span>
-      <input type="text" bind:value={formulaDraft} placeholder="wood + stone * 2" />
+      <span>{t('custom.formula')}</span>
+      <input type="text" bind:value={formulaDraft} placeholder={t('custom.formula-placeholder')} />
     </label>
 
     <label class="check">
       <input type="checkbox" checked={data.perPlayer} onchange={(event) => instance.setPerPlayer((event.currentTarget as HTMLInputElement).checked)} />
-      <span>A sheet per player</span>
+      <span>{t('custom.per-player-check')}</span>
     </label>
 
     {#if data.perPlayer}
       <label class="field">
-        <span>Players (one name per line)</span>
+        <span>{t('custom.players-label')}</span>
         <textarea rows="4" bind:value={playerDraft}></textarea>
       </label>
     {/if}
 
-    <button type="button" class="wide primary" onclick={saveBuilder}>Save the sheet</button>
-    <p class="dim small">The formula can use any counter name, plus min, max, round and abs.</p>
+    <button type="button" class="wide primary" onclick={saveBuilder}>{t('custom.save')}</button>
+    <p class="dim small">{t('custom.hint')}</p>
   </Sheet>
 {/if}
 

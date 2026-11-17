@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance, ToolResult } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import {
@@ -16,6 +17,10 @@ import {
 import Bag from './Bag.svelte';
 import meta from './meta';
 import preset from './preset';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('bag', en);
 
 export interface BagActions {
   draw(count?: number): void;
@@ -121,7 +126,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
     data.remaining = { ...nextCounts };
     data.tokens = [];
     data.trays = [];
-    note(`New ${setName} bag: ${totalOf(nextCounts)} tokens`);
+    note(translate('bag.note-new-bag', { set: setName, count: totalOf(nextCounts) }));
   }
 
   const instance: BagInstance = {
@@ -177,10 +182,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
     draw(count) {
       const amount = Math.max(1, Math.round(count ?? data.drawCount));
       if (totalOf(data.remaining) === 0) {
-        ctx.toast('The bag is empty. Refill it to draw again.', 'error');
+        ctx.toast(translate('bag.toast-empty'), 'error');
         return;
       }
-      ctx.undo.push(`draw ${amount}`);
+      ctx.undo.push(translate('bag.undo-draw', { count: amount }));
       const drawn: Token[] = [];
       for (let index = 0; index < amount; index += 1) {
         const type = drawType(data.remaining, ctx.rng);
@@ -192,53 +197,57 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
       }
       ctx.audio.play('click');
       ctx.haptics.buzz('short');
-      note(`Drew ${drawn.map((token) => token.type).join(' ') || 'nothing'}`);
-      if (drawn.length < amount) ctx.toast('The bag ran out before the draw finished');
+      note(
+        translate('bag.note-drew', {
+          tiles: drawn.map((token) => token.type).join(' ') || translate('bag.note-nothing'),
+        }),
+      );
+      if (drawn.length < amount) ctx.toast(translate('bag.toast-ran-out'));
     },
     assignTo(player) {
       target = player.trim();
-      note(target ? `Drawing for ${target}` : 'Drawing to the shared tray');
+      note(target ? translate('bag.note-for', { player: target }) : translate('bag.note-shared'));
     },
     assignedTo: () => target,
     returnAt(index) {
       const token = data.tokens[index];
       if (!token) return;
-      ctx.undo.push('return a token');
+      ctx.undo.push(translate('bag.undo-return-token'));
       data.tokens = data.tokens.filter((_, at) => at !== index);
       data.remaining[token.type] = (data.remaining[token.type] ?? 0) + 1;
-      note(`Returned ${token.type}`);
+      note(translate('bag.note-returned', { type: token.type }));
     },
     returnPlayer(player) {
       const tray = data.trays.find((item) => item.player === player);
       if (!tray || !tray.tokens.length) return;
-      ctx.undo.push('return a tray');
+      ctx.undo.push(translate('bag.undo-return-tray'));
       for (const token of tray.tokens) {
         data.remaining[token.type] = (data.remaining[token.type] ?? 0) + 1;
       }
       data.trays = data.trays.filter((item) => item.player !== player);
-      note(`${player} returned their tiles`);
+      note(translate('bag.note-player-returned', { player }));
     },
     returnAll() {
       const every = [...data.tokens, ...data.trays.flatMap((tray) => tray.tokens)];
       if (!every.length) return;
-      ctx.undo.push('return everything');
+      ctx.undo.push(translate('bag.undo-return-all'));
       for (const token of every) {
         data.remaining[token.type] = (data.remaining[token.type] ?? 0) + 1;
       }
       data.tokens = [];
       data.trays = [];
-      note('Everything is back in the bag');
+      note(translate('bag.note-all-back'));
     },
     refill() {
-      ctx.undo.push('refill the bag');
+      ctx.undo.push(translate('bag.undo-refill'));
       data.remaining = { ...data.counts };
       data.tokens = [];
       data.trays = [];
-      note(`Refilled to ${totalOf(data.counts)} tokens`);
+      note(translate('bag.note-refilled', { count: totalOf(data.counts) }));
     },
     setSet(next) {
       if (next === data.set) return;
-      ctx.undo.push('tile set');
+      ctx.undo.push(translate('bag.undo-set'));
       builder(next);
     },
     setDraw(count) {
@@ -246,7 +255,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
     },
     setTrayMode(mode) {
       if (mode === data.trayMode) return;
-      ctx.undo.push('tray mode');
+      ctx.undo.push(translate('bag.undo-tray-mode'));
       if (mode === 'shared') {
         data.tokens = [...data.tokens, ...data.trays.flatMap((tray) => tray.tokens)];
         data.trays = [];
@@ -258,14 +267,14 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
       const current = data.remaining[type] ?? 0;
       const next = Math.max(0, current + delta);
       if (next === current) return;
-      ctx.undo.push('bag counts');
+      ctx.undo.push(translate('bag.undo-counts'));
       data.remaining[type] = next;
       data.counts[type] = Math.max(data.counts[type] ?? 0, next);
     },
     addType(type, count) {
       const name = type.trim();
       if (!name || !count) return;
-      ctx.undo.push('add a tile type');
+      ctx.undo.push(translate('bag.undo-add-type'));
       data.counts[name] = (data.counts[name] ?? 0) + count;
       data.remaining[name] = (data.remaining[name] ?? 0) + count;
     },
@@ -282,10 +291,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
       const counts = parse(countsText);
       const points = parse(valuesText);
       if (!Object.keys(counts).length) {
-        ctx.toast('Write one line per type, like "A = 9"', 'error');
+        ctx.toast(translate('bag.toast-format'), 'error');
         return;
       }
-      ctx.undo.batch('custom bag', () => {
+      ctx.undo.batch(translate('bag.undo-custom'), () => {
         data.set = 'custom';
         data.counts = counts;
         data.values = points;
@@ -293,7 +302,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
         data.tokens = [];
         data.trays = [];
       });
-      note(`Custom bag with ${totalOf(counts)} tokens`);
+      note(translate('bag.note-custom', { count: totalOf(counts) }));
     },
   };
 

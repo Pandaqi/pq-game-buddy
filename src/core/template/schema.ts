@@ -3,6 +3,8 @@
  * template validation, persistence and "save as template".
  */
 
+import { translate } from '../i18n';
+
 export type FieldSpec =
   | { type: 'enum'; values: string[]; default: string; label?: string }
   | { type: 'boolean'; default: boolean; label?: string }
@@ -171,28 +173,32 @@ export function coerceField(spec: FieldSpec, raw: string): CoerceResult {
       if (spec.values.includes(value)) return { ok: true, value };
       return {
         ok: false,
-        message: `"${text}" is not one of ${spec.values.join(', ')}`,
+        message: translate('diag.not-one-of', { text, values: spec.values.join(', ') }),
       };
     }
     case 'boolean': {
       const value = parseBoolean(text);
-      if (value === null) return { ok: false, message: `"${text}" is not yes or no` };
+      if (value === null) return { ok: false, message: translate('diag.not-yes-no', { text }) };
       return { ok: true, value };
     }
     case 'number': {
       const value = Number(text);
-      if (!Number.isFinite(value)) return { ok: false, message: `"${text}" is not a number` };
+      if (!Number.isFinite(value)) {
+        return { ok: false, message: translate('diag.not-number', { text }) };
+      }
       if (spec.min !== undefined && value < spec.min) {
-        return { ok: false, message: `${value} is below the minimum of ${spec.min}` };
+        return { ok: false, message: translate('diag.below-min', { value, min: spec.min }) };
       }
       if (spec.max !== undefined && value > spec.max) {
-        return { ok: false, message: `${value} is above the maximum of ${spec.max}` };
+        return { ok: false, message: translate('diag.above-max', { value, max: spec.max }) };
       }
       return { ok: true, value };
     }
     case 'duration': {
       const value = parseDuration(text);
-      if (value === null) return { ok: false, message: `"${text}" is not a duration. Try 3m or 180s.` };
+      if (value === null) {
+        return { ok: false, message: translate('diag.not-duration', { text }) };
+      }
       return { ok: true, value };
     }
     case 'list':
@@ -201,7 +207,7 @@ export function coerceField(spec: FieldSpec, raw: string): CoerceResult {
       return { ok: true, value: parsePairs(text) };
     case 'color': {
       const value = parseColor(text);
-      if (!value) return { ok: false, message: `"${text}" is not a colour. Try red or #c0392b.` };
+      if (!value) return { ok: false, message: translate('diag.not-colour', { text }) };
       return { ok: true, value };
     }
     case 'text':

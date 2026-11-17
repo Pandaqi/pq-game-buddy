@@ -50,7 +50,7 @@ adding a tool or a dependency.
 | Layer | Path | Rules |
 |-------|------|-------|
 | Shell | `src/App.svelte`, `src/main.ts`, `src/ui/` | Router, home, session view, settings, import flow |
-| Core services | `src/core/*.ts` | Storage, ticker, RNG, audio, haptics, wake lock, undo, router, session model, share, theme files, i18n |
+| Core services | `src/core/*.ts` | Storage, ticker, RNG, audio, haptics, wake lock, undo, router, session model, share, theme files, languages |
 | Template engine | `src/core/template/` | Tokenizer, diagnostics, preset schema, coercion, serialization |
 | Runtime store | `src/core/session-store.svelte.ts` | Runes mirror of the session; creates tool instances and contexts |
 | UI primitives | `src/core/ui/*.svelte` | Sheet, stepper, number pad, chips, empty state, confetti |
@@ -70,6 +70,38 @@ holds every mark on one grid and `core/ui/doodles.ts` the decorative woodland SV
 `docs/STYLE.md` is the contract and the restyle checklist. `core/theme.ts` parses a
 player's `.gamebuddy-theme` into validated custom properties, so the tokens are the
 only seam a theme needs; see `docs/THEME-FORMAT.md`.
+
+## Languages
+
+`core/i18n.ts` holds the language state and the lookup in plain TypeScript;
+`core/i18n.svelte.ts` is a thin reactive wrapper (one `$state` revision that every read
+touches), which is what a view, a tool or a component imports. That split is a rule, not
+a convenience: the parser, the theme reader and the CLI scripts print words too, and logic
+never takes a rune. `core/langs.ts` names the languages and `DEFAULT_LANGUAGE` says which
+one boots when nobody has chosen. Five are complete — English, Dutch, German, Spanish and
+French — and each ships every shell key and every tool key, because the gate in
+`tests/i18n.test.ts` compares a language against the English set and fails on a gap.
+
+No dictionary is compiled into the start-up. Every language, English included, is a chunk
+loaded when it is picked and never fetched: `core/locales/<lang>.ts` for the shell and
+`core/locales/tool-text-<lang>.generated.ts` for the tools, which `bun run gen` builds
+from each `src/tools/<id>/locales/<lang>.ts`. A tool registers its own English words at
+module scope (`registerToolStrings`), so its text still ships in its own chunk and there
+is no English tool-text chunk at all. The registry
+(`core/locales/registry.generated.ts`) is the only place that lists the loaders, and
+`bun run build --langs=en` drops the rest with a bundle-time plugin, so the generated
+files on disk never depend on the last build. `main.ts` awaits `startLanguage(...)` before
+it mounts, so the first paint already has words; a stored language this build does not
+carry falls back to the default and then to whatever the build has.
+
+Dictionaries are plain `Record<string, string>` objects. The lookup reads the active
+language only — there is no English safety net underneath, because `tests/i18n.test.ts`
+fails when a shipped language misses a key or a literal `t('…')` call resolves nowhere.
+`fallback` is for text that arrives with data (a tool's manifest title) and nothing else.
+A key is `<area>.<name>` for the core and `<toolId>.<name>` for a tool; the template and
+theme diagnostics use `diag.*` through `translate()` from the plain module. A tool's
+`summaryOf` and `stepLabel` do the same, so the copy button and the play log follow the
+language rather than staying English.
 
 ## Tool lifecycle
 

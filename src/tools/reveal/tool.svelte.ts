@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import { PLAYER_COLORS } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
@@ -21,14 +22,18 @@ import {
 import Reveal from './Reveal.svelte';
 import meta from './meta';
 import preset from './preset';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('reveal', en);
 
 function playersFrom(ctx: ToolContext): RevealPlayer[] {
   const players = ctx.session.players();
   const source = players.length
     ? players
     : [
-        { id: 'p1', name: 'Player 1', color: PLAYER_COLORS[0] },
-        { id: 'p2', name: 'Player 2', color: PLAYER_COLORS[1] },
+        { id: 'p1', name: translate('reveal.player-name', { count: 1 }), color: PLAYER_COLORS[0] },
+        { id: 'p2', name: translate('reveal.player-name', { count: 2 }), color: PLAYER_COLORS[1] },
       ];
   return source.map((player, index) => ({
     id: player.id,
@@ -58,7 +63,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
     holder: 0,
     autoHide: Math.max(0, Number(values['auto-hide'] ?? 8)),
     ballot: {
-      question: String(values.ballot ?? 'Who should go first?'),
+      question: String(values.ballot ?? translate('reveal.default-question')),
       options: options.length ? options : players.map((player) => player.name),
       votes: {},
       revealed: false,
@@ -169,12 +174,20 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
     },
     summary() {
       if (data.mode === 'roles') {
-        if (!data.dealt) return `Roles: ${data.roles.map((role) => `${role.name} x${role.count}`).join(', ') || 'none'}`;
-        const lines = [`Roles dealt to ${data.players.length} players`];
+        if (!data.dealt) {
+          return translate('reveal.summary-roles', {
+            roles:
+              data.roles.map((role) => `${role.name} x${role.count}`).join(', ') ||
+              translate('reveal.summary-none'),
+          });
+        }
+        const lines = [translate('reveal.summary-dealt', { players: data.players.length })];
         if (data.allRevealed) {
           for (const player of data.players) {
             const role = roleOf(data, player.id);
-            lines.push(`${player.name}: ${role?.name ?? '?'}`);
+            lines.push(
+              translate('reveal.summary-player-role', { name: player.name, role: role?.name ?? '?' }),
+            );
           }
         }
         return lines.join('\n');
@@ -182,28 +195,47 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
       if (data.mode === 'ballot') {
         const lines = [data.ballot.question];
         if (data.ballot.revealed) {
-          for (const row of tally(data.ballot.votes, data.ballot.options)) lines.push(`${row.option}: ${row.count}`);
+          for (const row of tally(data.ballot.votes, data.ballot.options)) {
+            lines.push(translate('reveal.summary-option', { option: row.option, count: row.count }));
+          }
         } else {
-          lines.push(`${Object.keys(data.ballot.votes).length}/${data.players.length} votes cast`);
+          lines.push(
+            translate('reveal.summary-votes-cast', {
+              cast: Object.keys(data.ballot.votes).length,
+              total: data.players.length,
+            }),
+          );
         }
         return lines.join('\n');
       }
-      const lines = [`Blind bids ${data.bids.min}–${data.bids.max}`];
-      if (data.bids.revealed) lines.push(`Highest: ${bidLeaders(data).join(', ') || 'nobody'}`);
-      else lines.push(`${Object.values(data.bids.values).filter((value) => typeof value === 'number').length}/${data.players.length} bids in`);
+      const lines = [translate('reveal.summary-bids', { min: data.bids.min, max: data.bids.max })];
+      if (data.bids.revealed) {
+        lines.push(
+          translate('reveal.summary-highest', {
+            names: bidLeaders(data).join(', ') || translate('reveal.summary-nobody'),
+          }),
+        );
+      } else {
+        lines.push(
+          translate('reveal.summary-bids-in', {
+            count: Object.values(data.bids.values).filter((value) => typeof value === 'number').length,
+            total: data.players.length,
+          }),
+        );
+      }
       return lines.join('\n');
     },
     setMode(mode) {
       if (data.mode === mode) return;
-      ctx.undo.push('reveal mode');
+      ctx.undo.push(translate('reveal.undo-mode'));
       data.mode = mode;
     },
     deal() {
       if (!data.roles.length) {
-        ctx.toast('Add at least one role first');
+        ctx.toast(translate('reveal.toast-add-role'));
         return;
       }
-      ctx.undo.push('deal roles');
+      ctx.undo.push(translate('reveal.undo-deal'));
       data.assignment = dealRoles(data.roles, data.players, ctx.rng);
       data.dealt = true;
       data.holder = 0;
@@ -212,7 +244,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
     },
     clearDeal() {
       if (!data.dealt) return;
-      ctx.undo.push('clear deal');
+      ctx.undo.push(translate('reveal.undo-clear'));
       data.assignment = {};
       data.dealt = false;
       data.allRevealed = false;
@@ -228,7 +260,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
         clean.push({ name, count: Math.round(role.count), description: role.description.trim() });
       }
       if (JSON.stringify(clean) === JSON.stringify(data.roles)) return;
-      ctx.undo.push('roles');
+      ctx.undo.push(translate('reveal.undo-roles'));
       data.roles = clean;
       if (!clean.length) {
         data.dealt = false;
@@ -246,29 +278,29 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
     setAutoHide(seconds) {
       const next = Math.max(0, Math.round(seconds));
       if (next === data.autoHide) return;
-      ctx.undo.push('auto hide');
+      ctx.undo.push(translate('reveal.undo-auto-hide'));
       data.autoHide = next;
     },
     setBallotQuestion(text) {
       const clean = text.trim();
       if (!clean || clean === data.ballot.question) return;
-      ctx.undo.push('ballot question');
+      ctx.undo.push(translate('reveal.undo-question'));
       data.ballot.question = clean;
     },
     setBallotOptions(next) {
       const clean = next.map((option) => option.trim()).filter(Boolean);
       if (!clean.length) {
-        ctx.toast('A ballot needs at least one option', 'error');
+        ctx.toast(translate('reveal.toast-ballot-option'), 'error');
         return;
       }
-      ctx.undo.push('ballot options');
+      ctx.undo.push(translate('reveal.undo-options'));
       data.ballot.options = clean;
       data.ballot.votes = emptyVotes();
       data.ballot.revealed = false;
     },
     castVote(playerId, option) {
       if (!data.ballot.options.includes(option)) return;
-      ctx.undo.push('vote');
+      ctx.undo.push(translate('reveal.undo-vote'));
       data.ballot.votes[playerId] = option;
       data.ballot.revealed = false;
       ctx.haptics.buzz('short');
@@ -277,16 +309,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
     },
     revealBallot() {
       if (!Object.keys(data.ballot.votes).length) {
-        ctx.toast('No votes to reveal yet');
+        ctx.toast(translate('reveal.toast-no-votes'));
         return;
       }
-      ctx.undo.push('reveal ballot');
+      ctx.undo.push(translate('reveal.undo-reveal-ballot'));
       data.ballot.revealed = true;
       ctx.audio.play('success');
     },
     coverBallot() {
       if (!data.ballot.revealed) return;
-      ctx.undo.push('cover ballot');
+      ctx.undo.push(translate('reveal.undo-cover-ballot'));
       data.ballot.revealed = false;
     },
     setBid(playerId, value) {
@@ -294,7 +326,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
         value === null || !Number.isFinite(value)
           ? null
           : Math.max(data.bids.min, Math.min(data.bids.max, Math.round(value)));
-      ctx.undo.push('bid');
+      ctx.undo.push(translate('reveal.undo-bid'));
       data.bids.values[playerId] = clean;
       data.bids.revealed = false;
       ctx.haptics.buzz('short');
@@ -305,7 +337,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
       const low = Math.max(0, Math.round(Number.isFinite(min) ? min : 0));
       const high = Math.max(low + 1, Math.round(Number.isFinite(max) ? max : low + 1));
       if (low === data.bids.min && high === data.bids.max) return;
-      ctx.undo.push('bid range');
+      ctx.undo.push(translate('reveal.undo-bid-range'));
       data.bids.min = low;
       data.bids.max = high;
       for (const player of data.players) {
@@ -317,29 +349,29 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
     },
     revealBids() {
       if (!Object.keys(data.bids.values).length) {
-        ctx.toast('No bids to reveal yet');
+        ctx.toast(translate('reveal.toast-no-bids'));
         return;
       }
-      ctx.undo.push('reveal bids');
+      ctx.undo.push(translate('reveal.undo-reveal-bids'));
       data.bids.revealed = true;
       ctx.audio.play('success');
       const leaders = bidLeaders(data);
-      if (leaders.length) ctx.toast(`Highest bid: ${leaders.join(', ')}`);
+      if (leaders.length) ctx.toast(translate('reveal.highest-bid', { names: leaders.join(', ') }));
     },
     coverBids() {
       if (!data.bids.revealed) return;
-      ctx.undo.push('cover bids');
+      ctx.undo.push(translate('reveal.undo-cover-bids'));
       data.bids.revealed = false;
     },
     revealAll() {
       if (!data.dealt || data.allRevealed) return;
-      ctx.undo.push('reveal all roles');
+      ctx.undo.push(translate('reveal.undo-reveal-all'));
       data.allRevealed = true;
       ctx.audio.play('success');
     },
     coverAll() {
       if (!data.allRevealed) return;
-      ctx.undo.push('cover roles');
+      ctx.undo.push(translate('reveal.undo-cover-roles'));
       data.allRevealed = false;
     },
     syncPlayers() {
@@ -354,7 +386,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
       ) {
         return;
       }
-      ctx.undo.push('use session players');
+      ctx.undo.push(translate('reveal.undo-session-players'));
       data.players = next;
       data.assignment = {};
       data.dealt = false;

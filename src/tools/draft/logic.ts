@@ -1,5 +1,7 @@
 /** Draft order, picks, the per-pick clock and a simple auction. No Svelte here. */
 
+import { translate } from '../../core/i18n';
+
 export interface Pick {
   round: number;
   picker: string;
@@ -55,14 +57,16 @@ export function maxBid(budget: number, openSlots: number, minimum = 1): number {
 export function summaryOf(state: DraftState): string {
   const lines: string[] = [];
   const turn = turnAt(state.order, state.snake, state.picks.length);
-  if (turn.picker) lines.push(`Next pick: ${turn.picker} (round ${turn.round})`);
+  if (turn.picker) lines.push(translate('draft.summary-next', { name: turn.picker, round: turn.round }));
   if (state.picks.length) {
-    lines.push('Picks:');
-    for (const pick of state.picks) lines.push(`- ${pick.picker}: ${pick.item}`);
+    lines.push(translate('draft.summary-picks'));
+    for (const pick of state.picks)
+      lines.push(translate('draft.summary-pick', { name: pick.picker, item: pick.item }));
   }
   if (state.sales.length) {
-    lines.push('Sold:');
-    for (const sale of state.sales) lines.push(`- ${sale.item} to ${sale.buyer} for ${sale.price}`);
+    lines.push(translate('draft.summary-sold'));
+    for (const sale of state.sales)
+      lines.push(translate('draft.summary-sale', { item: sale.item, buyer: sale.buyer, price: sale.price }));
   }
-  return lines.length ? lines.join('\n') : 'Nothing drafted yet.';
+  return lines.length ? lines.join('\n') : translate('draft.summary-none');
 }

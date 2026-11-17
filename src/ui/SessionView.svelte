@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createDisplayChannel, displayUrl } from '../core/display';
+  import { language, t } from '../core/i18n.svelte';
   import { scrollToStart } from '../core/dom';
   import { recordPlay, updatePlay, type PlayResult } from '../core/play-log';
   import { navigate } from '../core/router';
@@ -73,7 +74,9 @@
   let toolsOpen = $state(false);
   const seatsOpen = $derived(seatPrefs[entry?.id ?? ''] ?? seats === 'multi');
   const seatCount = $derived(session?.players.length ?? 0);
-  const seatSummary = $derived(seatCount === 1 ? '1 player' : `${seatCount} players`);
+  const seatSummary = $derived(
+    seatCount === 1 ? t('session.players-one') : t('session.players-many', { count: seatCount }),
+  );
 
   function toggleSeats(): void {
     if (!entry) return;
@@ -88,14 +91,14 @@
 
   function copySummary(): void {
     if (!session) return;
-    const lines = [`${session.gameName} — ${new Date().toLocaleString()}`, ''];
+    const lines = [`${session.gameName} — ${new Date().toLocaleString(language())}`, ''];
     for (const item of entries) {
       lines.push(`# ${item.label}`);
       lines.push(item.instance.summary());
       lines.push('');
     }
     void copyText(lines.join('\n')).then((ok) => {
-      store.toast(ok ? 'Summary copied' : 'Could not copy', ok ? 'info' : 'error');
+      store.toast(ok ? t('toast.summary-copied') : t('toast.could-not-copy'), ok ? 'info' : 'error');
     });
     menuOpen = false;
   }
@@ -104,7 +107,7 @@
     if (!session) return;
     const text = store.exportTemplate();
     download(suggestFilename(session.gameName), text);
-    store.toast('Template saved');
+    store.toast(t('toast.template-saved'));
     menuOpen = false;
   }
 
@@ -117,13 +120,13 @@
   async function showQr(): Promise<void> {
     menuOpen = false;
     if (typeof location === 'undefined' || !/^https?:$/.test(location.protocol)) {
-      store.toast('QR needs the hosted version. Save the template instead.', 'error');
+      store.toast(t('toast.qr-hosted'), 'error');
       return;
     }
     const link = templateShareUrl(store.exportTemplate());
     // One symbol holds 2953 bytes in byte mode; the share URL is ASCII, so length is bytes.
     if (new TextEncoder().encode(link).length > 2953) {
-      store.toast('Too big for one QR. Copy the share link instead.', 'error');
+      store.toast(t('toast.qr-too-big'), 'error');
       return;
     }
     qrImage = '';
@@ -133,19 +136,19 @@
       const { qrSvg } = await import('../core/qr');
       qrImage = qrSvg(link).svg;
     } catch {
-      qrError = 'That template is too big for one QR. Copy the share link instead.';
+      qrError = t('toast.qr-too-big');
     }
   }
 
   function shareLink(): void {
     const text = store.exportTemplate();
     if (shareTooLong(text)) {
-      store.toast('Too big for a link. Save the file instead.', 'error');
+      store.toast(t('toast.share-too-long'), 'error');
       menuOpen = false;
       return;
     }
     void copyText(templateShareUrl(text)).then((ok) => {
-      store.toast(ok ? 'Share link copied' : 'Could not copy', ok ? 'info' : 'error');
+      store.toast(ok ? t('toast.share-copied') : t('toast.could-not-copy'), ok ? 'info' : 'error');
     });
     menuOpen = false;
   }
@@ -154,7 +157,7 @@
     if (!session) return;
     const name = suggestFilename(session.gameName).replace(/\.gamebuddy$/, '-session.json');
     download(name, store.exportSessionJson(), 'application/json');
-    store.toast('Session file exported');
+    store.toast(t('toast.session-exported'));
     menuOpen = false;
   }
 
@@ -203,7 +206,7 @@
       const updated = updatePlay(session.playId, { results: finishResults, winner: finishWinner, players, minutes });
       if (updated) {
         finishSaved = true;
-        store.toast('Play log updated');
+        store.toast(t('toast.play-updated'));
         return;
       }
     }
@@ -217,7 +220,7 @@
     });
     store.markPlaySaved(saved.id);
     finishSaved = true;
-    store.toast('Saved to the play log');
+    store.toast(t('toast.play-saved'));
   }
 
   function saveAndClose(): void {
@@ -228,8 +231,10 @@
   function syncPlayers(): void {
     const count = store.syncPlayersToTools();
     const message = count
-      ? `Players synced in ${count} tool${count === 1 ? '' : 's'}`
-      : 'No tools can sync players';
+      ? count === 1
+        ? t('toast.players-synced-one')
+        : t('toast.players-synced', { count })
+      : t('toast.no-sync-tools');
     store.toast(message, count ? 'info' : 'error');
     menuOpen = false;
   }
@@ -244,13 +249,15 @@
   }
 
   function copyResult(): void {
-    const lines = [`${session?.gameName ?? 'Game'} — ${new Date().toLocaleString()}`];
-    lines.push(finishWinner ? `Winner: ${finishWinner}` : 'No single winner');
+    const lines = [`${session?.gameName ?? t('game.fallback')} — ${new Date().toLocaleString(language())}`];
+    lines.push(
+      finishWinner ? t('finish.winner', { name: finishWinner }) : t('finish.no-single-winner'),
+    );
     for (const row of finishResults) {
       lines.push(`${row.name}${typeof row.score === 'number' ? `: ${row.score}` : ''}`);
     }
     void copyText(lines.join('\n')).then((ok) => {
-      store.toast(ok ? 'Result copied' : 'Could not copy', ok ? 'info' : 'error');
+      store.toast(ok ? t('toast.result-copied') : t('toast.could-not-copy'), ok ? 'info' : 'error');
     });
   }
 </script>
@@ -258,10 +265,14 @@
 <div class="session" data-family={entry?.module.family ?? 'track'}>
   <header class="head">
     <div class="title">
-      <h1>{session?.gameName ?? 'Game'}</h1>
-      <p class="dim">{entries.length} tool{entries.length === 1 ? '' : 's'}</p>
+      <h1>{session?.gameName ?? t('game.fallback')}</h1>
+      <p class="dim">
+        {entries.length === 1
+          ? t('session.tool-count-one', { count: 1 })
+          : t('session.tool-count-many', { count: entries.length })}
+      </p>
     </div>
-    <button type="button" class="menu" onclick={() => (menuOpen = true)} aria-label="Game menu">⋯</button>
+    <button type="button" class="menu" onclick={() => (menuOpen = true)} aria-label={t('session.menu')}>⋯</button>
   </header>
 
   {#if entry && seats !== 'none'}
@@ -270,7 +281,7 @@
         type="button"
         class="seats-toggle"
         aria-expanded={seatsOpen}
-        aria-label={seatsOpen ? 'Hide the player list' : 'Show the player list'}
+        aria-label={seatsOpen ? t('session.seats-hide') : t('session.seats-show')}
         onclick={toggleSeats}
       >
         <span class="seats-dots" aria-hidden="true">
@@ -287,7 +298,7 @@
           {#each session?.players ?? [] as player (player.id)}
             <PlayerChip name={player.name} initial={player.initial} color={player.color} active={player.active} onclick={() => store.setActivePlayer(player.id)} />
           {/each}
-          <button type="button" class="add-player" onclick={() => (playersOpen = true)} aria-label="Edit players">+</button>
+          <button type="button" class="add-player" onclick={() => (playersOpen = true)} aria-label={t('session.edit-players')}>+</button>
         </div>
       {/if}
     </div>
@@ -295,7 +306,7 @@
 
   {#if store.unavailable.length}
     <p class="warn" role="status">
-      This template uses tools this build does not have ({store.unavailable.map((item) => item.toolId).join(', ')}). Everything else still runs.
+      {t('session.unavailable', { tools: store.unavailable.map((item) => item.toolId).join(', ') })}
     </p>
   {/if}
 
@@ -313,11 +324,16 @@
             <span class="tab-mark">{@html item.module.icon}</span>
           {/each}
         </span>
-        <span>{entry?.label ?? 'Tools'} · {entries.length} tools</span>
+        <span>
+          {entry?.label ?? t('session.tools')} ·
+          {entries.length === 1
+            ? t('session.tool-count-one', { count: 1 })
+            : t('session.tool-count-many', { count: entries.length })}
+        </span>
         <span class="chev" class:open={toolsOpen} aria-hidden="true">▾</span>
       </button>
       {#if toolsOpen}
-        <div class="tabs" id="session-tools" role="tablist" aria-label="Tools">
+        <div class="tabs" id="session-tools" role="tablist" aria-label={t('session.tools')}>
           {#each entries as item (item.id)}
             <button
               type="button"
@@ -344,27 +360,27 @@
         <Tool ctx={entry.ctx} instance={entry.instance} />
         {#snippet failed(error, reset)}
           <div class="broken" role="alert">
-            <h2>{entry.label} hit an error</h2>
+            <h2>{t('session.tool-broke', { label: entry.label })}</h2>
             <pre>{String(error)}</pre>
-            <button type="button" onclick={reset}>Try again</button>
+            <button type="button" onclick={reset}>{t('app.try-again')}</button>
           </div>
         {/snippet}
       </svelte:boundary>
     </div>
     {/key}
   {:else}
-    <p class="dim pad">This session has no tools yet. Close it and start from a template.</p>
+    <p class="dim pad">{t('session.no-tools')}</p>
   {/if}
 
   {#if canUndo}
     <button type="button" class="undo" onclick={() => store.undoActive()}>
-      Undo{undoLabel ? `: ${undoLabel}` : ''}
+      {undoLabel ? t('session.undo-with', { label: undoLabel }) : t('session.undo')}
     </button>
   {/if}
 </div>
 
 {#if playersOpen}
-  <Sheet title="Players" onclose={() => (playersOpen = false)}>
+  <Sheet title={t('players.title')} onclose={() => (playersOpen = false)}>
     <ul class="player-list">
       {#each store.players() as player (player.id)}
         <li>
@@ -372,13 +388,13 @@
           <input
             type="text"
             value={player.name}
-            aria-label="Name for {player.name}"
+            aria-label={t('players.name', { name: player.name })}
             onchange={(event) => store.renamePlayer(player.id, (event.currentTarget as HTMLInputElement).value)}
           />
           <button
             type="button"
             onclick={() => store.removePlayer(player.id)}
-            aria-label="Remove {player.name}"
+            aria-label={t('players.remove', { name: player.name })}
             disabled={store.players().length <= 1}
           >
             ✕
@@ -387,21 +403,21 @@
       {/each}
     </ul>
     <label class="field">
-      <span>Add a player</span>
+      <span>{t('players.add-label')}</span>
       <input type="text" bind:value={newName} onkeydown={(event) => { if (event.key === 'Enter') addPlayerNow(); }} />
     </label>
-    <button type="button" class="primary" onclick={addPlayerNow}>Add player</button>
-    <button type="button" class="wide" onclick={() => { syncPlayers(); playersOpen = false; }}>Sync tools with these players</button>
+    <button type="button" class="primary" onclick={addPlayerNow}>{t('players.add')}</button>
+    <button type="button" class="wide" onclick={() => { syncPlayers(); playersOpen = false; }}>{t('players.sync')}</button>
   </Sheet>
 {/if}
 
 {#if finishOpen}
-  <Sheet title="Finish game" onclose={() => (finishOpen = false)}>
+  <Sheet title={t('finish.title')} onclose={() => (finishOpen = false)}>
     {#if finishWinner}<Confetti />{/if}
-    <p class="dim small">Results come from this game's tools. Pick the source and the winner, then save it to the log.</p>
+    <p class="dim small">{t('finish.hint')}</p>
 
     {#if finishSources.length > 1}
-      <div class="sources" role="group" aria-label="Results source">
+      <div class="sources" role="group" aria-label={t('finish.source')}>
         {#each finishSources as source (source.id)}
           <button type="button" class:active={finishSourceId === source.id} onclick={() => useSource(source.id)}>
             {source.label}
@@ -411,7 +427,7 @@
     {/if}
 
     {#if finishTied}
-      <p class="tie" role="status">That score is tied. Choose who won, or pick “no single winner”.</p>
+      <p class="tie" role="status">{t('finish.tied')}</p>
     {/if}
 
     <ul class="finish-list">
@@ -439,65 +455,63 @@
             checked={finishWinner === ''}
             onchange={() => (finishWinner = '')}
           />
-          <span>No single winner (co-op or abandoned)</span>
+          <span>{t('finish.no-winner')}</span>
         </label>
       </li>
     </ul>
 
     {#if finishSaved}
-      <p class="saved" role="status">This game is in the play log.</p>
-      <button type="button" class="wide" onclick={savePlay}>Update play log</button>
+      <p class="saved" role="status">{t('finish.in-log')}</p>
+      <button type="button" class="wide" onclick={savePlay}>{t('finish.update')}</button>
       <button type="button" class="wide primary-wide" onclick={finishAndClose}>
-        {forgetOnClose ? 'Forget game and close' : 'Close game and go home'}
+        {forgetOnClose ? t('finish.forget-close') : t('finish.close-home')}
       </button>
     {:else}
-      <button type="button" class="wide" onclick={savePlay}>Save to the play log</button>
-      <button type="button" class="wide primary-wide" onclick={saveAndClose}>Save and close</button>
-      <button type="button" class="wide danger" onclick={finishAndClose}>Close without saving</button>
+      <button type="button" class="wide" onclick={savePlay}>{t('finish.save')}</button>
+      <button type="button" class="wide primary-wide" onclick={saveAndClose}>{t('finish.save-close')}</button>
+      <button type="button" class="wide danger" onclick={finishAndClose}>{t('finish.close-unsaved')}</button>
     {/if}
-    <button type="button" class="wide" onclick={copyResult}>Copy result</button>
+    <button type="button" class="wide" onclick={copyResult}>{t('finish.copy')}</button>
 
     <label class="check">
       <input type="checkbox" bind:checked={forgetOnClose} />
-      <span>Also forget the saved game on this device</span>
+      <span>{t('finish.forget')}</span>
     </label>
-    <p class="dim small">Closing keeps the game resumable unless you tick the box. Nothing is deleted without that choice.</p>
+    <p class="dim small">{t('finish.forget-hint')}</p>
   </Sheet>
 {/if}
 
 {#if qrOpen}
-  <Sheet title="Scan this template" onclose={() => (qrOpen = false)}>
+  <Sheet title={t('qr.title')} onclose={() => (qrOpen = false)}>
     {#if qrImage}
       <div class="qr">{@html qrImage}</div>
-      <p class="dim small">
-        Point a phone camera at the code. It opens the same template in this app, on this site.
-      </p>
+      <p class="dim small">{t('qr.hint')}</p>
     {:else if qrError}
       <p class="dim">{qrError}</p>
     {:else}
-      <p class="dim">Drawing the code…</p>
+      <p class="dim">{t('qr.drawing')}</p>
     {/if}
   </Sheet>
 {/if}
 
 {#if menuOpen}
-  <Sheet title="Game menu" onclose={() => (menuOpen = false)}>
-    <button type="button" class="wide" onclick={copySummary}>Copy summary</button>
-    <button type="button" class="wide" onclick={() => window.print()}>Print this game</button>
+  <Sheet title={t('menu.title')} onclose={() => (menuOpen = false)}>
+    <button type="button" class="wide" onclick={copySummary}>{t('menu.copy-summary')}</button>
+    <button type="button" class="wide" onclick={() => window.print()}>{t('menu.print')}</button>
     {#if entry}
-      <a class="wide link" href={displayUrl(entry.id)} target="_blank" rel="noopener noreferrer">Open display view</a>
+      <a class="wide link" href={displayUrl(entry.id)} target="_blank" rel="noopener noreferrer">{t('menu.display')}</a>
     {/if}
-    <button type="button" class="wide" onclick={saveTemplate}>Save as template</button>
-    <button type="button" class="wide" onclick={shareLink}>Share as link</button>
-    <button type="button" class="wide" onclick={showQr}>Show QR code</button>
-    <button type="button" class="wide" onclick={exportSession}>Export session JSON</button>
-    <a class="wide link" href="#/log">Play log</a>
-    <a class="wide link" href="#/settings">Settings</a>
-    <button type="button" class="wide" onclick={() => { store.saveNow(); store.toast('Saved'); }}>Save now</button>
-    <button type="button" class="wide" onclick={syncPlayers}>Sync players to tools</button>
-    <button type="button" class="wide primary-wide" onclick={openFinish}>Finish game</button>
-    <button type="button" class="wide danger" onclick={closeGame}>Close game</button>
-    <p class="dim small">Closing keeps the game saved on this device, ready to resume from home.</p>
+    <button type="button" class="wide" onclick={saveTemplate}>{t('menu.save-template')}</button>
+    <button type="button" class="wide" onclick={shareLink}>{t('menu.share')}</button>
+    <button type="button" class="wide" onclick={showQr}>{t('menu.qr')}</button>
+    <button type="button" class="wide" onclick={exportSession}>{t('menu.export-session')}</button>
+    <a class="wide link" href="#/log">{t('menu.log')}</a>
+    <a class="wide link" href="#/settings">{t('menu.settings')}</a>
+    <button type="button" class="wide" onclick={() => { store.saveNow(); store.toast(t('toast.saved')); }}>{t('menu.save-now')}</button>
+    <button type="button" class="wide" onclick={syncPlayers}>{t('menu.sync')}</button>
+    <button type="button" class="wide primary-wide" onclick={openFinish}>{t('menu.finish')}</button>
+    <button type="button" class="wide danger" onclick={closeGame}>{t('menu.close')}</button>
+    <p class="dim small">{t('menu.close-hint')}</p>
   </Sheet>
 {/if}
 

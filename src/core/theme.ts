@@ -3,6 +3,8 @@
  * Applied as custom properties so no view has to know a theme exists.
  */
 
+import { translate } from './i18n';
+
 export interface ThemeDiagnostic {
   line: number;
   severity: 'error' | 'warning';
@@ -75,9 +77,9 @@ const FONT = /^[A-Za-z0-9 ,'"_\-]{1,120}$/;
 const UNSAFE = /[;{}@\\]|url\s*\(|expression\s*\(/i;
 
 function invalidReason(kind: TokenKind): string {
-  if (kind === 'color') return 'Use a hex colour such as #fdf6e3, or rgb(), hsl() or transparent';
-  if (kind === 'length') return 'Use a size such as 16px or 1rem, or 0';
-  return 'Use a font stack such as Dosis, system-ui, sans-serif';
+  if (kind === 'color') return translate('diag.theme-colour');
+  if (kind === 'length') return translate('diag.theme-length');
+  return translate('diag.theme-font');
 }
 
 function validValue(kind: TokenKind, value: string): boolean {
@@ -110,7 +112,7 @@ export function parseTheme(text: string): Theme {
       theme.diagnostics.push({
         line,
         severity: 'error',
-        message: 'Each line needs a key and a value, like paper: #fdf6e3',
+        message: translate('diag.theme-pair'),
       });
       return;
     }
@@ -133,7 +135,7 @@ export function parseTheme(text: string): Theme {
           theme.diagnostics.push({
             line,
             severity: 'warning',
-            message: 'Settings cannot be hidden: that page is how a theme is removed.',
+            message: translate('diag.theme-settings'),
           });
           continue;
         }
@@ -141,7 +143,7 @@ export function parseTheme(text: string): Theme {
           theme.diagnostics.push({
             line,
             severity: 'warning',
-            message: `There is no "${name}" button to hide. Try sound or mute.`,
+            message: translate('diag.theme-button', { name }),
           });
           continue;
         }
@@ -158,7 +160,7 @@ export function parseTheme(text: string): Theme {
       theme.diagnostics.push({
         line,
         severity: 'warning',
-        message: `Unknown theme key "${key}". Try paper, ink, forest, fam-time or radius.`,
+        message: translate('diag.theme-key', { key }),
       });
       return;
     }
@@ -168,7 +170,7 @@ export function parseTheme(text: string): Theme {
       theme.diagnostics.push({
         line,
         severity: 'warning',
-        message: `"${key}" appears twice; the last one wins.`,
+        message: translate('diag.theme-duplicate', { key }),
       });
     }
     seen.add(`${slot}:${plain}`);

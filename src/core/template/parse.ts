@@ -3,6 +3,7 @@
  * raw text here; `resolveTemplate` applies each tool's preset schema.
  */
 
+import { translate } from '../i18n';
 import type { PresetSchema, PresetValues } from './schema';
 import { coerceField, defaultsFor, nearestKey } from './schema';
 
@@ -170,7 +171,7 @@ export function parseTemplate(text: string): ParseResult {
       const toolId = (tokens[1] ?? '').toLowerCase();
       const instanceId = (tokens[2] ?? tokens[1] ?? '').toLowerCase();
       if (!toolId) {
-        diagnostics.push({ severity: 'error', message: 'A [tool] section needs a tool id', line });
+        diagnostics.push({ severity: 'error', message: translate('diag.tool-id'), line });
         return { section: { kind: 'unknown', line }, kv: null, tool: null, script: null, variant: null };
       }
       const block: ToolBlock = { toolId, instanceId, line, values: {} };
@@ -188,7 +189,7 @@ export function parseTemplate(text: string): ParseResult {
       if (!id) {
         diagnostics.push({
           severity: 'warning',
-          message: 'A [variant] section needs a name, like [variant quick]',
+          message: translate('diag.variant-name'),
           line,
         });
         return { section: { kind: 'unknown', line }, kv: null, tool: null, script: null, variant: null };
@@ -203,7 +204,7 @@ export function parseTemplate(text: string): ParseResult {
     if (head === 'players' || head === 'setup' || head === 'rules' || head === 'notes') {
       return { section: { kind: head, line }, kv: null, tool: null, script: null, variant: null };
     }
-    diagnostics.push({ severity: 'warning', message: `Unknown section [${tokens.join(' ')}] ignored`, line });
+    diagnostics.push({ severity: 'warning', message: translate('diag.unknown-section', { name: tokens.join(' ') }), line });
     return { section: { kind: 'unknown', line }, kv: null, tool: null, script: null, variant: null };
   };
 
@@ -246,7 +247,7 @@ export function parseTemplate(text: string): ParseResult {
     if (!section) {
       diagnostics.push({
         severity: 'warning',
-        message: 'Text before the first section was ignored (start with [game])',
+        message: translate('diag.text-before'),
         line: lineNo,
       });
       continue;
@@ -261,7 +262,7 @@ export function parseTemplate(text: string): ParseResult {
         }
         const pair = splitKeyValue(line);
         if (!pair) {
-          diagnostics.push({ severity: 'warning', message: `Expected "key: value", got "${line.trim()}"`, line: lineNo });
+          diagnostics.push({ severity: 'warning', message: translate('diag.key-value', { line: line.trim() }), line: lineNo });
           continue;
         }
         if (!currentKV) break;
@@ -269,7 +270,7 @@ export function parseTemplate(text: string): ParseResult {
         if (existing) {
           diagnostics.push({
             severity: 'warning',
-            message: `Duplicate key "${pair.key}" (first on line ${existing.line}); the last value wins`,
+            message: translate('diag.duplicate-key', { key: pair.key, line: existing.line }),
             line: lineNo,
           });
         }
@@ -315,7 +316,7 @@ export function parseTemplate(text: string): ParseResult {
         if (!stepMatch) {
           diagnostics.push({
             severity: 'warning',
-            message: `Script steps look like "1. say: text", got "${line.trim()}"`,
+            message: translate('diag.script-step', { line: line.trim() }),
             line: lineNo,
           });
           continue;
@@ -324,7 +325,7 @@ export function parseTemplate(text: string): ParseResult {
         if (!SCRIPT_VERBS.includes(verb)) {
           diagnostics.push({
             severity: 'warning',
-            message: `Unknown script verb "${verb}"; it will be skipped`,
+            message: translate('diag.script-verb', { verb }),
             line: lineNo,
           });
         }
@@ -346,7 +347,7 @@ export function parseTemplate(text: string): ParseResult {
   const game: GameMeta = { name: '', tags: [], format: 1, line: gameRaw.name?.line ?? 1 };
   const nameEntry = gameRaw.name;
   if (!nameEntry || !nameEntry.raw.trim()) {
-    diagnostics.push({ severity: 'error', message: 'A template needs a name in [game]', line: 1 });
+    diagnostics.push({ severity: 'error', message: translate('diag.name'), line: 1 });
   } else {
     game.name = nameEntry.raw.trim();
   }
@@ -355,14 +356,14 @@ export function parseTemplate(text: string): ParseResult {
     if (!range) {
       diagnostics.push({
         severity: 'warning',
-        message: `players: "${gameRaw.players.raw}" is not a count or range like 2-4`,
+        message: translate('diag.players', { raw: gameRaw.players.raw }),
         line: gameRaw.players.line,
       });
     } else {
       const min = Number(range[1]);
       const max = range[2] ? Number(range[2]) : min;
       if (max < min) {
-        diagnostics.push({ severity: 'warning', message: `players: ${min}-${max} has the range backwards`, line: gameRaw.players.line });
+        diagnostics.push({ severity: 'warning', message: translate('diag.players-backwards', { min, max }), line: gameRaw.players.line });
       }
       game.players = { min: Math.min(min, max), max: Math.max(min, max) };
     }
@@ -376,11 +377,11 @@ export function parseTemplate(text: string): ParseResult {
   if (gameRaw.format) {
     const format = Number(gameRaw.format.raw);
     if (Number.isFinite(format) && format >= 1) game.format = Math.floor(format);
-    else diagnostics.push({ severity: 'warning', message: `format: "${gameRaw.format.raw}" is not a version number`, line: gameRaw.format.line });
+    else diagnostics.push({ severity: 'warning', message: translate('diag.format-version', { raw: gameRaw.format.raw }), line: gameRaw.format.line });
     if (game.format > 1) {
       diagnostics.push({
         severity: 'warning',
-        message: `This template uses format ${game.format}; this app understands format 1`,
+        message: translate('diag.format-newer', { format: game.format, current: 1 }),
         line: gameRaw.format.line,
       });
     }
@@ -390,7 +391,7 @@ export function parseTemplate(text: string): ParseResult {
     if (!['name', 'players', 'time', 'tags', 'icon', 'source', 'author', 'license', 'format'].includes(key)) {
       diagnostics.push({
         severity: 'warning',
-        message: `Unknown [game] key "${key}" ignored`,
+        message: translate('diag.unknown-game-key', { key }),
         line: gameRaw[key].line,
       });
     }
@@ -402,7 +403,7 @@ export function parseTemplate(text: string): ParseResult {
     if (first !== undefined) {
       diagnostics.push({
         severity: 'warning',
-        message: `Duplicate tool instance "${block.instanceId}" (first on line ${first})`,
+        message: translate('diag.duplicate-tool', { id: block.instanceId, line: first }),
         line: block.line,
       });
     } else {
@@ -422,7 +423,7 @@ export function parseTemplate(text: string): ParseResult {
     if (seenVariants.has(block.id)) {
       diagnostics.push({
         severity: 'warning',
-        message: `Duplicate variant "${block.id}" (first on line ${block.line}); the last one wins`,
+        message: translate('diag.duplicate-variant', { id: block.id, line: block.line }),
         line: block.line,
       });
     }
@@ -479,7 +480,7 @@ export function resolveTemplate(
     if (!schema) {
       diagnostics.push({
         severity: 'warning',
-        message: `Unknown tool "${block.toolId}"; it will show as unavailable`,
+        message: translate('diag.unknown-tool', { id: block.toolId }),
         line: block.line,
       });
       unavailable.push({ toolId: block.toolId, instanceId: block.instanceId, line: block.line });
@@ -492,14 +493,16 @@ export function resolveTemplate(
         const hint = nearestKey(key, schema);
         diagnostics.push({
           severity: 'warning',
-          message: hint ? `Unknown key "${key}", did you mean "${hint}"?` : `Unknown key "${key}" ignored`,
+          message: hint
+            ? translate('diag.unknown-key-hint', { key, hint })
+            : translate('diag.unknown-key', { key }),
           line: entry.line,
         });
         continue;
       }
       const result = coerceField(spec, entry.raw);
       if (!result.ok) {
-        diagnostics.push({ severity: 'error', message: `${key}: ${result.message}`, line: entry.line });
+        diagnostics.push({ severity: 'error', message: translate('diag.value', { key, message: result.message ?? '' }), line: entry.line });
         continue;
       }
       values[key] = result.value;

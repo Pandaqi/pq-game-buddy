@@ -1,4 +1,5 @@
 import { announce } from '../../core/dom';
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import { PLAYER_COLORS } from '../../core/session';
 import { wake } from '../../core/wake';
@@ -7,6 +8,10 @@ import { formatClock, formatDurationText, parseDuration } from '../../core/templ
 import Timer from './Timer.svelte';
 import meta from './meta';
 import preset from './preset';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('timer', en);
 import {
   applyIncrement,
   clampDuration,
@@ -54,8 +59,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
         );
       }
       return [
-        newClock({ id: 't1', name: 'Phase 1', color: PLAYER_COLORS[0], duration, delay }),
-        newClock({ id: 't2', name: 'Phase 2', color: PLAYER_COLORS[1], duration, delay }),
+        newClock({ id: 't1', name: translate('timer.phase-name', { count: 1 }), color: PLAYER_COLORS[0], duration, delay }),
+        newClock({ id: 't2', name: translate('timer.phase-name', { count: 2 }), color: PLAYER_COLORS[1], duration, delay }),
       ];
     }
     const total = mode === 'chess' ? Math.max(2, count) : perPlayer || layout === 'grid' ? count : 1;
@@ -63,7 +68,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
       const limit = mode === 'interval' ? interval || duration : duration;
       return newClock({
         id: `t${index + 1}`,
-        name: playerNames[index] ?? (total > 1 ? `Timer ${index + 1}` : 'Timer'),
+        name:
+          playerNames[index] ??
+          (total > 1 ? translate('timer.timer-name', { count: index + 1 }) : translate('timer.timer-single')),
         color: PLAYER_COLORS[index % PLAYER_COLORS.length],
         duration: limit,
         delay,
@@ -228,7 +235,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
 
   function addTimer(): void {
     if (data.timers.length >= 12) {
-      ctx.toast('Twelve timers is the limit');
+      ctx.toast(translate('timer.toast-limit'));
       return;
     }
     ctx.undo.push('add timer');
@@ -236,7 +243,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
     data.timers.push(
       newClock({
         id: `t${index + 1}-${Date.now().toString(36)}`,
-        name: playerNames[index] ?? `Timer ${index + 1}`,
+        name: playerNames[index] ?? translate('timer.timer-name', { count: index + 1 }),
         color: PLAYER_COLORS[index % PLAYER_COLORS.length],
         duration: data.mode === 'interval' ? data.interval : data.timers[0]?.duration ?? 300000,
         delay: data.delay,
@@ -246,7 +253,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
 
   function removeTimer(index: number): void {
     if (data.timers.length <= 1) {
-      ctx.toast('At least one timer stays');
+      ctx.toast(translate('timer.toast-one-left'));
       return;
     }
     ctx.undo.push('remove timer');
@@ -358,7 +365,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
   function usePlayers(): void {
     const players = ctx.session.players();
     if (!players.length) {
-      ctx.toast('Add players in the session first');
+      ctx.toast(translate('timer.toast-no-players'));
       return;
     }
     ctx.undo.push('use players');
@@ -442,8 +449,17 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
       const wall = ctx.clock.wall();
       const lines = data.timers.map((clock, index) => {
         const shown = clockLabel(index, mono, wall);
-        const state = clock.running ? 'running' : clock.elapsed > 0 ? 'paused' : 'ready';
-        return `${clock.name}: ${shown} (${state}${clock.laps.length ? `, ${clock.laps.length} intervals` : ''})`;
+        const state = clock.running
+          ? translate('timer.state-running')
+          : clock.elapsed > 0
+            ? translate('timer.state-paused')
+            : translate('timer.state-ready');
+        return translate(clock.laps.length ? 'timer.summary-line-laps' : 'timer.summary-line', {
+          name: clock.name,
+          time: shown,
+          state,
+          count: clock.laps.length,
+        });
       });
       return lines.join('\n');
     },

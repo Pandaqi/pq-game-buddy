@@ -1,5 +1,7 @@
 /** Build-your-own tracker: fields, counters, a checklist, a table and formulas. */
 
+import { translate } from '../../core/i18n';
+
 export type FieldType = 'text' | 'number' | 'checkbox' | 'select' | 'note';
 
 export interface CustomField {
@@ -192,13 +194,16 @@ export function summaryOf(state: CustomState): string {
   const lines: string[] = [];
   for (const field of state.fields) {
     if (field.type === 'note') continue;
-    lines.push(`${field.label}: ${String(field.value)}`);
+    lines.push(translate('custom.summary-field', { label: field.label, value: String(field.value) }));
   }
-  for (const counter of state.counters) lines.push(`${counter.label}: ${counter.value}`);
+  for (const counter of state.counters)
+    lines.push(translate('custom.summary-field', { label: counter.label, value: counter.value }));
   const done = state.checklist.filter((item) => item.done).length;
-  if (state.checklist.length) lines.push(`Checklist: ${done}/${state.checklist.length}`);
-  if (state.table.cells.length) lines.push(`Table total: ${grandTotal(state.table)}`);
+  if (state.checklist.length)
+    lines.push(translate('custom.summary-checklist', { done, total: state.checklist.length }));
+  if (state.table.cells.length)
+    lines.push(translate('custom.summary-table', { value: grandTotal(state.table) }));
   const result = evaluateFormula(state.formula, formulaVars(state));
-  if (result !== null) lines.push(`Formula: ${result}`);
-  return lines.length ? lines.join('\n') : 'An empty sheet. Add a field or a counter.';
+  if (result !== null) lines.push(translate('custom.summary-formula', { value: result }));
+  return lines.length ? lines.join('\n') : translate('custom.summary-none');
 }

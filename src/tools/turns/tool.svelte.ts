@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import { wake } from '../../core/wake';
@@ -23,13 +24,17 @@ import {
 import Turns from './Turns.svelte';
 import meta from './meta';
 import preset from './preset';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('turns', en);
 
 function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
   const presetOrder = Array.isArray(values.order) ? (values.order as string[]) : [];
   const sessionNames = ctx.session.players().map((player) => player.name);
   const order = normaliseOrder(presetOrder.length ? presetOrder : sessionNames);
   const presetPhases = normalisePhases(Array.isArray(values.phases) ? (values.phases as string[]) : []);
-  const phases = presetPhases.length ? presetPhases : ['Turn'];
+  const phases = presetPhases.length ? presetPhases : [translate('turns.default-phase')];
   const duration = Math.max(0, Number(values.timer ?? 0));
   const mode: TurnsMode = values.mode === 'initiative' ? 'initiative' : 'order';
 
@@ -83,12 +88,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     log(`${currentName(data)} ran out of time`);
     ctx.audio.play('bell');
     ctx.haptics.buzz('long');
-    ctx.toast(`Time is up for ${currentName(data)}`);
+    ctx.toast(translate('turns.toast-time-up', { name: currentName(data) }));
   }
 
   function beginTimer(pushUndo: boolean): void {
     if (data.timer.duration <= 0) return;
-    if (pushUndo) ctx.undo.push('start turn clock');
+    if (pushUndo) ctx.undo.push(translate('turns.undo-clock-start'));
     if (data.timer.remaining <= 0) data.timer.remaining = data.timer.duration;
     data.timer.startedWall = ctx.clock.wall();
     data.timer.startedMono = ctx.clock.now();
@@ -176,24 +181,31 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     },
     summary() {
       const lines = [
-        `Round ${data.round} · ${currentPhase(data)}`,
-        `Turn: ${currentName(data)}`,
+        translate('turns.summary-round', { round: data.round, phase: currentPhase(data) }),
+        translate('turns.summary-turn', { name: currentName(data) }),
       ];
       if (data.mode === 'initiative') {
         const ranking = initiativeRanking(data);
         lines.push(
-          `Initiative: ${ranking.map((seat) => `${data.order[seat]} ${data.initiative[seat] ?? 0}`).join(' → ')}`,
+          translate('turns.summary-initiative', {
+            order: ranking
+              .map((seat) => `${data.order[seat]} ${data.initiative[seat] ?? 0}`)
+              .join(' → '),
+          }),
         );
       } else {
-        lines.push(`Order: ${data.order.join(' → ')}`);
+        lines.push(translate('turns.summary-order', { order: data.order.join(' → ') }));
       }
       if (data.timer.duration) {
-        lines.push(`Clock: ${Math.ceil(data.timer.remaining / 1000)}s left${data.timer.running ? ' (running)' : ''}`);
+        const seconds = Math.ceil(data.timer.remaining / 1000);
+        lines.push(
+          translate(data.timer.running ? 'turns.summary-clock-running' : 'turns.summary-clock', { seconds }),
+        );
       }
       return lines.join('\n');
     },
     next() {
-      ctx.undo.push('next turn');
+      ctx.undo.push(translate('turns.undo-next'));
       if (data.mode === 'initiative') advanceInitiative(data);
       else advance(data);
       stopTimer();
@@ -207,14 +219,14 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       if (data.mode === 'initiative') {
         const ranking = initiativeRanking(data);
         if (ranking.indexOf(data.index) === 0 && data.round <= 1) return;
-        ctx.undo.push('previous turn');
+        ctx.undo.push(translate('turns.undo-previous'));
         rewindInitiative(data);
         stopTimer();
         data.timer.remaining = data.timer.duration;
         return;
       }
       if (data.index === 0 && data.round <= 1) return;
-      ctx.undo.push('previous turn');
+      ctx.undo.push(translate('turns.undo-previous'));
       rewind(data);
       stopTimer();
       data.timer.remaining = data.timer.duration;
@@ -222,7 +234,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     goTo(index) {
       const next = Math.max(0, Math.min(data.order.length - 1, Math.round(index)));
       if (next === data.index) return;
-      ctx.undo.push('jump turn');
+      ctx.undo.push(translate('turns.undo-jump'));
       jumpTo(data, next);
       stopTimer();
       data.timer.remaining = data.timer.duration;
@@ -232,14 +244,14 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     setPhase(index) {
       const next = Math.max(0, Math.min(data.phases.length - 1, Math.round(index)));
       if (next === data.phase) return;
-      ctx.undo.push('phase');
+      ctx.undo.push(translate('turns.undo-phase'));
       data.phase = next;
       log(`Phase: ${currentPhase(data)}`);
     },
     setOrder(names) {
       const next = normaliseOrder(names);
       if (next.join('|') === data.order.join('|')) return;
-      ctx.undo.push('turn order');
+      ctx.undo.push(translate('turns.undo-order'));
       data.order = next;
       data.initiative = normaliseInitiative([], next.length);
       data.index = 0;
@@ -248,7 +260,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     setMode(next) {
       const modeNext: TurnsMode = next === 'initiative' ? 'initiative' : 'order';
       if (modeNext === data.mode) return;
-      ctx.undo.push('turn style');
+      ctx.undo.push(translate('turns.undo-style'));
       data.mode = modeNext;
       data.initiative = normaliseInitiative(data.initiative, data.order.length);
       data.index = 0;
@@ -258,13 +270,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       const seat = Math.max(0, Math.min(data.order.length - 1, Math.round(index)));
       const next = Math.max(-99, Math.min(999, Math.round(Number.isFinite(value) ? value : 0)));
       if ((data.initiative[seat] ?? 0) === next) return;
-      ctx.undo.push('initiative', `initiative:${seat}`);
+      ctx.undo.push(translate('turns.undo-initiative'), `initiative:${seat}`);
       const copy = data.order.map((_, at) => data.initiative[at] ?? 0);
       copy[seat] = next;
       data.initiative = copy;
     },
     newInitiativeRound() {
-      ctx.undo.push('new initiative round');
+      ctx.undo.push(translate('turns.undo-new-initiative'));
       newInitiativeRound(data);
       stopTimer();
       data.timer.remaining = data.timer.duration;
@@ -273,57 +285,57 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     syncPlayers() {
       const names = ctx.session.players().map((player) => player.name);
       if (!names.length) {
-        ctx.toast('No players in the session yet');
+        ctx.toast(translate('turns.toast-no-players'));
         return;
       }
       instance.setOrder(names);
     },
     setPass(value) {
       if (data.pass === value) return;
-      ctx.undo.push('pass-the-phone');
+      ctx.undo.push(translate('turns.undo-pass'));
       data.pass = value;
     },
     setAutoStart(value) {
       if (data.autoStart === value) return;
-      ctx.undo.push('auto start');
+      ctx.undo.push(translate('turns.undo-auto-start'));
       data.autoStart = value;
     },
     setDuration(ms) {
       const next = Math.max(0, Math.round(Number.isFinite(ms) ? ms : 0));
       if (next === data.timer.duration) return;
-      ctx.undo.push('turn timer');
+      ctx.undo.push(translate('turns.undo-timer'));
       data.timer.duration = next;
       if (!data.timer.running) data.timer.remaining = next;
     },
     setPhases(next) {
       const clean = normalisePhases(next);
-      const phasesNext = clean.length ? clean : ['Turn'];
+      const phasesNext = clean.length ? clean : [translate('turns.default-phase')];
       if (phasesNext.join('|') === data.phases.join('|')) return;
-      ctx.undo.push('phases');
+      ctx.undo.push(translate('turns.undo-phases'));
       data.phases = phasesNext;
       data.phase = Math.min(data.phase, phasesNext.length - 1);
     },
     startTimer() {
       if (data.timer.running) return;
       if (data.timer.duration <= 0) {
-        ctx.toast('Set a turn timer first');
+        ctx.toast(translate('turns.toast-set-timer'));
         return;
       }
       beginTimer(true);
     },
     pauseTimer() {
       if (!data.timer.running) return;
-      ctx.undo.push('pause turn clock');
+      ctx.undo.push(translate('turns.undo-pause'));
       stopTimer();
     },
     resetTimer() {
       if (!data.timer.running && data.timer.remaining === data.timer.duration) return;
-      ctx.undo.push('reset turn clock');
+      ctx.undo.push(translate('turns.undo-reset'));
       stopTimer();
       data.timer.remaining = data.timer.duration;
     },
     resetTurn() {
-      ctx.undo.push('new turn round');
+      ctx.undo.push(translate('turns.undo-new-round'));
       stopTimer();
       data.index = 0;
       data.round = 1;
@@ -333,7 +345,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     },
     clearLog() {
       if (!data.log.length) return;
-      ctx.undo.push('clear turn log');
+      ctx.undo.push(translate('turns.undo-clear-log'));
       data.log = [];
     },
     dispose() {

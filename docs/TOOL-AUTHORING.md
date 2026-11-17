@@ -13,7 +13,8 @@ src/tools/<id>/
 ├─ logic.ts           # pure functions + state/action types          (no Svelte)
 ├─ tool.svelte.ts     # create(ctx, values) → ToolInstance + actions
 ├─ <Tool>.svelte      # the view, imported by tool.svelte.ts
-└─ example.gamebuddy  # minimal template used by tests and docs
+├─ example.gamebuddy  # minimal template used by tests and docs
+└─ locales/           # en.ts, nl.ts, … (optional until M10 reaches the tool)
 ```
 
 `meta.ts` must default-export an object whose `id` matches the folder name. Its
@@ -28,6 +29,20 @@ imports this file: `src/core/tools.generated.ts` holds one `import()` per tool, 
 the tool's code, view and styles are fetched together, only when a session uses it.
 Never import a tool from the shell: that pulls a screen back into the start-up
 payload, which is the budget with the least room.
+
+## Words
+
+Player-facing text goes through `t()` from `core/i18n.svelte`. A tool keeps its own
+strings in `locales/<lang>.ts` (a flat object of short keys) and registers the English
+one at module scope with `registerToolStrings('<id>', en)`, so the words travel in the
+tool's chunk. English is not special: it is a chunk like any other, so a build that
+leaves it out ships no English words at all. Logic that prints without a view — a parser,
+the theme reader, a CLI script — imports `translate()` from plain `core/i18n.ts` instead;
+the rune lives only in the reactive `i18n.svelte.ts` wrapper. Write keys as `<name>`
+inside the file; the runtime namespaces them to `<toolId>.<name>`. `title` and `blurb`
+belong there too: the home screen looks them up with the manifest as the fallback.
+`bun run gen` gathers every tool's `<lang>.ts` other than English into one chunk per
+language, and `tests/i18n.test.ts` fails when a language misses a key.
 
 Styles stay in the view's own `<style>` block. Views compile with `css: 'injected'`,
 so those rules travel inside the view's chunk and no global stylesheet has to know
@@ -86,6 +101,9 @@ Persist nothing yourself: the session store saves on its own.
 - [ ] No `setInterval`/`requestAnimationFrame`; use `ctx.clock`.
 - [ ] No `fetch`, no external assets, no new dependency.
 - [ ] Under 24 KB gzipped as one chunk (your logic, state, view, styles and data).
+- [ ] No visible English left in the markup: every string is a key in
+      `locales/en.ts`, with a `locales/<lang>.ts` beside it for each language the
+      build ships.
 - [ ] `bun run gen && bun run check` passes, including `tests/tool-contract.test.ts`,
       which runs this contract against every folder in `src/tools/`.
 

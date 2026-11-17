@@ -215,8 +215,14 @@ session storage or memory. Nothing is uploaded and there is no sync.
   that happens.
 - Word lists are curated starter lists, not tournament dictionaries. The checker
   says "not in this list", never "not a word".
-- English only for now. The app is built so other languages can be added, but no
-  translation ships yet.
+- Five languages so far: English, Dutch, German, Spanish and French. The globe in the
+  header lists whatever a build carries, and the choice is saved with your settings on
+  this device. Each one covers every screen — home, a game, the gallery, settings, the
+  editor, the play log, all twenty-one tools, the copied summaries, and the template and
+  theme error messages. No language is ever fetched: a language the build does not carry
+  is not offered, and a language is a loaded file rather than a fallback, so English is
+  only there when the build includes it. `bun run build --langs=nl` ships one language
+  and is smaller for it.
 
 ## If something goes wrong
 

@@ -1,7 +1,12 @@
 import type { ToolContext, ToolInstance, ToolResult } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import { maxBid, summaryOf, turnAt, type DraftState } from './logic';
 import Draft from './Draft.svelte';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('draft', en);
 import meta from './meta';
 import preset from './preset';
 
@@ -29,7 +34,11 @@ export type DraftInstance = ToolInstance<DraftState> & DraftActions;
 function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
   const names = ctx.session.players().map((player) => player.name);
   const templateOrder = Array.isArray(values.order) ? (values.order as string[]).filter(Boolean) : [];
-  const order = templateOrder.length ? templateOrder : names.length ? names : ['Player 1', 'Player 2'];
+  const order = templateOrder.length
+    ? templateOrder
+    : names.length
+      ? names
+      : [translate('draft.player-name', { count: 1 }), translate('draft.player-name', { count: 2 })];
   const budget = Math.max(1, Number(values.budget ?? 100));
 
   const data = $state<DraftState>({
@@ -131,16 +140,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
     pick(item) {
       const chosen = (item ?? data.pool[0] ?? '').trim();
       if (!chosen) {
-        ctx.toast('Add things to the pool first, then pick', 'error');
+        ctx.toast(translate('draft.toast-pool-empty'), 'error');
         return;
       }
       const current = turn();
       if (!current.picker) return;
       if (!data.pool.includes(chosen)) {
-        ctx.toast(`"${chosen}" is not in the pool`, 'error');
+        ctx.toast(translate('draft.toast-not-in-pool', { item: chosen }), 'error');
         return;
       }
-      ctx.undo.push('pick');
+      ctx.undo.push(translate('draft.undo-pick-item'));
       data.pool = data.pool.filter((entry) => entry !== chosen);
       data.picks = [
         ...data.picks,
@@ -157,10 +166,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
         .map((line) => line.trim())
         .filter(Boolean);
       if (!list.length) {
-        ctx.toast('A draft order needs at least one name', 'error');
+        ctx.toast(translate('draft.toast-order-empty'), 'error');
         return;
       }
-      ctx.undo.batch('draft order', () => {
+      ctx.undo.batch(translate('draft.undo-order-batch'), () => {
         data.order = list;
         data.picks = [];
         data.budgets = Object.fromEntries(list.map((name) => [name, data.budget]));
@@ -169,13 +178,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
     },
     setSnake(value) {
       if (value === data.snake) return;
-      ctx.undo.push('snake order');
+      ctx.undo.push(translate('draft.undo-snake'));
       data.snake = value;
       data.picks = [];
     },
     randomizeOrder() {
       if (!data.order.length) return;
-      ctx.undo.push('randomize order');
+      ctx.undo.push(translate('draft.undo-random'));
       data.order = ctx.rng.shuffle(data.order);
       data.picks = [];
       note(`Order: ${data.order.join(' → ')}`);
@@ -185,19 +194,19 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
         .split('\n')
         .map((line) => line.trim())
         .filter(Boolean);
-      ctx.undo.push('draft pool');
+      ctx.undo.push(translate('draft.undo-pool-batch'));
       data.pool = list;
     },
     addPoolItem(item) {
       const trimmed = item.trim();
       if (!trimmed) return;
-      ctx.undo.push('add to pool');
+      ctx.undo.push(translate('draft.undo-add-pool'));
       data.pool = [...data.pool, trimmed];
     },
     removePick(index) {
       const pick = data.picks[index];
       if (!pick) return;
-      ctx.undo.push('undo pick');
+      ctx.undo.push(translate('draft.undo-undo-pick'));
       data.picks = data.picks.filter((_, at) => at !== index);
       data.pool = [...data.pool, pick.item];
       note(`Returned ${pick.item} to the pool`);
@@ -210,7 +219,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       if (data.seconds <= 0) return;
       data.deadline = ctx.clock.wall() + data.seconds;
       ctx.audio.play('click');
-      note('Pick clock started');
+      note(translate('draft.note-clock'));
     },
     stopTimer() {
       data.deadline = null;
@@ -219,7 +228,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       const chosen = item.trim();
       if (!chosen) return;
       if (!data.budgets[data.bidder]) data.bid = 0;
-      ctx.undo.push('nominate');
+      ctx.undo.push(translate('draft.undo-nominate'));
       data.nomination = chosen;
       data.bid = 0;
       data.bidder = '';
@@ -227,7 +236,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
     },
     raise(amount) {
       if (!data.nomination) {
-        ctx.toast('Nominate something first', 'error');
+        ctx.toast(translate('draft.toast-nominate'), 'error');
         return;
       }
       const step = Math.max(1, Math.round(amount));
@@ -235,10 +244,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       const wallet = data.budgets[bidder] ?? 0;
       const next = data.bid + step;
       if (next > wallet) {
-        ctx.toast(`${bidder || 'Nobody'} cannot afford ${next}`, 'error');
+        ctx.toast(
+          translate('draft.toast-cannot-afford', {
+            name: bidder || translate('draft.nobody'),
+            amount: next,
+          }),
+          'error',
+        );
         return;
       }
-      ctx.undo.push('bid', 'bid');
+      ctx.undo.push(translate('draft.bid'), 'bid');
       data.bid = next;
       data.bidder = bidder;
       ctx.haptics.buzz('short');
@@ -250,16 +265,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       if (!data.nomination) return;
       const buyer = data.bidder;
       if (!buyer) {
-        ctx.toast('Pick who is bidding first', 'error');
+        ctx.toast(translate('draft.toast-pick-bidder'), 'error');
         return;
       }
       const price = data.bid;
       const wallet = data.budgets[buyer] ?? 0;
       if (price > wallet) {
-        ctx.toast(`${buyer} cannot afford that`, 'error');
+        ctx.toast(translate('draft.toast-cannot-afford', { name: buyer, amount: price }), 'error');
         return;
       }
-      ctx.undo.push('sell');
+      ctx.undo.push(translate('draft.undo-sell'));
       data.budgets = { ...data.budgets, [buyer]: wallet - price };
       data.sales = [...data.sales, { item: data.nomination, price, buyer }];
       data.pool = data.pool.filter((entry) => entry !== data.nomination);
@@ -276,7 +291,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       data.bidder = '';
     },
     reset() {
-      ctx.undo.push('reset draft');
+      ctx.undo.push(translate('draft.undo-reset'));
       data.pool = [...data.pool, ...data.picks.map((pick) => pick.item), ...data.sales.map((sale) => sale.item)];
       data.picks = [];
       data.sales = [];

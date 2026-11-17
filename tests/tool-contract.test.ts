@@ -1,3 +1,4 @@
+import './helpers/language';
 /**
  * The tool contract, checked for every folder in `src/tools`.
  *
@@ -14,7 +15,7 @@ import { parseTemplate, resolveTemplate } from '../src/core/template/parse';
 import { makePlayers } from '../src/core/session';
 import { createRng } from '../src/core/rng';
 import { clock } from '../src/core/ticker';
-import { t } from '../src/core/i18n';
+import { t } from '../src/core/i18n.svelte';
 import { loadTool } from '../src/core/tools.generated';
 import type { ToolContext } from '../src/core/registry';
 

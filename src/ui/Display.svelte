@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { createDisplayChannel } from '../core/display';
+  import { t } from '../core/i18n.svelte';
   import { store } from '../core/session-store.svelte';
 
   let { instanceId }: { instanceId: string } = $props();
@@ -35,24 +36,24 @@
     {@const Tool = entry.module.component}
     <header class="bar no-print">
       <span class="title">{entry.label}</span>
-      <a href="#/play">Back to controls</a>
+      <a href="#/play">{t('display.back')}</a>
     </header>
     <div class="stage">
       <svelte:boundary>
         <Tool ctx={entry.ctx} instance={entry.instance} />
         {#snippet failed(error)}
-          <p class="error" role="alert">This tool could not render: {String(error)}</p>
+          <p class="error" role="alert">{t('display.broke', { error: String(error) })}</p>
         {/snippet}
       </svelte:boundary>
     </div>
   {:else if ready}
     <div class="empty">
-      <h1>Nothing to display</h1>
-      <p>Start a game in the controlling tab, then open the display link from its menu.</p>
-      <a class="link" href="#/">Go home</a>
+      <h1>{t('display.empty-title')}</h1>
+      <p>{t('display.empty-hint')}</p>
+      <a class="link" href="#/">{t('app.home')}</a>
     </div>
   {:else}
-    <p class="empty">Loading the display…</p>
+    <p class="empty">{t('display.loading')}</p>
   {/if}
   {#if broken}<p class="error no-print">{broken}</p>{/if}
 </div>

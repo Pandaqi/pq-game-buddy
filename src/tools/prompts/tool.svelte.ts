@@ -1,10 +1,14 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import { PROMPT_PACKS, PACK_IDS } from '../../data/prompts';
 import { drawFrom, parseCustomPacks, summaryOf, type CustomPack, type PromptCard } from './logic';
 import Prompts from './Prompts.svelte';
+import en from './locales/en';
 import meta from './meta';
 import preset from './preset';
+
+registerToolStrings('prompts', en);
 
 export interface PromptsState {
   packs: string[];
@@ -118,12 +122,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): PromptsInstance {
       data.draw = Math.max(1, Math.min(10, Math.round(value)));
     },
     togglePack(id) {
-      ctx.undo.push('prompt packs');
+      ctx.undo.push(translate('prompts.undo-packs'));
       data.packs = data.packs.includes(id) ? data.packs.filter((pack) => pack !== id) : [...data.packs, id];
       if (!data.packs.length) data.packs = [id];
     },
     setDesigner(value) {
-      ctx.undo.push('designer mode');
+      ctx.undo.push(translate('prompts.undo-designer'));
       data.designer = value;
     },
     setSeed(value) {
@@ -153,7 +157,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): PromptsInstance {
       } else {
         const source = mergedPool(data.packs);
         if (!source.length) {
-          ctx.toast('Those packs are empty', 'error');
+          ctx.toast(translate('prompts.toast-empty-packs'), 'error');
           return;
         }
         for (const item of drawFrom(source, data.draw, ctx.rng, [...blocked, ...cards.map((card) => card.item)])) {
@@ -163,14 +167,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): PromptsInstance {
       }
 
       if (!cards.length) {
-        ctx.toast('Everything in these packs is already excluded. Clear the exclusions.');
+        ctx.toast(translate('prompts.toast-all-excluded'));
         return;
       }
-      ctx.undo.push('draw prompts');
+      ctx.undo.push(translate('prompts.undo-draw'));
       data.cards = cards;
       ctx.audio.play('click');
       ctx.haptics.buzz('short');
-      note(`Drew ${cards.length - kept.length} card${cards.length - kept.length === 1 ? '' : 's'}`);
+      const drawn = cards.length - kept.length;
+      note(drawn === 1 ? translate('prompts.note-drew-one') : translate('prompts.note-drew-many', { count: drawn }));
     },
     reroll(index) {
       const card = data.cards[index];
@@ -179,17 +184,17 @@ function create(ctx: ToolContext, values: PresetValues = {}): PromptsInstance {
       const source = pool(poolId);
       const [item] = drawFrom(source, 1, ctx.rng, [...data.excluded, ...data.cards.map((entry) => entry.item)]);
       if (!item) {
-        ctx.toast('That pack has nothing left to draw');
+        ctx.toast(translate('prompts.toast-nothing-left'));
         return;
       }
-      ctx.undo.push('reroll a card');
+      ctx.undo.push(translate('prompts.undo-reroll'));
       data.cards = data.cards.map((entry, at) => (at === index ? { ...entry, item } : entry));
     },
     toggleLock(item) {
       data.locked = data.locked.includes(item) ? data.locked.filter((entry) => entry !== item) : [...data.locked, item];
     },
     exclude(item) {
-      ctx.undo.push('exclude a prompt');
+      ctx.undo.push(translate('prompts.undo-exclude'));
       data.excluded = [...data.excluded, item];
       data.cards = data.cards.filter((card) => card.item !== item);
     },
@@ -199,16 +204,20 @@ function create(ctx: ToolContext, values: PresetValues = {}): PromptsInstance {
     importPacks(text) {
       const packs = parseCustomPacks(text);
       if (!packs.length) {
-        ctx.toast('Write a pack name in [brackets], then one entry per line', 'error');
+        ctx.toast(translate('prompts.toast-pack-format'), 'error');
         return;
       }
-      ctx.undo.push('import prompt packs');
+      ctx.undo.push(translate('prompts.undo-import'));
       data.custom = packs;
       data.packs = [...new Set([...data.packs, ...packs.map((pack) => pack.name)])];
-      ctx.toast(`${packs.length} custom pack${packs.length === 1 ? '' : 's'} ready`);
+      ctx.toast(
+        packs.length === 1
+          ? translate('prompts.toast-packs-ready-one')
+          : translate('prompts.toast-packs-ready-many', { count: packs.length }),
+      );
     },
     clear() {
-      ctx.undo.push('clear the table');
+      ctx.undo.push(translate('prompts.undo-clear'));
       data.cards = [];
       data.locked = [];
       data.history = [];

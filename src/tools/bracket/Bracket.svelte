@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { BRACKET_FORMATS, STAGE_LABELS, type BracketFormat, type Match, type Stage } from './logic';
@@ -11,7 +12,8 @@
   let editorOpen = $state(false);
   let newName = $state('');
 
-  const nameOf = (id: string | null): string => (id ? data.entrants.find((item) => item.id === id)?.name ?? id : 'Winner');
+  const nameOf = (id: string | null): string =>
+    id ? data.entrants.find((item) => item.id === id)?.name ?? id : t('bracket.winner');
   const championName = $derived(view.champion ? nameOf(view.champion) : '');
 
   const groups = $derived.by(() => {
@@ -37,29 +39,33 @@
 </script>
 
 <div class="bracket">
-  <div class="formats" role="group" aria-label="Tournament format">
+  <div class="formats" role="group" aria-label={t('bracket.format')}>
     {#each BRACKET_FORMATS as format (format)}
       <button type="button" class:active={data.format === format} onclick={() => instance.setFormat(format as BracketFormat)}>
-        {format.replace('-', ' ')}
+        {t(`bracket.format-${format}`)}
       </button>
     {/each}
   </div>
 
   {#if championName}
-    <p class="champion" role="status">Champion: <strong>{championName}</strong></p>
+    <p class="champion" role="status">{t('bracket.champion')} <strong>{championName}</strong></p>
   {:else if view.next}
     <p class="next" role="status">
-      Next up: <strong>{nameOf(view.next.aName)}</strong> vs <strong>{nameOf(view.next.bName)}</strong>
-      <span class="dim small">· best of {data.bestOf}</span>
+      {t('bracket.next-up')} <strong>{nameOf(view.next.aName)}</strong> {t('bracket.vs')}
+      <strong>{nameOf(view.next.bName)}</strong>
+      <span class="dim small">{t('bracket.best-of', { count: data.bestOf })}</span>
     </p>
   {:else}
-    <p class="next dim">Add entrants and report results to crown a champion.</p>
+    <p class="next dim">{t('bracket.empty')}</p>
   {/if}
 
   {#if groups.length}
     {#each groups as group (group.stage + group.round)}
       <section class="round">
-        <h2>{STAGE_LABELS[group.stage]} · round {group.round}</h2>
+        <h2>
+          {t(`bracket.stage-${group.stage}`, undefined, STAGE_LABELS[group.stage])} ·
+          {t('bracket.round', { count: group.round })}
+        </h2>
         <ul class="matches">
           {#each group.matches as match (match.id)}
             <li class="match" class:done={!!match.result}>
@@ -72,7 +78,7 @@
                 >
                   {nameOf(match.aName)}
                 </button>
-                <span class="vs">vs</span>
+                <span class="vs">{t('bracket.vs')}</span>
                 <button
                   type="button"
                   class:won={match.result?.winner === match.bName}
@@ -84,7 +90,7 @@
               </div>
               <div class="scores">
                 <label>
-                  <span class="sr-only">Score for {nameOf(match.aName)}</span>
+                  <span class="sr-only">{t('bracket.score-for', { name: nameOf(match.aName) })}</span>
                   <input
                     type="number"
                     min="0"
@@ -94,7 +100,7 @@
                 </label>
                 <span class="dash">–</span>
                 <label>
-                  <span class="sr-only">Score for {nameOf(match.bName)}</span>
+                  <span class="sr-only">{t('bracket.score-for', { name: nameOf(match.bName) })}</span>
                   <input
                     type="number"
                     min="0"
@@ -103,7 +109,7 @@
                   />
                 </label>
                 {#if match.result}
-                  <button type="button" class="clear" onclick={() => instance.clearResult(match.id)}>Clear</button>
+                  <button type="button" class="clear" onclick={() => instance.clearResult(match.id)}>{t('bracket.clear')}</button>
                 {/if}
               </div>
             </li>
@@ -114,14 +120,14 @@
   {/if}
 
   <section class="round">
-    <h2>Standings</h2>
+    <h2>{t('bracket.standings')}</h2>
     <table>
       <thead>
         <tr>
           <th scope="col">#</th>
-          <th scope="col">Name</th>
-          <th scope="col">W</th>
-          <th scope="col">L</th>
+          <th scope="col">{t('bracket.name')}</th>
+          <th scope="col">{t('bracket.wins')}</th>
+          <th scope="col">{t('bracket.losses')}</th>
           <th scope="col">+/−</th>
         </tr>
       </thead>
@@ -140,28 +146,28 @@
   </section>
 
   <div class="row">
-    <button type="button" onclick={() => (editorOpen = true)}>Entrants</button>
-    <button type="button" onclick={() => instance.regenerate('random')}>Reseed randomly</button>
-    <button type="button" onclick={() => instance.clearResults()}>Clear results</button>
+    <button type="button" onclick={() => (editorOpen = true)}>{t('bracket.entrants')}</button>
+    <button type="button" onclick={() => instance.regenerate('random')}>{t('bracket.reseed')}</button>
+    <button type="button" onclick={() => instance.clearResults()}>{t('bracket.clear-results')}</button>
   </div>
 
   <label class="inline">
-    <span>Best of</span>
+    <span>{t('bracket.best-of-label')}</span>
     <input type="number" min="1" max="9" value={data.bestOf} onchange={(event) => instance.setBestOf(Number((event.currentTarget as HTMLInputElement).value))} />
   </label>
 
   <label class="inline">
-    <span>Tiebreak</span>
+    <span>{t('bracket.tiebreak')}</span>
     <select value={data.tiebreak} onchange={(event) => instance.setTiebreak((event.currentTarget as HTMLSelectElement).value as 'diff' | 'head')}>
-      <option value="diff">Score difference</option>
-      <option value="head">Head to head</option>
+      <option value="diff">{t('bracket.tiebreak-diff')}</option>
+      <option value="head">{t('bracket.tiebreak-head')}</option>
     </select>
   </label>
 </div>
 
 {#if editorOpen}
-  <Sheet title="Entrants" onclose={() => (editorOpen = false)}>
-    <p class="dim small">{data.entrants.length} entrants. Changing the list resets reported results.</p>
+  <Sheet title={t('bracket.entrants')} onclose={() => (editorOpen = false)}>
+    <p class="dim small">{t('bracket.entrants-count', { count: data.entrants.length })}</p>
     <ul class="entrants">
       {#each data.entrants as entrant (entrant.id)}
         <li>
@@ -169,19 +175,19 @@
           <input
             type="text"
             value={entrant.name}
-            aria-label="Name for entrant {entrant.seed}"
+            aria-label={t('bracket.entrant-name', { seed: entrant.seed })}
             onchange={(event) => instance.renameEntrant(entrant.id, (event.currentTarget as HTMLInputElement).value)}
           />
-          <button type="button" onclick={() => instance.removeEntrant(entrant.id)} aria-label="Remove {entrant.name}" disabled={data.entrants.length <= 2}>✕</button>
+          <button type="button" onclick={() => instance.removeEntrant(entrant.id)} aria-label={t('bracket.remove-entrant', { name: entrant.name })} disabled={data.entrants.length <= 2}>✕</button>
         </li>
       {/each}
     </ul>
     <label class="field">
-      <span>Add an entrant</span>
+      <span>{t('bracket.add-entrant-label')}</span>
       <input type="text" bind:value={newName} onkeydown={(event) => { if (event.key === 'Enter') { instance.addEntrant(newName); newName = ''; } }} />
     </label>
-    <button type="button" class="primary-wide" onclick={() => { instance.addEntrant(newName); newName = ''; }}>Add entrant</button>
-    <button type="button" class="wide" onclick={() => (editorOpen = false)}>Done</button>
+    <button type="button" class="primary-wide" onclick={() => { instance.addEntrant(newName); newName = ''; }}>{t('bracket.add-entrant')}</button>
+    <button type="button" class="wide" onclick={() => (editorOpen = false)}>{t('bracket.done')}</button>
   </Sheet>
 {/if}
 

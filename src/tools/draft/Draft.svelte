@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import EmptyState from '../../core/ui/EmptyState.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
@@ -41,7 +42,7 @@
   }
 
   function saveSettings(): void {
-    ctx.undo.batch('draft settings', () => {
+    ctx.undo.batch(t('draft.undo-settings'), () => {
       instance.setOrder(orderDraft);
       instance.setPool(poolDraft);
     });
@@ -52,37 +53,38 @@
 <div class="draft">
   {#if data.auction}
     <section class="panel">
-      <h2>Auction</h2>
+      <h2>{t('draft.auction')}</h2>
       {#if data.nomination}
-        <p class="nomination">On the block: <strong>{data.nomination}</strong></p>
-        <p class="bid" role="status">Bid: <strong>{data.bid}</strong>{#if data.bidder} by {data.bidder}{/if}</p>
+        <p class="nomination">{t('draft.on-block')} <strong>{data.nomination}</strong></p>
+        <p class="bid" role="status">{t('draft.bid')} <strong>{data.bid}</strong>{#if data.bidder}
+            {t('draft.by', { name: data.bidder })}{/if}</p>
         <div class="auction-controls">
           <label class="field">
-            <span>Bidder</span>
+            <span>{t('draft.bidder')}</span>
             <select value={data.bidder} onchange={(event) => instance.setBidder((event.currentTarget as HTMLSelectElement).value)}>
-              <option value="">Pick a player</option>
+              <option value="">{t('draft.pick-player')}</option>
               {#each data.order as name (name)}
                 <option value={name}>{name} ({data.budgets[name] ?? 0})</option>
               {/each}
             </select>
           </label>
           <label class="field">
-            <span>Step</span>
+            <span>{t('draft.step')}</span>
             <input type="number" min="1" value={bidStep} onchange={(event) => (bidStep = Math.max(1, Number((event.currentTarget as HTMLInputElement).value)))} />
           </label>
         </div>
         <div class="row">
-          <button type="button" onclick={() => instance.raise(bidStep)}>Raise {bidStep}</button>
-          <button type="button" class="primary" onclick={() => instance.sell()}>Sold</button>
-          <button type="button" onclick={() => instance.cancelNomination()}>Withdraw</button>
+          <button type="button" onclick={() => instance.raise(bidStep)}>{t('draft.raise', { step: bidStep })}</button>
+          <button type="button" class="primary" onclick={() => instance.sell()}>{t('draft.sold')}</button>
+          <button type="button" onclick={() => instance.cancelNomination()}>{t('draft.withdraw')}</button>
         </div>
       {:else}
-        <p class="dim small">Nominate something from the pool. Bids are checked against the bidder's budget.</p>
+        <p class="dim small">{t('draft.nominate-hint')}</p>
       {/if}
 
       <table>
         <thead>
-          <tr><th scope="col">Player</th><th scope="col">Left</th></tr>
+          <tr><th scope="col">{t('draft.player')}</th><th scope="col">{t('draft.left')}</th></tr>
         </thead>
         <tbody>
           {#each data.order as name (name)}
@@ -93,7 +95,7 @@
       {#if data.sales.length}
         <ol class="log">
           {#each data.sales as sale, index (index)}
-            <li>{sale.item} → {sale.buyer} for {sale.price}</li>
+            <li>{t('draft.sale-line', { item: sale.item, buyer: sale.buyer, price: sale.price })}</li>
           {/each}
         </ol>
       {/if}
@@ -104,19 +106,22 @@
         <p class="clock" class:pulse={expired} aria-live="polite">{formatClock(remaining, true)}</p>
       {/if}
       <p class="who">
-        Round {turn.round} · <strong>{turn.picker || 'Nobody'}</strong> picks
+        {t('draft.round-label', { round: turn.round })} ·
+        <strong>{turn.picker || t('draft.nobody')}</strong> {t('draft.picks-verb')}
       </p>
       {#if data.seconds > 0}
         <button type="button" class="clock-toggle" onclick={() => (data.deadline ? instance.stopTimer() : instance.startTimer())}>
-          {data.deadline ? 'Stop the clock' : `Start ${formatClock(data.seconds)} clock`}
+          {data.deadline
+            ? t('draft.stop-clock')
+            : t('draft.start-clock', { time: formatClock(data.seconds) })}
         </button>
       {/if}
     </section>
 
     <section class="panel">
       <header>
-        <h2>Pool</h2>
-        <span class="dim small">{data.pool.length} left</span>
+        <h2>{t('draft.pool')}</h2>
+        <span class="dim small">{t('draft.pool-left', { count: data.pool.length })}</span>
       </header>
       {#if data.pool.length}
         <ul class="pool">
@@ -125,20 +130,20 @@
           {/each}
         </ul>
       {:else}
-        <EmptyState title="The pool is empty" body="Add cards, players or heroes to draft in the settings." />
+        <EmptyState title={t('draft.pool-empty')} body={t('draft.pool-empty-body')} />
       {/if}
       <div class="add">
-        <label class="sr-only" for="draft-new">Add to the pool</label>
-        <input id="draft-new" type="text" bind:value={newItem} placeholder="Add to the pool" />
-        <button type="button" onclick={() => { instance.addPoolItem(newItem); newItem = ''; }}>Add</button>
+        <label class="sr-only" for="draft-new">{t('draft.add-to-pool')}</label>
+        <input id="draft-new" type="text" bind:value={newItem} placeholder={t('draft.add-to-pool')} />
+        <button type="button" onclick={() => { instance.addPoolItem(newItem); newItem = ''; }}>{t('draft.add')}</button>
       </div>
     </section>
   {/if}
 
   <section class="panel">
     <header>
-      <h2>Order</h2>
-      <span class="dim small">{data.snake ? 'snake' : 'linear'}</span>
+      <h2>{t('draft.order')}</h2>
+      <span class="dim small">{data.snake ? t('draft.snake') : t('draft.linear')}</span>
     </header>
     <ol class="preview">
       {#each preview as item (item.pick)}
@@ -153,14 +158,14 @@
   {#if data.picks.length}
     <section class="panel">
       <header>
-        <h2>Picks</h2>
+        <h2>{t('draft.picks')}</h2>
         <span class="dim small">{data.picks.length}</span>
       </header>
       <ol class="log">
         {#each data.picks as pick, index (index)}
           <li>
             <span>{pick.picker}: <strong>{pick.item}</strong></span>
-            <button type="button" onclick={() => instance.removePick(index)} aria-label="Undo the pick of {pick.item}">↺</button>
+            <button type="button" onclick={() => instance.removePick(index)} aria-label={t('draft.undo-pick', { item: pick.item })}>↺</button>
           </li>
         {/each}
       </ol>
@@ -168,9 +173,9 @@
   {/if}
 
   <div class="row">
-    <button type="button" onclick={openSettings}>Settings</button>
-    <button type="button" onclick={() => instance.randomizeOrder()}>Shuffle order</button>
-    <button type="button" onclick={() => instance.reset()}>Reset</button>
+    <button type="button" onclick={openSettings}>{t('draft.settings')}</button>
+    <button type="button" onclick={() => instance.randomizeOrder()}>{t('draft.shuffle')}</button>
+    <button type="button" onclick={() => instance.reset()}>{t('draft.reset')}</button>
   </div>
 
   {#if data.log.length}
@@ -183,25 +188,25 @@
 </div>
 
 {#if settingsOpen}
-  <Sheet title="Draft settings" onclose={() => (settingsOpen = false)}>
+  <Sheet title={t('draft.settings-title')} onclose={() => (settingsOpen = false)}>
     <label class="field">
-      <span>Order (one name per line)</span>
+      <span>{t('draft.order-label')}</span>
       <textarea rows="5" bind:value={orderDraft} spellcheck="false"></textarea>
     </label>
     <label class="field">
-      <span>Pool (one item per line)</span>
+      <span>{t('draft.pool-label')}</span>
       <textarea rows="6" bind:value={poolDraft} spellcheck="false"></textarea>
     </label>
     <label class="check">
       <input type="checkbox" checked={data.snake} onchange={(event) => instance.setSnake((event.currentTarget as HTMLInputElement).checked)} />
-      <span>Snake order (the last picker goes first next round)</span>
+      <span>{t('draft.snake-check')}</span>
     </label>
     <label class="check">
-      <input type="checkbox" checked={data.auction} onchange={(event) => { ctx.undo.push('auction mode'); instance.data.auction = (event.currentTarget as HTMLInputElement).checked; }} />
-      <span>Auction instead of a draft</span>
+      <input type="checkbox" checked={data.auction} onchange={(event) => {           ctx.undo.push(t('draft.undo-auction')); instance.data.auction = (event.currentTarget as HTMLInputElement).checked; }} />
+      <span>{t('draft.auction-check')}</span>
     </label>
     <label class="field">
-      <span>Seconds per pick</span>
+      <span>{t('draft.seconds-label')}</span>
       <input
         type="number"
         min="0"
@@ -211,22 +216,25 @@
       />
     </label>
     <label class="field">
-      <span>Budget per player</span>
+      <span>{t('draft.budget-label')}</span>
       <input
         type="number"
         min="1"
         value={data.budget}
         onchange={(event) => {
           const value = Math.max(1, Number((event.currentTarget as HTMLInputElement).value));
-          ctx.undo.push('auction budget');
+          ctx.undo.push(t('draft.undo-budget'));
           instance.data.budget = value;
           instance.data.budgets = Object.fromEntries(instance.data.order.map((name) => [name, value]));
         }}
       />
     </label>
-    <button type="button" class="wide primary" onclick={saveSettings}>Save settings</button>
-    <p class="dim small">Saving a new order or pool clears the picks, because the turn sequence changed.</p>
-    <p class="dim small">Budget left for {bidderDraft || 'nobody'}: {myBudget}</p>
+    <button type="button" class="wide primary" onclick={saveSettings}>{t('draft.save')}</button>
+    <p class="dim small">{t('draft.save-hint')}</p>
+    <p class="dim small">{t('draft.budget-left', {
+          name: bidderDraft || t('draft.nobody').toLowerCase(),
+          amount: myBudget,
+        })}</p>
   </Sheet>
 {/if}
 

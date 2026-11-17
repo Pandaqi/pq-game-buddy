@@ -1,5 +1,7 @@
 /** Speedrun splits: targets, best times, deltas and gold splits. No Svelte here. */
 
+import { translate } from '../../core/i18n';
+
 export interface Split {
   name: string;
   /** Target or best time for this segment, in milliseconds. 0 means unset. */
@@ -59,15 +61,14 @@ export function summaryOf(state: SplitsState): string {
     const time = state.run[index];
     const best = state.pb[index];
     const diff = delta(time, best);
-    lines.push(
-      `${split.name}: ${time === undefined ? '—' : `${(time / 1000).toFixed(2)}s`}${
-        diff === null ? '' : ` (${diff >= 0 ? '+' : ''}${(diff / 1000).toFixed(2)})`
-      }`,
-    );
+    const shown = `${time === undefined ? '—' : `${(time / 1000).toFixed(2)}s`}${
+      diff === null ? '' : ` (${diff >= 0 ? '+' : ''}${(diff / 1000).toFixed(2)})`
+    }`;
+    lines.push(translate('splits.summary-split', { name: split.name, time: shown }));
   });
-  if (state.run.length) lines.push(`Total: ${(totalOf(state.run) / 1000).toFixed(2)}s`);
-  if (state.pb.length) lines.push(`Best: ${(totalOf(state.pb) / 1000).toFixed(2)}s`);
-  lines.push(`Attempts: ${state.attempts}`);
+  if (state.run.length) lines.push(translate('splits.summary-total', { time: (totalOf(state.run) / 1000).toFixed(2) }));
+  if (state.pb.length) lines.push(translate('splits.summary-best', { time: (totalOf(state.pb) / 1000).toFixed(2) }));
+  lines.push(translate('splits.summary-attempts', { count: state.attempts }));
   return lines.join('\n');
 }
 

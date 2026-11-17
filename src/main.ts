@@ -7,6 +7,7 @@ import './core/styles/components.css';
 
 import { mount } from 'svelte';
 import App from './App.svelte';
+import { startLanguage } from './core/i18n.svelte';
 import { store } from './core/session-store.svelte';
 import { settings } from './core/settings.svelte';
 
@@ -16,7 +17,12 @@ store.init();
 const target = document.getElementById('app');
 if (target) {
   const bootTool = document.body.dataset.tool ?? '';
-  mount(App, { target, props: { bootTool } });
+  // Every language, English included, is a chunk: mount once the words are here
+  // so the first paint never shows a raw key. The promise settles in a tick or
+  // two on a local file and the app is offline either way.
+  void startLanguage(settings.values.language).then(() => {
+    mount(App, { target, props: { bootTool } });
+  });
 }
 
 // The build adds the manifest link to hosted pages only, and to tool pages as

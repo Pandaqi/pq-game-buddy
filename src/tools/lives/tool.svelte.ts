@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import { PLAYER_COLORS } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
@@ -5,6 +6,10 @@ import { clampLives, isGameOver, isOut, resultsFor, type LivesInstance, type Liv
 import Lives from './Lives.svelte';
 import meta from './meta';
 import preset from './preset';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('lives', en);
 
 function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
   const start = Math.max(0, Number(values.lives ?? 3));
@@ -59,7 +64,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
     if (data.mode === 'shared' || id === 'shared') {
       const next = clampLives(data.lives + delta, data.max);
       if (next === data.lives) return;
-      ctx.undo.push('change lives', 'lives-shared');
+      ctx.undo.push(translate('lives.undo-lives'), 'lives-shared');
       data.lives = next;
       ctx.haptics.buzz('short');
       if (isGameOver(data)) ctx.audio.play('buzzer');
@@ -70,12 +75,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
     const before = track.lives;
     const next = clampLives(before + delta, track.max);
     if (next === before) return;
-    ctx.undo.push('change lives', `lives-${id}`);
+    ctx.undo.push(translate('lives.undo-lives'), `lives-${id}`);
     track.lives = next;
     ctx.haptics.buzz('short');
     if (elimination && before > 0 && isOut(data, track)) {
       ctx.audio.play('buzzer');
-      ctx.toast(`${track.name} is out`);
+      ctx.toast(translate('lives.toast-out', { name: track.name }));
     } else if (elimination && track.lives > 0) {
       ctx.audio.play('click');
     }
@@ -98,7 +103,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
           .filter((player) => player && typeof player.id === 'string')
           .map((player, index) => ({
             id: player.id,
-            name: typeof player.name === 'string' ? player.name : `Player ${index + 1}`,
+                name:
+              typeof player.name === 'string'
+                ? player.name
+                : translate('lives.player-name', { count: index + 1 }),
             lives: Math.max(0, Number(player.lives) || 0),
             max: Math.max(1, Number(player.max) || data.max),
             color: typeof player.color === 'string' ? player.color : PLAYER_COLORS[index % PLAYER_COLORS.length],
@@ -142,16 +150,25 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
     },
     summary() {
       const lines: string[] = [];
-      if (data.mode === 'shared') lines.push(`Lives: ${data.lives}/${data.max}`);
-      else {
+      if (data.mode === 'shared') {
+        lines.push(translate('lives.summary-shared', { lives: data.lives, max: data.max }));
+      } else {
         for (const player of data.players) {
-          lines.push(`${player.name}: ${player.lives}/${player.max}${isOut(data, player) ? ' (out)' : ''}`);
+          lines.push(
+            translate(isOut(data, player) ? 'lives.summary-out' : 'lives.summary-track', {
+              name: player.name,
+              lives: player.lives,
+              max: player.max,
+            }),
+          );
         }
       }
-      for (const extra of data.extras) lines.push(`${extra.name}: ${extra.value}`);
+      for (const extra of data.extras) {
+        lines.push(translate('lives.summary-track-value', { name: extra.name, value: extra.value }));
+      }
       const active = data.conditions.filter((condition) => condition.active).map((condition) => condition.name);
-      if (active.length) lines.push(`Conditions: ${active.join(', ')}`);
-      if (isGameOver(data)) lines.push('Game over');
+      if (active.length) lines.push(translate('lives.summary-conditions', { names: active.join(', ') }));
+      if (isGameOver(data)) lines.push(translate('lives.summary-over'));
       return lines.join('\n');
     },
     results: () => resultsFor(data),
@@ -160,7 +177,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
       if (data.mode === 'shared' || id === 'shared') {
         const next = clampLives(value, data.max);
         if (next === data.lives) return;
-        ctx.undo.push('set lives');
+        ctx.undo.push(translate('lives.undo-set'));
         data.lives = next;
         return;
       }
@@ -168,18 +185,18 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
       if (!track) return;
       const next = clampLives(value, track.max);
       if (next === track.lives) return;
-      ctx.undo.push('set lives');
+      ctx.undo.push(translate('lives.undo-set'));
       track.lives = next;
     },
     setMode(mode) {
       if (data.mode === mode) return;
-      ctx.undo.push('lives mode');
+      ctx.undo.push(translate('lives.undo-mode'));
       data.mode = mode;
     },
     addPlayer(name) {
       const trimmed = name.trim();
       if (!trimmed) return;
-      ctx.undo.push('add player');
+      ctx.undo.push(translate('lives.undo-add'));
       data.players.push({
         id: `x${Date.now().toString(36)}`,
         name: trimmed,
@@ -190,7 +207,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
     },
     removePlayer(id) {
       if (data.players.length <= 1) return;
-      ctx.undo.push('remove player');
+      ctx.undo.push(translate('lives.undo-remove'));
       data.players = data.players.filter((player) => player.id !== id);
     },
     syncPlayers() {
@@ -205,7 +222,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
       ) {
         return;
       }
-      ctx.undo.push('use session players');
+      ctx.undo.push(translate('lives.undo-sync'));
       data.players = source.map((player, index) => {
         const existing = data.players.find((track) => track.id === player.id);
         return {
@@ -220,18 +237,18 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
     adjustExtra(name, delta) {
       const extra = data.extras.find((item) => item.name === name);
       if (!extra) return;
-      ctx.undo.push('change track', `extra-${name}`);
+      ctx.undo.push(translate('lives.undo-track'), `extra-${name}`);
       extra.value = Math.max(0, extra.value + delta);
     },
     toggleCondition(name) {
       const condition = data.conditions.find((item) => item.name === name);
       if (!condition) return;
-      ctx.undo.push('toggle condition');
+      ctx.undo.push(translate('lives.undo-condition'));
       condition.active = !condition.active;
       ctx.haptics.buzz('short');
     },
     resetAll() {
-      ctx.undo.push('reset lives');
+      ctx.undo.push(translate('lives.undo-reset'));
       data.lives = Math.min(start, data.max);
       for (const player of data.players) player.lives = Math.min(start, player.max);
       for (const extra of data.extras) extra.value = 0;
@@ -239,7 +256,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
       data.revealed = !data.hidden;
     },
     setHidden(value) {
-      ctx.undo.push('hidden lives');
+      ctx.undo.push(translate('lives.undo-hidden'));
       data.hidden = value;
       data.revealed = !value;
     },

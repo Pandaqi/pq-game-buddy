@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import EmptyState from '../../core/ui/EmptyState.svelte';
   import {
@@ -25,12 +26,12 @@
   const showWheel = $derived(data.view === 'wheel' && !data.teamResult && data.result.length > 0 && pool.length > 1);
   const showSlot = $derived(data.view === 'slot' && !data.teamResult && data.result.length > 0 && pool.length > 1);
 
-  const SOURCES: { id: PickSource; label: string }[] = [
-    { id: 'number', label: 'Number' },
-    { id: 'list', label: 'List' },
-    { id: 'players', label: 'Players' },
-    { id: 'teams', label: 'Teams' },
-    { id: 'seats', label: 'Seats' },
+  const SOURCES: { id: PickSource; key: string }[] = [
+    { id: 'number', key: 'pick.number' },
+    { id: 'list', key: 'pick.list' },
+    { id: 'players', key: 'pick.players' },
+    { id: 'teams', key: 'pick.teams' },
+    { id: 'seats', key: 'pick.seats' },
   ];
 
   function addOption(event: SubmitEvent): void {
@@ -41,7 +42,7 @@
 </script>
 
 <div class="pick">
-  <div class="sources" role="tablist" aria-label="Pick source">
+  <div class="sources" role="tablist" aria-label={t('pick.source')}>
     {#each SOURCES as item (item.id)}
       <button
         type="button"
@@ -50,22 +51,22 @@
         class:active={data.source === item.id}
         onclick={() => instance.setSource(item.id)}
       >
-        {item.label}
+        {t(item.key)}
       </button>
     {/each}
   </div>
 
-  <div class="views" role="group" aria-label="Result view">
-    <button type="button" class:active={data.view === 'list'} onclick={() => instance.setView('list')} aria-pressed={data.view === 'list'}>List</button>
-    <button type="button" class:active={data.view === 'cards'} onclick={() => instance.setView('cards')} aria-pressed={data.view === 'cards'}>Cards</button>
-    <button type="button" class:active={data.view === 'wheel'} onclick={() => instance.setView('wheel')} aria-pressed={data.view === 'wheel'}>Wheel</button>
-    <button type="button" class:active={data.view === 'slot'} onclick={() => instance.setView('slot')} aria-pressed={data.view === 'slot'}>Slot</button>
+  <div class="views" role="group" aria-label={t('pick.result-view')}>
+    <button type="button" class:active={data.view === 'list'} onclick={() => instance.setView('list')} aria-pressed={data.view === 'list'}>{t('pick.view-list')}</button>
+    <button type="button" class:active={data.view === 'cards'} onclick={() => instance.setView('cards')} aria-pressed={data.view === 'cards'}>{t('pick.view-cards')}</button>
+    <button type="button" class:active={data.view === 'wheel'} onclick={() => instance.setView('wheel')} aria-pressed={data.view === 'wheel'}>{t('pick.view-wheel')}</button>
+    <button type="button" class:active={data.view === 'slot'} onclick={() => instance.setView('slot')} aria-pressed={data.view === 'slot'}>{t('pick.view-slot')}</button>
   </div>
 
   {#if data.source === 'number'}
     <div class="grid-two">
       <label class="field">
-        <span>From</span>
+        <span>{t('pick.from')}</span>
         <input
           type="number"
           value={data.min}
@@ -74,7 +75,7 @@
         />
       </label>
       <label class="field">
-        <span>To</span>
+        <span>{t('pick.to')}</span>
         <input
           type="number"
           value={data.max}
@@ -87,28 +88,28 @@
 
   {#if data.source === 'list'}
     <form class="adder" onsubmit={addOption}>
-      <label class="sr-only" for="pick-value">Option</label>
-      <input id="pick-value" bind:value={draft} placeholder="Add an option" />
-      <button type="submit">Add</button>
+      <label class="sr-only" for="pick-value">{t('pick.option')}</label>
+      <input id="pick-value" bind:value={draft} placeholder={t('pick.add-option')} />
+      <button type="submit">{t('pick.add')}</button>
     </form>
     {#if data.values.length}
       <ul class="values">
         {#each data.values as value (value)}
           <li>
             <span>{value}</span>
-            <button type="button" aria-label="Remove {value}" onclick={() => instance.removeValue(value)}>✕</button>
+            <button type="button" aria-label={t('pick.remove', { value })} onclick={() => instance.removeValue(value)}>✕</button>
           </li>
         {/each}
       </ul>
     {:else}
-      <EmptyState title="The list is empty" body="Add a few names, words or options, or pull in the players." />
+      <EmptyState title={t('pick.list-empty')} body={t('pick.list-empty-body')} />
     {/if}
-    <button type="button" class="ghost" onclick={() => instance.usePlayers()}>Use player names</button>
+    <button type="button" class="ghost" onclick={() => instance.usePlayers()}>{t('pick.use-players')}</button>
   {/if}
 
   {#if data.source === 'teams'}
     <label class="field">
-      <span>Teams</span>
+      <span>{t('pick.teams')}</span>
       <input
         type="number"
         min="2"
@@ -121,7 +122,7 @@
 
   <div class="count-row">
     <label class="field">
-      <span>Draw</span>
+      <span>{t('pick.draw')}</span>
       <input
         type="number"
         min="1"
@@ -137,7 +138,7 @@
           checked={!data.replacement}
           onchange={(event) => instance.setReplacement(!(event.currentTarget as HTMLInputElement).checked)}
         />
-        <span>No repeats</span>
+        <span>{t('pick.no-repeats')}</span>
       </label>
     {/if}
   </div>
@@ -147,7 +148,7 @@
       <div class="teams">
         {#each data.teamResult as team, index (index)}
           <div class="team">
-            <h3>Team {index + 1}</h3>
+            <h3>{t('pick.team-number', { count: index + 1 })}</h3>
             <p>{team.join(', ') || '—'}</p>
           </div>
         {/each}
@@ -187,7 +188,7 @@
                 type="button"
                 class="result card back"
                 onclick={() => instance.revealAt(index)}
-                aria-label="Reveal card {index + 1} of {data.result.length}"
+                aria-label={t('pick.reveal-card', { index: index + 1, total: data.result.length })}
               >?</button>
             {/if}
           {/each}
@@ -200,30 +201,38 @@
         </div>
       {/if}
       {#if data.view === 'cards' && data.revealed.some((value) => !value)}
-        <button type="button" class="ghost reveal-all" onclick={() => instance.revealAll()}>Reveal all</button>
+        <button type="button" class="ghost reveal-all" onclick={() => instance.revealAll()}>{t('pick.reveal-all')}</button>
       {/if}
     {:else}
       <p class="placeholder">
-        {data.source === 'seats' ? 'Tap draw for a seating order.' : data.source === 'teams' ? 'Tap draw to split into teams.' : 'Tap draw to pick.'}
+        {data.source === 'seats'
+          ? t('pick.hint-seats')
+          : data.source === 'teams'
+            ? t('pick.hint-teams')
+            : t('pick.hint-pick')}
       </p>
     {/if}
   </div>
 
   <button type="button" class="draw" onclick={() => instance.draw()}>
-    {data.source === 'seats' ? 'Seat us' : data.source === 'teams' ? 'Split teams' : 'Draw'}
+    {data.source === 'seats'
+      ? t('pick.seat-us')
+      : data.source === 'teams'
+        ? t('pick.split-teams')
+        : t('pick.draw')}
   </button>
 
   <div class="extra">
     <label class="field">
-      <span>Seed (optional)</span>
+      <span>{t('pick.seed')}</span>
       <input
         type="text"
         value={data.seed}
-        placeholder="repeatable picks"
+        placeholder={t('pick.seed-placeholder')}
         onchange={(event) => instance.setSeed((event.currentTarget as HTMLInputElement).value)}
       />
     </label>
-    <button type="button" class="ghost" onclick={() => instance.reset()}>Clear result</button>
+    <button type="button" class="ghost" onclick={() => instance.reset()}>{t('pick.clear')}</button>
   </div>
 
   {#if data.history.length > 1}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../core/i18n.svelte';
   import { settings } from '../core/settings.svelte';
   import { readFileText } from '../core/share';
   import { storage, storagePersistent } from '../core/storage';
@@ -41,14 +42,14 @@
 
   const storageText = $derived(
     storagePersistent
-      ? 'Saved on this device.'
+      ? t('settings.storage.local')
       : storage.kind === 'session'
-        ? 'Only while this tab stays open. Export your game to keep it.'
-        : 'This browser cannot save. Export your game to keep it.',
+        ? t('settings.storage.session')
+        : t('settings.storage.memory'),
   );
 
   function doReset(): void {
-    if (confirmText.trim().toUpperCase() !== 'DELETE') return;
+    if (confirmText.trim().toUpperCase() !== t('settings.confirm-word')) return;
     settings.clearAllData();
     resetOpen = false;
     confirmText = '';
@@ -57,40 +58,38 @@
 
 <div class="settings">
   <header class="head">
-    <h1>Settings</h1>
-    <a class="back" href="#/">Home</a>
+    <h1>{t('settings.title')}</h1>
+    <a class="back" href="#/">{t('settings.home')}</a>
   </header>
 
   <section>
-    <h2>Light or dark</h2>
-    <p class="dim small">Light is paper and ink. Dark is a dim room: warm charcoal, no glare.</p>
+    <h2>{t('settings.appearance')}</h2>
+    <p class="dim small">{t('settings.appearance-hint')}</p>
     <div class="segment">
-      {#each ['system', 'light', 'dark'] as theme (theme)}
+      {#each [['system', t('settings.theme.system')], ['light', t('settings.theme.light')], ['dark', t('settings.theme.dark')]] as item (item[0])}
         <button
           type="button"
-          class:active={settings.values.theme === theme}
-          onclick={() => settings.set('theme', theme as 'system' | 'light' | 'dark')}
+          class:active={settings.values.theme === item[0]}
+          onclick={() => settings.set('theme', item[0] as 'system' | 'light' | 'dark')}
         >
-          {theme}
+          {item[1]}
         </button>
       {/each}
     </div>
   </section>
 
   <section>
-    <h2>Theme file</h2>
-    <p class="dim small">
-      A .gamebuddy-theme is plain text with a few colours, sizes and fonts. It stays on this device and is never fetched.
-    </p>
+    <h2>{t('settings.theme-file')}</h2>
+    <p class="dim small">{t('settings.theme-file-hint')}</p>
     {#if activeTheme.name}
-      <p class="dim small">Active theme: {activeTheme.name}</p>
+      <p class="dim small">{t('settings.theme-active', { name: activeTheme.name })}</p>
     {/if}
     <label class="field">
-      <span>Paste a theme</span>
+      <span>{t('settings.theme-paste')}</span>
       <textarea rows="6" bind:value={themeDraft} spellcheck="false" placeholder="name: Lantern night&#10;paper: #fdf6e3&#10;ink: #2b2118"></textarea>
     </label>
     <label class="field">
-      <span>Or choose a file</span>
+      <span>{t('settings.theme-choose')}</span>
       <input type="file" accept=".gamebuddy-theme,.txt,text/plain" onchange={loadThemeFile} />
     </label>
     {#if themeName}
@@ -100,48 +99,48 @@
       <ul class="diags">
         {#each themeDiags as item, index (index)}
           <li class:error={item.severity === 'error'}>
-            <span class="line">line {item.line}</span>
+            <span class="line">{t('settings.line', { line: item.line })}</span>
             <span>{item.message}</span>
           </li>
         {/each}
       </ul>
     {/if}
     <div class="row">
-      <button type="button" class="wide" onclick={useTheme} disabled={!themeDraft.trim()}>Use this theme</button>
+      <button type="button" class="wide" onclick={useTheme} disabled={!themeDraft.trim()}>{t('settings.theme-use')}</button>
       {#if settings.values.themeText}
-        <button type="button" class="wide" onclick={removeTheme}>Remove theme</button>
+        <button type="button" class="wide" onclick={removeTheme}>{t('settings.theme-remove')}</button>
       {/if}
     </div>
   </section>
 
   <section>
-    <h2>Table mode</h2>
+    <h2>{t('settings.table')}</h2>
     <label class="check">
       <input type="checkbox" checked={settings.values.table} onchange={(event) => settings.set('table', (event.currentTarget as HTMLInputElement).checked)} />
-      <span>Bigger type, thicker targets and less chrome, for a phone lying flat on the table.</span>
+      <span>{t('settings.table-hint')}</span>
     </label>
   </section>
 
   <section>
-    <h2>Huge mode</h2>
+    <h2>{t('settings.huge')}</h2>
     <label class="check">
       <input type="checkbox" checked={settings.values.huge} onchange={(event) => settings.set('huge', (event.currentTarget as HTMLInputElement).checked)} />
-      <span>Bigger than table mode, for a large screen or low vision. Screens scroll more.</span>
+      <span>{t('settings.huge-hint')}</span>
     </label>
   </section>
 
   <section>
-    <h2>Switch access</h2>
+    <h2>{t('settings.switch')}</h2>
     <label class="check">
       <input type="checkbox" checked={settings.values.switchAccess} onchange={(event) => settings.set('switchAccess', (event.currentTarget as HTMLInputElement).checked)} />
-      <span>Bigger targets and a thicker focus ring, for a single switch or a head pointer.</span>
+      <span>{t('settings.switch-hint')}</span>
     </label>
   </section>
 
   <section>
-    <h2>Motion</h2>
+    <h2>{t('settings.motion')}</h2>
     <div class="segment">
-      {#each [['system', 'System'], ['reduce', 'Reduced'], ['allow', 'Full']] as item (item[0])}
+      {#each [['system', t('settings.motion.system')], ['reduce', t('settings.motion.reduce')], ['allow', t('settings.motion.allow')]] as item (item[0])}
         <button
           type="button"
           class:active={settings.values.motion === item[0]}
@@ -154,13 +153,13 @@
   </section>
 
   <section>
-    <h2>Sound</h2>
+    <h2>{t('settings.sound')}</h2>
     <label class="check">
       <input type="checkbox" checked={settings.values.muted} onchange={(event) => settings.set('muted', (event.currentTarget as HTMLInputElement).checked)} />
-      <span>Mute all cues</span>
+      <span>{t('settings.mute')}</span>
     </label>
     <label class="range">
-      <span>Volume</span>
+      <span>{t('settings.volume')}</span>
       <input
         type="range"
         min="0"
@@ -172,57 +171,52 @@
     </label>
     <label class="check">
       <input type="checkbox" checked={settings.values.haptics} onchange={(event) => settings.set('haptics', (event.currentTarget as HTMLInputElement).checked)} />
-      <span>Vibration where the device supports it</span>
+      <span>{t('settings.haptics')}</span>
     </label>
   </section>
 
   <section>
-    <h2>Saving</h2>
+    <h2>{t('settings.saving')}</h2>
     <p class="dim">{storageText}</p>
-    <p class="dim small">Games live in this browser only. There is no account and no server.</p>
+    <p class="dim small">{t('settings.saving-hint')}</p>
   </section>
 
   <section>
-    <h2>Data</h2>
-    <button type="button" class="danger" onclick={() => (resetOpen = true)}>Reset all data</button>
-    <p class="dim small">Deletes saved games and settings from this device. Export anything you want to keep first; it cannot be undone.</p>
+    <h2>{t('settings.data')}</h2>
+    <button type="button" class="danger" onclick={() => (resetOpen = true)}>{t('settings.reset')}</button>
+    <p class="dim small">{t('settings.reset-hint')}</p>
   </section>
 
   <section>
-    <h2>About</h2>
-    <p class="dim">
-      Game Buddy lives on your device. No account, no tracking, no requests. I built it for my own
-      table first, then kept going.
-    </p>
-    <p class="dim small">
-      Templates are plain text: write one in Notepad, send it in the group chat, drop it here.
-    </p>
-    <p class="dim small">Game names are used descriptively; this is not affiliated with or endorsed by any publisher.</p>
+    <h2>{t('settings.about')}</h2>
+    <p class="dim">{t('settings.about-text')}</p>
+    <p class="dim small">{t('settings.about-templates')}</p>
+    <p class="dim small">{t('settings.about-names')}</p>
   </section>
 
   <footer class="made-by">
     <p>
-      Made by <a href={SITE_URL} target="_blank" rel="noopener noreferrer">{AUTHOR}</a>.
-      Game Buddy version {VERSION}.
+      {t('settings.made-by')} <a href={SITE_URL} target="_blank" rel="noopener noreferrer">{AUTHOR}</a>.
+      {t('settings.version', { version: VERSION })}
     </p>
     <p class="small">
-      More games and tools at
+      {t('settings.more-at')}
       <a href={SITE_URL} target="_blank" rel="noopener noreferrer">pandaqi.com</a>.
-      The source lives at
+      {t('settings.source-at')}
       <a href={REPO_URL} target="_blank" rel="noopener noreferrer">github.com/Pandaqi/pq-game-buddy</a>.
     </p>
   </footer>
 </div>
 
 {#if resetOpen}
-  <Sheet title="Reset all data" onclose={() => (resetOpen = false)}>
-    <p class="dim">This deletes every saved game and setting on this device. Type DELETE to confirm.</p>
+  <Sheet title={t('settings.reset')} onclose={() => (resetOpen = false)}>
+    <p class="dim">{t('settings.reset-confirm', { word: t('settings.confirm-word') })}</p>
     <label class="field">
-      <span>Confirmation</span>
+      <span>{t('settings.confirm-label')}</span>
       <input type="text" bind:value={confirmText} autocomplete="off" />
     </label>
-    <button type="button" class="danger wide" disabled={confirmText.trim().toUpperCase() !== 'DELETE'} onclick={doReset}>
-      Delete everything
+    <button type="button" class="danger wide" disabled={confirmText.trim().toUpperCase() !== t('settings.confirm-word')} onclick={doReset}>
+      {t('settings.delete-all')}
     </button>
   </Sheet>
 {/if}

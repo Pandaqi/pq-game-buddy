@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import type { CoinInstance } from './logic';
 
@@ -12,39 +13,53 @@
 <div class="coin">
   <div class="stage" aria-live="polite">
     {#if data.seriesWinner}
-      <p class="big">{data.seriesWinner === 'heads' ? 'Heads' : 'Tails'} wins</p>
-      <p class="sub">Best of {data.target} · {data.series.heads}–{data.series.tails}</p>
+      <p class="big">
+        {t('coin.series-won', { side: data.seriesWinner === 'heads' ? t('coin.heads') : t('coin.tails') })}
+      </p>
+      <p class="sub">
+        {t('coin.best-of', {
+          target: data.target,
+          heads: data.series.heads,
+          tails: data.series.tails,
+        })}
+      </p>
     {:else if data.results.length === 0}
-      <p class="big">Ready</p>
-      <p class="sub">Tap flip to toss {data.coins === 1 ? 'the coin' : `${data.coins} coins`}.</p>
+      <p class="big">{t('coin.ready')}</p>
+      <p class="sub">
+        {data.coins === 1 ? t('coin.tap-one') : t('coin.tap-many', { count: data.coins })}
+      </p>
     {:else if data.coins === 1}
-      <p class="big">{data.results[0] ? 'Heads' : 'Tails'}</p>
+      <p class="big">{data.results[0] ? t('coin.heads') : t('coin.tails')}</p>
       <p class="sub">{data.results[0] ? '♛' : '✦'}</p>
     {:else}
       <p class="big">{headsCount} / {tailsCount}</p>
-      <p class="sub">heads / tails{headsCount === data.results.length ? ' — all heads!' : ''}</p>
+      <p class="sub">
+        {t('coin.tally-label')}{headsCount === data.results.length ? t('coin.all-heads') : ''}
+      </p>
       <div class="coins">
         {#each data.results as heads, index (index)}
-          <span class="mini" class:heads>{heads ? 'H' : 'T'}</span>
+          <span class="mini" class:heads>{heads ? t('coin.initial-heads') : t('coin.initial-tails')}</span>
         {/each}
       </div>
     {/if}
   </div>
 
   <button type="button" class="flip" onclick={() => instance.flip()}>
-    {data.seriesWinner ? 'Flip again' : 'Flip'}
+    {data.seriesWinner ? t('coin.flip-again') : t('coin.flip')}
   </button>
 
-  <div class="modes" role="group" aria-label="Coin format">
-    <button type="button" class:active={data.mode === 'single'} onclick={() => instance.setMode('single')}>Single toss</button>
-    <button type="button" class:active={data.mode === 'best'} onclick={() => instance.setMode('best')}>Best of</button>
+  <div class="modes" role="group" aria-label={t('coin.format')}>
+    <button type="button" class:active={data.mode === 'single'} onclick={() => instance.setMode('single')}>{t('coin.single')}</button>
+    <button type="button" class:active={data.mode === 'best'} onclick={() => instance.setMode('best')}>{t('coin.best')}</button>
   </div>
 
   {#if data.mode === 'best'}
     <div class="series">
-      <span class="tally">Heads {data.series.heads} · Tails {data.series.tails}</span>
+      <span class="tally">
+        {t('coin.tally', { heads: data.series.heads, tails: data.series.tails })}
+      </span>
       <label class="field">
-        <span>First to</span>
+        <span>{t('coin.first-to')}</span>
         <input
           type="number"
           min="1"
@@ -57,22 +72,27 @@
   {/if}
 
   <div class="call">
-    <span class="label">Call it</span>
+    <span class="label">{t('coin.call')}</span>
     <div class="row">
-      <button type="button" class:active={data.call === 'heads'} onclick={() => instance.setCall(data.call === 'heads' ? 'none' : 'heads')}>Heads</button>
-      <button type="button" class:active={data.call === 'tails'} onclick={() => instance.setCall(data.call === 'tails' ? 'none' : 'tails')}>Tails</button>
+      <button type="button" class:active={data.call === 'heads'} onclick={() => instance.setCall(data.call === 'heads' ? 'none' : 'heads')}>{t('coin.heads')}</button>
+      <button type="button" class:active={data.call === 'tails'} onclick={() => instance.setCall(data.call === 'tails' ? 'none' : 'tails')}>{t('coin.tails')}</button>
     </div>
   </div>
 
   {#if data.call !== 'none'}
     <p class="tally">
-      {data.wins} won · {data.losses} lost · streak {data.streak} (best {data.bestStreak})
+      {t('coin.stats', {
+        won: data.wins,
+        lost: data.losses,
+        streak: data.streak,
+        best: data.bestStreak,
+      })}
     </p>
   {/if}
 
   <div class="options">
     <label class="field">
-      <span>Coins</span>
+      <span>{t('coin.coins')}</span>
       <input
         type="range"
         min="1"
@@ -83,7 +103,7 @@
       <strong>{data.coins}</strong>
     </label>
     <label class="field">
-      <span>Heads chance</span>
+      <span>{t('coin.heads-chance')}</span>
       <input
         type="range"
         min="0"
@@ -96,10 +116,10 @@
     </label>
   </div>
   {#if data.fairness !== 50}
-    <p class="warn">Weighted coin: {data.fairness}% heads, as configured.</p>
+    <p class="warn">{t('coin.weighted', { percent: data.fairness })}</p>
   {/if}
 
-  <button type="button" class="ghost" onclick={() => instance.reset()}>Reset tallies</button>
+  <button type="button" class="ghost" onclick={() => instance.reset()}>{t('coin.reset')}</button>
 
   {#if data.history.length}
     <ol class="history">
@@ -108,7 +128,7 @@
           <span>{item.heads}H · {item.tails}T</span>
           {#if item.call !== 'none'}
             <span class:won={item.won === true} class:lost={item.won === false}>
-              {item.won === null ? 'tie' : item.won ? 'called it' : 'missed'}
+              {item.won === null ? t('coin.tie') : item.won ? t('coin.called-it') : t('coin.missed')}
             </span>
           {/if}
         </li>

@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance, ToolResult } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import {
@@ -11,6 +12,10 @@ import {
 import Bracket from './Bracket.svelte';
 import meta from './meta';
 import preset from './preset';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('bracket', en);
 
 export interface BracketState {
   format: BracketFormat;
@@ -50,7 +55,11 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
 
   const data = $state<BracketState>({
     format: (values.format as BracketFormat) ?? 'single',
-    entrants: makeEntrants(names.length ? names : ['Player 1', 'Player 2']),
+    entrants: makeEntrants(
+      names.length
+        ? names
+        : [translate('bracket.player-name', { count: 1 }), translate('bracket.player-name', { count: 2 })],
+    ),
     results: {},
     scores: {},
     bestOf: Math.max(1, Number(values['best-of'] ?? 1)),
@@ -123,7 +132,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
       },
       champion: () => {
         const champion = buildBracket(input()).champion;
-        if (champion) ctx.toast(`Champion: ${data.entrants.find((item) => item.id === champion)?.name ?? champion}`);
+        if (champion) {
+          ctx.toast(
+            translate('bracket.toast-champion', {
+              name: data.entrants.find((item) => item.id === champion)?.name ?? champion,
+            }),
+          );
+        }
       },
     },
     summary() {
@@ -131,10 +146,28 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
       const nameOf = (id: string | null): string =>
         data.entrants.find((item) => item.id === id)?.name ?? '?';
       const lines: string[] = [];
-      if (view.champion) lines.push(`Champion: ${nameOf(view.champion)}`);
-      if (view.next) lines.push(`Next: ${nameOf(view.next.aName)} vs ${nameOf(view.next.bName)}`);
-      lines.push('Standings:');
-      for (const row of view.standings) lines.push(`${row.name}: ${row.wins}-${row.losses} (${row.diff >= 0 ? '+' : ''}${row.diff})`);
+      if (view.champion) {
+        lines.push(translate('bracket.summary-champion', { name: nameOf(view.champion) }));
+      }
+      if (view.next) {
+        lines.push(
+          translate('bracket.summary-next', {
+            a: nameOf(view.next.aName),
+            b: nameOf(view.next.bName),
+          }),
+        );
+      }
+      lines.push(translate('bracket.summary-standings'));
+      for (const row of view.standings) {
+        lines.push(
+          translate('bracket.summary-row', {
+            name: row.name,
+            wins: row.wins,
+            losses: row.losses,
+            diff: `${row.diff >= 0 ? '+' : ''}${row.diff}`,
+          }),
+        );
+      }
       return lines.join('\n');
     },
     results() {
@@ -155,14 +188,14 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
       const saved = data.scores[matchId];
       const scoreA = saved ? saved.a : winner === a ? 1 : 0;
       const scoreB = saved ? saved.b : winner === b ? 1 : 0;
-      ctx.undo.push('report result');
+      ctx.undo.push(translate('bracket.undo-report'));
       data.results = { ...data.results, [matchId]: { winner, scoreA, scoreB } };
       ctx.audio.play('click');
       ctx.haptics.buzz('short');
     },
     clearResult(matchId) {
       if (!data.results[matchId]) return;
-      ctx.undo.push('clear result');
+      ctx.undo.push(translate('bracket.undo-clear'));
       const next = { ...data.results };
       delete next[matchId];
       if (matchId === 'grand-1') delete next['grand-2'];
@@ -172,7 +205,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
       const clean = Number.isFinite(value) ? Math.max(0, Math.round(value)) : 0;
       const current = data.scores[matchId] ?? { a: 0, b: 0 };
       const next = { ...current, [side]: clean };
-      ctx.undo.push('score', `score-${matchId}-${side}`);
+      ctx.undo.push(translate('bracket.undo-score'), `score-${matchId}-${side}`);
       data.scores = { ...data.scores, [matchId]: next };
       const existing = data.results[matchId];
       if (existing) {
@@ -184,23 +217,23 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
     },
     setFormat(format) {
       if (format === data.format) return;
-      ctx.undo.push('tournament format');
+      ctx.undo.push(translate('bracket.undo-format'));
       data.format = format;
       data.results = {};
     },
     setBestOf(value) {
       const next = Math.max(1, Math.min(9, Math.round(value)));
       if (next === data.bestOf) return;
-      ctx.undo.push('best of');
+      ctx.undo.push(translate('bracket.undo-best-of'));
       data.bestOf = next;
     },
     setTiebreak(value) {
       if (value === data.tiebreak) return;
-      ctx.undo.push('tiebreaker');
+      ctx.undo.push(translate('bracket.undo-tiebreak'));
       data.tiebreak = value;
     },
     regenerate(seeding) {
-      ctx.undo.push('regenerate bracket');
+      ctx.undo.push(translate('bracket.undo-regenerate'));
       const chosen = seeding ?? data.seeding;
       data.seeding = chosen;
       const base = data.entrants.map((entrant) => entrant.name);
@@ -208,33 +241,33 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
       data.entrants = makeEntrants(ordered);
       data.results = {};
       data.scores = {};
-      ctx.toast('Bracket reset');
+      ctx.toast(translate('bracket.toast-reset'));
     },
     addEntrant(name) {
       const trimmed = name.trim();
       if (!trimmed) return;
-      ctx.undo.push('add entrant');
+      ctx.undo.push(translate('bracket.undo-add'));
       data.entrants = [...data.entrants, { id: `e${Date.now().toString(36)}`, name: trimmed, seed: data.entrants.length + 1 }];
       data.results = {};
     },
     renameEntrant(id, name) {
       const entrant = data.entrants.find((item) => item.id === id);
       if (!entrant) return;
-      ctx.undo.push('rename entrant');
+      ctx.undo.push(translate('bracket.undo-rename'));
       entrant.name = name.trim() || entrant.name;
     },
     removeEntrant(id) {
       if (data.entrants.length <= 2) {
-        ctx.toast('A bracket needs at least two entrants', 'error');
+        ctx.toast(translate('bracket.toast-two'), 'error');
         return;
       }
-      ctx.undo.push('remove entrant');
+      ctx.undo.push(translate('bracket.undo-remove'));
       data.entrants = data.entrants.filter((entrant) => entrant.id !== id);
       data.results = {};
     },
     clearResults() {
       if (!Object.keys(data.results).length) return;
-      ctx.undo.push('clear every result');
+      ctx.undo.push(translate('bracket.undo-clear-all'));
       data.results = {};
       data.scores = {};
     },

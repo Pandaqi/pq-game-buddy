@@ -3,6 +3,65 @@
 All notable changes to Game Buddy. The template format is versioned separately
 (`format: 1`) and only changes with a compatibility note.
 
+## Unreleased — M10 localization (five languages complete)
+
+### Added
+
+- **A language layer.** `t()` now resolves through a dictionary instead of a fixed map.
+  Every language, English included, is a chunk that arrives when it is picked and is
+  never fetched; `main.ts` waits for the first one before it mounts, so no words are
+  compiled into the start-up and the first visit fell by 5.6 KB. There is no English
+  safety net under a translation — `tests/i18n.test.ts` resolves every literal `t('…')`
+  call and compares each shipped language against the English key set, which is what
+  keeps a raw key off the screen.
+- **A language switcher** in the header. It lists only the languages the build carries,
+  opens a sheet like the sound board, and saves the choice with the other settings.
+  The wordmark folds away under 26rem so four 48 px controls still fit a 320 px phone.
+- **Per-tool words.** A tool keeps its strings in `src/tools/<id>/locales/<lang>.ts` and
+  registers the English one with `registerToolStrings`, so its text travels in its own
+  chunk. `bun run gen` gathers the translations into one `tool-text-<lang>.generated.ts`
+  per language for the tools that have them.
+- **A build filter.** `bun run build --langs=nl` drops every other language chunk through
+  a bundle-time plugin, without touching the generated files. English is not special: a
+  build that leaves it out carries no English words at all.
+- **Localized diagnostics.** The parser, the schema and the theme reader print `diag.*`
+  keys through `translate()` in the new plain `core/i18n.ts`; the reactive
+  `core/i18n.svelte.ts` on top of it is what views import, so logic never takes a rune.
+  The English wording is unchanged, so every existing message still reads the same.
+- **German, Spanish and French, complete.** Each is `core/locales/<lang>.ts` plus
+  twenty-one `src/tools/<id>/locales/<lang>.ts`, gathered by `bun run gen` into one
+  `tool-text-<lang>.generated.ts`; the header switcher lists all five and the choice is
+  saved with your settings. The gate compares every language against the English key
+  set, so a language only ships when nothing is missing.
+- **Every tool's copied summary.** `summaryOf` and `stepLabel` went through `translate()`
+  in the last ten tools — bag, buzzer, custom, decks, draft, pick, prompts, script,
+  splits and words — so the copy button and the play log use the active language
+  everywhere.
+
+### Changed
+
+- **The shell is in five languages.** Home, session, gallery, settings, editor, play
+  log, display, self-test, the import and finish sheets, the toasts and the undo labels
+  all go through `t()`, with complete `core/locales/en.ts`, `nl.ts`, `de.ts`, `es.ts` and
+  `fr.ts`.
+- **All twenty-one tools are in all five languages**, view, aria labels, actions, toasts
+  and undo labels included. Their tool titles and blurbs are keys too,
+  so the home shelf and the gallery follow the switch.
+- **The deferred ceiling moved once, 250 KB to 320 KB**, because three complete
+  translations cost 66.4 KB; `ROADMAP.md` §5.2 has the arithmetic.
+- Dates and times in the session summary, the finish sheet and the play log now use the
+  active language (`toLocaleDateString(language())`).
+
+### Known limits
+
+- **A language costs about 22 KB gzipped, so languages are where the deferred budget
+  goes.** The three new ones took the deferred total from 236.2 KB to 302.6 KB, which is
+  why the ceiling moved once to 320 KB (`ROADMAP.md` §5.2). A sixth language needs its
+  own arithmetic before it ships.
+- **The five dictionaries are hand-written translations, not reviewed by native
+  speakers.** Wording follows `docs/STYLE.md` (plain, warm, short) and the English key
+  set exactly, but a language pass by a speaker is the human check that remains.
+
 ## Unreleased — counting mode, I Bid You Not and the gallery grid
 
 ### Added

@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import {
@@ -12,6 +13,10 @@ import {
 import Rules from './Rules.svelte';
 import meta from './meta';
 import preset from './preset';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('rules', en);
 
 function create(ctx: ToolContext, values: PresetValues = {}): RulesInstance {
   const setup = (Array.isArray(values.setup) ? (values.setup as string[]) : [])
@@ -77,68 +82,72 @@ function create(ctx: ToolContext, values: PresetValues = {}): RulesInstance {
       const lines: string[] = [];
       if (data.quick) lines.push(data.quick);
       const progress = setupProgress(data.setup);
-      if (progress.total) lines.push(`Setup: ${progress.done}/${progress.total} done`);
+      if (progress.total) {
+        lines.push(translate('rules.summary-setup', { done: progress.done, total: progress.total }));
+      }
       for (const item of data.setup) lines.push(`${item.done ? '[x]' : '[ ]'} ${item.text}`);
       if (data.scoring.length) {
-        lines.push('Scoring:');
-        for (const row of data.scoring) lines.push(`- ${row.name}: ${row.points}`);
+        lines.push(translate('rules.summary-scoring'));
+        for (const row of data.scoring) {
+          lines.push(translate('rules.summary-row', { name: row.name, points: row.points }));
+        }
       }
       if (data.source) lines.push(data.source);
-      return lines.length ? lines.join('\n') : 'No rules loaded yet. Add a quick card or paste the rules in settings.';
+      return lines.length ? lines.join('\n') : translate('rules.summary-none');
     },
     setQuick(text) {
       const clean = text.trim();
       if (clean === data.quick) return;
-      ctx.undo.push('quick card');
+      ctx.undo.push(translate('rules.undo-quick'));
       data.quick = clean;
     },
     setRules(text) {
       const clean = text.trim();
       if (clean === data.rules) return;
-      ctx.undo.push('rules text');
+      ctx.undo.push(translate('rules.undo-text'));
       data.rules = clean;
     },
     setSource(text) {
       const clean = text.trim();
       if (clean === data.source) return;
-      ctx.undo.push('source link');
+      ctx.undo.push(translate('rules.undo-source'));
       data.source = clean;
     },
     toggleSetup(index) {
       const item = data.setup[index];
       if (!item) return;
-      ctx.undo.push(item.done ? 'uncheck setup' : 'check setup');
+      ctx.undo.push(translate(item.done ? 'rules.undo-uncheck' : 'rules.undo-check'));
       item.done = !item.done;
       ctx.haptics.buzz('short');
       if (setupProgress(data.setup).done === data.setup.length) {
-        ctx.toast('Setup complete');
+        ctx.toast(translate('rules.toast-complete'));
         ctx.audio.play('success');
       }
     },
     resetSetup() {
       if (!data.setup.some((item) => item.done)) return;
-      ctx.undo.push('reset checklist');
+      ctx.undo.push(translate('rules.undo-reset'));
       for (const item of data.setup) item.done = false;
     },
     setSetup(items) {
       const clean = items.map((item) => item.trim()).filter(Boolean);
       if (clean.join('\n') === data.setup.map((item) => item.text).join('\n')) return;
       const done = new Map(data.setup.map((item) => [item.text, item.done]));
-      ctx.undo.push('setup list');
+      ctx.undo.push(translate('rules.undo-setup'));
       data.setup = clean.map((text) => ({ text, done: done.get(text) ?? false }));
     },
     setGlossary(entries: GlossaryEntry[]) {
       const clean = entries
         .map((entry) => ({ term: entry.term.trim(), definition: entry.definition.trim() }))
         .filter((entry) => entry.term);
-      ctx.undo.push('glossary');
+      ctx.undo.push(translate('rules.undo-glossary'));
       data.glossary = clean;
     },
     setScoring(rows: ScoringRow[]) {
       const clean = rows
         .map((row) => ({ name: row.name.trim(), points: Number(row.points) || 0 }))
         .filter((row) => row.name);
-      ctx.undo.push('scoring reference');
+      ctx.undo.push(translate('rules.undo-scoring'));
       data.scoring = clean;
     },
   };

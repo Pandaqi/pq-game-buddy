@@ -3,9 +3,13 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { schemas } from '../src/core/schemas.generated';
+import { startLanguage } from '../src/core/i18n';
 import { allDiagnostics, hasErrors, parseTemplate, resolveTemplate } from '../src/core/template/parse';
 
 const root = join(import.meta.dir, '..');
+
+// The linter prints the same words the app does, so it loads a language first.
+await startLanguage('en');
 
 const files: { label: string; path: string }[] = [];
 for (const folder of ['templates', 'templates/pandaqi']) {

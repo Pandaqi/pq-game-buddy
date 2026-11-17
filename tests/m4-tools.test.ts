@@ -1,3 +1,4 @@
+import './helpers/language';
 import { describe, expect, test } from 'bun:test';
 import { buildBracket, roundRobinDefs, seedOrder, type Entrant, type Result } from '../src/tools/bracket/logic';
 import { delayFor, isLive, type BuzzerState } from '../src/tools/buzzer/logic';

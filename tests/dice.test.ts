@@ -1,3 +1,4 @@
+import './helpers/language';
 import { describe, expect, test } from 'bun:test';
 import { createRng } from '../src/core/rng';
 import { cleanFaces, namedFaces, normaliseFaces, normaliseSets, parseDice, rollDice, rollFaces } from '../src/tools/dice/logic';

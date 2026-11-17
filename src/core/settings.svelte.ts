@@ -2,6 +2,8 @@
 
 import { audio } from './audio';
 import { haptics } from './haptics';
+import { startLanguage, setLanguage } from './i18n.svelte';
+import { DEFAULT_LANGUAGE } from './langs';
 import { KEYS, readJson, storage, writeJson } from './storage';
 import { applyThemeText } from './theme';
 
@@ -16,6 +18,8 @@ export interface SettingsState {
   volume: number;
   muted: boolean;
   haptics: boolean;
+  /** One of `core/langs.ts`; a build only offers the languages it carries. */
+  language: string;
   /** Raw text of the active `.gamebuddy-theme`, empty when none is used. */
   themeText: string;
 }
@@ -29,6 +33,7 @@ const DEFAULTS: SettingsState = {
   volume: 0.7,
   muted: false,
   haptics: true,
+  language: DEFAULT_LANGUAGE,
   themeText: '',
 };
 
@@ -39,6 +44,8 @@ class SettingsStore {
     const stored = readJson<Partial<SettingsState>>(KEYS.settings, {});
     this.values = { ...DEFAULTS, ...stored };
     this.apply();
+    // The words are the one setting that may need a chunk; the boot path awaits it.
+    void startLanguage(this.values.language);
   }
 
   set<K extends keyof SettingsState>(key: K, value: SettingsState[K]): void {
@@ -66,6 +73,15 @@ class SettingsStore {
     applyThemeText(this.values.themeText);
   }
 
+  /** Switch language and remember it. False when this build does not carry it. */
+  async useLanguage(id: string): Promise<boolean> {
+    const ok = await setLanguage(id);
+    if (!ok) return false;
+    this.values.language = id;
+    this.save();
+    return true;
+  }
+
   /** Replace the active theme file. Empty text removes it. */
   setTheme(text: string): void {
     this.values.themeText = text;
@@ -77,6 +93,7 @@ class SettingsStore {
     this.values = { ...DEFAULTS };
     this.save();
     this.apply();
+    void startLanguage(DEFAULT_LANGUAGE);
   }
 
   /** Wipe every key this app owns. */

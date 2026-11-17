@@ -1,3 +1,4 @@
+import './helpers/language';
 import { describe, expect, test } from 'bun:test';
 import { parseTheme, themeCss, themeIsEmpty, themeToText } from '../src/core/theme';
 

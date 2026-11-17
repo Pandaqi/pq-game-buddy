@@ -3,6 +3,7 @@
  * success counting. Fate dice use sides 0 and values -1..1.
  */
 
+import { translate } from '../../core/i18n';
 import type { Rng } from '../../core/rng';
 import type { ToolInstance } from '../../core/registry';
 
@@ -47,7 +48,7 @@ const MAX_SIDES = 1000;
 
 export function parseDice(input: string): ParseOutcome {
   const text = String(input ?? '').trim().toLowerCase().replace(/\s+/g, '');
-  if (!text) return { ok: false, message: 'Type a roll like 2d6+1' };
+  if (!text) return { ok: false, message: translate('dice.error-empty') };
 
   const terms: DiceTerm[] = [];
   let modifier = 0;
@@ -61,13 +62,13 @@ export function parseDice(input: string): ParseOutcome {
       sign = -1;
       part = part.slice(1);
     }
-    if (!part) return { ok: false, message: `"${rawPart}" is not a die` };
+    if (!part) return { ok: false, message: translate('dice.error-not-a-die', { part: rawPart }) };
 
     const match = part.match(/^(\d*)d(\d+|%|f)(.*)$/);
     if (!match) {
       const numeric = Number(part);
       if (!Number.isFinite(numeric)) {
-        return { ok: false, message: `I do not understand "${rawPart}". Try 2d6+1.` };
+        return { ok: false, message: translate('dice.error-unreadable', { part: rawPart }) };
       }
       modifier += sign * numeric;
       continue;
@@ -75,16 +76,16 @@ export function parseDice(input: string): ParseOutcome {
 
     const count = match[1] === '' ? 1 : Number(match[1]);
     if (!Number.isFinite(count) || count < 1) {
-      return { ok: false, message: 'A die needs a count of at least 1' };
+      return { ok: false, message: translate('dice.error-count') };
     }
-    if (count > MAX_DICE) return { ok: false, message: `That is more than ${MAX_DICE} dice` };
+    if (count > MAX_DICE) return { ok: false, message: translate('dice.error-too-many', { max: MAX_DICE }) };
 
     let sides: number;
     if (match[2] === '%') sides = 100;
     else if (match[2] === 'f') sides = 0;
     else sides = Number(match[2]);
     if (sides !== 0 && (sides < 2 || sides > MAX_SIDES)) {
-      return { ok: false, message: `A die needs between 2 and ${MAX_SIDES} sides` };
+      return { ok: false, message: translate('dice.error-sides', { max: MAX_SIDES }) };
     }
 
     let rest = match[3] ?? '';
@@ -93,23 +94,23 @@ export function parseDice(input: string): ParseOutcome {
     while (rest && guard < 8) {
       guard += 1;
       const op = rest.match(/^(kh|kl|r|!|>)(\d*)/);
-      if (!op) return { ok: false, message: `I do not understand "${rest}"` };
+      if (!op) return { ok: false, message: translate('dice.error-modifier', { part: rest }) };
       const code = op[1];
       const value = op[2] ? Number(op[2]) : 0;
       rest = rest.slice(op[0].length);
       if (code === 'kh') {
-        if (value < 1) return { ok: false, message: 'Keep highest needs a count, like kh3' };
+        if (value < 1) return { ok: false, message: translate('dice.error-keep-high') };
         term.keepHigh = value;
       } else if (code === 'kl') {
-        if (value < 1) return { ok: false, message: 'Keep lowest needs a count, like kl1' };
+        if (value < 1) return { ok: false, message: translate('dice.error-keep-low') };
         term.keepLow = value;
       }
       else if (code === 'r') {
-        if (!value) return { ok: false, message: 'Reroll needs a value, like r1' };
+        if (!value) return { ok: false, message: translate('dice.error-reroll') };
         term.reroll = value;
       } else if (code === '!') term.explode = true;
       else if (code === '>') {
-        if (!value) return { ok: false, message: 'Success counting needs a target, like >7' };
+        if (!value) return { ok: false, message: translate('dice.error-successes') };
         term.successAt = value;
       }
     }
@@ -117,7 +118,7 @@ export function parseDice(input: string): ParseOutcome {
   }
 
   if (!terms.length && modifier === 0) {
-    return { ok: false, message: 'That roll has no dice in it' };
+    return { ok: false, message: translate('dice.error-no-dice') };
   }
   return { ok: true, expression: { terms, modifier } };
 }

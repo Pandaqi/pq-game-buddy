@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import { PLAYER_COLORS } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
@@ -18,6 +19,10 @@ import {
   type ScoreState,
 } from './logic';
 import Score from './Score.svelte';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('score', en);
 import meta from './meta';
 import preset from './preset';
 
@@ -41,8 +46,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     const source = sessionPlayers.length
       ? sessionPlayers
       : [
-          { id: 'p1', name: 'Player 1', color: PLAYER_COLORS[0] },
-          { id: 'p2', name: 'Player 2', color: PLAYER_COLORS[1] },
+          { id: 'p1', name: translate('score.player-name', { count: 1 }), color: PLAYER_COLORS[0] },
+          { id: 'p2', name: translate('score.player-name', { count: 2 }), color: PLAYER_COLORS[1] },
         ];
     return source.map((player, index) => ({
       id: player.id,
@@ -99,8 +104,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     ctx.haptics.buzz('short');
     const total = totalFor(data, id);
     if (!data.target) return;
-    if (data.win === 'highest' && total >= data.target) ctx.toast(`${player.name} reached ${total} — game over?`);
-    if (data.win === 'lowest' && total <= data.target) ctx.toast(`${player.name} reached ${total} — game over?`);
+    const reached = translate('score.toast-target', { name: player.name, total });
+    if (data.win === 'highest' && total >= data.target) ctx.toast(reached);
+    if (data.win === 'lowest' && total <= data.target) ctx.toast(reached);
   }
 
   function emptyRow(): Record<string, number> {
@@ -165,7 +171,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
                 .filter((entry) => entry && typeof entry.id === 'string')
                 .map((entry) => ({
                   id: entry.id,
-                  label: typeof entry.label === 'string' ? entry.label : 'Entry',
+                  label:
+                    typeof entry.label === 'string'
+                      ? entry.label
+                      : translate('score.entry-default'),
                   amount: Number(entry.amount) || 0,
                 }))
             : [];
@@ -211,7 +220,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     summary: () => scoreSheet(data),
     results: () => standingsFor(data).map((row) => ({ name: row.name, score: row.total })),
     adjust(id, delta) {
-      ctx.undo.push('score change', `score-${id}`);
+      ctx.undo.push(translate('score.undo-score'), `score-${id}`);
       if (data.mode === 'rounds' && data.roundCount > 0) {
         const row = data.rounds[id] ?? [];
         const index = Math.max(0, data.roundCount - 1);
@@ -225,14 +234,14 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
         row[first.name] = Math.max(0, (row[first.name] ?? 0) + delta);
         data.counts[id] = row;
       } else if (data.mode === 'ledger') {
-        instance.addLedgerEntry(id, 'Adjust', delta);
+        instance.addLedgerEntry(id, translate('score.entry-default'), delta);
       } else {
         data.totals[id] = (data.totals[id] ?? data.start) + delta;
       }
       announceScore(id);
     },
     setTotal(id, value) {
-      ctx.undo.push('set score');
+      ctx.undo.push(translate('score.undo-set'));
       if (data.mode === 'rounds' && data.roundCount > 0) {
         const row = data.rounds[id] ?? [];
         while (row.length < data.roundCount) row.push(0);
@@ -244,7 +253,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
       announceScore(id);
     },
     setRound(id, round, value) {
-      ctx.undo.push('set round', `round-${id}-${round}`);
+      ctx.undo.push(translate('score.undo-round'), `round-${id}-${round}`);
       const row = data.rounds[id] ?? [];
       while (row.length <= round) row.push(0);
       row[round] = Number.isFinite(value) ? value : 0;
@@ -252,7 +261,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
       data.roundCount = Math.max(data.roundCount, row.length);
     },
     addRound() {
-      ctx.undo.push('add round');
+      ctx.undo.push(translate('score.undo-add-round'));
       data.roundCount += 1;
       for (const player of data.players) {
         const row = data.rounds[player.id] ?? [];
@@ -262,7 +271,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     },
     removeRound() {
       if (data.roundCount <= 1) return;
-      ctx.undo.push('remove round');
+      ctx.undo.push(translate('score.undo-remove-round'));
       data.roundCount -= 1;
       for (const player of data.players) {
         const row = data.rounds[player.id] ?? [];
@@ -272,7 +281,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     addPlayer(name) {
       const trimmed = name.trim();
       if (!trimmed) return;
-      ctx.undo.push('add player');
+      ctx.undo.push(translate('score.undo-add'));
       const id = `x${Date.now().toString(36)}`;
       data.players.push({ id, name: trimmed, color: PLAYER_COLORS[data.players.length % PLAYER_COLORS.length] });
       data.totals[id] = data.start;
@@ -283,16 +292,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     renamePlayer(id, name) {
       const player = data.players.find((item) => item.id === id);
       if (!player) return;
-      ctx.undo.push('rename player');
+      ctx.undo.push(translate('score.undo-rename'));
       player.name = name.trim() || player.name;
     },
     syncPlayers() {
       const source = ctx.session.players();
       if (!source.length) {
-        ctx.toast('No players in the session yet');
+        ctx.toast(translate('score.toast-no-players'));
         return;
       }
-      ctx.undo.push('use session players');
+      ctx.undo.push(translate('score.undo-sync'));
       data.players = source.map((player, index) => ({
         id: player.id,
         name: player.name,
@@ -314,7 +323,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
       data.ledger = ledger;
     },
     clearAll() {
-      ctx.undo.push('clear scores');
+      ctx.undo.push(translate('score.undo-clear'));
       for (const player of data.players) {
         data.totals[player.id] = data.start;
         data.rounds[player.id] = Array.from({ length: data.roundCount }, () => 0);
@@ -324,41 +333,41 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
       data.notes = {};
     },
     setMode(mode) {
-      ctx.undo.push('score mode');
+      ctx.undo.push(translate('score.undo-mode'));
       data.mode = mode;
     },
     setWin(win) {
       if (data.win === win) return;
-      ctx.undo.push('win condition');
+      ctx.undo.push(translate('score.undo-win'));
       data.win = win;
     },
     setStep(value) {
       const next = Math.max(1, Math.round(Number.isFinite(value) ? value : 1));
       if (data.step === next) return;
-      ctx.undo.push('score step');
+      ctx.undo.push(translate('score.undo-step'));
       data.step = next;
     },
     setTarget(value) {
       const next = Math.max(0, Math.round(Number.isFinite(value) ? value : 0));
       if (data.target === next) return;
-      ctx.undo.push('score target');
+      ctx.undo.push(translate('score.undo-target'));
       data.target = next;
     },
     setHint(text) {
       const next = text.trim();
       if (data.hint === next) return;
-      ctx.undo.push('score hint');
+      ctx.undo.push(translate('score.undo-hint'));
       data.hint = next;
     },
     setCategoryCount(id, category, value) {
-      ctx.undo.push('category count', `count-${id}-${category}`);
+      ctx.undo.push(translate('score.undo-category'), `count-${id}-${category}`);
       const row = data.counts[id] ?? {};
       row[category] = Math.max(0, Number.isFinite(value) ? Math.round(value) : 0);
       data.counts[id] = row;
       announceScore(id);
     },
     setCategories(next) {
-      ctx.undo.push('categories');
+      ctx.undo.push(translate('score.undo-categories'));
       const clean: ScoreCategory[] = [];
       const seen = new Set<string>();
       for (const entry of next) {
@@ -386,18 +395,18 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
           return;
         }
       }
-      ctx.undo.push('formula');
+      ctx.undo.push(translate('score.undo-formula'));
       data.formula = trimmed;
     },
     addLedgerEntry(id, label, amount) {
       if (!data.players.some((player) => player.id === id)) return;
-      const clean = label.trim() || 'Entry';
+      const clean = label.trim() || translate('score.entry-default');
       const value = Number.isFinite(amount) ? Math.round(amount * 100) / 100 : 0;
       if (value === 0) {
-        ctx.toast('An entry needs a non-zero amount', 'error');
+        ctx.toast(translate('score.toast-entry-zero'), 'error');
         return;
       }
-      ctx.undo.push('ledger entry', `ledger-${id}`);
+      ctx.undo.push(translate('score.undo-entry'), `ledger-${id}`);
       const entries = data.ledger[id] ?? [];
       entries.push({ id: `e${Date.now().toString(36)}${entries.length}`, label: clean, amount: value });
       data.ledger[id] = entries;
@@ -406,7 +415,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     removeLedgerEntry(id, entryId) {
       const entries = data.ledger[id] ?? [];
       if (!entries.some((entry) => entry.id === entryId)) return;
-      ctx.undo.push('remove entry');
+      ctx.undo.push(translate('score.undo-remove-entry'));
       data.ledger[id] = entries.filter((entry) => entry.id !== entryId);
     },
     note(playerId, cell) {
@@ -416,12 +425,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
       const key = noteKey(playerId, cell);
       const clean = text.trim();
       if ((data.notes[key] ?? '') === clean) return;
-      ctx.undo.push(clean ? 'cell note' : 'clear note');
+      ctx.undo.push(clean ? translate('score.undo-note') : translate('score.undo-clear-note'));
       if (clean) data.notes[key] = clean;
       else delete data.notes[key];
     },
     setHidden(value) {
-      ctx.undo.push('hidden scores');
+      ctx.undo.push(translate('score.undo-hidden-scores'));
       data.hidden = value;
       data.revealed = !value;
     },

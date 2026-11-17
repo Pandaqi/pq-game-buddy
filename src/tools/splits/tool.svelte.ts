@@ -1,9 +1,13 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import { parseSplits, summaryOf, totalOf, type Split, type SplitsState } from './logic';
 import Splits from './Splits.svelte';
+import en from './locales/en';
 import meta from './meta';
 import preset from './preset';
+
+registerToolStrings('splits', en);
 
 export interface SplitsActions {
   start(): void;
@@ -31,7 +35,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): SplitsInstance {
     .filter((value) => value > 0);
 
   const data = $state<SplitsState>({
-    game: String(values.game ?? 'My game'),
+    game: String(values.game ?? translate('splits.default-game')),
     category: String(values.category ?? ''),
     splits,
     pb,
@@ -51,7 +55,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): SplitsInstance {
     const previous = totalOf(data.pb);
     if (!data.pb.length || total < previous) {
       data.pb = data.run.slice();
-      ctx.toast('New personal best');
+      ctx.toast(translate('splits.toast-pb'));
       ctx.audio.play('success');
     } else {
       ctx.audio.play('bell');
@@ -109,7 +113,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): SplitsInstance {
     },
     start() {
       if (!data.splits.length) {
-        ctx.toast('Add a few splits first', 'error');
+        ctx.toast(translate('splits.toast-add-first'), 'error');
         return;
       }
       data.run = [];
@@ -149,22 +153,22 @@ function create(ctx: ToolContext, values: PresetValues = {}): SplitsInstance {
       data.lastAt = 0;
     },
     resetAll() {
-      ctx.undo.push('reset everything');
+      ctx.undo.push(translate('splits.undo-reset-all'));
       instance.reset();
       data.attempts = 0;
     },
     clearPB() {
       if (!data.pb.length && !data.golds.length) return;
-      ctx.undo.push('clear the best run');
+      ctx.undo.push(translate('splits.undo-clear-pb'));
       data.pb = [];
       data.golds = [];
     },
     savePB() {
       if (!data.run.length) {
-        ctx.toast('Finish a run first', 'error');
+        ctx.toast(translate('splits.toast-finish'), 'error');
         return;
       }
-      ctx.undo.push('save as personal best');
+      ctx.undo.push(translate('splits.undo-save-pb'));
       data.pb = data.run.slice();
       data.golds = data.run.slice();
     },
@@ -177,10 +181,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): SplitsInstance {
     setSplits(text) {
       const next = parseSplits(text);
       if (!next.length) {
-        ctx.toast('Write one split per line', 'error');
+        ctx.toast(translate('splits.toast-one-per-line'), 'error');
         return;
       }
-      ctx.undo.batch('splits list', () => {
+      ctx.undo.batch(translate('splits.undo-splits'), () => {
         data.splits = next;
         data.run = [];
         data.running = false;

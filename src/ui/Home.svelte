@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { language, t, toolBlurb, toolTitle } from '../core/i18n.svelte';
   import { manifest } from '../core/manifest.generated';
   import { store } from '../core/session-store.svelte';
   import { doodle, HERO_SCENE } from '../core/ui/doodles';
@@ -42,8 +43,8 @@
     if (!needle) return allTools;
     return allTools.filter(
       (module) =>
-        module.title.toLowerCase().includes(needle) ||
-        module.blurb.toLowerCase().includes(needle) ||
+        toolTitle(module.id, module.title).toLowerCase().includes(needle) ||
+        toolBlurb(module.id, module.blurb).toLowerCase().includes(needle) ||
         module.tags.some((tag) => tag.includes(needle)),
     );
   });
@@ -66,29 +67,29 @@
     <div class="hero-art" aria-hidden="true">{@html HERO_SCENE}</div>
     <p class="kicker">
       <span class="kicker-leaf" aria-hidden="true">{@html doodle('leaf')}</span>
-      No account. No internet. No install.
+      {t('home.kicker')}
     </p>
-    <h1>Game night,<br />sorted.</h1>
-    <p class="lede">Timers, dice, scorepads and templates for the games on your shelf.</p>
+    <h1>{t('home.title-1')}<br />{t('home.title-2')}</h1>
+    <p class="lede">{t('home.lede')}</p>
   </section>
 
   {#if store.lastSession}
     <button type="button" class="continue" onclick={oncontinue}>
       <span class="continue-art" aria-hidden="true">{@html doodle('acorn')}</span>
       <span class="continue-text">
-        <span class="label">Pick up where you stopped</span>
+        <span class="label">{t('home.continue')}</span>
         <span class="game">{store.lastSession.game}</span>
       </span>
-      <span class="when">{new Date(store.lastSession.updatedAt).toLocaleDateString()}</span>
+      <span class="when">{new Date(store.lastSession.updatedAt).toLocaleDateString(language())}</span>
     </button>
   {/if}
 
   <section>
     <header class="section-head">
-      <h2>Tools</h2>
+      <h2>{t('home.tools')}</h2>
       <label class="search">
-        <span class="sr-only">Search all tools</span>
-        <input type="search" bind:value={query} placeholder="Search all tools" />
+        <span class="sr-only">{t('home.search')}</span>
+        <input type="search" bind:value={query} placeholder={t('home.search')} />
       </label>
     </header>
 
@@ -103,21 +104,23 @@
               data-family={module.family}
             >
               <span class="mark" aria-hidden="true">{@html module.icon}</span>
-              <span class="title">{module.title}</span>
-              <span class="blurb">{module.blurb}</span>
+              <span class="title">{toolTitle(module.id, module.title)}</span>
+              <span class="blurb">{toolBlurb(module.id, module.blurb)}</span>
             </button>
           </li>
         {/each}
       </ul>
     {:else}
-      <p class="dim">No tool matches “{query}”. Try a shorter word.</p>
+      <p class="dim">{t('home.empty', { query })}</p>
     {/if}
 
     {#if !query.trim()}
       <div class="shelf-foot">
-        <p class="hint">{showAll ? `All ${allTools.length} tools.` : 'The everyday shelf. Search finds everything.'}</p>
+        <p class="hint">
+          {showAll ? t('home.all-tools', { count: allTools.length }) : t('home.everyday')}
+        </p>
         <button type="button" class="wide ghost" onclick={() => (showAll = !showAll)}>
-          {showAll ? 'Show fewer tools' : `Show all ${allTools.length} tools`}
+          {showAll ? t('home.fewer') : t('home.show-all', { count: allTools.length })}
         </button>
       </div>
     {/if}
@@ -125,12 +128,9 @@
 
   <section>
     <details class="fold">
-      <summary>Or start from a game template</summary>
+      <summary>{t('home.templates-fold')}</summary>
       <div class="fold-body">
-        <p class="hint">
-          {templates.length} games, already set up. Bring your own on the templates page: a .gamebuddy
-          file, its images and a theme, all at once.
-        </p>
+        <p class="hint">{t('home.templates-hint', { count: templates.length })}</p>
         <ul class="templates">
           {#each templates as template (template.id)}
             <li>
@@ -140,23 +140,25 @@
                   <span class="title">{template.name}</span>
                 </span>
                 <span class="meta">
-                  {template.players ?? 'any'} players{#if template.time} · {template.time}{/if}
+                  {template.players
+                    ? t('home.players', { count: template.players })
+                    : t('home.any-players')}{#if template.time} · {template.time}{/if}
                   {#if template.tools.length}· {template.tools.join(', ')}{/if}
                 </span>
               </button>
             </li>
           {/each}
         </ul>
-        <button type="button" class="wide ghost" onclick={onimport}>Import your own</button>
+        <button type="button" class="wide ghost" onclick={onimport}>{t('home.import')}</button>
       </div>
     </details>
   </section>
 
-  <nav class="links" aria-label="More">
-    <a href="#/templates">All templates</a>
-    <a href="#/editor">Template editor</a>
-    <a href="#/log">Play log</a>
-    <a href="#/settings">Settings</a>
+  <nav class="links" aria-label={t('nav.more')}>
+    <a href="#/templates">{t('home.all-templates')}</a>
+    <a href="#/editor">{t('home.editor')}</a>
+    <a href="#/log">{t('home.log')}</a>
+    <a href="#/settings">{t('home.settings')}</a>
   </nav>
 </div>
 

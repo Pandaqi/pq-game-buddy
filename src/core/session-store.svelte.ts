@@ -5,7 +5,7 @@
 
 import { audio } from './audio';
 import { haptics } from './haptics';
-import { t } from './i18n';
+import { t } from './i18n.svelte';
 import type { AnyToolModule, SessionApi, ToolContext, ToolInstance } from './registry';
 import { hasTool, loadTool } from './tools.generated';
 import { createRng } from './rng';
@@ -245,7 +245,7 @@ class SessionStore {
         continue;
       }
       if (this.entriesList.some((entry) => entry.id === spec.instanceId)) {
-        this.toast(`Two tools share the name "${spec.instanceId}"; the duplicate was skipped`, 'error');
+        this.toast(t('toast.duplicate-tool', { name: spec.instanceId }), 'error');
         continue;
       }
       const entry = this.createEntry(module, spec.instanceId, spec.values);
@@ -359,7 +359,7 @@ class SessionStore {
     const entry = this.activeEntry;
     if (!entry) return;
     if (entry.undo.undo()) {
-      this.toast(t('session.undo') + ': ' + entry.label);
+      this.toast(t('session.undo-with', { label: entry.label }));
     }
   }
 
@@ -445,7 +445,7 @@ class SessionStore {
     session.updatedAt = Date.now();
     const ok = writeJson(KEYS.session(session.id), session);
     if (!ok) {
-      this.toast('Could not save. Export the session so you do not lose it.', 'error');
+      this.toast(t('toast.save-failed'), 'error');
       return;
     }
     const index = readJson<SessionIndexEntry[]>(KEYS.sessions, []);

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../core/i18n.svelte';
   import { listRecentImports, type RecentImport } from '../core/recent-imports';
   import { navigate } from '../core/router';
   import { schemas } from '../core/schemas.generated';
@@ -137,7 +138,7 @@
   /** "What should we play?" offers a game from the current filters, not all of them. */
   function surprise(): void {
     if (!shown.length) {
-      store.toast('No game matches those filters. Clear one and try again.', 'error');
+      store.toast(t('gallery.no-filter-match'), 'error');
       return;
     }
     choose(shown[Math.floor(Math.random() * shown.length)]);
@@ -153,7 +154,7 @@
     const count = parsed.template.players.length ? parsed.template.players.length : Math.max(1, Math.min(20, seats));
     const names = parsed.template.players.length
       ? parsed.template.players
-      : Array.from({ length: count }, (_, index) => `Player ${index + 1}`);
+      : Array.from({ length: count }, (_, index) => t('players.default', { count: index + 1 }));
     const baseTools = toolsForSession(parsed.template, resolved.tools);
     const variant = parsed.template.variants.find((item) => item.id === variantId);
     const tools = variant ? applyVariant(baseTools, variant) : baseTools;
@@ -173,64 +174,64 @@
     writeJson(KEYS.recent, recent);
     chosen = null;
     navigate({ name: 'session' });
-    if (range && names.length < range.min) store.toast(`This game wants at least ${range.min} players`);
+    if (range && names.length < range.min) store.toast(t('gallery.wants-players', { count: range.min }));
   }
 </script>
 
 <div class="gallery">
   <header class="head">
     <div>
-      <h1>Template gallery</h1>
-      <p class="dim">{templates.length} games, ready to play. Nothing to download.</p>
+      <h1>{t('gallery.title')}</h1>
+      <p class="dim">{t('gallery.hint', { count: templates.length })}</p>
     </div>
-    <a class="back" href="#/">Home</a>
+    <a class="back" href="#/">{t('nav.home')}</a>
   </header>
 
   <div class="filters">
     <label class="search">
-      <span class="sr-only">Search templates</span>
-      <input type="search" bind:value={query} placeholder="Search games or tools" />
+      <span class="sr-only">{t('gallery.search')}</span>
+      <input type="search" bind:value={query} placeholder={t('gallery.search-games')} />
     </label>
-    <div class="chips" role="group" aria-label="Template collection">
-      {#each [['all', 'All'], ['pandaqi', 'Pandaqi'], ['favourites', 'Favourites'], ['recent', 'Recent']] as item (item[0])}
+    <div class="chips" role="group" aria-label={t('gallery.collection')}>
+      {#each [['all', t('gallery.all')], ['pandaqi', t('gallery.pandaqi')], ['favourites', t('gallery.favourites')], ['recent', t('gallery.recent')]] as item (item[0])}
         <button type="button" class:active={mode === item[0]} onclick={() => (mode = item[0] as typeof mode)}>{item[1]}</button>
       {/each}
     </div>
     <div class="selects">
       <label class="field">
-        <span>Players</span>
+        <span>{t('gallery.players')}</span>
         <select bind:value={playersFilter}>
-          <option value="any">Any</option>
-          <option value="1-2">1–2</option>
-          <option value="3-4">3–4</option>
-          <option value="5+">5+</option>
+          <option value="any">{t('gallery.any')}</option>
+          <option value="1-2">{t('gallery.players-small')}</option>
+          <option value="3-4">{t('gallery.players-mid')}</option>
+          <option value="5+">{t('gallery.players-big')}</option>
         </select>
       </label>
       <label class="field">
-        <span>Length</span>
+        <span>{t('gallery.length')}</span>
         <select bind:value={timeFilter}>
-          <option value="any">Any</option>
-          <option value="short">20 min or less</option>
-          <option value="medium">20–60 min</option>
-          <option value="long">Over an hour</option>
+          <option value="any">{t('gallery.any')}</option>
+          <option value="short">{t('gallery.time-short')}</option>
+          <option value="medium">{t('gallery.time-medium')}</option>
+          <option value="long">{t('gallery.time-long')}</option>
         </select>
       </label>
       <label class="field">
-        <span>Tag</span>
+        <span>{t('gallery.tag')}</span>
         <select bind:value={tagFilter}>
-          <option value="any">Any</option>
+          <option value="any">{t('gallery.any')}</option>
           {#each tags as tag (tag)}
             <option value={tag}>{tag}</option>
           {/each}
         </select>
       </label>
-      <button type="button" class="surprise" onclick={surprise}>What should we play?</button>
+      <button type="button" class="surprise" onclick={surprise}>{t('gallery.surprise')}</button>
     </div>
   </div>
 
   {#if imports.length}
     <section class="imports">
-      <h2>Recently imported</h2>
+      <h2>{t('gallery.recently-imported')}</h2>
       <div class="chips">
         {#each imports as entry (entry.at)}
           <button type="button" class="import-chip" onclick={() => chooseImport(entry)}>
@@ -252,7 +253,9 @@
               <span class="title">{template.name}</span>
             </span>
             <span class="meta">
-              {template.players ?? 'any'} players{#if template.time} · {template.time}{/if}
+              {template.players
+                ? t('home.players', { count: template.players })
+                : t('home.any-players')}{#if template.time} · {template.time}{/if}
             </span>
             <span class="tools">{template.tools.join(' · ')}</span>
           </button>
@@ -260,7 +263,9 @@
             type="button"
             class="star"
             class:on={favourites.includes(template.id)}
-            aria-label={favourites.includes(template.id) ? `Remove ${template.name} from favourites` : `Favourite ${template.name}`}
+            aria-label={favourites.includes(template.id)
+              ? t('gallery.unfavourite', { name: template.name })
+              : t('gallery.favourite', { name: template.name })}
             aria-pressed={favourites.includes(template.id)}
             onclick={() => toggleFavourite(template.id)}
           >★</button>
@@ -268,18 +273,15 @@
       {/each}
     </ul>
   {:else}
-    <p class="empty">No template matches those filters. Try “Any”, or clear the search.</p>
-    <a class="primary link" href="#/editor">Write one in the editor</a>
+    <p class="empty">{t('gallery.empty')}</p>
+    <a class="primary link" href="#/editor">{t('gallery.write')}</a>
   {/if}
 
   <section class="upload" aria-labelledby="upload-title">
-    <h2 id="upload-title">Bring your own</h2>
-    <p>
-      Upload a <code>.gamebuddy</code> template, a saved game's <code>.json</code>, its images and a
-      <code>.gamebuddy-theme</code> in one go. Everything stays on this device.
-    </p>
+    <h2 id="upload-title">{t('gallery.bring')}</h2>
+    <p>{t('gallery.bring-hint')}</p>
     <label class="field">
-      <span>Files</span>
+      <span>{t('import.files')}</span>
       <input
         type="file"
         multiple
@@ -292,10 +294,7 @@
         }}
       />
     </label>
-    <p class="hint">
-      An image named like the template's <code>icon:</code> value — or like the template file — becomes its
-      mark. A theme is applied straight away. A session <code>.json</code> resumes that game.
-    </p>
+    <p class="hint">{t('gallery.file-hint')}</p>
   </section>
 </div>
 
@@ -303,13 +302,15 @@
   {@const current = chosen}
   <Sheet title={current.name} onclose={() => (chosen = null)}>
     <p class="dim">
-      {current.players ?? 'any'} players{#if current.time} · {current.time}{/if}
+      {current.players
+        ? t('home.players', { count: current.players })
+        : t('home.any-players')}{#if current.time} · {current.time}{/if}
       {#if current.tags.length}· {current.tags.join(', ')}{/if}
     </p>
-    <p class="dim small">Tools: {current.tools.join(', ') || 'none'}</p>
+    <p class="dim small">{t('gallery.tools', { tools: current.tools.join(', ') || t('gallery.no-tools') })}</p>
     {#if chosenVariants.length}
-      <div class="variants" role="group" aria-label="House-rule variant">
-        <button type="button" class:active={variantId === ''} onclick={() => (variantId = '')}>Base rules</button>
+      <div class="variants" role="group" aria-label={t('seats.variant')}>
+        <button type="button" class:active={variantId === ''} onclick={() => (variantId = '')}>{t('seats.base')}</button>
         {#each chosenVariants as variant (variant.id)}
           <button type="button" class:active={variantId === variant.id} onclick={() => (variantId = variant.id)}>{variant.name}</button>
         {/each}
@@ -317,20 +318,20 @@
     {/if}
     {#if !current.players}
       <label class="field">
-        <span>Seats</span>
+        <span>{t('gallery.seats')}</span>
         <input type="number" min="1" max="20" bind:value={seats} />
       </label>
     {:else if current.players.includes('-')}
       <label class="field">
-        <span>Seats (this game takes {current.players})</span>
+        <span>{t('gallery.seats-range', { range: current.players })}</span>
         <input type="number" min={rangeOf(current).min} max={rangeOf(current).max} bind:value={seats} />
       </label>
     {/if}
     <button type="button" class="wide" onclick={startChosen} disabled={!chosenText}>
-      {chosenText ? 'Start game' : 'Loading…'}
+      {chosenText ? t('seats.start') : t('gallery.loading')}
     </button>
     <button type="button" class="wide ghost" onclick={() => toggleFavourite(current.id)}>
-      {favourites.includes(current.id) ? 'Remove from favourites' : 'Add to favourites'}
+      {favourites.includes(current.id) ? t('gallery.remove-favourite') : t('gallery.add-favourite')}
     </button>
   </Sheet>
 {/if}

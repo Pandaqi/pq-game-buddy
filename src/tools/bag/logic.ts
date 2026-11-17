@@ -1,5 +1,6 @@
 /** Blind draws from a bag of tiles or tokens. No Svelte here. */
 
+import { translate } from '../../core/i18n';
 import type { Rng } from '../../core/rng';
 
 export interface Token {
@@ -86,16 +87,22 @@ export function trayTotal(tokens: Token[]): number {
 }
 
 export function summaryOf(state: BagState): string {
-  const lines = [`Bag: ${totalOf(state.remaining)} tokens left`];
+  const lines = [translate('bag.summary-bag', { count: totalOf(state.remaining) })];
   const groups = new Map<string, string[]>();
   for (const token of state.tokens) {
     const list = groups.get(token.type) ?? [];
     list.push(token.type);
     groups.set(token.type, list);
   }
-  if (groups.size) lines.push(`Tray: ${[...groups.keys()].join(' ')}`);
+  if (groups.size) lines.push(translate('bag.summary-tray', { types: [...groups.keys()].join(' ') }));
   for (const tray of state.trays) {
-    if (tray.tokens.length) lines.push(`${tray.player}: ${tray.tokens.map((token) => token.type).join(' ')}`);
+    if (tray.tokens.length)
+      lines.push(
+        translate('bag.summary-player', {
+          name: tray.player,
+          types: tray.tokens.map((token) => token.type).join(' '),
+        }),
+      );
   }
   return lines.join('\n');
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
   import {
@@ -38,7 +39,7 @@
   }
 
   function saveText(): void {
-    ctx.undo.batch('rules text', () => {
+    ctx.undo.batch(t('rules.undo-text'), () => {
       instance.setQuick(quickDraft);
       instance.setRules(rulesDraft);
       instance.setSetup(setupDraft.split('\n'));
@@ -54,7 +55,7 @@
   }
 
   function saveReference(): void {
-    ctx.undo.batch('reference', () => {
+    ctx.undo.batch(t('rules.undo-reference'), () => {
       instance.setGlossary(glossaryDraft);
       instance.setScoring(scoringDraft);
     });
@@ -70,8 +71,8 @@
   {#if data.setup.length}
     <section class="block">
       <header>
-        <h2>Setup</h2>
-        <span class="progress">{progress.done}/{progress.total}</span>
+        <h2>{t('rules.setup')}</h2>
+        <span class="progress">{t('rules.progress', { done: progress.done, total: progress.total })}</span>
       </header>
       <ul class="checklist">
         {#each data.setup as item, index (index)}
@@ -87,14 +88,14 @@
           </li>
         {/each}
       </ul>
-      {#if progress.done}<button type="button" class="ghost" onclick={() => instance.resetSetup()}>Reset checklist</button>{/if}
+      {#if progress.done}<button type="button" class="ghost" onclick={() => instance.resetSetup()}>{t('rules.reset-checklist')}</button>{/if}
     </section>
   {/if}
 
   {#if data.rules || data.glossary.length}
     <label class="search">
-      <span class="sr-only">Search the rules</span>
-      <input type="search" bind:value={query} placeholder="Search rules and glossary" />
+      <span class="sr-only">{t('rules.search')}</span>
+      <input type="search" bind:value={query} placeholder={t('rules.search-placeholder')} />
     </label>
   {/if}
 
@@ -110,17 +111,17 @@
         {/if}
       {/each}
       {#if query.trim() && blocks.length === 0}
-        <p class="hint">Nothing in the rules matches "{query}".</p>
+        <p class="hint">{t('rules.nothing-rules', { query })}</p>
       {/if}
     </section>
   {/if}
 
   {#if data.scoring.length}
     <section class="block">
-      <h2>Scoring</h2>
+      <h2>{t('rules.scoring')}</h2>
       <table>
         <thead>
-          <tr><th scope="col">Thing</th><th scope="col">Points</th></tr>
+          <tr><th scope="col">{t('rules.thing')}</th><th scope="col">{t('rules.points')}</th></tr>
         </thead>
         <tbody>
           {#each data.scoring as row (row.name)}
@@ -136,7 +137,7 @@
 
   {#if data.glossary.length}
     <section class="block">
-      <h2>Glossary</h2>
+      <h2>{t('rules.glossary')}</h2>
       {#if glossaryShown.length}
         <dl>
           {#each glossaryShown as entry (entry.term)}
@@ -145,14 +146,14 @@
           {/each}
         </dl>
       {:else}
-        <p class="hint">No glossary terms match "{query}".</p>
+        <p class="hint">{t('rules.nothing-glossary', { query })}</p>
       {/if}
     </section>
   {/if}
 
   {#if data.source}
     <p class="source">
-      Source:
+      {t('rules.source')}
       {#if /^https?:\/\//.test(data.source)}
         <a href={data.source} target="_blank" rel="noopener noreferrer">{data.source}</a>
       {:else}
@@ -162,57 +163,57 @@
   {/if}
 
   <div class="row">
-    <button type="button" onclick={openText}>Edit rules</button>
-    <button type="button" onclick={openReference}>Edit reference</button>
+    <button type="button" onclick={openText}>{t('rules.edit-rules')}</button>
+    <button type="button" onclick={openReference}>{t('rules.edit-reference')}</button>
   </div>
 </div>
 
 {#if textOpen}
-  <Sheet title="Rules text" onclose={() => (textOpen = false)}>
+  <Sheet title={t('rules.text-title')} onclose={() => (textOpen = false)}>
     <label class="field">
-      <span>Quick card</span>
-      <input type="text" bind:value={quickDraft} placeholder="Lowest score wins" />
+      <span>{t('rules.quick-card')}</span>
+      <input type="text" bind:value={quickDraft} placeholder={t('rules.quick-placeholder')} />
     </label>
     <label class="field">
-      <span>Rules</span>
-      <textarea rows="10" bind:value={rulesDraft} spellcheck="true" placeholder="# Goal&#10;Score the most points.&#10;&#10;- Roll the dice&#10;- Move the pawn"></textarea>
+      <span>{t('rules.rules')}</span>
+      <textarea rows="10" bind:value={rulesDraft} spellcheck="true" placeholder={t('rules.rules-placeholder')}></textarea>
     </label>
     <label class="field">
-      <span>Setup checklist (one item per line)</span>
-      <textarea rows="4" bind:value={setupDraft} spellcheck="true" placeholder="Shuffle the deck&#10;Deal five cards"></textarea>
+      <span>{t('rules.setup-label')}</span>
+      <textarea rows="4" bind:value={setupDraft} spellcheck="true" placeholder={t('rules.setup-placeholder')}></textarea>
     </label>
     <label class="field">
-      <span>Source link</span>
-      <input type="text" bind:value={sourceDraft} placeholder="https://example.com/rules" />
+      <span>{t('rules.source-link')}</span>
+      <input type="text" bind:value={sourceDraft} placeholder={t('rules.source-placeholder')} />
     </label>
-    <button type="button" class="wide" onclick={saveText}>Save rules</button>
-    <p class="hint">`#`, `##` and `-` lines are enough to structure the page. No HTML.</p>
+    <button type="button" class="wide" onclick={saveText}>{t('rules.save-rules')}</button>
+    <p class="hint">{t('rules.text-hint')}</p>
   </Sheet>
 {/if}
 
 {#if referenceOpen}
-  <Sheet title="Reference" onclose={() => (referenceOpen = false)}>
-    <h3>Scoring</h3>
+  <Sheet title={t('rules.reference')} onclose={() => (referenceOpen = false)}>
+    <h3>{t('rules.scoring')}</h3>
     {#each scoringDraft as row, index (index)}
       <div class="ref-row">
-        <input type="text" aria-label="Scoring {index + 1} name" bind:value={row.name} placeholder="city" />
-        <input type="number" aria-label="Scoring {index + 1} points" bind:value={row.points} />
-        <button type="button" aria-label="Remove scoring {index + 1}" onclick={() => (scoringDraft = scoringDraft.filter((_, at) => at !== index))}>✕</button>
+        <input type="text" aria-label={t('rules.scoring-name', { index: index + 1 })} bind:value={row.name} placeholder={t('rules.example-city')} />
+        <input type="number" aria-label={t('rules.scoring-points', { index: index + 1 })} bind:value={row.points} />
+        <button type="button" aria-label={t('rules.remove-scoring', { index: index + 1 })} onclick={() => (scoringDraft = scoringDraft.filter((_, at) => at !== index))}>✕</button>
       </div>
     {/each}
-    <button type="button" onclick={() => (scoringDraft = [...scoringDraft, { name: '', points: 1 }])}>Add scoring row</button>
+    <button type="button" onclick={() => (scoringDraft = [...scoringDraft, { name: '', points: 1 }])}>{t('rules.add-scoring')}</button>
 
-    <h3>Glossary</h3>
+    <h3>{t('rules.glossary')}</h3>
     {#each glossaryDraft as entry, index (index)}
       <div class="ref-row">
-        <input type="text" aria-label="Glossary {index + 1} term" bind:value={entry.term} placeholder="meeple" />
-        <input type="text" aria-label="Glossary {index + 1} definition" bind:value={entry.definition} placeholder="little person" />
-        <button type="button" aria-label="Remove glossary {index + 1}" onclick={() => (glossaryDraft = glossaryDraft.filter((_, at) => at !== index))}>✕</button>
+        <input type="text" aria-label={t('rules.glossary-term', { index: index + 1 })} bind:value={entry.term} placeholder={t('rules.example-meeple')} />
+        <input type="text" aria-label={t('rules.glossary-definition', { index: index + 1 })} bind:value={entry.definition} placeholder={t('rules.example-person')} />
+        <button type="button" aria-label={t('rules.remove-glossary', { index: index + 1 })} onclick={() => (glossaryDraft = glossaryDraft.filter((_, at) => at !== index))}>✕</button>
       </div>
     {/each}
-    <button type="button" onclick={() => (glossaryDraft = [...glossaryDraft, { term: '', definition: '' }])}>Add term</button>
+    <button type="button" onclick={() => (glossaryDraft = [...glossaryDraft, { term: '', definition: '' }])}>{t('rules.add-term')}</button>
 
-    <button type="button" class="wide" onclick={saveReference}>Save reference</button>
+    <button type="button" class="wide" onclick={saveReference}>{t('rules.save-reference')}</button>
   </Sheet>
 {/if}
 

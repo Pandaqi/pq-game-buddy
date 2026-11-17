@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import PassThePhone from '../../core/ui/PassThePhone.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
@@ -41,7 +42,7 @@
   }
 
   function saveSettings(): void {
-    ctx.undo.batch('turn settings', () => {
+    ctx.undo.batch(t('turns.undo-settings'), () => {
       instance.setOrder(orderDraft.split(','));
       instance.setPhases(phasesDraft.split(','));
       instance.setDuration(Math.max(0, secondsDraft) * 1000);
@@ -52,8 +53,8 @@
 
 <div class="turns">
   <div class="top">
-    <span class="round">Round {data.round}</span>
-    <div class="phase-chips" role="group" aria-label="Phase">
+    <span class="round">{t('turns.round', { count: data.round })}</span>
+    <div class="phase-chips" role="group" aria-label={t('turns.phase')}>
       {#each data.phases as item, index (index)}
         <button type="button" class:active={index === data.phase} aria-pressed={index === data.phase} onclick={() => instance.setPhase(index)}>
           {item}
@@ -63,7 +64,7 @@
   </div>
 
   <div class="stage">
-    <p class="lead">{data.mode === 'initiative' ? 'Acting now' : 'It is the turn of'}</p>
+    <p class="lead">{data.mode === 'initiative' ? t('turns.acting') : t('turns.turn-of')}</p>
     <h2 aria-live="polite">{who}</h2>
     <p class="phase">{phase}</p>
 
@@ -71,11 +72,11 @@
       <p class="clock" class:low={data.timer.remaining <= 10000}>{formatClock(data.timer.remaining)}</p>
       <div class="clock-actions">
         {#if data.timer.running}
-          <button type="button" onclick={() => instance.pauseTimer()}>Pause clock</button>
+          <button type="button" onclick={() => instance.pauseTimer()}>{t('turns.pause-clock')}</button>
         {:else}
-          <button type="button" class="primary" onclick={() => instance.startTimer()}>Start clock</button>
+          <button type="button" class="primary" onclick={() => instance.startTimer()}>{t('turns.start-clock')}</button>
         {/if}
-        <button type="button" onclick={() => instance.resetTimer()}>Reset clock</button>
+        <button type="button" onclick={() => instance.resetTimer()}>{t('turns.reset-clock')}</button>
       </div>
     {/if}
   </div>
@@ -83,33 +84,33 @@
   {#if data.mode === 'initiative'}
     <div class="initiative">
       <div class="init-head">
-        <span>Initiative this round</span>
-        <button type="button" onclick={() => instance.newInitiativeRound()}>New round</button>
+        <span>{t('turns.initiative-round')}</span>
+        <button type="button" onclick={() => instance.newInitiativeRound()}>{t('turns.new-round')}</button>
       </div>
       {#each initiativeRanking(data) as seat (seat)}
         <div class="init-row" class:active={seat === data.index}>
           <button type="button" class="who" onclick={() => jump(seat)} aria-current={seat === data.index ? 'true' : undefined}>
             {data.order[seat]}
           </button>
-          <div class="stepper" role="group" aria-label="Initiative for {data.order[seat]}">
+          <div class="stepper" role="group" aria-label={t('turns.initiative-for', { name: data.order[seat] })}>
             <button
               type="button"
-              aria-label="Lower initiative for {data.order[seat]}"
+              aria-label={t('turns.lower-initiative', { name: data.order[seat] })}
               onclick={() => instance.setInitiative(seat, (data.initiative[seat] ?? 0) - 1)}
             >−</button>
             <span class="value">{data.initiative[seat] ?? 0}</span>
             <button
               type="button"
-              aria-label="Raise initiative for {data.order[seat]}"
+              aria-label={t('turns.raise-initiative', { name: data.order[seat] })}
               onclick={() => instance.setInitiative(seat, (data.initiative[seat] ?? 0) + 1)}
             >+</button>
           </div>
         </div>
       {/each}
-      <p class="hint">Highest goes first. New round clears every value and starts again.</p>
+      <p class="hint">{t('turns.initiative-hint')}</p>
     </div>
   {:else if data.order.length > 1}
-    <div class="order" role="group" aria-label="Turn order">
+    <div class="order" role="group" aria-label={t('turns.order')}>
       {#each data.order as item, index (item + index)}
         <button
           type="button"
@@ -124,65 +125,65 @@
   {/if}
 
   <div class="turn-actions">
-    <button type="button" class="previous" onclick={() => instance.previous()} aria-label="Previous turn">←</button>
-    <button type="button" class="next" onclick={nextTurn}>Next turn</button>
+    <button type="button" class="previous" onclick={() => instance.previous()} aria-label={t('turns.previous-turn')}>←</button>
+    <button type="button" class="next" onclick={nextTurn}>{t('turns.next-turn')}</button>
   </div>
 
   <div class="row">
-    <button type="button" onclick={openSettings}>Settings</button>
-    <button type="button" onclick={() => instance.syncPlayers()}>Use session players</button>
+    <button type="button" onclick={openSettings}>{t('turns.settings')}</button>
+    <button type="button" onclick={() => instance.syncPlayers()}>{t('turns.use-players')}</button>
   </div>
 
   <details class="log">
-    <summary>Turn log ({data.log.length})</summary>
+    <summary>{t('turns.log', { count: data.log.length })}</summary>
     {#if data.log.length}
       <ol>
         {#each data.log as entry, index (index)}
           <li>{entry.text}</li>
         {/each}
       </ol>
-      <button type="button" class="ghost" onclick={() => instance.clearLog()}>Clear log</button>
+      <button type="button" class="ghost" onclick={() => instance.clearLog()}>{t('turns.clear-log')}</button>
     {:else}
-      <p class="hint">No turns taken yet. Press next turn and the log starts here.</p>
+      <p class="hint">{t('turns.log-empty')}</p>
     {/if}
   </details>
 
-  <button type="button" class="ghost" onclick={() => instance.resetTurn()}>Start over</button>
+  <button type="button" class="ghost" onclick={() => instance.resetTurn()}>{t('turns.start-over')}</button>
 </div>
 
 {#if passing}
   <PassThePhone
     name={who}
-    hint={`Round ${data.round} · ${phase}`}
-    action="Start turn"
+    hint={t('turns.pass-hint', { round: data.round, phase })}
+    action={t('turns.start-turn')}
     onshow={startAfterPass}
   />
 {/if}
 
 {#if settingsOpen}
-  <Sheet title="Turn settings" onclose={() => (settingsOpen = false)}>
+  <Sheet title={t('turns.settings-title')} onclose={() => (settingsOpen = false)}>
     <label class="field">
-      <span>Turn order (comma separated)</span>
-      <input type="text" bind:value={orderDraft} placeholder="Ada, Bo, Cy" />
+      <span>{t('turns.order-label')}</span>
+      <input type="text" bind:value={orderDraft} placeholder={t('turns.order-placeholder')} />
     </label>
     <label class="field">
-      <span>Phases</span>
-      <input type="text" bind:value={phasesDraft} placeholder="Turn, Buy, Fight" />
+      <span>{t('turns.phases')}</span>
+      <input type="text" bind:value={phasesDraft} placeholder={t('turns.phases-placeholder')} />
     </label>
     <label class="field">
-      <span>Turn timer in seconds (0 = none)</span>
+      <span>{t('turns.timer-label')}</span>
       <input type="number" min="0" max="86400" bind:value={secondsDraft} />
     </label>
-    <div class="time-presets" role="group" aria-label="Timer presets">
+    <div class="time-presets" role="group" aria-label={t('turns.presets')}>
       {#each [0, 30, 60, 120, 300] as seconds (seconds)}
         <button type="button" class:active={secondsDraft === seconds} onclick={() => (secondsDraft = seconds)}>
-          {seconds === 0 ? 'Off' : seconds < 60 ? `${seconds}s` : `${seconds / 60}m`}
+          {seconds === 0 ? t('turns.off') : seconds < 60 ? `${seconds}s` : `${seconds / 60}m`}
         </button>
       {/each}
     </div>
-    <div class="segment" role="group" aria-label="Turn style">
-      <button type="button" class:active={data.mode === 'order'} onclick={() => instance.setMode('order')}>Turn order</button>
-      <button type="button" class:active={data.mode === 'initiative'} onclick={() => instance.setMode('initiative')}>Initiative</button>
+    <div class="segment" role="group" aria-label={t('turns.style')}>
+      <button type="button" class:active={data.mode === 'order'} onclick={() => instance.setMode('order')}>{t('turns.mode-order')}</button>
+      <button type="button" class:active={data.mode === 'initiative'} onclick={() => instance.setMode('initiative')}>{t('turns.mode-initiative')}</button>
     </div>
     <label class="check">
       <input
@@ -190,7 +191,7 @@
         checked={data.pass}
         onchange={(event) => instance.setPass((event.currentTarget as HTMLInputElement).checked)}
       />
-      <span>Cover the screen when the turn changes</span>
+      <span>{t('turns.cover')}</span>
     </label>
     <label class="check">
       <input
@@ -198,10 +199,10 @@
         checked={data.autoStart}
         onchange={(event) => instance.setAutoStart((event.currentTarget as HTMLInputElement).checked)}
       />
-      <span>Start the clock automatically</span>
+      <span>{t('turns.auto-start')}</span>
     </label>
-    <button type="button" class="wide" onclick={saveSettings}>Save settings</button>
-    <p class="hint">The screen is kept awake while the turn clock runs.</p>
+    <button type="button" class="wide" onclick={saveSettings}>{t('turns.save')}</button>
+    <p class="hint">{t('turns.hint')}</p>
   </Sheet>
 {/if}
 

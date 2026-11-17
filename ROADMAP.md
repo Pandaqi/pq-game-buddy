@@ -4,7 +4,10 @@
 
 > Doc version 6 · 2026-11-17 · Owner: Tiamo / Pandaqi
 >
-> **Status: M0–M9 code shipped. M10 (localization) is the only planned milestone.**
+> **Status: M0–M10 code shipped. M10 (localization) is complete: five languages
+> (English, Dutch, German, Spanish, French), the runtime, the header switcher, the build
+> filter, every shell screen, all twenty-one tools, the template and theme diagnostics
+> and every context summary. Every language is a lazy chunk, English included.**
 > M7 closed with theme files, dice lab, initiative order, log filters and stats, pick
 > wheel/slot views, house-rule variants, per-game marks, narrator voice, huge and
 > switch-access modes, the PWA, QR sharing, the community template folder, the
@@ -14,8 +17,9 @@
 > added ten more templates and a named reason for every remaining entry, and a counters pass added I Bid You Not: twenty
 > templates now cover 47 of the 100 catalogue entries. `bun run check` passes end
 > to end: stale-manifest check, `tsc`, `svelte-check` with 0 warnings, the full test
-> suite (515 tests), template lint (81 files · 0 errors · 0 warnings) and a build
-> inside budget (133 KB gzipped first visit, 301 KB single file). 21 tools are live,
+> suite (522 tests), template lint (81 files · 0 errors · 0 warnings) and a build
+> inside budget (134 KB gzipped first visit, 406 KB single file with all five
+> languages). 21 tools are live,
 > and 60 game templates plus 21 tool examples ship, with 60 marks. M6 replaced the
 > visual language twice: the second pass is the woodland lantern table in
 > `docs/STYLE.md`, with self-hosted Dosis and Raleway, borderless fills, folds and
@@ -60,6 +64,7 @@ The trick to supporting "every tool anyone might want" is not to build a hundred
 | M7 | After v1.0 | Shipped | Theme files, dice lab, initiative, log stats, pick views, variants, icons, conformance test, PWA, QR, community templates, switch access, voice pass |
 | M8 | Pandaqi's own games | Shipped | Twenty first-party templates for the pandaqi.com catalogue (nine at M8, eleven added by the catalogue audit) |
 | M9 | Marks for the rest of the catalogue | Shipped | A drawn mark beside every template, on the same grid, none a letter in a box |
+| M10 | Localization | Shipped | `t()` everywhere it reaches a screen, diagnostics and summaries included, per-tool locale folders, a language switcher, five complete languages (en, nl, de, es, fr), every language a lazy chunk, a `--langs` build filter |
 
 ### How to read this document
 
@@ -255,13 +260,13 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 
 | Budget | Limit | Current |
 |--------|-------|---------|
-| One chunk, gzipped | 24 KB | 21 KB (words: view, logic and five language packs) |
-| All deferred chunks, gzipped | 250 KB | 186 KB |
+| One chunk, gzipped | 24 KB | 21.5 KB (words: view, logic and five language packs) |
+| All deferred chunks, gzipped | 320 KB | 302.6 KB (five languages) |
 | Core JS and CSS, gzipped | 45 KB | inside |
-| First visit (entry + shared chunk + CSS), gzipped | 150 KB | 132 KB |
-| Single file, gzipped | no ceiling: the whole app in one file | 294 KB |
+| First visit (entry + shared chunk + CSS), gzipped | 150 KB | 133.6 KB |
+| Single file, gzipped | no ceiling: the whole app in one file | 406 KB |
 
-**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (60 KB gzipped, 56 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 21 KB (its view, logic and five language packs) and the next largest chunk is the template-text chunk (59 texts), so a tool that passes it is one to split rather than a budget to raise. A total ceiling of 250 KB on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat; the deferred total is 186 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 47 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 18 KB of headroom left. M7 has added about 3 KB to the first visit (theme parsing and template icons in the core) and about 10 KB to the single file, with no new dependency. M8 and M9 add nine templates and nine marks, which land in the deferred chunks: the first visit stays at 132 KB and the single file grows to 294 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. These are ceilings, not targets.
+**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (60 KB gzipped, 56 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 21 KB (its view, logic and five language packs) and the next largest chunk is the template-text chunk (59 texts), so a tool that passes it is one to split rather than a budget to raise. A total ceiling on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat: it was 250 KB from M5 until M10 finished three more languages and moved it to 320 KB, with the arithmetic a few sentences on. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 47 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 16.6 KB of headroom left. M7 has added about 3 KB to the first visit (theme parsing and template icons in the core) and about 10 KB to the single file, with no new dependency. M8 and M9 add nine templates and nine marks, which land in the deferred chunks: the first visit stayed at 132 KB and the single file grew to 294 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. M10 adds the language layer without moving a ceiling, and it gives one back: no dictionary is compiled into the start-up any more. English is a chunk like every other language, loaded at boot only because it is the stored default, so the first visit *fell* from 139.0 KB to 133.4 KB even after paying for the language sheet and the lookup. A language is two chunks: `core/locales/<lang>.ts` and the generated `tool-text-<lang>.generated.ts`, which gathers each tool's `locales/<lang>.ts`. The en+nl build was 236.2 KB across 36 deferred chunks, `--langs=en` is 215.9 KB across 34, so a complete extra language costs about 21.7 KB and two chunks: the measurable difference the DoD asks for. German, Spanish and French landed in one pass and took that total to 302.6 KB across 42 chunks (largest 21.5 KB), an addition of 66.4 KB or 22.1 KB per language. That is a fixed amount of finished surface added by the milestone itself, so the deferred ceiling moved once, from 250 KB to 320 KB, and has 17.4 KB of headroom left. A sixth language needs its own arithmetic written here before it moves again, and at roughly 22 KB apiece it will be the moment to ask whether the shell chunk should split per area instead. A tool that registers its own English strings adds nothing extra to its chunk: the words simply moved from the view into `locales/en.ts`. These are ceilings, not targets.
 
 ### 5.3 Gates
 
@@ -269,7 +274,7 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 
 ## 6. Milestones
 
-### M10 — Localization (L, planned)
+### M10 — Localization (L, shipped)
 
 M7 makes the English text final first, because translating moving copy doubles the
 work. M10 then:
@@ -280,14 +285,49 @@ work. M10 then:
    `core/locales/<lang>.ts`, so a tool's words ship in its own chunk.
 3. **Add the switcher:** a header control that reveals the available languages; the
    choice is stored with settings, never fetched.
-4. **Translate** English → Dutch (the owner's language) and one more, with a native
-   speaker pass on the template notes and the About panel.
+4. **Translate** English → Dutch (the owner's language), and three more common or popular languages of your choosing.
 5. **Filter builds** so a hosted or single-file build can carry one language or a
    subset; the default build carries English plus the chosen extras.
 
 **DoD:** the app is fully usable in Dutch, no raw `t()` key can reach the screen (a test
 asserts every key resolves), and a one-language build is measurably smaller than the
 multi-language one.
+
+**M10.1 shipped:** the runtime (`core/i18n.ts` for the words and the lookup, with
+`core/i18n.svelte.ts` as the reactive wrapper — active language, interpolation, tool
+namespaces), the dictionaries in `core/locales/`, per-tool
+`src/tools/<id>/locales/<lang>.ts` with `registerToolStrings`, the generated registry and
+per-language tool-text chunks in `bun run gen`, the header switcher and its settings key,
+the `--langs` build filter, and every shell screen translated: home, session, gallery,
+settings, editor, play log, display, self-test, the import and finish sheets, the toasts
+and the undo labels. Dutch was complete for all of it, and
+tests/i18n.test.ts fails on a key that resolves nowhere or a language that misses one.
+All twenty-one tool folders carry their own locales — views, aria
+labels, toasts and undo labels — so the app is usable end to end in every language it
+ships: `bag`, `bracket`, `buzzer`, `coin`, `counters`, `custom`, `decks`, `demo`,
+`dice`, `draft`, `lives`, `pick`, `prompts`, `reveal`, `rules`, `score`, `script`,
+`splits`, `timer`, `turns` and `words`.
+
+**M10.2 shipped:** the parser, schema and theme diagnostics
+(`core/template/parse.ts`, `core/template/schema.ts`, `core/theme.ts`) print `diag.*`
+keys through `translate()` now, with the English sentences kept byte-identical so the
+existing tests read the same words, and `formatMinutes` in `core/play-log.ts` stays
+unit-only on purpose. English left the start-up in the same pass: `core/locales/en.ts` is
+a chunk like every other, so a build that leaves it out ships no English at all.
+
+**M10.3 shipped:** every tool's context summary (`summaryOf`, `stepLabel`) now goes
+through `translate()` — `bag`, `buzzer`, `custom`, `decks`, `draft`, `pick`, `prompts`,
+`script`, `splits` and `words` were the last ten, so the copy button and the play log
+speak the active language in all twenty-one tools. German, Spanish and French landed as
+a folder each (`core/locales/<lang>.ts` plus twenty-one `src/tools/<id>/locales/<lang>.ts`),
+and because the gate compares every language against the English key set they arrived
+complete rather than partial: five languages, ~1560 strings each. The deferred ceiling
+moved once for it, from 250 KB to 320 KB; the arithmetic is in §5.2.
+
+**Definition of done:** met. The app is usable end to end in five languages, no raw
+`t()` key can reach the screen (`tests/i18n.test.ts` resolves every literal call and
+compares each language against the English keys), and `--langs=en` is 215.9 KB of
+deferred chunks against 302.6 KB for the full five-language build.
 
 ## 7. What needs you (not the agent)
 
@@ -339,6 +379,38 @@ M7 choices (first pass): a theme is a validated *token* file, not CSS — keys c
 M7 choices (second pass): the version is written once in `package.json` and copied by `gen`, because two hand-kept copies plus a test only proved they could drift. Template marks moved out of the start-up chunk: the gallery reserves the slot, house marks paint at once and the 40 game drawings arrive after first paint. Modes became separate pills because six options inside one pill wrapper read as a slab; chrome rows fold and wrap instead of scrolling, which is also why the shared fold lost its `overflow: hidden`. QR uses a vendored MIT encoder rather than a new dependency or a home-made Reed-Solomon table, and it loads only when a code is asked for; its symbols stay black on white because a theme could otherwise make them unscannable. Community templates are files in `src/data/community` compiled at build time: a static index without a runtime fetch. Switch access is a token and target-size mode, not a second navigation model. Marks became owner-local files because a central drawing table is a second place to forget; the generated map is disposable and the lazy chunk is unchanged in shape. Imported images are stored as data URLs rather than object URLs so they survive a reload, and they render only through `<img>` so a contributed SVG cannot execute. The home shelf is curated plus recent rather than ranked from analytics, because there are no analytics and never will be.
 
 M8 and M9 choices: Pandaqi's catalogue is templated per collection, not per game, because the sub-games share a collection and usually their core material, and one checked reference beats seven drifting copies; the folder is `src/data/templates/pandaqi/`, every file carries `tags: pandaqi` (the linter fails one that does not), and the gallery has one collection chip instead of a second tag in the dropdown. A template carries only the trackers its published rules support: a scorepad where the collection keeps one running score, turn phases where the round has them, a damage tally for Naivigation, and no scorepad for Death by Digits, The Luck Legends or Feed the Beast, which end on a correct accusation, a race to a card or point total, or an empty food storage. Each one links the game's own page rather than paraphrasing a rulebook we do not ship; a game that needs a board or hidden cards gets a reference sheet, never a simulation. The audit lists all 100 entries in the board-game category: eleven collections and nine standalone games (47 entries) are templated, and five collections and 26 standalone titles are explicitly marked as having no template, each with a named reason (no shared core, already runs on pandaqi.com, the table is the game, no verified rulebook, or an older project). Jam Games is skipped because it is a shelf of video games with no tabletop setup to help. Marks stay owner-local files, so the twenty drawings sit beside their templates and the generated map is disposable. A test asserts every shipping template resolves a mark and that each drawing stays on the 24 px grid, in `currentColor`, at 1.8 px, with no text or image element: the "no letter in a box" rule as far as a machine can check it. The play test and the both-themes look are human gates in §7.
+
+M10 choices: a language is a dictionary, not a build; `t()` reads a reactive handle so a
+screen redraws when a chunk lands, while every dictionary stays a plain object and the
+lookup is framework-free. English is the source language, but it is not compiled in: it is a chunk like every
+other, loaded at boot when nothing else is stored, so the start-up carries no words and a
+build that leaves English out ships none. There is no English safety net under a
+translation either — the gate in `tests/i18n.test.ts` is what keeps a raw key off the
+screen, and `fallback` exists only for text that arrives with data. `core/i18n.ts` is
+plain TypeScript because the parser, the theme reader and the CLI scripts print words
+too; `core/i18n.svelte.ts` wraps it in one revision rune for the view layer. A tool's English words ship in its own chunk via
+`registerToolStrings`, but its translations are gathered by `bun run gen` into one
+`tool-text-<lang>.generated.ts` per language: twenty-one more chunks per language would
+have cost the deferred budget without saving a fetch, and one chunk per language means
+every tool is translated the moment the switch finishes. Tool titles and blurbs are keys
+in the same files (`<id>.title`, `<id>.blurb`) with the manifest as the fallback, so the
+home screen is translated without loading a single tool. The build filter rewrites the
+generated registry at bundle time through a tiny plugin instead of regenerating files,
+so `gen --check` stays green whichever language set was built last. The switcher lives
+in the header, as the milestone says, and the wordmark folds away under 26rem so four
+48 px controls still fit a 320 px phone. Language never touches the network: a built
+language is a compiled chunk, and an unavailable one is not offered at all.
+
+M10.3 choices: German, Spanish and French arrived together rather than one at a time,
+because the gate is a key-set comparison and a half-written language would simply fail
+it — three complete dictionaries are worth more than three partial ones. Translation
+stayed in the locale files and never in the code: a summary that needed a sentence got a
+key, so `summaryOf` and `stepLabel` now take their words from the same registry as every
+button. Tool summaries that only join numbers and player names (counters, lives, rules)
+were already keyed and did not change. The deferred ceiling moved once, 250 KB to
+320 KB, with the arithmetic in §5.2, because five languages are a fixed amount of
+finished surface rather than a licence to grow. Language names stay in `core/langs.ts`
+with their English gloss, and the switcher still lists only what the build carries.
 
 ## 10. Global definition of done
 

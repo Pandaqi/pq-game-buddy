@@ -1,5 +1,6 @@
 <script lang="ts">
   import { commitOnEnter } from '../../core/dom';
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import { copyText } from '../../core/share';
   import NumberPad from '../../core/ui/NumberPad.svelte';
@@ -37,12 +38,12 @@
       : { ok: true, value: 0, message: '' },
   );
 
-  const MODE_LABELS: { id: ScoreMode; label: string }[] = [
-    { id: 'simple', label: 'Totals' },
-    { id: 'rounds', label: 'Rounds' },
-    { id: 'categories', label: 'Categories' },
-    { id: 'ledger', label: 'Ledger' },
-  ];
+  const MODE_LABELS = $derived<{ id: ScoreMode; label: string }[]>([
+    { id: 'simple', label: t('score.totals') },
+    { id: 'rounds', label: t('score.rounds') },
+    { id: 'categories', label: t('score.categories') },
+    { id: 'ledger', label: t('score.ledger') },
+  ]);
 
   function rankOf(id: string): number {
     return standings.find((row) => row.id === id)?.rank ?? 0;
@@ -54,7 +55,7 @@
 
   function copySheet(): void {
     void copyText(csvSheet(data)).then((ok) => {
-      ctx.toast(ok ? 'Score sheet copied' : 'Could not copy', ok ? 'info' : 'error');
+      ctx.toast(ok ? t('score.toast-copied') : t('score.toast-copy-failed'), ok ? 'info' : 'error');
     });
   }
 
@@ -67,7 +68,7 @@
   function saveCategories(): void {
     instance.setCategories(categoryDraft);
     categoryDraft = data.categories.map((category) => ({ ...category }));
-    ctx.toast('Categories saved');
+    ctx.toast(t('score.toast-cats-saved'));
   }
 
   function addPlayerNow(): void {
@@ -103,12 +104,12 @@
   }
 
   function playerName(id: string): string {
-    return data.players.find((player) => player.id === id)?.name ?? 'Player';
+    return data.players.find((player) => player.id === id)?.name ?? t('score.player');
   }
 </script>
 
 <div class="score">
-  <div class="modes" role="group" aria-label="Scoring mode">
+  <div class="modes" role="group" aria-label={t('score.scoring-mode')}>
     {#each MODE_LABELS as item (item.id)}
       <button type="button" class:active={data.mode === item.id} onclick={() => instance.setMode(item.id)}>
         {item.label}
@@ -119,35 +120,37 @@
   <div class="head">
     <span class="mode">
       {data.mode === 'rounds'
-        ? `Rounds · ${data.roundCount}`
+        ? t('score.rounds-head', { count: data.roundCount })
         : data.mode === 'categories'
-          ? `${data.categories.length} ${data.categories.length === 1 ? 'category' : 'categories'}`
+          ? t(data.categories.length === 1 ? 'score.categories-head-one' : 'score.categories-head', {
+              count: data.categories.length,
+            })
           : data.mode === 'ledger'
-            ? 'Ledger · running entries'
-            : 'Totals'}
+            ? t('score.ledger-head')
+            : t('score.totals')}
     </span>
     <div class="head-actions">
-      {#if data.target}<span class="target">Target {data.target}</span>{/if}
+      {#if data.target}<span class="target">{t('score.target', { target: data.target })}</span>{/if}
       {#if hiddenNow}
-        <button type="button" class="reveal" onclick={() => instance.reveal()}>Reveal scores</button>
+        <button type="button" class="reveal" onclick={() => instance.reveal()}>{t('score.reveal-scores')}</button>
       {/if}
-      <button type="button" class="settings" onclick={openSettings} aria-label="Score settings">Settings</button>
+      <button type="button" class="settings" onclick={openSettings} aria-label={t('score.settings')}>{t('score.settings')}</button>
     </div>
   </div>
 
   {#if data.hint}
-    <p class="hint-line">Typical winning score: {data.hint}</p>
+    <p class="hint-line">{t('score.typical', { score: data.hint })}</p>
   {/if}
 
   {#if data.mode === 'categories'}
     {#if data.categories.length === 0}
-      <p class="empty">This pad has no categories yet. Add them in settings, or switch to totals.</p>
+      <p class="empty">{t('score.no-categories')}</p>
     {:else}
       <div class="table-wrap">
         <table>
           <thead>
             <tr>
-              <th scope="col">Category</th>
+              <th scope="col">{t('score.category')}</th>
               {#each data.players as player (player.id)}
                 <th scope="col">{player.name}</th>
               {/each}
@@ -158,7 +161,9 @@
               <tr>
                 <th scope="row">
                   {category.name}
-                  <small>{category.points} pt{category.points === 1 ? '' : 's'}</small>
+                  <small>{t(category.points === 1 ? 'score.points-one' : 'score.points-many', {
+                      count: category.points,
+                    })}</small>
                 </th>
                 {#each data.players as player (player.id)}
                   {@const cell = `c:${category.name}`}
@@ -168,7 +173,7 @@
                       <input
                         type="number"
                         min="0"
-                        aria-label="{player.name} {category.name} count"
+                        aria-label={t('score.count-aria', { player: player.name, category: category.name })}
                         value={data.counts[player.id]?.[category.name] ?? 0}
                         onkeydown={commitOnEnter}
                         onchange={(event) =>
@@ -182,7 +187,7 @@
                         type="button"
                         class="note-btn"
                         class:filled={!!note}
-                        aria-label="Note for {player.name} {category.name}"
+                        aria-label={t('score.note-aria', { player: player.name, category: category.name })}
                         onclick={() => openNote(player.id, cell, `${player.name} · ${category.name}`)}
                       >✎</button>
                     </div>
@@ -192,7 +197,7 @@
               </tr>
             {/each}
             <tr class="totals-row">
-              <th scope="row">{data.formula.trim() ? 'Formula total' : 'Total'}</th>
+              <th scope="row">{data.formula.trim() ? t('score.formula-total') : t('score.total')}</th>
               {#each data.players as player (player.id)}
                 <td class="total">{shownTotal(player.id)}</td>
               {/each}
@@ -211,11 +216,11 @@
       <table>
         <thead>
           <tr>
-            <th scope="col">Player</th>
+            <th scope="col">{t('score.player')}</th>
             {#each Array(data.roundCount) as _, round (round)}
               <th scope="col">{round + 1}</th>
             {/each}
-            <th scope="col">Total</th>
+            <th scope="col">{t('score.total')}</th>
           </tr>
         </thead>
         <tbody>
@@ -232,7 +237,7 @@
                   <div class="cell">
                     <input
                       type="number"
-                      aria-label="{player.name} round {round + 1}"
+                      aria-label={t('score.round-aria', { player: player.name, round: round + 1 })}
                       value={data.rounds[player.id]?.[round] ?? 0}
                       onkeydown={commitOnEnter}
                       onchange={(event) =>
@@ -242,8 +247,8 @@
                       type="button"
                       class="note-btn"
                       class:filled={!!note}
-                      aria-label="Note for {player.name} round {round + 1}"
-                      onclick={() => openNote(player.id, cell, `${player.name} · round ${round + 1}`)}
+                      aria-label={t('score.note-round-aria', { player: player.name, round: round + 1 })}
+                      onclick={() => openNote(player.id, cell, t('score.round-label', { player: player.name, round: round + 1 }))}
                     >✎</button>
                   </div>
                   {#if note}<small class="cell-note">{note}</small>{/if}
@@ -256,8 +261,8 @@
       </table>
     </div>
     <div class="row">
-      <button type="button" onclick={() => instance.addRound()}>Add round</button>
-      <button type="button" onclick={() => instance.removeRound()}>Remove round</button>
+      <button type="button" onclick={() => instance.addRound()}>{t('score.add-round')}</button>
+      <button type="button" onclick={() => instance.removeRound()}>{t('score.remove-round')}</button>
     </div>
   {:else if data.mode === 'ledger'}
     <ul class="ledger">
@@ -276,7 +281,7 @@
                   <span class="amount">{entry.amount >= 0 ? '+' : ''}{entry.amount}</span>
                   <button
                     type="button"
-                    aria-label="Remove {entry.label} from {player.name}"
+                    aria-label={t('score.remove-entry', { label: entry.label, player: player.name })}
                     onclick={() => instance.removeLedgerEntry(player.id, entry.id)}
                   >✕</button>
                 </li>
@@ -284,7 +289,7 @@
             </ul>
           {/if}
           <button type="button" class="add-entry" disabled={hiddenNow} onclick={() => openEntry(player.id)}>
-            Add entry
+            {t('score.add-entry')}
           </button>
         </li>
       {/each}
@@ -303,17 +308,17 @@
           <button
             type="button"
             class="total-button"
-            aria-label="Set {player.name}'s score"
+            aria-label={t('score.set-score', { name: player.name })}
             disabled={hiddenNow}
             onclick={() => (editing = player.id)}
           >
             {shownTotal(player.id)}
           </button>
           <div class="adjust">
-            <button type="button" onclick={() => instance.adjust(player.id, -data.step)} aria-label="Minus {data.step} for {player.name}">
+            <button type="button" onclick={() => instance.adjust(player.id, -data.step)} aria-label={t('score.minus', { step: data.step, name: player.name })}>
               −{data.step}
             </button>
-            <button type="button" onclick={() => instance.adjust(player.id, data.step)} aria-label="Plus {data.step} for {player.name}">
+            <button type="button" onclick={() => instance.adjust(player.id, data.step)} aria-label={t('score.plus', { step: data.step, name: player.name })}>
               +{data.step}
             </button>
           </div>
@@ -323,11 +328,11 @@
   {/if}
 
   <div class="row">
-    <button type="button" onclick={() => (adding = true)}>Add player</button>
-    <button type="button" onclick={() => instance.syncPlayers()}>Use session players</button>
+    <button type="button" onclick={() => (adding = true)}>{t('score.add-player')}</button>
+    <button type="button" onclick={() => instance.syncPlayers()}>{t('score.use-players')}</button>
   </div>
   <div class="row">
-    <button type="button" onclick={copySheet}>Copy sheet</button>
+    <button type="button" onclick={copySheet}>{t('score.copy-sheet')}</button>
   </div>
 
   {#if data.players.length > 1}
@@ -343,17 +348,17 @@
   {/if}
 
   <details class="danger-zone">
-    <summary>Clear scores</summary>
-    <p>Sets every score back to {data.start}. Undo still works.</p>
-    <button type="button" class="danger" onclick={() => instance.clearAll()}>Clear all scores</button>
+    <summary>{t('score.clear-scores')}</summary>
+    <p>{t('score.clear-body', { start: data.start })}</p>
+    <button type="button" class="danger" onclick={() => instance.clearAll()}>{t('score.clear-all')}</button>
   </details>
 </div>
 
 {#if editing}
-  <Sheet title="Set score" onclose={() => (editing = null)}>
+  <Sheet title={t('score.set-score-title')} onclose={() => (editing = null)}>
     <NumberPad
       value={totalFor(data, editing)}
-      label="Score"
+      label={t('score.score')}
       onsubmit={(value) => {
         if (editing) instance.setTotal(editing, value);
         editing = null;
@@ -364,57 +369,57 @@
 {/if}
 
 {#if adding}
-  <Sheet title="Add player" onclose={() => (adding = false)}>
+  <Sheet title={t('score.add-player')} onclose={() => (adding = false)}>
     <label class="field">
-      <span>Name</span>
+      <span>{t('score.name')}</span>
       <input type="text" bind:value={newName} onkeydown={(event) => { if (event.key === 'Enter') addPlayerNow(); }} />
     </label>
-    <button type="button" class="wide" onclick={addPlayerNow}>Add</button>
+    <button type="button" class="wide" onclick={addPlayerNow}>{t('score.add')}</button>
   </Sheet>
 {/if}
 
 {#if entryFor}
-  <Sheet title="Add entry" onclose={() => (entryFor = null)}>
-    <p class="hint">For {playerName(entryFor)}. Negative amounts take points away.</p>
+  <Sheet title={t('score.entry-title')} onclose={() => (entryFor = null)}>
+    <p class="hint">{t('score.entry-hint', { name: playerName(entryFor) })}</p>
     <label class="field">
-      <span>Label</span>
-      <input type="text" bind:value={entryLabel} placeholder="Tickets made" />
+      <span>{t('score.entry-label')}</span>
+      <input type="text" bind:value={entryLabel} placeholder={t('score.entry-placeholder')} />
     </label>
     <label class="field">
-      <span>Amount</span>
+      <span>{t('score.amount')}</span>
       <input type="number" bind:value={entryAmount} placeholder="12" />
     </label>
-    <button type="button" class="wide" onclick={saveEntry}>Add entry</button>
+    <button type="button" class="wide" onclick={saveEntry}>{t('score.add-entry')}</button>
   </Sheet>
 {/if}
 
 {#if noteEdit}
-  <Sheet title="Cell note" onclose={() => (noteEdit = null)}>
+  <Sheet title={t('score.note-title')} onclose={() => (noteEdit = null)}>
     <p class="hint">{noteEdit.label}</p>
     <label class="field">
-      <span>Note</span>
-      <textarea rows="3" bind:value={noteEdit.draft} placeholder="Why this score changed" spellcheck="true"></textarea>
+      <span>{t('score.note')}</span>
+      <textarea rows="3" bind:value={noteEdit.draft} placeholder={t('score.note-placeholder')} spellcheck="true"></textarea>
     </label>
-    <button type="button" class="wide" onclick={saveNote}>Save note</button>
+    <button type="button" class="wide" onclick={saveNote}>{t('score.save-note')}</button>
   </Sheet>
 {/if}
 
 {#if settingsOpen}
-  <Sheet title="Score settings" onclose={() => (settingsOpen = false)}>
+  <Sheet title={t('score.settings')} onclose={() => (settingsOpen = false)}>
     <label class="field">
-      <span>Win condition</span>
+      <span>{t('score.win-condition')}</span>
       <select
         value={data.win}
         onchange={(event) =>
           instance.setWin((event.currentTarget as HTMLSelectElement).value as 'highest' | 'lowest')}
       >
-        <option value="highest">Highest wins</option>
-        <option value="lowest">Lowest wins</option>
+        <option value="highest">{t('score.highest')}</option>
+        <option value="lowest">{t('score.lowest')}</option>
       </select>
     </label>
 
     <label class="field">
-      <span>Step</span>
+      <span>{t('score.step')}</span>
       <input
         type="number"
         min="1"
@@ -426,7 +431,7 @@
     </label>
 
     <label class="field">
-      <span>Target (0 = none)</span>
+      <span>{t('score.target-label')}</span>
       <input
         type="number"
         min="0"
@@ -437,11 +442,11 @@
     </label>
 
     <label class="field">
-      <span>Typical winning score (optional)</span>
+      <span>{t('score.hint-label')}</span>
       <input
         type="text"
         value={data.hint}
-        placeholder="about 10 points"
+        placeholder={t('score.hint-placeholder')}
         onkeydown={commitOnEnter}
         onchange={(event) => instance.setHint((event.currentTarget as HTMLInputElement).value)}
       />
@@ -453,30 +458,30 @@
         checked={data.hidden}
         onchange={(event) => instance.setHidden((event.currentTarget as HTMLInputElement).checked)}
       />
-      <span>Hide totals until revealed</span>
+      <span>{t('score.hide-totals')}</span>
     </label>
 
     {#if data.mode === 'categories'}
       <div class="cat-list">
-        <span class="cat-head">Categories and points</span>
+        <span class="cat-head">{t('score.cat-head')}</span>
         {#each categoryDraft as category, index (index)}
           <div class="cat-row">
             <input
               type="text"
-              aria-label="Category {index + 1} name"
+              aria-label={t('score.cat-name', { index: index + 1 })}
               bind:value={category.name}
-              placeholder="cities"
+              placeholder={t('score.example-city')}
             />
             <input
               type="number"
-              aria-label="Category {index + 1} points"
+              aria-label={t('score.cat-points', { index: index + 1 })}
               bind:value={category.points}
               min="0"
             />
             <button
               type="button"
               class="remove"
-              aria-label="Remove category {index + 1}"
+              aria-label={t('score.remove-cat', { index: index + 1 })}
               onclick={() => (categoryDraft = categoryDraft.filter((_, at) => at !== index))}
             >✕</button>
           </div>
@@ -485,25 +490,25 @@
           <button
             type="button"
             onclick={() => (categoryDraft = [...categoryDraft, { name: '', points: 1 }])}
-          >Add category</button>
-          <button type="button" class="save" onclick={saveCategories}>Save categories</button>
+          >{t('score.add-cat')}</button>
+          <button type="button" class="save" onclick={saveCategories}>{t('score.save-cats')}</button>
         </div>
       </div>
 
       <label class="field">
-        <span>Formula (optional)</span>
+        <span>{t('score.formula-label')}</span>
         <textarea
           rows="2"
           bind:value={formulaDraft}
-          placeholder="settlements + cities * 2"
+          placeholder={t('score.formula-placeholder')}
           spellcheck="false"
         ></textarea>
       </label>
       {#if !formulaCheck.ok}
         <p class="formula bad">{formulaCheck.message}</p>
       {/if}
-      <button type="button" class="wide" onclick={saveFormula}>Save formula</button>
-      <p class="hint">Names come from the categories; `+ - * /`, brackets, min, max, sum and if work.</p>
+      <button type="button" class="wide" onclick={saveFormula}>{t('score.save-formula')}</button>
+      <p class="hint">{t('score.formula-hint')}</p>
     {/if}
   </Sheet>
 {/if}

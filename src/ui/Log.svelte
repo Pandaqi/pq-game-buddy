@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { language, t } from '../core/i18n.svelte';
   import { clearPlays, formatMinutes, listPlays, playsToCsv, playsToJson, statsFor } from '../core/play-log';
   import { copyText, download } from '../core/share';
   import Sheet from '../core/ui/Sheet.svelte';
@@ -45,7 +46,7 @@
 
   function copyCsv(): void {
     void copyText(playsToCsv(shown)).then((ok) => {
-      store.toast(ok ? 'History copied as CSV' : 'Could not copy', ok ? 'info' : 'error');
+      store.toast(ok ? t('toast.history-copied') : t('toast.could-not-copy'), ok ? 'info' : 'error');
     });
   }
 
@@ -53,43 +54,43 @@
     clearPlays();
     records = [];
     confirmOpen = false;
-    store.toast('Play history cleared');
+    store.toast(t('toast.history-cleared'));
   }
 
   function when(at: number): string {
-    return new Date(at).toLocaleString();
+    return new Date(at).toLocaleString(language());
   }
 </script>
 
 <div class="log-page">
   <header class="head">
     <div>
-      <h1>Play log</h1>
-      <p class="dim">Finished games on this device. Nothing leaves it.</p>
+      <h1>{t('log.title')}</h1>
+      <p class="dim">{t('log.hint')}</p>
     </div>
-    <a class="back" href="#/">Home</a>
+    <a class="back" href="#/">{t('nav.home')}</a>
   </header>
 
   {#if records.length}
     <section class="filters">
       <label class="search">
-        <span class="sr-only">Search the play log</span>
-        <input type="search" bind:value={query} placeholder="Search a game, player or winner" />
+        <span class="sr-only">{t('log.search')}</span>
+        <input type="search" bind:value={query} placeholder={t('log.search-placeholder')} />
       </label>
       <div class="picks">
         <label class="field">
-          <span>Game</span>
+          <span>{t('log.game')}</span>
           <select bind:value={gameFilter}>
-            <option value="any">Any</option>
+            <option value="any">{t('log.any')}</option>
             {#each games as game (game)}
               <option value={game}>{game}</option>
             {/each}
           </select>
         </label>
         <label class="field">
-          <span>Player</span>
+          <span>{t('log.player')}</span>
           <select bind:value={playerFilter}>
-            <option value="any">Any</option>
+            <option value="any">{t('log.any')}</option>
             {#each players as name (name)}
               <option value={name}>{name}</option>
             {/each}
@@ -97,13 +98,13 @@
         </label>
         <label class="check">
           <input type="checkbox" bind:checked={winnersOnly} />
-          <span>Won by someone</span>
+          <span>{t('log.won-by-someone')}</span>
         </label>
       </div>
       {#if filtering}
         <div class="found">
-          <span>{shown.length} of {records.length} plays</span>
-          <button type="button" onclick={clearFilters}>Clear filters</button>
+          <span>{t('log.found', { shown: shown.length, total: records.length })}</span>
+          <button type="button" onclick={clearFilters}>{t('log.clear-filters')}</button>
         </div>
       {/if}
     </section>
@@ -112,30 +113,31 @@
       <section class="stats">
         <div class="stat">
           <span class="value">{stats.plays}</span>
-          <span class="label">{stats.plays === 1 ? 'play' : 'plays'}</span>
+          <span class="label">{stats.plays === 1 ? t('log.plays-one') : t('log.plays-many')}</span>
         </div>
         <div class="stat">
           <span class="value small-value">{stats.minutes ? formatMinutes(stats.minutes) : '—'}</span>
-          <span class="label">at the table</span>
+          <span class="label">{t('log.at-table')}</span>
         </div>
         <div class="stat">
           <span class="value">{stats.games}</span>
-          <span class="label">{stats.games === 1 ? 'game' : 'games'}</span>
+          <span class="label">{stats.games === 1 ? t('log.games-one') : t('log.games-many')}</span>
         </div>
       </section>
 
       <p class="streak">
         {#if stats.streak}
-          {stats.streak.name} won {stats.streak.length}
-          {stats.streak.length === 1 ? 'game' : 'games'} in a row.
+          {stats.streak.length === 1
+            ? t('log.streak-one', { name: stats.streak.name })
+            : t('log.streak', { name: stats.streak.name, count: stats.streak.length })}
         {:else}
-          No winning streak yet. Finish a game and pick a winner.
+          {t('log.no-streak')}
         {/if}
       </p>
 
       {#if stats.winRates.length}
         <section class="rates">
-          <h2>Win rate</h2>
+          <h2>{t('log.win-rate')}</h2>
           <ul>
             {#each stats.winRates as row (row.name)}
               <li>
@@ -146,7 +148,7 @@
               </li>
             {/each}
           </ul>
-          <p class="hint">Wins divided by the games each player sat in. Colour never carries the number.</p>
+          <p class="hint">{t('log.win-rate-hint')}</p>
         </section>
       {/if}
 
@@ -158,7 +160,7 @@
               <span class="when">{when(record.at)}</span>
             </div>
             <p class="winner">
-              {record.winner ? `Won by ${record.winner}` : 'No winner recorded'}
+              {record.winner ? t('log.won-by', { name: record.winner }) : t('log.no-winner')}
               {#if record.minutes}· {formatMinutes(record.minutes)}{/if}
             </p>
             {#if record.results.length}
@@ -171,32 +173,36 @@
       </ul>
 
       <div class="actions">
-        <button type="button" onclick={copyCsv}>Copy CSV</button>
-        <button type="button" onclick={() => download('play-log.csv', playsToCsv(shown), 'text/csv')}>CSV file</button>
-        <button type="button" onclick={() => download('play-log.json', playsToJson(shown), 'application/json')}>JSON file</button>
+        <button type="button" onclick={copyCsv}>{t('log.copy-csv')}</button>
+        <button type="button" onclick={() => download('play-log.csv', playsToCsv(shown), 'text/csv')}>{t('log.csv-file')}</button>
+        <button type="button" onclick={() => download('play-log.json', playsToJson(shown), 'application/json')}>{t('log.json-file')}</button>
       </div>
-      <p class="hint">Exports follow the filters, so the {shown.length} plays above are the {shown.length === 1 ? 'one' : 'ones'} you get.</p>
-      <button type="button" class="danger" onclick={() => (confirmOpen = true)}>Clear history</button>
+      <p class="hint">
+        {shown.length === 1
+          ? t('log.export-hint-one')
+          : t('log.export-hint', { count: shown.length })}
+      </p>
+      <button type="button" class="danger" onclick={() => (confirmOpen = true)}>{t('log.clear-history')}</button>
     {:else}
       <div class="empty">
-        <p class="title">Nothing matches those filters.</p>
-        <p class="dim">Try another game or player, or clear the search.</p>
-        <button type="button" class="primary" onclick={clearFilters}>Clear filters</button>
+        <p class="title">{t('log.nothing-title')}</p>
+        <p class="dim">{t('log.nothing-hint')}</p>
+        <button type="button" class="primary" onclick={clearFilters}>{t('log.clear-filters')}</button>
       </div>
     {/if}
   {:else}
     <div class="empty">
-      <p class="title">No finished games yet.</p>
-      <p class="dim">Open a game, use its menu and tap “Finish game”. The result lands here, with winners, streaks and time played.</p>
-      <a class="primary link" href="#/">Pick a tool</a>
+      <p class="title">{t('log.no-games-title')}</p>
+      <p class="dim">{t('log.no-games-hint')}</p>
+      <a class="primary link" href="#/">{t('log.pick-tool')}</a>
     </div>
   {/if}
 </div>
 
 {#if confirmOpen}
-  <Sheet title="Clear play history" onclose={() => (confirmOpen = false)}>
-    <p>Clear the whole log? Every finished game on this device goes; nothing else does. This cannot be undone.</p>
-    <button type="button" class="danger wide" onclick={clearAll}>Clear {records.length} plays</button>
+  <Sheet title={t('log.clear-sheet')} onclose={() => (confirmOpen = false)}>
+    <p>{t('log.clear-confirm')}</p>
+    <button type="button" class="danger wide" onclick={clearAll}>{t('log.clear-count', { count: records.length })}</button>
   </Sheet>
 {/if}
 

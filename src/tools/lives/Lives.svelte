@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { gameOverLabel, isGameOver, isOut, type LivesInstance } from './logic';
@@ -31,28 +32,28 @@
 </script>
 
 <div class="lives">
-  <div class="modes" role="group" aria-label="Who has lives">
-    <button type="button" class:active={data.mode === 'shared'} onclick={() => instance.setMode('shared')}>Shared</button>
-    <button type="button" class:active={data.mode === 'players'} onclick={() => instance.setMode('players')}>Per player</button>
+  <div class="modes" role="group" aria-label={t('lives.who-lives')}>
+    <button type="button" class:active={data.mode === 'shared'} onclick={() => instance.setMode('shared')}>{t('lives.shared')}</button>
+    <button type="button" class:active={data.mode === 'players'} onclick={() => instance.setMode('players')}>{t('lives.per-player')}</button>
   </div>
 
   {#if over}
     <div class="over" role="status">
       <strong>{overLabel}</strong>
-      <span>Press reset for another round.</span>
+      <span>{t('lives.round-hint')}</span>
     </div>
   {/if}
 
   {#if data.mode === 'shared'}
     <div class="stage">
       <p class="count" aria-live="polite">{shown(data.lives)}</p>
-      <p class="of">of {data.max}</p>
+      <p class="of">{t('lives.of', { max: data.max })}</p>
       {#if !hiddenNow && data.max <= 10}
         <p class="heart-row" aria-hidden="true">{hearts(data.lives, data.max)}</p>
       {/if}
       <div class="big-actions">
-        <button type="button" onclick={() => instance.adjust('shared', -data.step)} aria-label="Lose {data.step} lives">−</button>
-        <button type="button" class="plus" onclick={() => instance.adjust('shared', data.step)} aria-label="Gain {data.step} lives">+</button>
+        <button type="button" onclick={() => instance.adjust('shared', -data.step)} aria-label={t('lives.lose-lives', { count: data.step })}>−</button>
+        <button type="button" class="plus" onclick={() => instance.adjust('shared', data.step)} aria-label={t('lives.gain-lives', { count: data.step })}>+</button>
       </div>
     </div>
   {:else}
@@ -62,37 +63,37 @@
           <div class="who">
             <span class="dot" style="--player: {player.color}">{player.name.slice(0, 2).toUpperCase()}</span>
             <span class="name">{player.name}</span>
-            {#if isOut(data, player)}<span class="tag">out</span>{/if}
+            {#if isOut(data, player)}<span class="tag">{t('lives.out')}</span>{/if}
           </div>
           <p class="count small">{shown(player.lives)}<span class="of">/{player.max}</span></p>
           {#if !hiddenNow && player.max <= 10}
             <p class="heart-row" aria-hidden="true">{hearts(player.lives, player.max)}</p>
           {/if}
           <div class="row-actions">
-            <button type="button" onclick={() => instance.adjust(player.id, -data.step)} aria-label="Lose {data.step} for {player.name}">−</button>
-            <button type="button" class="plus" onclick={() => instance.adjust(player.id, data.step)} aria-label="Gain {data.step} for {player.name}">+</button>
+            <button type="button" onclick={() => instance.adjust(player.id, -data.step)} aria-label={t('lives.lose-for', { count: data.step, name: player.name })}>−</button>
+            <button type="button" class="plus" onclick={() => instance.adjust(player.id, data.step)} aria-label={t('lives.gain-for', { count: data.step, name: player.name })}>+</button>
           </div>
         </li>
       {/each}
     </ul>
     <div class="row">
-      <button type="button" onclick={() => (adding = true)}>Add player</button>
+      <button type="button" onclick={() => (adding = true)}>{t('lives.add-player')}</button>
       {#if data.players.length > 2}
-        <button type="button" onclick={() => instance.removePlayer(data.players[data.players.length - 1].id)}>Remove last</button>
+        <button type="button" onclick={() => instance.removePlayer(data.players[data.players.length - 1].id)}>{t('lives.remove-last')}</button>
       {/if}
     </div>
   {/if}
 
   {#if data.extras.length}
     <section class="extras">
-      <h2>Extra tracks</h2>
+      <h2>{t('lives.extra-tracks')}</h2>
       {#each data.extras as extra (extra.name)}
         <div class="extra">
           <span class="name">{extra.name}</span>
           <div class="row-actions">
-            <button type="button" onclick={() => instance.adjustExtra(extra.name, -extra.step)} aria-label="Lower {extra.name}">−</button>
+            <button type="button" onclick={() => instance.adjustExtra(extra.name, -extra.step)} aria-label={t('lives.lower', { name: extra.name })}>−</button>
             <span class="value">{shown(extra.value)}</span>
-            <button type="button" onclick={() => instance.adjustExtra(extra.name, extra.step)} aria-label="Raise {extra.name}">+</button>
+            <button type="button" onclick={() => instance.adjustExtra(extra.name, extra.step)} aria-label={t('lives.raise', { name: extra.name })}>+</button>
           </div>
         </div>
       {/each}
@@ -101,7 +102,7 @@
 
   {#if data.conditions.length}
     <section class="conditions">
-      <h2>Conditions</h2>
+      <h2>{t('lives.conditions')}</h2>
       <div class="chips">
         {#each data.conditions as condition (condition.name)}
           <button
@@ -119,18 +120,18 @@
 
   <div class="row">
     {#if hiddenNow}
-      <button type="button" class="reveal" onclick={() => instance.reveal()}>Reveal</button>
+      <button type="button" class="reveal" onclick={() => instance.reveal()}>{t('lives.reveal')}</button>
     {:else}
-      <button type="button" onclick={() => instance.setHidden(true)}>Hide values</button>
+      <button type="button" onclick={() => instance.setHidden(true)}>{t('lives.hide')}</button>
     {/if}
-    <button type="button" onclick={() => instance.resetAll()}>Reset</button>
+    <button type="button" onclick={() => instance.resetAll()}>{t('lives.reset')}</button>
   </div>
 </div>
 
 {#if adding}
-  <Sheet title="Add player" onclose={() => (adding = false)}>
+  <Sheet title={t('lives.add-player')} onclose={() => (adding = false)}>
     <label class="field">
-      <span>Name</span>
+      <span>{t('lives.name')}</span>
       <input
         type="text"
         bind:value={newName}
@@ -139,7 +140,7 @@
         }}
       />
     </label>
-    <button type="button" class="wide" onclick={addPlayerNow}>Add</button>
+    <button type="button" class="wide" onclick={addPlayerNow}>{t('lives.add')}</button>
   </Sheet>
 {/if}
 

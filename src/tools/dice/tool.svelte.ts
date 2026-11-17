@@ -1,3 +1,4 @@
+import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import {
@@ -19,6 +20,10 @@ import {
 import Dice from './Dice.svelte';
 import meta from './meta';
 import preset from './preset';
+import en from './locales/en';
+
+// A tool's words travel with its chunk; the shell only knows its title.
+registerToolStrings('dice', en);
 
 function create(ctx: ToolContext, values: PresetValues = {}): DiceInstance {
   const pool = String(values.pool ?? '').trim();
@@ -71,7 +76,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DiceInstance {
     const chosen = data.mode === 'pool' ? data.pool : (notation ?? data.notation);
     const source = String(chosen ?? '').trim();
     if (!source) {
-      data.error = data.mode === 'pool' ? 'Set a pool, like 4d6+2d8, in settings.' : 'Type a roll like 2d6+1';
+      data.error = data.mode === 'pool' ? translate('dice.error-pool') : translate('dice.error-notation');
       return;
     }
     const text = data.mode === 'pool' ? source : applyAdvantage(source);
@@ -92,7 +97,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DiceInstance {
   function rollLab(): void {
     const faces = namedFaces(data.faces);
     if (faces.length < 2) {
-      data.error = 'Give at least two faces a name first';
+      data.error = translate('dice.error-faces');
       return;
     }
     data.result = null;
@@ -148,15 +153,24 @@ function create(ctx: ToolContext, values: PresetValues = {}): DiceInstance {
     },
     summary() {
       if (data.mode === 'lab' && data.lab) {
-        return [`${data.lab.results.length} custom dice: ${data.lab.results.join(', ')}`, ...data.lab.tally.map((row) => `${row.face} × ${row.count}`)].join(
-          '\n',
-        );
+        return [
+          translate('dice.summary-lab', {
+            count: data.lab.results.length,
+            faces: data.lab.results.join(', '),
+          }),
+          ...data.lab.tally.map((row) =>
+            translate('dice.summary-lab-line', { face: row.face, count: row.count }),
+          ),
+        ].join('\n');
       }
-      if (!data.history.length) return 'No rolls yet.';
+      if (!data.history.length) return translate('dice.summary-none');
       return data.history
-        .map(
-          (item) =>
-            `${item.notation} = ${item.total}${item.successes ? ` (${item.successes} successes)` : ''}`,
+        .map((item) =>
+          translate(item.successes ? 'dice.summary-roll-successes' : 'dice.summary-roll', {
+            notation: item.notation,
+            total: item.total,
+            count: item.successes ?? 0,
+          }),
         )
         .join('\n');
     },
@@ -177,42 +191,42 @@ function create(ctx: ToolContext, values: PresetValues = {}): DiceInstance {
     setFaces(faces) {
       const next = cleanFaces(faces);
       if (next.join('|') === data.faces.join('|')) return;
-      ctx.undo.push('custom faces', 'dice-faces');
+      ctx.undo.push(translate('dice.undo-faces'), 'dice-faces');
       data.faces = next;
       data.lab = null;
     },
     setLabCount(count) {
       const next = Math.max(1, Math.min(12, Math.round(Number.isFinite(count) ? count : 1)));
       if (next === data.labCount) return;
-      ctx.undo.push('custom dice count');
+      ctx.undo.push(translate('dice.undo-count'));
       data.labCount = next;
     },
     saveSet(name) {
       const clean = String(name ?? '').trim().slice(0, 24);
       if (!clean) {
-        ctx.toast('Give the set a name first', 'error');
+        ctx.toast(translate('dice.toast-set-name'), 'error');
         return;
       }
       const faces = namedFaces(data.faces);
       if (faces.length < 2) {
-        ctx.toast('Name at least two faces before saving the set', 'error');
+        ctx.toast(translate('dice.toast-set-faces'), 'error');
         return;
       }
-      ctx.undo.push('save face set');
+      ctx.undo.push(translate('dice.undo-save-set'));
       data.sets = { ...data.sets, [clean]: faces };
-      ctx.toast(`Saved the face set "${clean}"`);
+      ctx.toast(translate('dice.toast-saved', { name: clean }));
     },
     loadSet(name) {
       const faces = data.sets[name];
       if (!faces) return;
-      ctx.undo.push('load face set');
+      ctx.undo.push(translate('dice.undo-load-set'));
       data.faces = faces.slice();
       data.lab = null;
-      ctx.toast(`Faces set to "${name}"`);
+      ctx.toast(translate('dice.toast-loaded', { name }));
     },
     deleteSet(name) {
       if (!data.sets[name]) return;
-      ctx.undo.push('delete face set');
+      ctx.undo.push(translate('dice.undo-delete-set'));
       const next = { ...data.sets };
       delete next[name];
       data.sets = next;
@@ -228,7 +242,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DiceInstance {
       data.seed = code;
     },
     clearHistory() {
-      ctx.undo.push('clear history');
+      ctx.undo.push(translate('dice.undo-clear'));
       data.history = [];
       data.result = null;
     },

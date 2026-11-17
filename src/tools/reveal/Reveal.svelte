@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import PassThePhone from '../../core/ui/PassThePhone.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
@@ -47,10 +48,10 @@
   const bidderIndex = $derived(firstUnvoted(data, 'bid'));
   const leaders = $derived(bidLeaders(data));
 
-  const MODES: { id: 'roles' | 'ballot' | 'bid'; label: string }[] = [
-    { id: 'roles', label: 'Roles' },
-    { id: 'ballot', label: 'Ballot' },
-    { id: 'bid', label: 'Blind bid' },
+  const MODES: { id: 'roles' | 'ballot' | 'bid'; key: string }[] = [
+    { id: 'roles', key: 'reveal.roles' },
+    { id: 'ballot', key: 'reveal.ballot' },
+    { id: 'bid', key: 'reveal.bid' },
   ];
 
   function openRoles(): void {
@@ -70,7 +71,7 @@
   }
 
   function saveBallot(): void {
-    ctx.undo.batch('ballot', () => {
+    ctx.undo.batch(t('reveal.ballot'), () => {
       instance.setBallotQuestion(questionDraft);
       instance.setBallotOptions(optionsDraft.split(','));
     });
@@ -105,10 +106,10 @@
 </script>
 
 <div class="reveal">
-  <div class="modes" role="group" aria-label="Reveal mode">
+  <div class="modes" role="group" aria-label={t('reveal.mode')}>
     {#each MODES as item (item.id)}
       <button type="button" class:active={data.mode === item.id} onclick={() => instance.setMode(item.id)}>
-        {item.label}
+        {t(item.key)}
       </button>
     {/each}
   </div>
@@ -116,7 +117,7 @@
   {#if data.mode === 'roles'}
     {#if !data.dealt}
       <div class="panel">
-        <h2>Roles</h2>
+        <h2>{t('reveal.roles')}</h2>
         {#if data.roles.length}
           <ul class="role-list">
             {#each data.roles as role (role.name)}
@@ -127,9 +128,12 @@
               </li>
             {/each}
           </ul>
-          <p class="hint">{data.roles.reduce((sum, role) => sum + role.count, 0)} cards for {data.players.length} players.</p>
+          <p class="hint">{t('reveal.cards-for', {
+            cards: data.roles.reduce((sum, role) => sum + role.count, 0),
+            players: data.players.length,
+          })}</p>
         {:else}
-          <p class="hint">No roles yet. Add werewolves, villagers, traitors — whatever the game needs.</p>
+          <p class="hint">{t('reveal.no-roles')}</p>
         {/if}
         <button
           type="button"
@@ -138,12 +142,12 @@
             instance.deal();
             passing = true;
           }}
-        >Deal roles</button>
-        <button type="button" onclick={openRoles}>Edit roles</button>
+        >{t('reveal.deal')}</button>
+        <button type="button" onclick={openRoles}>{t('reveal.edit-roles')}</button>
       </div>
     {:else if data.allRevealed}
       <div class="panel">
-        <h2>Everyone's role</h2>
+        <h2>{t('reveal.everyones-role')}</h2>
         <ul class="role-list">
           {#each data.players as player (player.id)}
             <li>
@@ -153,14 +157,14 @@
             </li>
           {/each}
         </ul>
-        <button type="button" onclick={() => instance.coverAll()}>Cover again</button>
-        <button type="button" onclick={() => instance.clearDeal()}>Redeal</button>
+        <button type="button" onclick={() => instance.coverAll()}>{t('reveal.cover-again')}</button>
+        <button type="button" onclick={() => instance.clearDeal()}>{t('reveal.redeal')}</button>
       </div>
     {:else if passing}
       <PassThePhone
-        name={holder?.name ?? 'Player'}
-        hint={`Card ${data.holder + 1} of ${data.players.length}`}
-        action="I have the phone"
+        name={holder?.name ?? t('reveal.player')}
+        hint={t('reveal.card-of', { index: data.holder + 1, total: data.players.length })}
+        action={t('reveal.have-phone')}
         autoHide={data.autoHide}
         onhide={() => (holding = false)}
         onnext={() => {
@@ -169,7 +173,7 @@
         }}
         oncancel={() => (passing = false)}
       >
-        <p class="lead">Hold the button to see your role</p>
+        <p class="lead">{t('reveal.hold-lead')}</p>
         <button
           type="button"
           class="hold"
@@ -187,15 +191,15 @@
           onkeyup={() => (holding = false)}
           onblur={() => (holding = false)}
         >
-          {holding ? 'Release to hide' : 'Hold to reveal'}
+          {holding ? t('reveal.release') : t('reveal.hold')}
         </button>
         {#if holding}
-          <p class="secret-role" aria-live="polite">{roleOf(data, holder?.id ?? '')?.name ?? 'No role'}</p>
+          <p class="secret-role" aria-live="polite">{roleOf(data, holder?.id ?? '')?.name ?? t('reveal.no-role')}</p>
           {#if roleOf(data, holder?.id ?? '')?.description}
             <p class="secret-notes">{roleOf(data, holder?.id ?? '')?.description}</p>
           {/if}
         {:else}
-          <p class="hint">Keep your thumb on the button. Let go and it hides.</p>
+          <p class="hint">{t('reveal.thumb')}</p>
         {/if}
         {#if data.players.length > 1}
           <button
@@ -205,30 +209,28 @@
               holding = false;
               instance.nextHolder();
             }}
-          >Next player →</button>
+          >{t('reveal.next-player')}</button>
         {/if}
       </PassThePhone>
     {:else}
       <div class="panel">
-        <h2>Roles are dealt</h2>
-        <p class="hint">Pass the phone when everyone is ready, or reveal the whole table at the end.</p>
-        <button type="button" class="wide" onclick={() => (passing = true)}>Pass the phone</button>
+        <h2>{t('reveal.dealt')}</h2>
+        <p class="hint">{t('reveal.dealt-hint')}</p>
+        <button type="button" class="wide" onclick={() => (passing = true)}>{t('reveal.pass-phone')}</button>
         <div class="row">
-          <button type="button" onclick={() => instance.revealAll()}>Reveal all</button>
-          <button type="button" onclick={() => instance.clearDeal()}>Redeal</button>
+          <button type="button" onclick={() => instance.revealAll()}>{t('reveal.reveal-all')}</button>
+          <button type="button" onclick={() => instance.clearDeal()}>{t('reveal.redeal')}</button>
         </div>
         <details class="how">
-          <summary>Using a screen reader or keyboard</summary>
+          <summary>{t('reveal.how-title')}</summary>
           <p>
-            Open <strong>Pass the phone</strong>, then hold <kbd>Space</kbd> or <kbd>Enter</kbd> on
-            <em>Hold to reveal</em>. The role is announced, and letting go of the key hides it again.
-            <kbd>Escape</kbd> closes the cover without revealing anything, and
-            <strong>Next player</strong> moves to the next person without a swipe.
+            {t('reveal.how-1')} <strong>{t('reveal.pass-phone')}</strong>{t('reveal.how-2')}
+            <kbd>Space</kbd> {t('reveal.how-3')} <kbd>Enter</kbd> {t('reveal.how-4')}
+            <em>{t('reveal.hold')}</em>{t('reveal.how-5')}
+            <kbd>Escape</kbd> {t('reveal.how-6')} <strong>{t('reveal.next-player-label')}</strong
+            >{t('reveal.how-7')}
           </p>
-          <p>
-            Nothing is timed unless the auto-hide setting is on, so there is no rush to find the
-            button. The role is text, never a colour or a picture.
-          </p>
+          <p>{t('reveal.how-8')}</p>
         </details>
       </div>
     {/if}
@@ -245,27 +247,27 @@
             </li>
           {/each}
         </ul>
-        <button type="button" onclick={() => instance.coverBallot()}>Hide votes</button>
+        <button type="button" onclick={() => instance.coverBallot()}>{t('reveal.hide-votes')}</button>
       {:else}
         <ul class="status">
           {#each data.players as player (player.id)}
             <li>
               <span>{player.name}</span>
-              <span class="state">{data.ballot.votes[player.id] ? 'voted' : 'waiting'}</span>
+              <span class="state">{data.ballot.votes[player.id] ? t('reveal.voted') : t('reveal.waiting')}</span>
             </li>
           {/each}
         </ul>
         {#if voted}
-          <button type="button" class="wide" onclick={() => instance.revealBallot()}>Reveal votes</button>
+          <button type="button" class="wide" onclick={() => instance.revealBallot()}>{t('reveal.reveal-votes')}</button>
         {:else if voterIndex >= 0 && ballotPassing}
           <PassThePhone
             name={data.players[voterIndex].name}
-            hint="Secret ballot"
-            action="Cast my vote"
+            hint={t('reveal.secret-ballot')}
+            action={t('reveal.cast-vote')}
             autoHide={0}
             oncancel={() => (ballotPassing = false)}
           >
-            <p class="lead">Choose one</p>
+            <p class="lead">{t('reveal.choose-one')}</p>
             <div class="options">
               {#each data.ballot.options as option (option)}
                 <button type="button" class="option-button" onclick={() => vote(option)}>{option}</button>
@@ -273,18 +275,18 @@
             </div>
           </PassThePhone>
         {:else if voterIndex >= 0}
-          <button type="button" class="wide" onclick={() => (ballotPassing = true)}>Pass the phone to vote</button>
+          <button type="button" class="wide" onclick={() => (ballotPassing = true)}>{t('reveal.pass-to-vote')}</button>
         {/if}
         <button type="button" onclick={() => data.ballot.options.length && instance.revealBallot()}>
-          End voting early
+          {t('reveal.end-early')}
         </button>
       {/if}
-      <button type="button" onclick={openBallot}>Edit ballot</button>
+      <button type="button" onclick={openBallot}>{t('reveal.edit-ballot')}</button>
     </div>
   {:else}
     <div class="panel">
-      <h2>Blind bid</h2>
-      <p class="hint">Bids between {data.bids.min} and {data.bids.max}. Nobody sees a number until the reveal.</p>
+      <h2>{t('reveal.blind-bid')}</h2>
+      <p class="hint">{t('reveal.bid-range', { min: data.bids.min, max: data.bids.max })}</p>
       {#if data.bids.revealed}
         <ul class="status">
           {#each data.players as player (player.id)}
@@ -295,30 +297,30 @@
           {/each}
         </ul>
         {#if leaders.length}
-          <p class="winner">Highest: {leaders.join(', ')}</p>
+          <p class="winner">{t('reveal.highest-list', { names: leaders.join(', ') })}</p>
         {/if}
-        <button type="button" onclick={() => instance.coverBids()}>Hide bids</button>
+        <button type="button" onclick={() => instance.coverBids()}>{t('reveal.hide-bids')}</button>
       {:else}
         <ul class="status">
           {#each data.players as player (player.id)}
             <li>
               <span>{player.name}</span>
-              <span class="state">{typeof data.bids.values[player.id] === 'number' ? 'in' : 'waiting'}</span>
+              <span class="state">{typeof data.bids.values[player.id] === 'number' ? t('reveal.in') : t('reveal.waiting')}</span>
             </li>
           {/each}
         </ul>
         {#if bidIn}
-          <button type="button" class="wide" onclick={() => instance.revealBids()}>Reveal bids</button>
+          <button type="button" class="wide" onclick={() => instance.revealBids()}>{t('reveal.reveal-bids')}</button>
         {:else if bidderIndex >= 0 && bidPassing}
           <PassThePhone
             name={data.players[bidderIndex].name}
-            hint="Nobody else can see this"
-            action="Enter my bid"
+            hint={t('reveal.nobody-sees')}
+            action={t('reveal.enter-bid')}
             autoHide={0}
             oncancel={() => (bidPassing = false)}
           >
             <label class="field">
-              <span>Your bid</span>
+              <span>{t('reveal.your-bid')}</span>
               <input
                 type="number"
                 min={data.bids.min}
@@ -333,66 +335,66 @@
               />
             </label>
             <div class="row">
-              <button type="button" onclick={() => (bidDraft = String(data.bids.min))}>Min</button>
-              <button type="button" onclick={() => (bidDraft = String(data.bids.max))}>Max</button>
+              <button type="button" onclick={() => (bidDraft = String(data.bids.min))}>{t('reveal.min')}</button>
+              <button type="button" onclick={() => (bidDraft = String(data.bids.max))}>{t('reveal.max')}</button>
             </div>
-            <button type="button" class="wide" onclick={saveBid}>Save bid</button>
+            <button type="button" class="wide" onclick={saveBid}>{t('reveal.save-bid')}</button>
           </PassThePhone>
         {:else if bidderIndex >= 0}
-          <button type="button" class="wide" onclick={() => (bidPassing = true)}>Pass the phone to bid</button>
+          <button type="button" class="wide" onclick={() => (bidPassing = true)}>{t('reveal.pass-to-bid')}</button>
         {/if}
       {/if}
-      <button type="button" onclick={openBidRange}>Edit bid range</button>
+      <button type="button" onclick={openBidRange}>{t('reveal.edit-range')}</button>
     </div>
   {/if}
 </div>
 
 {#if rolesOpen}
-  <Sheet title="Roles" onclose={() => (rolesOpen = false)}>
+  <Sheet title={t('reveal.roles')} onclose={() => (rolesOpen = false)}>
     {#each roleDraft as role, index (index)}
       <div class="role-edit">
-        <input type="text" aria-label="Role {index + 1} name" bind:value={role.name} placeholder="werewolf" />
-        <input type="number" aria-label="Role {index + 1} count" bind:value={role.count} min="0" max="30" />
-        <button type="button" aria-label="Remove role {index + 1}" onclick={() => (roleDraft = roleDraft.filter((_, at) => at !== index))}>✕</button>
+        <input type="text" aria-label={t('reveal.role-name', { index: index + 1 })} bind:value={role.name} placeholder={t('reveal.example-role')} />
+        <input type="number" aria-label={t('reveal.role-count', { index: index + 1 })} bind:value={role.count} min="0" max="30" />
+        <button type="button" aria-label={t('reveal.remove-role', { index: index + 1 })} onclick={() => (roleDraft = roleDraft.filter((_, at) => at !== index))}>✕</button>
       </div>
       <label class="field">
-        <span>What this role does</span>
-        <input type="text" bind:value={role.description} placeholder="Eats a villager each night" />
+        <span>{t('reveal.role-does')}</span>
+        <input type="text" bind:value={role.description} placeholder={t('reveal.role-placeholder')} />
       </label>
     {/each}
     <div class="row">
-      <button type="button" onclick={() => (roleDraft = [...roleDraft, { name: '', count: 1, description: '' }])}>Add role</button>
-      <button type="button" class="wide" onclick={saveRoles}>Save roles</button>
+      <button type="button" onclick={() => (roleDraft = [...roleDraft, { name: '', count: 1, description: '' }])}>{t('reveal.add-role')}</button>
+      <button type="button" class="wide" onclick={saveRoles}>{t('reveal.save-roles')}</button>
     </div>
-    <p class="hint">The count is how many of that card go into the deck.</p>
+    <p class="hint">{t('reveal.role-hint')}</p>
   </Sheet>
 {/if}
 
 {#if ballotOpen}
-  <Sheet title="Ballot" onclose={() => (ballotOpen = false)}>
+  <Sheet title={t('reveal.ballot')} onclose={() => (ballotOpen = false)}>
     <label class="field">
-      <span>Question</span>
+      <span>{t('reveal.question')}</span>
       <input type="text" bind:value={questionDraft} />
     </label>
     <label class="field">
-      <span>Options (comma separated)</span>
-      <input type="text" bind:value={optionsDraft} placeholder="Yes, No" />
+      <span>{t('reveal.options-label')}</span>
+      <input type="text" bind:value={optionsDraft} placeholder={t('reveal.options-placeholder')} />
     </label>
-    <button type="button" class="wide" onclick={saveBallot}>Save ballot</button>
+    <button type="button" class="wide" onclick={saveBallot}>{t('reveal.save-ballot')}</button>
   </Sheet>
 {/if}
 
 {#if bidRangeOpen}
-  <Sheet title="Bid range" onclose={() => (bidRangeOpen = false)}>
+  <Sheet title={t('reveal.range-title')} onclose={() => (bidRangeOpen = false)}>
     <label class="field">
-      <span>Lowest</span>
+      <span>{t('reveal.lowest')}</span>
       <input type="number" min="0" bind:value={minDraft} />
     </label>
     <label class="field">
-      <span>Highest</span>
+      <span>{t('reveal.highest-label')}</span>
       <input type="number" min="1" bind:value={maxDraft} />
     </label>
-    <button type="button" class="wide" onclick={saveBidRange}>Save range</button>
+    <button type="button" class="wide" onclick={saveBidRange}>{t('reveal.save-range')}</button>
   </Sheet>
 {/if}
 

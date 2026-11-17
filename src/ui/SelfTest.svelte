@@ -2,7 +2,7 @@
   import { onMount, mount, unmount } from 'svelte';
   import { audio } from '../core/audio';
   import { haptics } from '../core/haptics';
-  import { t } from '../core/i18n';
+  import { t } from '../core/i18n.svelte';
   import { manifest } from '../core/manifest.generated';
   import type { ToolContext } from '../core/registry';
   import { loadTool } from '../core/tools.generated';
@@ -104,26 +104,27 @@
 </script>
 
 <div class="selftest">
-  <h1>Self-test</h1>
-  <p class="dim">Boots every tool with its defaults, mounts it once, then unmounts it.</p>
+  <h1>{t('selftest.title')}</h1>
+  <p class="dim">{t('selftest.hint')}</p>
 
   <ul class="results">
     {#each results as item (item.id)}
       <li class:bad={!item.ok}>
         <span class="id">{item.id}</span>
-        <span>{item.ok ? 'ok' : item.error}</span>
+        <span>{item.ok ? t('selftest.ok') : item.error}</span>
       </li>
     {/each}
     {#if !ran}
-      <li><span class="id">…</span><span>running</span></li>
+      <li><span class="id">…</span><span>{t('selftest.running')}</span></li>
     {/if}
   </ul>
 
   <p class="net" class:bad={networkAttempts > 0}>
-    Network requests: {networkAttempts} {networkAttempts === 0 ? '(as it should be)' : '(this is a bug)'}
+    {t('selftest.network', { count: networkAttempts })}
+    {networkAttempts === 0 ? t('selftest.network-fine') : t('selftest.network-bug')}
   </p>
 
-  <button type="button" onclick={() => run()}>Run again</button>
+  <button type="button" onclick={() => run()}>{t('selftest.again')}</button>
   <div id="selftest-host" class="host" aria-hidden="true"></div>
 </div>
 

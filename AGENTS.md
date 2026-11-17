@@ -33,6 +33,7 @@ bun run check        # stale manifest + tsc + svelte-check + tests + template li
 bun run build        # dist/ (hosted, code-split) + dist/pq-game-buddy.html (offline copy)
 bun run build:site   # also dist/<tool>/index.html: one small page per tool
 bun run build:single # dist/index.html only, JS and CSS embedded: one file to copy around
+bun run build --langs=nl  # one language only: every language is a chunk, English too
 bun run size         # check dist/size.json against the budgets
 ```
 
