@@ -260,60 +260,6 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 ## 6. Milestones
 
 
-
-### M6 — Style: the lantern table (L, shipped)
-
-**Goal met:** every behaviour kept, the visual language replaced twice. The first pass
-was paper and ink with heavy outlines; the second answers the brief "cozy, playful,
-colourful, hierarchy first" with a woodland lantern table: cream paper, deep forest
-titles, six bright family accents, self-hosted Dosis and Raleway, almost no borders,
-secondary detail folded away and short bouncy entrances. `docs/STYLE.md` is the
-contract: tokens, family accents, type, radius, shadow, marks and doodles, motion,
-layout, a measured contrast table and a restyle checklist a second person can follow.
-
-Shipped steps:
-
-- **M6.1 Tokens.** `tokens.css` rewritten: cream paper (`#fbf2dd`), forest ink, six
-  family triplets (berry randomize, honey time, teal track, plum reveal, moss
-  reference, sky flow), soft coloured shadows, 10/16/26/28/999 radii, a dark room and
-  a table-mode override. Border tokens survive only for table rules and state rings.
-- **M6.2 Typography.** Dosis and Raleway, downloaded, subset to the app's characters,
-  base64-inlined in `fonts.css`; a rem scale at 13/15/17/22/30/40/52/72; 40–72 px
-  readouts, uppercase Raleway section labels, forest screen titles.
-- **M6.3 Shape and texture.** Fills instead of outlines everywhere; a card is a soft
-  coloured shadow; keys are pills that lift on hover via brightness so a coloured key
-  never loses its colour; fields are cushions; the hatch grain and two lantern glows
-  stay CSS-only.
-- **M6.4 Marks and doodles.** `core/ui/icons.ts` keeps the 24 px mark grid and gains a
-  distinct `notes` mark for the sound board; `core/ui/doodles.ts` adds the woodland
-  scene and five doodles as inline SVG placeholders.
-- **M6.5 Layout and hierarchy.** Home opens with a hero scene and a `clamp(3rem, 12vw,
-  5.5rem)` title, then the wash-tinted shelf; sessions are a quiet strip and the tool
-  owns the screen with no wrapper card; options, history and secondary settings fold
-  behind `core/ui/Fold.svelte`.
-- **M6.6 Motion.** `pop` 120 ms, `settle` 200 ms, `reveal` 280 ms, `bounce` 340 ms;
-  shelf tiles stagger in, a tool blooms when its tab is tapped, the fold chevron
-  bounces open. No continuous animation; confetti once, on a finished game with a
-  winner, skipped under reduced motion.
-- **M6.7 Copy.** Warm, short voice across empty states, confirms, errors and the cue
-  sheet; duration errors say what to type instead; no exclamation marks in errors.
-- **M6.8 Modes.** Light cream, warm-charcoal dark with pastel accents, table mode at
-  1.25× type with the shell header hidden, print at ink on white. The reveal cover
-  stays opaque in every mode.
-- **M6.9 Shared tool CSS.** The rules most tools repeated moved into
-  `core/styles/components.css`: `.panel`, `.block`, `.stage`, `.row`, `.field`, `.modes`,
-  `.wide`, `.primary`, `.ghost`, `.check`, `.dim`, `.small`, `.hint`, `.history`,
-  tables and `.fold`. 202 duplicated rules were deleted from the 21 tool views, and
-  the remaining ink outlines were stripped in the same pass. No view holds a hex
-  colour, a radius or a shadow outside `tokens.css`.
-- **M6.10 Handover.** `docs/STYLE.md`, licensing for both fonts, and this roadmap. The
-  screenshot set stays in §7: a picture of a real device in daylight is the point, and
-  the agent cannot take one.
-
-**Moved to M7 on purpose:** the `.gamebuddy-theme` file (a new format and a new settings
-surface, both outside M6) and the copy pass against the Pandaqi voice, which belongs with
-localization so the strings are written once.
-
 ### M7 — After v1.0 (stretch)
 
 Each item needs its own mini-plan and must keep the offline, no-account, no-network default. None block v1.0.
@@ -323,8 +269,14 @@ Each item needs its own mini-plan and must keep the offline, no-account, no-netw
 - **Log filters and search**, playtime totals, win rates and "what should we play" by player count and time.
 - **A writing pass against the Pandaqi voice**, before localization so the strings are final once. Sampled from <https://pandaqi.com>: direct address ("Try any game that catches your eye"), a concrete picture instead of a category ("Be a math detective and guess the missing numbers"), short sentences, one aside after a dash, first person for the author and "we" for the table, and an exclamation mark at most on a marketing line (never in an error). Work: rewrite `docs/USER-GUIDE.md`, the About panel, the template `notes` and the tool blurbs in that voice, keep the copy rules in `AGENTS.md`, and add three example strings to `docs/STYLE.md` so later copy has a target.
 - **Theme files.** A `.gamebuddy-theme` text format: `key: value` lines over the tokens in `tokens.css` (paper, ink, families, fonts, radius, hide-chrome flags), imported from Settings, applied as custom properties on `:root`, validated with line-numbered diagnostics like templates, and never fetched. It works offline and hosted because it is a file the player owns. M6 left the seam: no view may hard-code a colour, radius or shadow.
-- **Full string extraction** through `t()` and a first translated UI, once the text is stable.
+- **Full string extraction** through `t()` and a first translated UI, once the text is stable. 
+  - Make the UI available in English for now, plan a new milestone (M10) to support Dutch and one other language.
+  - Add a clean language switcher in the header (click icon -> reveals all languages -> pick)
+  - Lazy load all localized/language data instead of bundling into everything by default.
+  - Allow filtered builds that only include one language (or some subset of languages chosen), for smaller file sizes (most people only use one language anyway).
+  - EVEN BETTER (architecture improvement): keep localized data _with the tool_. Example: each tool has a folder called `locales` within its bundle with one data file per supported language inside. This would keep data close to where it's needed (instead of having one massive localization file) + allow even more fine-grained filtering and lazy loading.
 - **PWA install** for the hosted build (service worker, hosted only; the single file stays the offline story).
+- **Template improvements**: add the option for a `.gamebuddy` template to have an _icon_. Then plan a new milestone (M9) for giving all the popular game templates a matching icon. (You can do this, you've done it before: check their look/info, create some simple stylized SVG icon to represent that.)
 - **Community template gallery**: a static JSON index plus pull-request contributions; no runtime network requirement for the core app.
 - **QR sharing** with a tiny in-house encoder, for passing a template to a phone across the table.
 - **Narrator voice** using Web Speech (offline voice availability varies; always paired with readable text).

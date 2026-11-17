@@ -7,7 +7,7 @@ is enough: `bun run gen` picks it up and it appears on the home screen.
 
 ```
 src/tools/<id>/
-├─ meta.ts            # id, title, blurb, inline SVG icon, tags   (no Svelte)
+├─ meta.ts            # id, title, blurb, seats, icon, tags      (no Svelte)
 ├─ preset.ts          # preset schema                                (no Svelte)
 ├─ logic.ts           # pure functions + state/action types          (no Svelte)
 ├─ tool.svelte.ts     # create(ctx, values) → ToolInstance + actions
@@ -15,7 +15,11 @@ src/tools/<id>/
 └─ example.gamebuddy  # minimal template used by tests and docs
 ```
 
-`meta.ts` must default-export an object whose `id` matches the folder name.
+`meta.ts` must default-export an object whose `id` matches the folder name. Its
+`seats` field says how much the tool cares about the session's players: `multi`
+seats everyone, `one` works for a single player, `none` never reads them. The shell
+starts a `multi` tool with two seats, everything else with one, and only unfolds
+the seat strip for `multi` by default (the player can always open it).
 
 `tool.svelte.ts` default-exports `{ ...meta, preset, component, create }`, where
 `component` is the view imported statically from `./<Tool>.svelte`. The shell never

@@ -20,6 +20,8 @@ import preset from './preset';
 export interface BagActions {
   draw(count?: number): void;
   assignTo(player: string): void;
+  /** The seat the next draw lands in; empty when the bag is shared. */
+  assignedTo(): string;
   returnAt(index: number): void;
   returnPlayer(player: string): void;
   returnAll(): void;
@@ -79,6 +81,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
 
   let target = '';
 
+  /** The seat in play, for the cases where a per-player draw needs a default. */
+  function seatName(): string {
+    const players = ctx.session.players();
+    return players.find((player) => player.active)?.name ?? players[0]?.name ?? '';
+  }
+
   function note(text: string): void {
     data.history = [text, ...data.history].slice(0, 12);
   }
@@ -89,7 +97,14 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
   }
 
   function place(token: Token): void {
-    if (data.trayMode === 'shared' || !target) {
+    if (data.trayMode === 'shared') {
+      data.tokens = [...data.tokens, token];
+      return;
+    }
+    // Never fall back to the shared pile in per-player mode: that is how a
+    // second player's draw used to vanish into the first player's tray.
+    target = target || seatName();
+    if (!target) {
       data.tokens = [...data.tokens, token];
       return;
     }
@@ -184,6 +199,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
       target = player.trim();
       note(target ? `Drawing for ${target}` : 'Drawing to the shared tray');
     },
+    assignedTo: () => target,
     returnAt(index) {
       const token = data.tokens[index];
       if (!token) return;
@@ -236,6 +252,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
         data.trays = [];
       }
       data.trayMode = mode;
+      if (mode === 'per-player' && !target) target = seatName();
     },
     adjustType(type, delta) {
       const current = data.remaining[type] ?? 0;
@@ -280,7 +297,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
     },
   };
 
-  if (trayMode === 'per-player') target = ctx.session.players()[0]?.name ?? '';
+  if (trayMode === 'per-player') target = seatName();
 
   return instance;
 }

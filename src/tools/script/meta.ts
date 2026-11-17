@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Script',
   blurb: 'Run a game flow step by step: say, wait, reveal and time.',
   family: 'flow',
+  seats: 'none',
   icon: mark('scroll'),
   tags: ['flow', 'narrator', 'party'],
 };

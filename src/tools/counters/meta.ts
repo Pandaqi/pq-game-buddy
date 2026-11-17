@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Counters',
   blurb: 'Named counters and a shared bank, with transfers, denominations and a log.',
   family: 'track',
+  seats: 'none',
   icon: mark('token'),
   tags: ['tracking', 'economy'],
 };

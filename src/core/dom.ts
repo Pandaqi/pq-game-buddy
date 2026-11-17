@@ -17,6 +17,15 @@ export function announce(message: string): void {
   liveRegion.textContent = message;
 }
 
+/**
+ * A new screen starts at its top. Hash routes and tool tabs both call this, so
+ * no view has to reason about where the last one left the document.
+ */
+export function scrollToStart(): void {
+  if (typeof window === 'undefined') return;
+  window.scrollTo(0, 0);
+}
+
 export function focusElement(element: Element | null | undefined): void {
   if (!element || !(element instanceof HTMLElement)) return;
   element.focus();

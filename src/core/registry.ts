@@ -13,12 +13,21 @@ import type { UndoApi } from './undo';
 /** The six primitives, used as the colour identity of a tool's screens. */
 export type ToolFamily = 'randomize' | 'time' | 'track' | 'reveal' | 'reference' | 'flow';
 
+/**
+ * How much a tool cares about the session's seats: `multi` seats everyone,
+ * `one` works for a single player, `none` never reads players at all. The shell
+ * uses it to pick the starting seat count and whether the seat strip starts open.
+ */
+export type SeatScope = 'multi' | 'one' | 'none';
+
 export interface ToolMeta {
   id: string;
   title: string;
   blurb: string;
   /** Which accent the tool's screen borrows. */
   family: ToolFamily;
+  /** How the tool uses the session's players. */
+  seats: SeatScope;
   /** Inline SVG markup from `core/ui/icons.ts`. Trusted build-time constant. */
   icon: string;
   tags: string[];

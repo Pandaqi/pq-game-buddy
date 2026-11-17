@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Timer',
   blurb: 'Countdowns, stopwatch, flip timers and chess clocks.',
   family: 'time',
+  seats: 'one',
   icon: mark('clock'),
   tags: ['time', 'clock', 'party'],
 };

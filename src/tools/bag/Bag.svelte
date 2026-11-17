@@ -11,9 +11,11 @@
   let settingsOpen = $state(false);
   let countsDraft = $state('');
   let valuesDraft = $state('');
-  let who = $state('');
   let newType = $state('');
-  const activeWho = $derived(who || players[0]?.name || '');
+  // The seat strip and the bag's own row are the same choice, so both read the
+  // session's active player instead of keeping a second, drifting copy.
+  const activeWho = $derived(players.find((player) => player.active)?.name ?? players[0]?.name ?? '');
+  let assigned = instance.assignedTo();
   let left = $derived(totalOf(data.remaining));
   const types = $derived(Object.keys(data.remaining).sort());
 
@@ -28,9 +30,20 @@
   }
 
   function choosePlayer(name: string): void {
-    who = name;
+    const player = players.find((item) => item.name === name);
+    if (player) ctx.session.setActivePlayer(player.id);
+    assigned = name;
     instance.assignTo(name);
   }
+
+  // Switch seats anywhere and the next draw follows; otherwise a per-player
+  // tray quietly keeps filling the first player's pile.
+  $effect(() => {
+    if (data.trayMode !== 'per-player' || !activeWho) return;
+    if (activeWho === assigned) return;
+    assigned = activeWho;
+    instance.assignTo(activeWho);
+  });
 </script>
 
 <div class="bag">

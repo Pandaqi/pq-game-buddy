@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Lives',
   blurb: 'Track lives, extra tracks and conditions, with elimination and game over.',
   family: 'track',
+  seats: 'multi',
   icon: mark('heart'),
   tags: ['tracking', 'health'],
 };

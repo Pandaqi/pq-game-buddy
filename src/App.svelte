@@ -1,9 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { audio } from './core/audio';
+  import { scrollToStart } from './core/dom';
   import { manifest } from './core/manifest.generated';
   import { rememberImport } from './core/recent-imports';
-  import { navigate, parseRoute } from './core/router';
+  import { navigate, parseRoute, routeTo } from './core/router';
   import { schemas } from './core/schemas.generated';
   import { store } from './core/session-store.svelte';
   import { settings } from './core/settings.svelte';
@@ -42,6 +43,24 @@
   $effect(() => {
     if (typeof document === 'undefined') return;
     document.documentElement.dataset.screen = route.name;
+  });
+
+  // Settings is a screen, not a sheet, so the header gear toggles it and has to
+  // remember where it was opened from.
+  let returnHash = $state('#/');
+  $effect(() => {
+    if (route.name === 'settings') return;
+    returnHash = routeTo(route);
+  });
+
+  // Every new screen starts at its top. Home, settings, the log and a template
+  // session all arrive through a hash change, so one effect covers them.
+  let shownScreen = '';
+  $effect(() => {
+    const key = route.name === 'session' ? `session:${route.tab ?? ''}` : route.name;
+    if (key === shownScreen) return;
+    shownScreen = key;
+    scrollToStart();
   });
 
   type Flow = 'none' | 'paste' | 'start';
@@ -191,10 +210,13 @@
   async function startTool(toolId: string): Promise<void> {
     const tool = manifest.find((module) => module.id === toolId);
     if (!tool) return;
+    // A bag, a timer or a coin does not get better with a second player, so only
+    // a tool that seats everyone starts with two.
+    const players = tool.seats === 'multi' ? ['Player 1', 'Player 2'] : ['Player 1'];
     // The tool's own chunk arrives here; the shell only knew its name until now.
     await store.start({
       gameName: tool?.title ?? toolId,
-      players: ['Player 1', 'Player 2'],
+      players,
       tools: [{ toolId, instanceId: toolId, values: {} }],
     });
     navigate({ name: 'session' });
@@ -249,7 +271,12 @@
       >
         {@html mark(settings.values.muted ? 'muted' : 'sound')}
       </button>
-      <a class="icon" href="#/settings" aria-label="Settings">{@html mark('gear')}</a>
+      <a
+        class="icon"
+        href={route.name === 'settings' ? returnHash : '#/settings'}
+        aria-label={route.name === 'settings' ? 'Close settings' : 'Settings'}
+        aria-current={route.name === 'settings' ? 'page' : undefined}
+      >{@html mark('gear')}</a>
     </div>
   </header>
 
@@ -491,7 +518,8 @@
     transform: none;
     box-shadow: none;
   }
-  .icon[aria-pressed='true'] {
+  .icon[aria-pressed='true'],
+  .icon[aria-current='page'] {
     background: var(--accent-soft);
     color: var(--accent-deep);
   }

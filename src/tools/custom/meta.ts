@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Custom',
   blurb: 'Build your own tracker: fields, counters, a checklist, a table and formulas.',
   family: 'track',
+  seats: 'multi',
   icon: mark('sheet'),
   tags: ['track', 'tracker'],
 };

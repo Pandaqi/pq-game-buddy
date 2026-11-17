@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Decks',
   blurb: 'Shuffle, cut, deal and hide cards, from poker to Uno.',
   family: 'randomize',
+  seats: 'multi',
   icon: mark('card'),
   tags: ['random', 'cards'],
 };

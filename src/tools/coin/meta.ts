@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Coin',
   blurb: 'Flip one coin or ten, fair or weighted, with call-it.',
   family: 'randomize',
+  seats: 'none',
   icon: mark('chip'),
   tags: ['random', 'party'],
 };

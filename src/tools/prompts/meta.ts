@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Prompts',
   blurb: 'Random ideas, party prompts and design constraints from themed packs.',
   family: 'randomize',
+  seats: 'none',
   icon: mark('paw'),
   tags: ['random', 'ideas', 'party'],
 };

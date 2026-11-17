@@ -148,8 +148,10 @@ does not render under reduced motion. Dice and the coin change instantly.
 - The **shelf**: two tools per row on a phone, three on a tablet, four on a wide
   screen. Each tile is a wash-to-surface gradient, a 54 px mark, the Dosis name and one
   line of Raleway blurb. Tiles are the loudest repeated element on the page.
-- A session is a **strip** (quiet game name, seat chips, tool tabs as pills) and then
-  the tool owns the screen. No panel around the tool: the blocks inside it are the
+- A session is a **strip** (quiet game name, a one-line seat bar, tool tabs as pills)
+  and then the tool owns the screen. The seat bar's dots and its player count fold the
+  chips away, and tools that do not use players (`meta.seats`) do not show it at all;
+  only a tool that seats everyone opens it by default. No panel around the tool: the blocks inside it are the
   only cards.
 - The **stage**: the primary readout sits in the upper third at 40–72 px, controls sit
   within thumb reach, and everything secondary is behind a fold, a sheet or the "⋯"

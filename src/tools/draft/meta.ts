@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Draft',
   blurb: 'Snake or linear pick order, a pick clock, and auctions.',
   family: 'flow',
+  seats: 'multi',
   icon: mark('flag'),
   tags: ['flow', 'draft', 'auction'],
 };

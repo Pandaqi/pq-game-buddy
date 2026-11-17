@@ -45,6 +45,22 @@ All notable changes to Game Buddy. The template format is versioned separately
   209 → 265 KB, largest chunk 21 KB, deferred total 164 KB. The 150 KB first-visit
   ceiling holds with 25 KB to spare.
 
+### Shell fixes (M6 pass)
+
+- **Screens open at the top.** A hash route change and a tool tab swap both reset the
+  document scroll, so settings, a tool or a session never opens halfway down where the
+  last screen was left.
+- **The gear toggles settings.** The header's settings button remembers the screen it
+  was opened from; pressing it again closes settings and goes back there.
+- **Seats only where they matter.** Every tool declares `meta.seats` (`multi`, `one`,
+  `none`). A tool that is not player-bound starts with one seat and hides the player
+  strip; a single-player tool starts folded behind a quiet one-line bar with dots and a
+  count, and a multi-player tool opens it. Nothing is lost: the bar unfolds and the
+  full player sheet is one tap away, however many seats a game has.
+- **Bag seats.** Drawing in per-player mode follows the active seat — from the seat
+  strip or the bag's own row — instead of silently pouring the next player's tiles
+  into the first tray.
+
 ### Added
 
 - **Ten tools**: `decks`, `bag`, `bracket`, `draft`, `buzzer`, `script`, `words`,

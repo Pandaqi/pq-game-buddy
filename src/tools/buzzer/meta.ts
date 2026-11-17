@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Buzzer',
   blurb: 'First tap wins, with a random start, reaction times and false starts.',
   family: 'time',
+  seats: 'multi',
   icon: mark('key'),
   tags: ['time', 'party', 'quiz'],
 };

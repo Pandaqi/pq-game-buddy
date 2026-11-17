@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Bracket',
   blurb: 'Tournaments: single or double elimination, round robin, groups and Swiss.',
   family: 'flow',
+  seats: 'multi',
   icon: mark('bracket'),
   tags: ['flow', 'tournament'],
 };

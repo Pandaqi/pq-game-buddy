@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Turns',
   blurb: 'Whose turn it is, the round, the phase and an optional turn clock.',
   family: 'flow',
+  seats: 'multi',
   icon: mark('flag'),
   tags: ['flow', 'tracking'],
 };

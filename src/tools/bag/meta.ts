@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Bag',
   blurb: 'Blind draws from tiles or tokens, with values and a tray.',
   family: 'randomize',
+  seats: 'one',
   icon: mark('token'),
   tags: ['random', 'words', 'tokens'],
 };

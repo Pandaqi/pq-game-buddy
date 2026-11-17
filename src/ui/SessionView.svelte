@@ -1,5 +1,6 @@
 <script lang="ts">
   import { createDisplayChannel, displayUrl } from '../core/display';
+  import { scrollToStart } from '../core/dom';
   import { recordPlay, updatePlay, type PlayResult } from '../core/play-log';
   import { navigate } from '../core/router';
   import { store } from '../core/session-store.svelte';
@@ -52,6 +53,28 @@
     void store.version;
     return entry?.undo.label() ?? null;
   });
+
+  // A tool tab swap is not a route change, so it asks for the same reset itself.
+  let shownTool = '';
+  $effect(() => {
+    const id = store.activeId ?? '';
+    if (id === shownTool) return;
+    shownTool = id;
+    scrollToStart();
+  });
+
+  // The seat strip is chrome, not content: open where a tool seats everyone,
+  // folded away everywhere else. The choice sticks per tool instance.
+  const seats = $derived(entry?.module.seats ?? 'multi');
+  let seatPrefs = $state<Record<string, boolean>>({});
+  const seatsOpen = $derived(seatPrefs[entry?.id ?? ''] ?? seats === 'multi');
+  const seatCount = $derived(session?.players.length ?? 0);
+  const seatSummary = $derived(seatCount === 1 ? '1 player' : `${seatCount} players`);
+
+  function toggleSeats(): void {
+    if (!entry) return;
+    seatPrefs = { ...seatPrefs, [entry.id]: !seatsOpen };
+  }
 
   function closeGame(): void {
     store.close();
@@ -210,12 +233,34 @@
     <button type="button" class="menu" onclick={() => (menuOpen = true)} aria-label="Game menu">⋯</button>
   </header>
 
-  <div class="players">
-    {#each session?.players ?? [] as player (player.id)}
-      <PlayerChip name={player.name} initial={player.initial} color={player.color} active={player.active} onclick={() => store.setActivePlayer(player.id)} />
-    {/each}
-    <button type="button" class="add-player" onclick={() => (playersOpen = true)} aria-label="Edit players">+</button>
-  </div>
+  {#if entry && seats !== 'none'}
+    <div class="seats">
+      <button
+        type="button"
+        class="seats-toggle"
+        aria-expanded={seatsOpen}
+        aria-label={seatsOpen ? 'Hide the player list' : 'Show the player list'}
+        onclick={toggleSeats}
+      >
+        <span class="seats-dots" aria-hidden="true">
+          {#each (session?.players ?? []).slice(0, 4) as player (player.id)}
+            <span class="mini" style="--player: {player.color}">{player.initial}</span>
+          {/each}
+        </span>
+        <span class="seats-label">{seatSummary}</span>
+        <span class="chev" class:open={seatsOpen} aria-hidden="true">▾</span>
+      </button>
+
+      {#if seatsOpen}
+        <div class="players">
+          {#each session?.players ?? [] as player (player.id)}
+            <PlayerChip name={player.name} initial={player.initial} color={player.color} active={player.active} onclick={() => store.setActivePlayer(player.id)} />
+          {/each}
+          <button type="button" class="add-player" onclick={() => (playersOpen = true)} aria-label="Edit players">+</button>
+        </div>
+      {/if}
+    </div>
+  {/if}
 
   {#if store.unavailable.length}
     <p class="warn" role="status">
@@ -442,11 +487,62 @@
     box-shadow: none;
     flex: none;
   }
+  .seats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: 0 var(--space-2);
+  }
+  .seats-toggle {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: 0 var(--space-3) 0 var(--space-2);
+    background: transparent;
+    color: var(--text-dim);
+    box-shadow: none;
+    border-radius: var(--radius-pill);
+    font-size: var(--text-sm);
+    font-weight: 600;
+  }
+  .seats-toggle:hover {
+    background: var(--surface-2);
+    color: var(--text);
+    transform: none;
+    box-shadow: none;
+  }
+  .seats-dots {
+    display: inline-flex;
+  }
+  .mini {
+    display: inline-grid;
+    place-items: center;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-round);
+    background: var(--player);
+    color: var(--on-seat);
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+  .mini + .mini {
+    margin-left: -7px;
+  }
+  .chev {
+    font-size: 0.9em;
+    transition: transform var(--motion-pop) var(--ease-out);
+  }
+  .chev.open {
+    transform: rotate(180deg);
+  }
   .players {
     display: flex;
     gap: var(--space-2);
     overflow-x: auto;
-    padding: var(--space-1) var(--space-2) var(--space-2);
+    padding: 0 0 var(--space-1);
   }
   .add-player {
     flex: none;

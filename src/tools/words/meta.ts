@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Words',
   blurb: 'Is it a word? Find anagrams, solve a rack, draw letters or a Codenames board.',
   family: 'reference',
+  seats: 'none',
   icon: mark('words'),
   tags: ['reference', 'words', 'solver'],
 };

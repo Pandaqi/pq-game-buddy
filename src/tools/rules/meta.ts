@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Rules',
   blurb: 'A quick card, setup checklist, rules text, scoring reference and glossary.',
   family: 'reference',
+  seats: 'none',
   icon: mark('book'),
   tags: ['reference', 'rules'],
 };

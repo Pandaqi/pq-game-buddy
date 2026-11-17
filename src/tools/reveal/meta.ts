@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Reveal',
   blurb: 'Deal secret roles, run a ballot or take blind bids without leaking.',
   family: 'reveal',
+  seats: 'multi',
   icon: mark('eye'),
   tags: ['reveal', 'secrets'],
 };

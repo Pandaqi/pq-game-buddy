@@ -6,6 +6,7 @@ const meta: ToolMeta = {
   title: 'Demo',
   blurb: 'A tiny counter that proves tool folders are picked up automatically.',
   family: 'track',
+  seats: 'none',
   icon: mark('sparkle'),
   tags: ['dev'],
 };
