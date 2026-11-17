@@ -208,8 +208,7 @@
   .sources button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
@@ -217,7 +216,6 @@
   }
   .sources button.active {
     background: var(--accent);
-    border-color: var(--accent);
     color: var(--accent-text);
     font-weight: 700;
   }
@@ -228,38 +226,24 @@
     gap: var(--space-2);
     align-items: end;
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    font-size: var(--text-sm);
-    color: var(--text-dim);
-  }
+
   .field input,
   .adder input {
+    border: 0;
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     padding: 0 var(--space-3);
     font: inherit;
   }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 48px;
-  }
-  .check input {
-    width: 24px;
-    height: 24px;
-  }
+
+
   .adder {
     display: flex;
     gap: var(--space-2);
   }
   .adder input {
+    border: 0;
     flex: 1;
   }
   .adder button {
@@ -284,8 +268,7 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
-    border: 1px solid var(--line);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: var(--space-1) var(--space-1) var(--space-1) var(--space-3);
     background: var(--surface);
   }
@@ -293,21 +276,12 @@
     min-width: 36px;
     min-height: 36px;
     border: 0;
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     background: var(--surface-2);
     color: var(--text-dim);
     cursor: pointer;
   }
-  .stage {
-    min-height: 8rem;
-    display: grid;
-    place-items: center;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-    padding: var(--space-4);
-    text-align: center;
-  }
+
   .results {
     display: flex;
     flex-wrap: wrap;
@@ -326,13 +300,11 @@
     min-height: 6rem;
     display: grid;
     place-items: center;
-    border: 2px solid var(--accent);
     background: var(--surface);
   }
   .result.card.back {
     background: var(--accent);
     color: var(--accent-text);
-    border-color: var(--accent);
     font-size: var(--text-xl);
     cursor: pointer;
   }
@@ -341,14 +313,14 @@
     gap: var(--space-1);
     width: fit-content;
     padding: var(--space-1);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--surface-2);
   }
   .views button {
     min-height: 40px;
     padding: 0 var(--space-3);
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: transparent;
     color: var(--text);
     cursor: pointer;
@@ -371,7 +343,6 @@
     width: 100%;
   }
   .team {
-    border: 1px solid var(--line);
     border-radius: var(--radius);
     padding: var(--space-2);
   }
@@ -402,23 +373,6 @@
   .extra .field {
     flex: 1;
   }
-  .ghost {
-    min-height: 48px;
-    padding: 0 var(--space-3);
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .history {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    color: var(--text-dim);
-    font-size: var(--text-sm);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-  }
+
+
 </style>

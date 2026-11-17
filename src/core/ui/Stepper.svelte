@@ -37,9 +37,9 @@
     min-height: 56px;
   }
   .value {
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
     font-variant-numeric: tabular-nums;
-    font-weight: 700;
+    font-weight: 800;
   }
   .buttons {
     display: flex;
@@ -49,14 +49,10 @@
     min-width: 56px;
     min-height: 48px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
     font-weight: 700;
     cursor: pointer;
-  }
-  button:hover {
-    border-color: var(--accent);
   }
 </style>

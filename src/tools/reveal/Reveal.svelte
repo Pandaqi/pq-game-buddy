@@ -390,32 +390,10 @@
     gap: var(--space-3);
     padding: var(--space-3);
   }
-  .modes {
-    display: flex;
-    gap: var(--space-1);
-    padding: var(--space-1);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-  }
-  .modes button {
-    flex: 1;
-    min-height: 44px;
-    border-radius: var(--radius-sm);
-    border: 0;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .modes button.active {
-    background: var(--surface);
-    font-weight: 700;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-  }
-  .panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
+
+
+
+
   h2 {
     margin: 0;
     font-size: var(--text-lg);
@@ -429,7 +407,6 @@
     min-height: 88px;
     padding: 0 var(--space-4);
     border-radius: var(--radius-lg);
-    border: 2px solid var(--accent);
     background: var(--accent-soft);
     color: var(--text);
     font-size: var(--text-lg);
@@ -457,8 +434,7 @@
     min-height: 48px;
     margin-top: var(--space-2);
     padding: 0 var(--space-4);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface);
     color: var(--text);
     font-weight: 700;
@@ -481,7 +457,6 @@
     align-items: baseline;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
   }
@@ -516,7 +491,7 @@
   }
   .tally .bar {
     height: 12px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--accent);
     transform-origin: left;
     transform: scaleX(min(1, var(--share)));
@@ -536,8 +511,8 @@
   .option-button {
     min-height: 64px;
     border-radius: var(--radius-lg);
-    border: 1px solid var(--accent);
-    background: var(--surface);
+    background: var(--surface-2);
+    box-shadow: var(--shadow-soft);
     color: var(--text);
     font-weight: 700;
     cursor: pointer;
@@ -546,42 +521,19 @@
     margin: 0;
     font-weight: 800;
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .wide {
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 0;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-    cursor: pointer;
-  }
-  .hint {
-    margin: 0;
-    color: var(--text-dim);
-    font-size: var(--text-sm);
-  }
+
+
+
+
   .role-edit {
     display: grid;
     grid-template-columns: 1fr 4.5rem 2.75rem;
     gap: var(--space-2);
   }
   .role-edit input {
+    border: 0;
     min-height: 44px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
@@ -591,24 +543,10 @@
   .role-edit button {
     min-height: 44px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: transparent;
     color: var(--text-dim);
     cursor: pointer;
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
-  .field input {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-3);
-    font: inherit;
-  }
+
+
 </style>

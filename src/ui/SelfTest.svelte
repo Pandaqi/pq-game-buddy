@@ -158,7 +158,6 @@
     padding: var(--space-2);
     border-radius: var(--radius);
     background: var(--surface);
-    border: 1px solid var(--line);
     font-size: var(--text-sm);
   }
   .results li.bad {
@@ -180,7 +179,6 @@
   button {
     min-height: 48px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;

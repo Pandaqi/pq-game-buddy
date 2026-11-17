@@ -188,6 +188,7 @@
   h1 {
     margin: 0;
     font-size: var(--text-2xl);
+    color: var(--forest);
   }
   h2 {
     margin: 0 0 var(--space-1);
@@ -201,15 +202,15 @@
     font-size: var(--text-sm);
   }
   .back {
-    min-height: 44px;
+    min-height: 46px;
     display: inline-flex;
     align-items: center;
-    padding: 0 var(--space-3);
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
     color: var(--text);
     text-decoration: none;
+    font-weight: 600;
   }
   .toolbar {
     display: flex;
@@ -218,11 +219,10 @@
     gap: var(--space-2);
   }
   .toolbar button {
-    min-height: 44px;
-    padding: 0 var(--space-3);
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
+    min-height: 46px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
@@ -235,24 +235,19 @@
   }
   .field select,
   .field input {
-    min-height: 44px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-2);
+    min-height: 46px;
+    padding: 0 var(--space-4);
   }
   .code {
     display: grid;
     grid-template-columns: 3rem 1fr;
-    border: 1px solid var(--line);
     border-radius: var(--radius);
     overflow: hidden;
     background: var(--surface);
     min-height: 18rem;
   }
   .code.bad {
-    border-color: var(--danger);
+    box-shadow: inset 0 0 0 3px var(--danger);
   }
   .gutter {
     margin: 0;
@@ -269,11 +264,11 @@
   textarea {
     width: 100%;
     min-height: 18rem;
-    padding: var(--space-2);
-    border: 0;
+    padding: var(--space-3);
     resize: vertical;
     background: var(--surface);
     color: var(--text);
+    border-radius: 0;
     font-family: var(--font-mono);
     font-size: var(--text-sm);
     line-height: 21px;
@@ -286,16 +281,16 @@
     flex-wrap: wrap;
   }
   .pill {
-    padding: var(--space-1) var(--space-3);
-    border-radius: 999px;
+    padding: var(--space-1) var(--space-4);
+    border-radius: var(--radius-pill);
     background: var(--accent-soft);
-    border: 1px solid var(--accent);
-    font-weight: 700;
+    color: var(--accent-deep);
+    font-weight: 800;
     font-size: var(--text-sm);
   }
   .pill.error {
     background: var(--danger-soft);
-    border-color: var(--danger);
+    color: var(--danger);
   }
   .diagnostics {
     list-style: none;
@@ -314,7 +309,6 @@
     min-height: 44px;
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text-dim);
     font: inherit;
@@ -323,7 +317,6 @@
   }
   .diagnostics li.error button {
     color: var(--danger);
-    border-color: var(--danger);
   }
   .line {
     font-family: var(--font-mono);
@@ -336,7 +329,6 @@
   }
   .preview {
     padding: var(--space-3);
-    border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     background: var(--surface);
     display: flex;
@@ -353,16 +345,15 @@
   }
   .preview li {
     padding: var(--space-1) var(--space-3);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--surface-2);
-    border: 1px solid var(--line);
   }
   .primary {
     min-height: 56px;
-    border-radius: var(--radius);
-    border: 0;
+    border-radius: var(--radius-pill);
     background: var(--accent);
     color: var(--accent-text);
+    box-shadow: var(--shadow-key);
     font-size: var(--text-lg);
     font-weight: 800;
     cursor: pointer;

@@ -122,33 +122,9 @@
     align-items: flex-end;
     gap: var(--space-2);
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-    font-size: var(--text-sm);
-  }
-  .field input {
-    min-height: 48px;
-    width: 6rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-2);
-  }
-  .primary {
-    flex: 1;
-    min-height: 56px;
-    border: 0;
-    border-radius: var(--radius);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-size: var(--text-lg);
-    font-weight: 800;
-    cursor: pointer;
-  }
+
+
+
   .packs {
     display: flex;
     flex-wrap: wrap;
@@ -157,31 +133,18 @@
   .packs button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
     font-size: var(--text-sm);
   }
   .packs button.active {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 700;
   }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 48px;
-    font-size: var(--text-sm);
-    color: var(--text-dim);
-  }
-  .check input {
-    width: 22px;
-    height: 22px;
-    flex: none;
-  }
+
+
   .cards {
     list-style: none;
     margin: 0;
@@ -196,7 +159,6 @@
     gap: var(--space-2);
     padding: var(--space-3);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--line);
     background: var(--surface-2);
   }
   .pack {
@@ -221,31 +183,17 @@
     min-height: 40px;
     padding: 0 var(--space-2);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     font-size: var(--text-sm);
     cursor: pointer;
   }
   .actions button.on {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 700;
   }
-  .panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-  }
-  .panel header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+
+
   h2 {
     margin: 0;
     font-size: var(--text-base);
@@ -254,7 +202,6 @@
     min-height: 40px;
     padding: 0 var(--space-2);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: transparent;
     color: var(--text-dim);
     cursor: pointer;
@@ -273,59 +220,19 @@
     min-height: 48px;
   }
   .inline input {
+    border: 0;
     min-height: 44px;
     min-width: 9rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .history {
-    margin: 0;
-    padding-left: var(--space-4);
-  }
-  .field textarea {
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: var(--space-2);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-  }
-  .wide {
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .wide.primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-  }
-  .dim {
-    color: var(--text-dim);
-    margin: 0;
-  }
-  .small {
-    font-size: var(--text-sm);
-  }
+
+
+
+
+
+
+
+
 </style>

@@ -53,8 +53,22 @@ adding a tool or a dependency.
 | Core services | `src/core/*.ts` | Storage, ticker, RNG, audio, haptics, wake lock, undo, router, session model, share, i18n |
 | Template engine | `src/core/template/` | Tokenizer, diagnostics, preset schema, coercion, serialization |
 | Runtime store | `src/core/session-store.svelte.ts` | Runes mirror of the session; creates tool instances and contexts |
-| UI primitives | `src/core/ui/*.svelte` | Sheet, stepper, number pad, chips, empty state |
+| UI primitives | `src/core/ui/*.svelte` | Sheet, stepper, number pad, chips, empty state, confetti |
+| Style | `src/core/styles/`, `src/core/ui/icons.ts` | Tokens (the only colours), base layer, marks; contract in `docs/STYLE.md` |
 | Tools | `src/tools/<id>/` | `meta.ts`, `preset.ts`, `logic.ts`, `tool.svelte.ts`, `<Tool>.svelte`, `example.gamebuddy`, tests |
+
+## Style layer
+
+There is one place with a colour, a radius or a shadow: `core/styles/tokens.css`.
+`core/styles/base.css` sits on top of it with the lantern glows and paper grain, the
+type scale, the borderless key and field, focus and print rules, and the one-shot
+entrance keyframes. `core/styles/components.css` holds the primitives every screen
+repeats (panels, stages, rows, fields, mode switches, tables, folds), and
+`core/styles/fonts.css` holds the base64 Dosis and Raleway faces. `core/ui/icons.ts`
+holds every mark on one grid and `core/ui/doodles.ts` the decorative woodland SVG. A tool inherits all of it; it sets `data-family` through its
+`meta.family` and gets that family's accent, and it must not name a colour itself.
+`docs/STYLE.md` is the contract and the restyle checklist, and the tokens are the seam
+a future `.gamebuddy-theme` file will write to (M7).
 
 ## Tool lifecycle
 

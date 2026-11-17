@@ -20,11 +20,11 @@ export type PresetValues = Record<string, unknown>;
 export const PALETTE_COLORS: Record<string, string> = {
   red: '#c0392b',
   orange: '#c2631b',
-  yellow: '#b58a12',
+  yellow: '#966f04',
   green: '#3d8b55',
   teal: '#23807f',
   blue: '#2f6fc0',
-  purple: '#7550c8',
+  purple: '#8464d0',
   pink: '#bd4d8c',
   gray: '#6b7280',
 };

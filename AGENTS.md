@@ -12,6 +12,7 @@ HTML file. Read this page, then follow the links. Everything else lives in `docs
 | `.gamebuddy` template format (frozen v1) | [docs/TEMPLATE-FORMAT.md](docs/TEMPLATE-FORMAT.md) |
 | Add or change a tool | [docs/TOOL-AUTHORING.md](docs/TOOL-AUTHORING.md) |
 | Using the app, template errors, limitations | [docs/USER-GUIDE.md](docs/USER-GUIDE.md) |
+| Visual language: tokens, type, marks, motion | [docs/STYLE.md](docs/STYLE.md) |
 | Accessibility rules and manual checklist | [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) |
 | Data sources, licences, attribution | [docs/LICENSES.md](docs/LICENSES.md) |
 | Versioning, release steps, smoke list | [docs/RELEASING.md](docs/RELEASING.md) |
@@ -78,6 +79,9 @@ by design.
   budget this project cannot afford to spend.
 - **Names:** files kebab-case, types PascalCase, functions and variables camelCase,
   preset keys and template sections kebab-case. Tool ids match their folder name.
+- **Tokens only.** A view never writes a hex colour, a radius or a shadow; it uses
+  `core/styles/tokens.css`, the family accent and `core/ui/icons.ts`. See
+  `docs/STYLE.md` for the scale, the mark grid and the restyle checklist.
 - **Comments explain why, not what.** Keep the existing doc-comment style: one line of
   intent at the top of each file.
 - **Tests live with their subject:** pure logic tests in `tests/`, fixtures in

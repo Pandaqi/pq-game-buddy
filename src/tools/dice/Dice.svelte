@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ToolContext } from '../../core/registry';
+  import Fold from '../../core/ui/Fold.svelte';
   import { facesFor, type DiceInstance } from './logic';
 
   let { ctx, instance }: { ctx: ToolContext; instance: DiceInstance } = $props();
@@ -78,7 +79,7 @@
         </p>
       {/if}
     {:else}
-      <p class="total">—</p>
+      <p class="total idle">—</p>
       <p class="breakdown">
         {data.mode === 'pool' ? 'Roll the pool.' : `Press roll for ${data.notation || 'a die'}.`}
       </p>
@@ -101,7 +102,8 @@
     </div>
   {/if}
 
-  <div class="options">
+  <Fold title="Roll options">
+    <div class="options">
     {#if data.mode === 'single'}
       <label>
         <span>Advantage</span>
@@ -135,10 +137,11 @@
         onchange={(event) => instance.setSeed((event.currentTarget as HTMLInputElement).value)}
       />
     </label>
-  </div>
+    </div>
+  </Fold>
 
   {#if data.history.length}
-    <section class="history">
+    <Fold title="Recent rolls">
       <header>
         <h2>History</h2>
         <button type="button" onclick={() => instance.clearHistory()}>Clear</button>
@@ -151,7 +154,7 @@
           </li>
         {/each}
       </ol>
-    </section>
+    </Fold>
   {/if}
 </div>
 
@@ -162,37 +165,17 @@
     gap: var(--space-3);
     padding: var(--space-3);
   }
-  .modes {
-    display: flex;
-    gap: var(--space-1);
-    padding: var(--space-1);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-    width: fit-content;
-  }
-  .modes button {
-    min-height: 44px;
-    padding: 0 var(--space-4);
-    border-radius: var(--radius-sm);
-    border: 0;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .modes button.active {
-    background: var(--surface);
-    font-weight: 700;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-  }
+
+
+
   .entry {
     display: flex;
     gap: var(--space-2);
   }
   input {
+    border: 0;
     flex: 1;
     min-height: 56px;
-    border-radius: var(--radius);
-    border: 2px solid var(--line);
     background: var(--surface);
     color: var(--text);
     padding: 0 var(--space-3);
@@ -200,17 +183,17 @@
     font-family: var(--font-mono);
   }
   input:focus-visible {
-    border-color: var(--accent);
+    border: 0;
   }
   .roll {
-    min-width: 96px;
+    min-width: 110px;
     min-height: 56px;
-    border-radius: var(--radius);
-    border: 0;
+    border-radius: var(--radius-pill);
     background: var(--accent);
     color: var(--accent-text);
-    font-size: var(--text-lg);
-    font-weight: 700;
+    box-shadow: var(--shadow-key);
+    font-size: var(--text-xl);
+    font-weight: 800;
     cursor: pointer;
   }
   .error {
@@ -218,21 +201,26 @@
     margin: 0;
   }
   .result {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4);
+    padding: var(--space-4) 0 var(--space-2);
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-3);
     align-items: center;
   }
   .total {
     margin: 0;
-    font-size: clamp(2.6rem, 16vw, 4.5rem);
+    font-size: clamp(4.5rem, 26vw, 8rem);
     font-weight: 800;
     font-variant-numeric: tabular-nums;
-    line-height: 1;
+    line-height: 0.9;
+    color: var(--accent);
+    text-shadow: 0 5px 0 var(--accent-soft);
+    animation: pop-in var(--motion-bounce) var(--ease-bounce);
+  }
+  .total.idle {
+    color: var(--text-faint);
+    text-shadow: none;
+    font-size: clamp(3.5rem, 18vw, 5.5rem);
   }
   .successes {
     display: block;
@@ -256,7 +244,6 @@
     padding: 0 var(--space-2);
     border-radius: var(--radius);
     background: var(--surface-2);
-    border: 1px solid var(--line);
     font-size: var(--text-xl);
     font-weight: 700;
   }
@@ -274,7 +261,7 @@
   .breakdown {
     margin: 0;
     color: var(--text-dim);
-    font-size: var(--text-sm);
+    font-size: var(--text-base);
     text-align: center;
   }
   .quick {
@@ -283,19 +270,20 @@
     gap: var(--space-2);
   }
   .quick button {
-    min-height: 44px;
-    padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--surface);
+    min-height: 46px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
     color: var(--text);
-    font-family: var(--font-mono);
+    font-size: var(--text-base);
+    font-weight: 600;
     cursor: pointer;
   }
   .quick button.macro {
     font-family: var(--font);
-    font-weight: 600;
-    border-color: var(--accent);
+    font-weight: 700;
+    background: var(--accent-soft);
+    color: var(--accent-deep);
   }
   .options {
     display: grid;
@@ -311,16 +299,15 @@
   }
   .options select,
   .options input {
+    border: 0;
     min-height: 48px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
     font-size: var(--text-base);
     font-family: var(--font);
   }
-  .history header {
+  header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -329,9 +316,8 @@
     font-size: var(--text-base);
     margin: 0;
   }
-  .history button {
+  header button {
     min-height: 44px;
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     border-radius: var(--radius);
@@ -349,10 +335,9 @@
   li {
     display: flex;
     justify-content: space-between;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius);
-    background: var(--surface);
-    border: 1px solid var(--line);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
     font-variant-numeric: tabular-nums;
   }
   .nota {

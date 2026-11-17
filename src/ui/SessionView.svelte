@@ -6,6 +6,7 @@
   import { copyText, download } from '../core/share';
   import { suggestFilename } from '../core/template/serialize';
   import { shareTooLong, templateShareUrl } from '../core/template/share-link';
+  import Confetti from '../core/ui/Confetti.svelte';
   import PlayerChip from '../core/ui/PlayerChip.svelte';
   import Sheet from '../core/ui/Sheet.svelte';
 
@@ -200,7 +201,7 @@
   }
 </script>
 
-<div class="session">
+<div class="session" data-family={entry?.module.family ?? 'track'}>
   <header class="head">
     <div class="title">
       <h1>{session?.gameName ?? 'Game'}</h1>
@@ -231,7 +232,9 @@
           aria-selected={store.activeId === item.id}
           class:active={store.activeId === item.id}
           onclick={() => store.setTab(item.id)}
+          data-family={item.module.family}
         >
+          <span class="tab-mark" aria-hidden="true">{@html item.module.icon}</span>
           {item.label}
         </button>
       {/each}
@@ -240,6 +243,7 @@
 
   {#if entry}
     {@const Tool = entry.module.component}
+    {#key store.activeId}
     <div class="panel">
       <svelte:boundary>
         <Tool ctx={entry.ctx} instance={entry.instance} />
@@ -252,6 +256,7 @@
         {/snippet}
       </svelte:boundary>
     </div>
+    {/key}
   {:else}
     <p class="dim pad">This session has no tools yet. Close it and start from a template.</p>
   {/if}
@@ -297,7 +302,8 @@
 
 {#if finishOpen}
   <Sheet title="Finish game" onclose={() => (finishOpen = false)}>
-    <p class="dim small">Results come from the tools in this game. Pick the source and the winner, then save.</p>
+    {#if finishWinner}<Confetti />{/if}
+    <p class="dim small">Results come from this game's tools. Pick the source and the winner, then save it to the log.</p>
 
     {#if finishSources.length > 1}
       <div class="sources" role="group" aria-label="Results source">
@@ -375,6 +381,7 @@
     <button type="button" class="wide" onclick={shareLink}>Share as link</button>
     <button type="button" class="wide" onclick={exportSession}>Export session JSON</button>
     <a class="wide link" href="#/log">Play log</a>
+    <a class="wide link" href="#/settings">Settings</a>
     <button type="button" class="wide" onclick={() => { store.saveNow(); store.toast('Saved'); }}>Save now</button>
     <button type="button" class="wide" onclick={syncPlayers}>Sync players to tools</button>
     <button type="button" class="wide primary-wide" onclick={openFinish}>Finish game</button>
@@ -384,25 +391,40 @@
 {/if}
 
 <style>
+  /* A strip, then the tool owns the screen. No box around the tool: the blocks
+     inside it are the only cards on screen. */
   .session {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-2) var(--space-2) var(--space-6);
-    max-width: 52rem;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3) var(--space-7);
+    max-width: 56rem;
     margin: 0 auto;
   }
   .head {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
-    padding: 0 var(--space-1);
+    padding: 0 var(--space-2);
   }
   h1 {
     font-size: var(--text-xl);
-    letter-spacing: -0.01em;
     margin: 0;
+    color: var(--forest);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .title {
+    min-width: 0;
+  }
+  .title .dim {
+    font-size: var(--text-xs);
+    margin: 0;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-weight: 700;
   }
   .dim {
     color: var(--text-dim);
@@ -413,83 +435,92 @@
   .menu {
     min-width: 48px;
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
+    border-radius: var(--radius-round);
+    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
-    cursor: pointer;
+    box-shadow: none;
+    flex: none;
   }
   .players {
     display: flex;
-    gap: var(--space-1);
+    gap: var(--space-2);
     overflow-x: auto;
-    padding: var(--space-1);
+    padding: var(--space-1) var(--space-2) var(--space-2);
   }
   .add-player {
     flex: none;
-    min-width: 44px;
-    min-height: 44px;
-    border-radius: 999px;
-    border: 1px dashed var(--line);
-    background: transparent;
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: var(--radius-round);
+    background: var(--surface-2);
     color: var(--text-dim);
-    cursor: pointer;
+    box-shadow: none;
     font-size: var(--text-lg);
   }
   .warn {
-    margin: 0;
-    padding: var(--space-2);
-    border-radius: var(--radius);
+    margin: 0 var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
     background: var(--danger-soft);
     font-size: var(--text-sm);
   }
   .tabs {
     display: flex;
-    gap: var(--space-1);
+    gap: var(--space-2);
     overflow-x: auto;
-    padding-bottom: var(--space-1);
+    padding: 0 var(--space-2) var(--space-1);
   }
   .tabs button {
-    min-height: 48px;
-    padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    min-height: 46px;
+    padding: 0 var(--space-4);
+    background: var(--surface-2);
+    color: var(--text-dim);
     white-space: nowrap;
-    cursor: pointer;
+    box-shadow: none;
   }
   .tabs button.active {
     background: var(--accent);
-    border-color: var(--accent);
     color: var(--accent-text);
-    font-weight: 700;
+    box-shadow: var(--shadow-key);
   }
+  .tab-mark {
+    display: inline-grid;
+    place-items: center;
+  }
+  .tab-mark :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+  /* Transparent: a tool's own blocks are the cards. */
   .panel {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
+    background: transparent;
+    box-shadow: none;
+    padding: 0 var(--space-1);
+    overflow: visible;
+    animation: bloom var(--motion-bounce) var(--ease-bounce);
   }
   .undo {
     position: sticky;
-    bottom: var(--space-2);
+    bottom: var(--space-3);
     align-self: center;
-    min-height: 44px;
-    padding: 0 var(--space-4);
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--text);
-    color: var(--bg);
-    cursor: pointer;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+    min-height: 48px;
+    padding: 0 var(--space-5);
+    background: var(--ink);
+    color: var(--paper);
+    box-shadow: var(--shadow-lift);
+    animation: bloom var(--motion-settle) var(--ease-bounce);
   }
   .broken {
     padding: var(--space-4);
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
+    background: var(--danger-soft);
+    border-radius: var(--radius-card);
   }
   .broken pre {
     white-space: pre-wrap;
@@ -499,11 +530,7 @@
   }
   .broken button {
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    cursor: pointer;
+    background: var(--surface);
   }
   .pad {
     padding: var(--space-4);
@@ -524,32 +551,26 @@
   .dot {
     display: inline-grid;
     place-items: center;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-round);
     background: var(--player);
-    color: #fff;
+    color: var(--on-seat);
+    font-family: var(--font-display);
     font-weight: 800;
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     flex: none;
   }
   .player-list input {
     flex: 1;
-    min-height: 44px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-2);
+    min-height: 48px;
   }
   .player-list button {
-    min-width: 44px;
-    min-height: 44px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: transparent;
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: var(--radius-round);
+    background: var(--surface-2);
     color: var(--text-dim);
-    cursor: pointer;
   }
   .field {
     display: flex;
@@ -557,52 +578,43 @@
     gap: var(--space-1);
     color: var(--text-dim);
   }
-  .field input {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-3);
-  }
   .primary {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 0;
+    min-height: 54px;
     background: var(--accent);
     color: var(--accent-text);
-    font-weight: 700;
-    cursor: pointer;
+    box-shadow: var(--shadow-key);
+    font-weight: 800;
+    font-size: var(--text-lg);
   }
   .wide {
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
+    min-height: 54px;
     background: var(--surface-2);
     color: var(--text);
-    cursor: pointer;
     font: inherit;
+    font-family: var(--font-display);
+    font-weight: 700;
   }
   .wide.danger {
-    border-color: var(--danger);
+    background: var(--danger-soft);
     color: var(--danger);
   }
   .link {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
+    min-height: 54px;
+    border-radius: var(--radius-pill);
     background: var(--surface-2);
     color: var(--text);
     text-decoration: none;
+    font-family: var(--font-display);
+    font-weight: 700;
   }
   .primary-wide {
-    border-color: var(--accent);
     background: var(--accent);
     color: var(--accent-text);
-    font-weight: 700;
+    box-shadow: var(--shadow-key);
+    font-weight: 800;
   }
   .finish-list {
     list-style: none;
@@ -617,8 +629,12 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-2);
-    min-height: 48px;
-    border-bottom: 1px solid var(--line);
+    min-height: 52px;
+    padding: 0 var(--space-2);
+    border-radius: var(--radius-pill);
+  }
+  .finish-list li:hover {
+    background: var(--surface-2);
   }
   .finish-list label {
     display: flex;
@@ -626,11 +642,9 @@
     gap: var(--space-2);
     cursor: pointer;
   }
-  .finish-list input {
-    width: 22px;
-    height: 22px;
-  }
   .finish-score {
+    font-family: var(--font-num);
+    font-size: var(--text-lg);
     font-weight: 800;
     font-variant-numeric: tabular-nums;
   }
@@ -641,40 +655,30 @@
   }
   .sources button {
     min-height: 44px;
-    padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    padding: 0 var(--space-4);
     background: var(--surface-2);
     color: var(--text);
-    cursor: pointer;
   }
   .sources button.active {
-    border-color: var(--accent);
     background: var(--accent-soft);
-    font-weight: 700;
+    color: var(--accent-deep);
+    font-weight: 800;
   }
-  .tie {
+  .tie,
+  .saved {
     margin: 0;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
     background: var(--accent-soft);
     font-size: var(--text-sm);
   }
   .saved {
-    margin: 0;
-    padding: var(--space-2) var(--space-3);
-    border-radius: var(--radius);
-    background: var(--accent-soft);
-    font-weight: 700;
+    font-weight: 800;
   }
   .check {
     display: flex;
     align-items: center;
     gap: var(--space-2);
     min-height: 48px;
-  }
-  .check input {
-    width: 24px;
-    height: 24px;
   }
 </style>

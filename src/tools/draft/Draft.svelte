@@ -237,20 +237,8 @@
     gap: var(--space-3);
     padding: var(--space-3);
   }
-  .panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-  }
-  .panel header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
+
+
   h2 {
     margin: 0;
     font-size: var(--text-base);
@@ -259,7 +247,6 @@
     align-items: center;
     text-align: center;
     background: var(--accent-soft);
-    border-color: var(--accent);
   }
   .who {
     margin: 0;
@@ -278,8 +265,7 @@
   .clock-toggle {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
@@ -296,24 +282,19 @@
     min-height: 52px;
     padding: 0 var(--space-3);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-weight: 600;
     cursor: pointer;
-  }
-  .pool button:hover {
-    border-color: var(--accent);
   }
   .add {
     display: flex;
     gap: var(--space-2);
   }
   .add input {
+    border: 0;
     flex: 1;
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-3);
@@ -322,7 +303,6 @@
     min-height: 48px;
     padding: 0 var(--space-4);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
@@ -344,10 +324,8 @@
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius);
     background: var(--surface-2);
-    border: 1px solid var(--line);
   }
   .preview li.next {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 700;
   }
@@ -376,22 +354,12 @@
     min-width: 40px;
     min-height: 40px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: transparent;
     color: var(--text-dim);
     cursor: pointer;
   }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  th,
-  td {
-    text-align: left;
-    padding: var(--space-1) var(--space-2);
-    border-bottom: 1px solid var(--line);
-    font-variant-numeric: tabular-nums;
-  }
+
+
   td {
     text-align: right;
     font-weight: 700;
@@ -408,76 +376,16 @@
     grid-template-columns: 2fr 1fr;
     gap: var(--space-2);
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .row .primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-  }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
-  .field input,
-  .field select,
-  .field textarea {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-2);
-    font: inherit;
-  }
-  .field textarea {
-    padding: var(--space-2);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-  }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 48px;
-  }
-  .check input {
-    width: 24px;
-    height: 24px;
-  }
-  .wide {
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .wide.primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-  }
-  .dim {
-    color: var(--text-dim);
-  }
-  .small {
-    font-size: var(--text-sm);
-  }
+
+
+
+
+
+
+
+
+
+
+
+
 </style>

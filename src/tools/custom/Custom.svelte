@@ -279,15 +279,7 @@
     gap: var(--space-3);
     padding: var(--space-3);
   }
-  .block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-  }
+
   h2 {
     margin: 0;
     font-size: var(--text-base);
@@ -301,31 +293,12 @@
     grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
     gap: var(--space-2);
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-    font-size: var(--text-sm);
-  }
+
   .field.wide {
     grid-column: 1 / -1;
   }
-  .field input,
-  .field select,
-  .field textarea {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-2);
-    font: inherit;
-    font-size: var(--text-base);
-  }
-  .field textarea {
-    padding: var(--space-2);
-  }
+
+
   .counters {
     list-style: none;
     margin: 0;
@@ -362,7 +335,6 @@
     min-width: 48px;
     min-height: 48px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
@@ -372,22 +344,9 @@
   .scroll {
     overflow-x: auto;
   }
-  table {
-    border-collapse: collapse;
-    min-width: 100%;
-  }
-  th,
-  td {
-    text-align: left;
-    padding: var(--space-1) var(--space-2);
-    border-bottom: 1px solid var(--line);
-    font-variant-numeric: tabular-nums;
-  }
-  thead th {
-    color: var(--text-dim);
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-  }
+
+
+
   .cell {
     display: flex;
     align-items: center;
@@ -404,10 +363,10 @@
     text-align: right;
   }
   .sheet td input {
+    border: 0;
     width: 4.5rem;
     min-height: 44px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     text-align: center;
@@ -437,6 +396,7 @@
     cursor: pointer;
   }
   .checklist input {
+    border: 0;
     width: 24px;
     height: 24px;
   }
@@ -454,35 +414,18 @@
     padding: 2px 6px;
     border-radius: var(--radius-sm);
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 56px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .row .primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 800;
-  }
+
+
+
   .inline-form {
     display: flex;
     gap: var(--space-2);
   }
   .inline-form input,
   .inline-form select {
+    border: 0;
     flex: 1;
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
@@ -492,7 +435,6 @@
     min-height: 48px;
     padding: 0 var(--space-3);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
@@ -510,8 +452,7 @@
     align-items: center;
     gap: var(--space-1);
     padding-left: var(--space-2);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface-2);
     font-size: var(--text-sm);
   }
@@ -523,39 +464,11 @@
     color: var(--text-dim);
     cursor: pointer;
   }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 48px;
-  }
-  .check input {
-    width: 24px;
-    height: 24px;
-  }
-  .wide {
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .wide.primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-  }
-  .history {
-    margin: 0;
-    padding-left: var(--space-4);
-  }
-  .dim {
-    color: var(--text-dim);
-    margin: 0;
-  }
-  .small {
-    font-size: var(--text-sm);
-  }
+
+
+
+
+
+
+
 </style>

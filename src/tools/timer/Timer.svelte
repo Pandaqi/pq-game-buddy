@@ -247,7 +247,7 @@
         value={formatDurationText(data.warnAt)}
         onchange={(event) => {
           const ms = parseDuration((event.currentTarget as HTMLInputElement).value);
-          if (ms === null) ctx.toast('That is not a duration', 'error');
+          if (ms === null) ctx.toast('That reads as no time at all. Try 30s or 2m.', 'error');
           else instance.applySettings({ warnAt: ms });
         }}
       />
@@ -355,7 +355,7 @@
         onchange={(event) => {
           if (menuIndex === null) return;
           const ms = parseDuration((event.currentTarget as HTMLInputElement).value);
-          if (ms === null) ctx.toast('That is not a duration', 'error');
+          if (ms === null) ctx.toast('That reads as no time at all. Try 30s or 2m.', 'error');
           else instance.setDuration(menuIndex, ms);
         }}
       />
@@ -399,19 +399,8 @@
     align-items: center;
     gap: var(--space-2);
   }
-  .hint {
-    color: var(--text-dim);
-    font-size: var(--text-sm);
-  }
-  .ghost {
-    background: transparent;
-    border: 1px solid var(--line);
-    color: var(--text);
-    border-radius: var(--radius);
-    min-height: 44px;
-    padding: 0 var(--space-3);
-    cursor: pointer;
-  }
+
+
   .cards {
     display: grid;
     gap: var(--space-3);
@@ -428,34 +417,39 @@
     }
   }
   .card {
-    background: var(--surface);
-    border: 2px solid var(--line);
-    border-radius: var(--radius-lg);
-    padding: var(--space-2);
+    padding: 0;
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
   }
-  .card.active {
-    border-color: var(--clock);
-    box-shadow: 0 0 0 3px var(--accent-soft);
+  .digits {
+    box-shadow: var(--shadow-card);
   }
-  .card.warn {
-    border-color: var(--warning);
+  .card.active .digits {
+    box-shadow: var(--shadow-card), inset 0 0 0 3px var(--clock);
   }
-  .card.done {
-    border-color: var(--danger);
+  .card.warn .digits {
+    background: var(--warning-soft);
+  }
+  .card.warn .time {
+    color: var(--warning);
+  }
+  .card.done .digits {
     background: var(--danger-soft);
+    box-shadow: var(--shadow-card), inset 0 0 0 3px var(--danger);
+  }
+  .card.done .time {
+    color: var(--danger);
   }
   .digits {
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
     align-items: stretch;
-    background: var(--surface-2);
+    background: var(--surface);
     border: 0;
-    border-radius: var(--radius);
-    padding: var(--space-3);
+    border-radius: var(--radius-card);
+    padding: var(--space-4);
     color: var(--text);
     cursor: pointer;
     text-align: left;
@@ -469,7 +463,7 @@
     font-weight: 600;
   }
   .time {
-    font-size: clamp(2rem, 12vw, 3.4rem);
+    font-size: clamp(3rem, 17vw, 5rem);
     font-weight: 800;
     font-variant-numeric: tabular-nums;
     line-height: 1;
@@ -477,9 +471,9 @@
   }
   .bar {
     display: block;
-    height: 6px;
-    border-radius: 999px;
-    background: var(--surface-2);
+    height: 8px;
+    border-radius: var(--radius-pill);
+    background: var(--line-soft);
     overflow: hidden;
   }
   .bar i {
@@ -496,23 +490,8 @@
   .flag.quiet {
     color: var(--text-dim);
   }
-  .row {
-    display: flex;
-    gap: var(--space-1);
-  }
-  .row button {
-    flex: 1;
-    min-height: 44px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    font-size: var(--text-sm);
-    cursor: pointer;
-  }
-  .row button:hover {
-    border-color: var(--accent);
-  }
+
+
   .controls {
     display: flex;
     gap: var(--space-2);
@@ -525,7 +504,6 @@
     flex: 1;
     min-height: 56px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     font-size: var(--text-base);
@@ -534,7 +512,6 @@
   }
   .controls .primary {
     background: var(--accent);
-    border-color: var(--accent);
     color: var(--accent-text);
     flex: 2;
     font-size: var(--text-lg);
@@ -547,8 +524,7 @@
   .quick button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
@@ -564,21 +540,17 @@
     min-height: 44px;
     align-items: center;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     padding: 0 var(--space-3);
     cursor: pointer;
   }
   .phase.current {
-    border-color: var(--accent);
+    background: var(--accent-soft);
+    box-shadow: var(--shadow-soft);
     font-weight: 700;
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-  }
+
   .field span {
     font-size: var(--text-sm);
     color: var(--text-dim);
@@ -586,25 +558,12 @@
   }
   .field input,
   .field select {
+    border: 0;
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-3);
     font: inherit;
   }
-  .wide {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    cursor: pointer;
-    font: inherit;
-  }
-  .wide.danger {
-    border-color: var(--danger);
-    color: var(--danger);
-  }
+
 </style>

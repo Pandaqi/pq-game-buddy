@@ -33,7 +33,13 @@ rules below, and the manual matrix at the end is the release gate.
   text size, with no horizontal scrolling and no clipped numbers.
 - **Contrast.** Text at least 4.5:1, large text and UI edges at least 3:1, verified in
   light, dark and table mode. Disabled controls keep 3:1 and say why they are
-  unavailable.
+  unavailable. The measured table lives in `docs/STYLE.md`; change a token and update
+  it in the same commit.
+- **Seats are rings.** Player colour is an outline around the player's initials, never
+  white text on a fill, so the brightest seat still carries readable letters and no
+  identity depends on colour alone.
+- **Type floor.** Labels may be 12–14 px; every number or name a player must read is at
+  least 20 px, and the primary readout is 34 px or larger in both themes.
 - **No flashing.** Nothing flashes above 3 Hz. The buzzer uses a hard colour change,
   not a strobe.
 - **Honest limits.** Wake Lock, vibration and audio are feature-detected; when they

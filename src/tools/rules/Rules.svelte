@@ -227,20 +227,11 @@
     margin: 0;
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-lg);
-    border: 2px solid var(--accent);
     background: var(--accent-soft);
     font-size: var(--text-lg);
     font-weight: 700;
   }
-  .block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-  }
+
   .block header {
     display: flex;
     align-items: baseline;
@@ -276,6 +267,7 @@
     cursor: pointer;
   }
   .checklist input {
+    border: 0;
     width: 24px;
     height: 24px;
     flex: none;
@@ -301,29 +293,17 @@
     padding-left: var(--space-3);
   }
   .search input {
+    border: 0;
     width: 100%;
     min-height: 48px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface);
     color: var(--text);
     padding: 0 var(--space-3);
   }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-  }
-  th,
-  td {
-    text-align: left;
-    padding: var(--space-1) var(--space-2);
-    border-bottom: 1px solid var(--line);
-  }
-  thead th {
-    color: var(--text-dim);
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-  }
+
+
+
   tbody td {
     text-align: right;
     font-weight: 700;
@@ -348,62 +328,30 @@
     font-size: var(--text-sm);
     overflow-wrap: anywhere;
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .ghost {
-    min-height: 44px;
-    border-radius: var(--radius);
-    border: 0;
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-    align-self: flex-start;
-  }
-  .hint {
-    margin: 0;
-    color: var(--text-dim);
-    font-size: var(--text-sm);
-  }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
+
+
+
+
+
   .field input,
   .field textarea {
+    border: 0;
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-3);
     font: inherit;
   }
-  .field textarea {
-    padding: var(--space-2) var(--space-3);
-    font-family: var(--font-mono);
-  }
+
   .ref-row {
     display: grid;
     grid-template-columns: 1fr 1fr 2.75rem;
     gap: var(--space-2);
   }
   .ref-row input {
+    border: 0;
     min-height: 44px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
@@ -413,18 +361,9 @@
   .ref-row button {
     min-height: 44px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: transparent;
     color: var(--text-dim);
     cursor: pointer;
   }
-  .wide {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 0;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-    cursor: pointer;
-  }
+
 </style>

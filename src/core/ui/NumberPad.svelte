@@ -66,14 +66,15 @@
   }
   output {
     display: block;
-    text-align: right;
-    font-size: clamp(2rem, 12vw, 3rem);
+    text-align: center;
+    font-size: clamp(3rem, 18vw, 5rem);
     font-weight: 800;
     font-variant-numeric: tabular-nums;
     padding: var(--space-2);
-    border-radius: var(--radius);
+    border-radius: var(--radius-lg);
     background: var(--surface-2);
-    min-height: 4rem;
+    color: var(--accent);
+    min-height: 5rem;
   }
   .keys {
     display: grid;
@@ -81,16 +82,12 @@
     gap: var(--space-2);
   }
   .keys button {
-    min-height: 56px;
+    min-height: 60px;
     font-size: var(--text-xl);
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
-  }
-  .keys button:active {
-    background: var(--surface-2);
   }
   .actions {
     display: flex;
@@ -99,19 +96,18 @@
   .actions button {
     flex: 1;
     min-height: 56px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     font-size: var(--text-lg);
     cursor: pointer;
   }
   .cancel {
-    background: var(--surface);
+    background: var(--surface-2);
     color: var(--text);
   }
   .ok {
     background: var(--accent);
-    border-color: var(--accent);
     color: var(--accent-text);
-    font-weight: 700;
+    box-shadow: var(--shadow-key);
+    font-weight: 800;
   }
 </style>

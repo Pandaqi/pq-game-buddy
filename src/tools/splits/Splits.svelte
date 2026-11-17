@@ -148,7 +148,6 @@
     min-height: 44px;
     padding: 0 var(--space-3);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
@@ -184,12 +183,10 @@
     align-items: center;
     padding: var(--space-1) var(--space-3);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     font-variant-numeric: tabular-nums;
   }
   .list li.current {
-    border-color: var(--accent);
     background: var(--accent-soft);
   }
   .list li.done {
@@ -218,22 +215,9 @@
     color: var(--danger);
     font-weight: 700;
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 56px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    font-weight: 600;
-    cursor: pointer;
-  }
+
+
   .row button.primary {
-    border-color: var(--accent);
     background: var(--accent);
     color: var(--accent-text);
     font-weight: 800;
@@ -246,45 +230,19 @@
     font-size: var(--text-sm);
     font-weight: 500;
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
+
   .field input,
   .field textarea {
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
+    border: 0;
     background: var(--surface-2);
     color: var(--text);
     padding: var(--space-2);
     font: inherit;
     min-height: 48px;
   }
-  .field textarea {
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-  }
-  .wide {
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .wide.primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-  }
-  .dim {
-    color: var(--text-dim);
-    margin: 0;
-  }
-  .small {
-    font-size: var(--text-sm);
-  }
+
+
+
+
+
 </style>

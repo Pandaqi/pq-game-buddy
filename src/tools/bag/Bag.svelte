@@ -208,7 +208,6 @@
     padding: var(--space-2);
     border-radius: var(--radius);
     background: var(--surface-2);
-    border: 1px solid var(--line);
   }
   .num {
     font-size: var(--text-xl);
@@ -229,14 +228,12 @@
   .who button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }
   .who button.active {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 700;
   }
@@ -245,49 +242,11 @@
     align-items: flex-end;
     gap: var(--space-2);
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-    flex: 1;
-  }
-  .field input,
-  .field select,
-  .field textarea {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-3);
-    font: inherit;
-  }
-  .field textarea {
-    padding: var(--space-2);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-  }
-  .primary {
-    min-height: 56px;
-    padding: 0 var(--space-5);
-    border: 0;
-    border-radius: var(--radius);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-size: var(--text-lg);
-    font-weight: 800;
-    cursor: pointer;
-  }
-  .block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-  }
+
+
+
+
+
   .block header {
     display: flex;
     justify-content: space-between;
@@ -315,7 +274,6 @@
     justify-content: center;
     padding: 0 var(--space-2);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-weight: 800;
@@ -360,7 +318,6 @@
     align-items: center;
     gap: var(--space-2);
     padding: var(--space-1);
-    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface-2);
   }
@@ -377,7 +334,6 @@
     min-width: 32px;
     min-height: 40px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
@@ -385,36 +341,10 @@
   .steppers button:disabled {
     opacity: 0.5;
   }
-  .history {
-    margin: 0;
-    padding-left: var(--space-4);
-    color: var(--text-dim);
-    font-size: var(--text-sm);
-  }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .ghost {
-    align-self: flex-start;
-    min-height: 40px;
-    padding: 0 var(--space-2);
-    border-radius: var(--radius);
-    border: 0;
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-  }
+
+
+
+
   .add {
     display: flex;
     gap: var(--space-2);
@@ -423,30 +353,12 @@
     min-height: 48px;
     padding: 0 var(--space-3);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }
-  .wide {
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .wide.primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-  }
-  .dim {
-    color: var(--text-dim);
-    margin: 0;
-  }
-  .small {
-    font-size: var(--text-sm);
-  }
+
+
+
+
 </style>

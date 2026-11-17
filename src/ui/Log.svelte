@@ -89,7 +89,7 @@
   {:else}
     <div class="empty">
       <p class="title">No finished games yet.</p>
-      <p class="dim">Open a game, then use the menu and “Finish game”. The result lands here, with winners and streaks.</p>
+      <p class="dim">Open a game, use its menu and tap “Finish game”. The result lands here, with winners and streaks.</p>
       <a class="primary link" href="#/">Pick a tool</a>
     </div>
   {/if}
@@ -97,7 +97,7 @@
 
 {#if confirmOpen}
   <Sheet title="Clear play history" onclose={() => (confirmOpen = false)}>
-    <p>This removes every finished game from this device. It cannot be undone.</p>
+    <p>Clear the whole log? Every finished game on this device goes; nothing else does. This cannot be undone.</p>
     <button type="button" class="danger wide" onclick={clearAll}>Clear {records.length} plays</button>
   </Sheet>
 {/if}
@@ -120,21 +120,22 @@
   h1 {
     margin: 0;
     font-size: var(--text-2xl);
+    color: var(--forest);
   }
   .dim {
     color: var(--text-dim);
     margin: var(--space-1) 0 0;
   }
   .back {
-    min-height: 44px;
+    min-height: 46px;
     display: inline-flex;
     align-items: center;
-    padding: 0 var(--space-3);
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
     color: var(--text);
     text-decoration: none;
+    font-weight: 600;
   }
   .stats {
     display: grid;
@@ -145,15 +146,16 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
-    padding: var(--space-3);
+    padding: var(--space-4);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--line);
     background: var(--surface);
+    box-shadow: var(--shadow-card);
   }
   .stat .value {
     font-size: var(--text-2xl);
     font-weight: 800;
     font-variant-numeric: tabular-nums;
+    color: var(--accent);
   }
   .stat .label {
     color: var(--text-dim);
@@ -171,8 +173,9 @@
   .wins li {
     display: flex;
     justify-content: space-between;
-    padding: var(--space-2) var(--space-3);
-    border-bottom: 1px solid var(--line);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
   }
   .wins .count {
     font-weight: 800;
@@ -190,10 +193,10 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
-    padding: var(--space-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+    border-radius: var(--radius-card);
     background: var(--surface);
+    box-shadow: var(--shadow-card);
   }
   .game {
     display: flex;
@@ -221,17 +224,15 @@
   .actions button {
     flex: 1;
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
   .danger {
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--danger);
-    background: transparent;
+    border-radius: var(--radius-pill);
+    background: var(--danger-soft);
     color: var(--danger);
     cursor: pointer;
   }
@@ -243,25 +244,27 @@
     flex-direction: column;
     gap: var(--space-2);
     align-items: flex-start;
-    padding: var(--space-4);
-    border: 1px dashed var(--line);
-    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--accent-soft);
   }
   .empty .title {
     margin: 0;
+    font-family: var(--font-display);
     font-weight: 800;
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
   }
   .primary {
     min-height: 52px;
     display: inline-flex;
     align-items: center;
-    padding: 0 var(--space-4);
-    border-radius: var(--radius);
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-pill);
     background: var(--accent);
     color: var(--accent-text);
+    box-shadow: var(--shadow-key);
     text-decoration: none;
-    font-weight: 700;
+    font-weight: 800;
   }
   .link {
     width: fit-content;

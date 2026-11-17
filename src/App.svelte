@@ -14,6 +14,8 @@
   import { toolsForSession } from './core/template/session-tools';
   import { decodeTemplateLink } from './core/template/share-link';
   import LazyView, { lazyView } from './core/ui/LazyView.svelte';
+  import { doodle } from './core/ui/doodles';
+  import { mark } from './core/ui/icons';
   import { templateText } from './data/templates';
   import Sheet from './core/ui/Sheet.svelte';
   import Home from './ui/Home.svelte';
@@ -34,6 +36,13 @@
 
   let hash = $state(typeof location === 'undefined' ? '#/' : location.hash || '#/');
   const route = $derived(parseRoute(hash));
+
+  // Table mode hides the shell chrome on a session screen, so the screen has to
+  // say which one it is.
+  $effect(() => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.dataset.screen = route.name;
+  });
 
   type Flow = 'none' | 'paste' | 'start';
   let flow = $state<Flow>('none');
@@ -69,7 +78,7 @@
     handledImport = payload;
     const text = decodeTemplateLink(payload);
     if (!text) {
-      store.toast('That share link is damaged', 'error');
+      store.toast('This share link is incomplete. Ask for the template file instead.', 'error');
       return;
     }
     beginImport(text);
@@ -103,7 +112,7 @@
       if (!file) return;
       void readFileText(file)
         .then((text) => beginImport(text))
-        .catch(() => store.toast('Could not read that file', 'error'));
+        .catch(() => store.toast('That file would not open. Try saving it again.', 'error'));
     };
     window.addEventListener('dragover', onDragOver);
     window.addEventListener('dragleave', onDragLeave);
@@ -194,7 +203,7 @@
   function continueSession(): void {
     void store.loadLatest().then((ok) => {
       if (ok) navigate({ name: 'session' });
-      else store.toast('There is no saved game on this device yet', 'error');
+      else store.toast('No saved game on this device yet. Start a tool or import a template.', 'error');
     });
   }
 
@@ -223,9 +232,14 @@
   <a class="skip" href="#main">Skip to content</a>
 
   <header class="top no-print">
-    <a class="brand" href="#/">Game Buddy</a>
+    <a class="brand" href="#/">
+      <span class="brand-mark" aria-hidden="true">{@html doodle('acorn')}</span>
+      Game Buddy
+    </a>
     <div class="top-actions">
-      <button type="button" class="icon" onclick={() => (cueOpen = true)} aria-label="Sound board">♪</button>
+      <button type="button" class="icon" onclick={() => (cueOpen = true)} aria-label="Sound board">
+        {@html mark('notes')}
+      </button>
       <button
         type="button"
         class="icon"
@@ -233,9 +247,9 @@
         aria-pressed={settings.values.muted}
         aria-label={settings.values.muted ? 'Unmute sounds' : 'Mute sounds'}
       >
-        {settings.values.muted ? '🔇' : '🔈'}
+        {@html mark(settings.values.muted ? 'muted' : 'sound')}
       </button>
-      <a class="icon" href="#/settings" aria-label="Settings">⚙</a>
+      <a class="icon" href="#/settings" aria-label="Settings">{@html mark('gear')}</a>
     </div>
   </header>
 
@@ -319,7 +333,7 @@
 
 {#if cueOpen}
   <Sheet title="Sound board" onclose={() => (cueOpen = false)}>
-    <p class="dim">Every sound has a visual twin: the button label is the cue.</p>
+    <p class="dim">Six cues for the table. Each one has a visual twin, so muted sound loses nothing.</p>
     <div class="cues">
       {#each CUES as cue (cue.id)}
         <button type="button" onclick={() => { audio.unlock(); audio.play(cue.id); }}>{cue.label}</button>
@@ -344,7 +358,7 @@
           if (!file) return;
           void readFileText(file)
             .then((text) => beginImport(text))
-            .catch(() => store.toast('Could not read that file', 'error'));
+            .catch(() => store.toast('That file would not open. Try saving it again.', 'error'));
         }}
       />
     </label>
@@ -402,7 +416,8 @@
     left: -999px;
     top: 0;
     background: var(--surface);
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
     z-index: 60;
   }
   .skip:focus {
@@ -413,19 +428,42 @@
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    padding: var(--space-2) var(--space-3);
-    border-bottom: 1px solid var(--line);
-    background: var(--surface);
+    padding: var(--space-3) var(--space-4);
+    /* Solid paper: the header is sticky, so a transparent one lets a scrolled
+       screen print through it. */
+    background: var(--paper);
     position: sticky;
     top: 0;
     z-index: 20;
   }
   .brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
     font-weight: 800;
-    letter-spacing: -0.01em;
-    color: var(--text);
+    letter-spacing: 0.01em;
+    color: var(--forest);
     text-decoration: none;
-    font-size: var(--text-lg);
+    font-size: clamp(1.4rem, 4vw, 1.75rem);
+  }
+  .brand-mark {
+    display: inline-grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    border-radius: var(--radius-round);
+    background: var(--accent-soft);
+    box-shadow: var(--shadow-card);
+    transform: rotate(-6deg);
+    transition: transform var(--motion-bounce) var(--ease-bounce);
+  }
+  .brand:hover .brand-mark {
+    transform: rotate(6deg) scale(1.06);
+  }
+  .brand-mark :global(svg) {
+    width: 26px;
+    height: 26px;
   }
   .top-actions {
     display: flex;
@@ -436,39 +474,48 @@
     place-items: center;
     min-width: 48px;
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid transparent;
+    border-radius: var(--radius-round);
     background: transparent;
-    color: var(--text);
+    box-shadow: none;
+    color: var(--text-dim);
     text-decoration: none;
-    font-size: var(--text-lg);
     cursor: pointer;
+  }
+  .icon :global(svg) {
+    width: 23px;
+    height: 23px;
   }
   .icon:hover {
     background: var(--surface-2);
+    color: var(--text);
+    transform: none;
+    box-shadow: none;
+  }
+  .icon[aria-pressed='true'] {
+    background: var(--accent-soft);
+    color: var(--accent-deep);
   }
   main {
     min-height: 60vh;
   }
   .banner {
-    margin: 0;
-    padding: var(--space-2) var(--space-3);
+    margin: var(--space-2) var(--space-4) 0;
+    padding: var(--space-2) var(--space-4);
     background: var(--danger-soft);
     color: var(--text);
+    border-radius: var(--radius-pill);
     font-size: var(--text-sm);
-    border-bottom: 1px solid var(--line);
   }
   .page {
-    max-width: 34rem;
+    max-width: 36rem;
     margin: 0 auto;
-    padding: var(--space-5) var(--space-4);
+    padding: var(--space-6) var(--space-4);
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-4);
   }
   h1 {
-    font-size: var(--text-2xl);
-    letter-spacing: -0.02em;
+    color: var(--forest);
   }
   .dim {
     color: var(--text-dim);
@@ -479,14 +526,22 @@
     flex-wrap: wrap;
   }
   .primary {
-    min-height: 52px;
-    padding: 0 var(--space-4);
-    border-radius: var(--radius);
-    border: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 56px;
+    padding: 0 var(--space-5);
     background: var(--accent);
     color: var(--accent-text);
-    font-weight: 700;
-    cursor: pointer;
+    box-shadow: var(--shadow-key);
+    font-weight: 800;
+    font-size: var(--text-lg);
+  }
+  @media (hover: hover) {
+    .primary:hover:not(:disabled) {
+      transform: translateY(-3px);
+      box-shadow: var(--shadow);
+    }
   }
   .link {
     display: inline-flex;
@@ -497,16 +552,7 @@
   .actions button {
     min-height: 52px;
     padding: 0 var(--space-4);
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .actions .primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: var(--accent-text);
+    background: var(--surface-2);
   }
   .dropzone {
     position: fixed;
@@ -519,51 +565,51 @@
     color: var(--text);
     z-index: 55;
     pointer-events: none;
-    font-weight: 700;
+    font-family: var(--font-display);
+    font-weight: 800;
     font-size: var(--text-xl);
   }
   .toast {
     position: fixed;
     left: 50%;
     transform: translateX(-50%);
-    bottom: calc(var(--space-4) + env(safe-area-inset-bottom, 0px));
-    background: var(--text);
-    color: var(--bg);
-    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
-    border-radius: 999px;
+    bottom: calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
+    background: var(--ink);
+    color: var(--paper);
+    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-5);
+    border-radius: var(--radius-pill);
     display: flex;
     align-items: center;
     gap: var(--space-2);
     z-index: 50;
     max-width: min(92vw, 32rem);
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-lift);
+    animation: bloom var(--motion-settle) var(--ease-bounce);
   }
   .toast.error {
     background: var(--danger);
-    color: #fff;
+    color: var(--on-accent);
   }
   .toast button {
     min-width: 40px;
     min-height: 40px;
-    border: 0;
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     background: transparent;
+    box-shadow: none;
     color: inherit;
     cursor: pointer;
   }
   .cues {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-2);
+    gap: var(--space-3);
   }
   .cues button {
-    min-height: 56px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
+    min-height: 62px;
     background: var(--surface-2);
     color: var(--text);
-    font-weight: 600;
-    cursor: pointer;
+    font-size: var(--text-lg);
+    font-weight: 700;
   }
   .field {
     display: flex;
@@ -573,14 +619,8 @@
   }
   .field textarea,
   .field input {
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: var(--space-2) var(--space-3);
     font-family: var(--font-mono);
     font-size: var(--text-sm);
-    min-height: 48px;
   }
   .diags {
     list-style: none;
@@ -609,7 +649,7 @@
   .detail {
     white-space: pre-wrap;
     background: var(--surface-2);
-    padding: var(--space-2);
+    padding: var(--space-3);
     border-radius: var(--radius);
     font-size: var(--text-sm);
     overflow: auto;

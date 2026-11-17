@@ -147,7 +147,7 @@
   }
   .progress {
     height: 8px;
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     background: var(--surface-2);
     overflow: hidden;
   }
@@ -170,7 +170,6 @@
     text-align: center;
     padding: var(--space-4);
     border-radius: var(--radius-lg);
-    border: 2px solid var(--accent);
     background: var(--accent-soft);
   }
   .big {
@@ -184,22 +183,9 @@
     color: var(--text-dim);
     font-size: var(--text-sm);
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 56px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    font-weight: 600;
-    cursor: pointer;
-  }
+
+
   .row button.primary {
-    border-color: var(--accent);
     background: var(--accent);
     color: var(--accent-text);
     font-weight: 800;
@@ -207,30 +193,10 @@
   .row button:disabled {
     opacity: 0.55;
   }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 48px;
-  }
-  .check input {
-    width: 24px;
-    height: 24px;
-  }
-  .panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-  }
-  .panel header {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
+
+
+
+
   h2 {
     margin: 0;
     font-size: var(--text-base);
@@ -273,42 +239,12 @@
     text-transform: uppercase;
     font-size: var(--text-xs);
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
-  .field textarea {
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: var(--space-2);
-    font-family: var(--font-mono);
-    font-size: var(--text-sm);
-  }
-  .wide {
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .wide.primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-  }
-  .dim {
-    color: var(--text-dim);
-    margin: 0;
-  }
-  .small {
-    font-size: var(--text-sm);
-  }
+
+
+
+
+
+
   button:not(.wide) {
     min-height: 44px;
   }

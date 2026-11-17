@@ -40,6 +40,7 @@
 
 <div class="backdrop" role="presentation" onclick={onclose}></div>
 <div class="sheet" class:wide bind:this={panel} role="dialog" aria-modal="true" aria-label={title} tabindex="-1">
+  <div class="handle" aria-hidden="true"></div>
   <header>
     <h2>{title}</h2>
     <button class="close" type="button" onclick={onclose} aria-label="Close">✕</button>
@@ -53,7 +54,7 @@
   .backdrop {
     position: fixed;
     inset: 0;
-    background: rgba(20, 14, 8, 0.55);
+    background: var(--scrim);
     z-index: 40;
     border: 0;
   }
@@ -68,53 +69,75 @@
     flex-direction: column;
     background: var(--surface);
     color: var(--text);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.28);
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+    box-shadow: var(--shadow-lift);
     padding-bottom: env(safe-area-inset-bottom, 0);
+    animation: settle var(--motion-settle) var(--ease-out);
   }
   .sheet.wide {
     max-width: 34rem;
     margin: 0 auto;
+  }
+  .handle {
+    width: 46px;
+    height: 5px;
+    margin: var(--space-3) auto 0;
+    border-radius: var(--radius-pill);
+    background: var(--line);
   }
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
-    padding: var(--space-3) var(--space-4);
-    border-bottom: 1px solid var(--line);
+    padding: var(--space-2) var(--space-3) var(--space-2) var(--space-5);
   }
   h2 {
     margin: 0;
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
+    color: var(--forest);
   }
   .close {
     min-width: 48px;
     min-height: 48px;
-    border: 0;
     background: transparent;
-    color: var(--text);
+    color: var(--text-dim);
     font-size: var(--text-lg);
-    border-radius: var(--radius);
+    border-radius: var(--radius-round);
+    box-shadow: none;
     cursor: pointer;
   }
   .close:hover {
     background: var(--surface-2);
+    transform: none;
   }
   .body {
     overflow: auto;
-    padding: var(--space-4);
+    padding: var(--space-2) var(--space-5) var(--space-6);
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: var(--space-4);
   }
   @media (min-width: 40rem) {
     .sheet {
       bottom: auto;
       top: 8vh;
-      border-radius: var(--radius-lg);
+      border-radius: var(--radius-card);
       max-width: 30rem;
       margin: 0 auto;
+    }
+    .handle {
+      display: none;
+    }
+  }
+  @keyframes settle {
+    from {
+      transform: translateY(18px);
+      opacity: 0.55;
+    }
+    to {
+      transform: none;
+      opacity: 1;
     }
   }
 </style>

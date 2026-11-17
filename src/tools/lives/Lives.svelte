@@ -150,27 +150,9 @@
     gap: var(--space-3);
     padding: var(--space-3);
   }
-  .modes {
-    display: flex;
-    gap: var(--space-1);
-    padding: var(--space-1);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-  }
-  .modes button {
-    flex: 1;
-    min-height: 44px;
-    border-radius: var(--radius-sm);
-    border: 0;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .modes button.active {
-    background: var(--surface);
-    font-weight: 700;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-  }
+
+
+
   .over {
     display: flex;
     flex-direction: column;
@@ -178,19 +160,12 @@
     padding: var(--space-3);
     border-radius: var(--radius);
     background: var(--danger-soft, var(--surface-2));
-    border: 1px solid var(--danger);
     color: var(--text);
   }
   .over strong {
     font-size: var(--text-lg);
   }
-  .stage {
-    text-align: center;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4);
-  }
+
   .count {
     margin: 0;
     font-size: clamp(3.6rem, 24vw, 6rem);
@@ -223,14 +198,12 @@
     font-size: var(--text-2xl);
     font-weight: 800;
     border-radius: var(--radius-lg);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
   .big-actions button.plus {
     background: var(--accent);
-    border-color: var(--accent);
     color: var(--accent-text);
   }
   .tracks {
@@ -242,7 +215,6 @@
     gap: var(--space-2);
   }
   .tracks li {
-    border: 2px solid var(--line);
     border-radius: var(--radius-lg);
     background: var(--surface);
     padding: var(--space-2) var(--space-3);
@@ -264,11 +236,12 @@
   .dot {
     display: inline-grid;
     place-items: center;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+    width: 34px;
+    height: 34px;
+    border-radius: var(--radius-round);
     background: var(--player);
-    color: #fff;
+    color: var(--on-seat);
+    font-family: var(--font-display);
     font-size: var(--text-xs);
     font-weight: 800;
     flex: none;
@@ -284,8 +257,7 @@
     font-weight: 800;
     text-transform: uppercase;
     color: var(--danger);
-    border: 1px solid var(--danger);
-    border-radius: 999px;
+    border-radius: var(--radius-pill);
     padding: 0 var(--space-2);
   }
   .tracks .count {
@@ -308,7 +280,6 @@
     min-width: 56px;
     min-height: 48px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
@@ -317,7 +288,6 @@
   }
   .row-actions button.plus {
     background: var(--accent-soft);
-    border-color: var(--accent);
   }
   .extras,
   .conditions {
@@ -335,7 +305,6 @@
     justify-content: space-between;
     gap: var(--space-2);
     padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
   }
@@ -353,57 +322,22 @@
   .chips button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }
   .chips button.active {
     background: var(--accent-soft);
-    border-color: var(--accent);
     font-weight: 700;
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
+
+
   .row button.reveal {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 700;
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
-  .field input {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-3);
-    font: inherit;
-  }
-  .wide {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 0;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-    cursor: pointer;
-  }
+
+
+
 </style>

@@ -79,6 +79,11 @@ actually done. `ROADMAP.md` §7 keeps the same list.
 - **Low-end profiling**: 2018-era Android, 4× CPU throttling, time to interactive,
   memory, long tasks.
 - **Second screen**: display mode on a projector or TV, readable at 2 m.
+- **Visual audit**: table mode on a phone in daylight at 2 m, plus 320 px width and
+  200 percent zoom in light and dark. Checklist in `docs/STYLE.md` §9.
+- **Screenshots**: home, a session, the gallery and the reveal cover in light, dark and
+  table mode for the release page and the pandaqi.com tools index. Replace the old set;
+  delete any claim the pictures no longer support.
 
 ## 6. After release
 
@@ -89,7 +94,9 @@ Run this after any content or code change, not only at launch:
 3. Start a timer, finish a game, confirm the log entry.
 4. Open display mode in a second tab and confirm it follows.
 5. Print one score sheet.
-6. `#/selftest`: no console errors, no network attempt.
+6. Switch light, dark and table mode on a phone; nothing clips, nothing scrolls the
+   page sideways, the score is still the loudest thing on screen.
+7. `#/selftest`: no console errors, no network attempt.
 7. Check the About panel and the changelog are current.
 
 ## 7. When something is broken

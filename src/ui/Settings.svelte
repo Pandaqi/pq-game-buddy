@@ -26,7 +26,8 @@
   <h1>Settings</h1>
 
   <section>
-    <h2>Theme</h2>
+    <h2>Light or dark</h2>
+    <p class="dim small">Light is paper and ink. Dark is a dim room: warm charcoal, no glare.</p>
     <div class="segment">
       {#each ['system', 'light', 'dark'] as theme (theme)}
         <button
@@ -44,7 +45,7 @@
     <h2>Table mode</h2>
     <label class="check">
       <input type="checkbox" checked={settings.values.table} onchange={(event) => settings.set('table', (event.currentTarget as HTMLInputElement).checked)} />
-      <span>Huge type and bigger targets for a phone lying on the table.</span>
+      <span>Bigger type, thicker targets and less chrome, for a phone lying flat on the table.</span>
     </label>
   </section>
 
@@ -89,13 +90,13 @@
   <section>
     <h2>Saving</h2>
     <p class="dim">{storageText}</p>
-    <p class="dim small">Games are stored in this browser only. There is no account and no server.</p>
+    <p class="dim small">Games live in this browser only. There is no account and no server.</p>
   </section>
 
   <section>
     <h2>Data</h2>
     <button type="button" class="danger" onclick={() => (resetOpen = true)}>Reset all data</button>
-    <p class="dim small">Deletes saved games and settings from this device. Export anything you want to keep first.</p>
+    <p class="dim small">Deletes saved games and settings from this device. Export anything you want to keep first; it cannot be undone.</p>
   </section>
 
   <section>
@@ -132,9 +133,14 @@
   h1 {
     font-size: var(--text-2xl);
     margin: 0;
+    color: var(--forest);
   }
   h2 {
-    font-size: var(--text-base);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-dim);
     margin-bottom: var(--space-2);
   }
   section {
@@ -146,23 +152,22 @@
     display: flex;
     gap: var(--space-1);
     padding: var(--space-1);
-    border-radius: var(--radius);
+    border-radius: var(--radius-pill);
     background: var(--surface-2);
   }
   .segment button {
     flex: 1;
     min-height: 48px;
-    border-radius: var(--radius-sm);
-    border: 0;
+    border-radius: var(--radius-pill);
     background: transparent;
-    color: var(--text);
+    color: var(--text-dim);
     text-transform: capitalize;
     cursor: pointer;
   }
   .segment button.active {
     background: var(--surface);
     font-weight: 700;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-soft);
   }
   .check {
     display: flex;
@@ -194,14 +199,13 @@
   }
   .danger {
     min-height: 52px;
-    border-radius: var(--radius);
-    border: 1px solid var(--danger);
-    background: transparent;
+    border-radius: var(--radius-pill);
+    background: var(--danger-soft);
     color: var(--danger);
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     align-self: flex-start;
-    padding: 0 var(--space-4);
+    padding: 0 var(--space-5);
   }
   .danger:disabled {
     opacity: 0.6;
@@ -215,11 +219,7 @@
   }
   .field input {
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-3);
+    padding: 0 var(--space-4);
   }
   .wide {
     width: 100%;

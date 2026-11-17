@@ -1,7 +1,9 @@
 /** Entry point. `data-tool` on <body> marks a single-tool page from the site build. */
 
+import './core/styles/fonts.css';
 import './core/styles/tokens.css';
 import './core/styles/base.css';
+import './core/styles/components.css';
 
 import { mount } from 'svelte';
 import App from './App.svelte';

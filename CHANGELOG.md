@@ -3,7 +3,47 @@
 All notable changes to Game Buddy. The template format is versioned separately
 (`format: 1`) and only changes with a compatibility note.
 
-## Unreleased — M4 and M5
+## Unreleased — M4, M5 and M6
+
+### Style (M6)
+
+- **The lantern table.** Every surface now uses one visual system: cream paper and
+  deep forest ink, a lantern glow and CSS-only grain, six bright tool-family accents
+  (berry randomize, honey time, teal track, plum reveal, moss reference, sky flow),
+  10/16/26/28/999 radii, soft coloured shadows and almost no borders. No network
+  asset and no image.
+- **Typography.** Dosis and Raleway are self-hosted: downloaded, subset to the app's
+  characters and base64-inlined, so the display face is warm and rounded and the body
+  is friendly without a single runtime request. A rem scale at 13/15/17/22/30/40/52/72,
+  a 72 px die result and 40–72 px score and clock readouts. No number a player must
+  read is under 20 px.
+- **Hierarchy and air.** Home is a hero scene plus a wash-tinted shelf; a session is a
+  quiet strip and then the tool owns the screen with no wrapper card; readouts are the
+  loudest thing on every tool, section labels are quiet uppercase Raleway, and
+  secondary detail (roll options, history, timer settings) folds behind
+  `core/ui/Fold.svelte` instead of crowding the stage.
+- **Marks and doodles.** `core/ui/icons.ts` keeps the 24 px mark grid and gains a
+  distinct `notes` mark for the sound board, so the header no longer shows two volume
+  icons; `core/ui/doodles.ts` adds a woodland hero scene and five doodles as inline SVG
+  placeholders for real illustrations.
+- **Shape and motion.** Keys are pills that lift on hover without losing their colour;
+  fields are cushions; cards float on a soft coloured shadow. Four one-shot motions
+  (120/200/280/340 ms): shelf tiles stagger in, a tool blooms when its tab is tapped,
+  the fold chevron bounces open. Nothing loops, and confetti appears once for a
+  finished game with a winner, never under reduced motion.
+- **Shared tool CSS.** The rules most tools repeated moved into
+  `core/styles/components.css` — panels, stages, rows, fields, mode switches, keys,
+  text helpers, tables and folds. 202 duplicated rules were deleted from the 21 tool
+  views and the leftover ink outlines stripped in the same pass.
+- **Modes.** Light is cream paper; dark is a dim room with pastel accents; table mode
+  is 1.25× type with the shell chrome hidden on a session screen; print is ink on
+  white. Seat colours are filled dots with dark initials, readable in both themes.
+- **Warm copy** for empty states, confirms, errors and the sound board, plus a
+  rewritten `docs/STYLE.md`: woodland tokens, family accents, fonts and their cost,
+  shape rules, motion, layout, measured contrast and a restyle checklist.
+- Budgets: first visit 65 → 125 KB gzipped (56 KB of it the two fonts), single file
+  209 → 265 KB, largest chunk 21 KB, deferred total 164 KB. The 150 KB first-visit
+  ceiling holds with 25 KB to spare.
 
 ### Added
 

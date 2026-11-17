@@ -124,13 +124,7 @@
     gap: var(--space-3);
     padding: var(--space-3);
   }
-  .stage {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    padding: var(--space-5) var(--space-3);
-    text-align: center;
-  }
+
   .big {
     margin: 0;
     font-size: clamp(2.6rem, 16vw, 4.5rem);
@@ -153,13 +147,11 @@
     place-items: center;
     width: 44px;
     height: 44px;
-    border-radius: 50%;
-    border: 2px solid var(--line);
+    border-radius: var(--radius-round);
     font-weight: 800;
   }
   .mini.heads {
     background: var(--accent-soft);
-    border-color: var(--accent);
   }
   .flip {
     min-height: 72px;
@@ -171,27 +163,9 @@
     color: var(--accent-text);
     cursor: pointer;
   }
-  .modes {
-    display: flex;
-    gap: var(--space-1);
-    padding: var(--space-1);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-  }
-  .modes button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius-sm);
-    border: 0;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .modes button.active {
-    background: var(--surface);
-    font-weight: 700;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-  }
+
+
+
   .series {
     display: flex;
     align-items: end;
@@ -210,23 +184,9 @@
     color: var(--text-dim);
     font-weight: 600;
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-    margin-top: var(--space-1);
-  }
-  .row button {
-    flex: 1;
-    min-height: 56px;
-    border-radius: var(--radius);
-    border: 2px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    font-size: var(--text-lg);
-    cursor: pointer;
-  }
+
+
   .row button.active {
-    border-color: var(--accent);
     background: var(--accent-soft);
   }
   .tally {
@@ -239,17 +199,10 @@
     gap: var(--space-3);
     grid-template-columns: 1fr 1fr;
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    font-size: var(--text-sm);
-    color: var(--text-dim);
-  }
+
   .field input[type='number'] {
+    border: 0;
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
@@ -264,27 +217,12 @@
     font-size: var(--text-sm);
     color: var(--warning);
   }
-  .ghost {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .history {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-  }
+
+
   .history li {
     display: flex;
     justify-content: space-between;
     padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
     font-variant-numeric: tabular-nums;

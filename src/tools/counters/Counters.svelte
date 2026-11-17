@@ -102,7 +102,6 @@
   }
   .bank {
     background: var(--surface);
-    border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     padding: var(--space-3);
     display: flex;
@@ -134,8 +133,7 @@
   .denoms button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--accent);
+    border-radius: var(--radius-pill);
     background: var(--accent-soft);
     color: var(--text);
     font-weight: 700;
@@ -150,7 +148,6 @@
     flex: 1;
     min-height: 48px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-base);
@@ -171,7 +168,6 @@
     gap: var(--space-1) var(--space-2);
     align-items: center;
     padding: var(--space-2) var(--space-3);
-    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface);
   }
@@ -198,7 +194,6 @@
     min-width: 56px;
     min-height: 44px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
@@ -207,7 +202,6 @@
   }
   .row-actions button.plus {
     background: var(--accent-soft);
-    border-color: var(--accent);
   }
   .row-actions button.remove {
     margin-left: auto;
@@ -215,32 +209,13 @@
     color: var(--text-dim);
     min-width: 44px;
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
+
+
   .row button.reveal {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 700;
   }
-  .ghost {
-    min-height: 44px;
-    border-radius: var(--radius);
-    border: 0;
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-  }
+
   .log summary {
     min-height: 44px;
     display: flex;
@@ -257,28 +232,7 @@
     flex-direction: column;
     gap: var(--space-1);
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
-  .field input {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-3);
-    font: inherit;
-  }
-  .wide {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 0;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-    cursor: pointer;
-  }
+
+
+
 </style>

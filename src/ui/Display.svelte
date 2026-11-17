@@ -108,7 +108,6 @@
     align-items: center;
     padding: 0 var(--space-4);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     color: var(--text);
     text-decoration: none;
   }

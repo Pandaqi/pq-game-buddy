@@ -40,7 +40,7 @@ bun run lint:templates
 bun run gen          # regenerate manifest/schemas/templates after adding a tool
 ```
 
-## What exists today (M0–M5)
+## What exists today (M0–M6)
 
 - App shell, hash router, error boundary, settings, light/dark/system themes,
   table mode, reduced-motion override, storage adapter chain with honest banners.
@@ -83,10 +83,13 @@ bun run gen          # regenerate manifest/schemas/templates after adding a tool
   deletes a saved game without an explicit choice.
 - Core services: one ticker, seeded + crypto RNG, snapshot undo, synthesized cue
   sheet, haptics, wake lock, clipboard/download, pass-the-phone cover.
+- The cozy-table style system: warm paper tokens, one accent per tool family,
+  hand-drawn inline marks, chunky keys, and light/dark/table/print modes. The contract
+  is `docs/STYLE.md`.
 - `#/selftest` boots every tool headlessly and asserts zero network requests.
 
-`ROADMAP.md` is the source of truth for what comes next (M6 style, then M7 stretch
-items) and for the release gates that need a human. Finished milestone detail is
+`ROADMAP.md` is the source of truth for what comes next (M7 stretch items, then M8
+Pandaqi templates) and for the release gates that need a human. Finished milestone detail is
 compressed there as it ships. The development contract is `AGENTS.md`; player and
 author docs are in `docs/`.
 

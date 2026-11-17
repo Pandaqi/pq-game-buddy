@@ -198,24 +198,16 @@
   .phase-chips button {
     min-height: 40px;
     padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }
   .phase-chips button.active {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 700;
   }
-  .stage {
-    text-align: center;
-    background: var(--surface);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    padding: var(--space-4);
-  }
+
   .lead {
     margin: 0;
     color: var(--text-dim);
@@ -255,7 +247,6 @@
     max-width: 12rem;
     min-height: 48px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-weight: 700;
@@ -263,7 +254,6 @@
   }
   .clock-actions button.primary {
     background: var(--accent);
-    border-color: var(--accent);
     color: var(--accent-text);
   }
   .order {
@@ -276,15 +266,13 @@
     flex: 0 0 auto;
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
+    border-radius: var(--radius-pill);
     background: var(--surface);
     color: var(--text);
     white-space: nowrap;
     cursor: pointer;
   }
   .order button.active {
-    border-color: var(--accent);
     background: var(--accent);
     color: var(--accent-text);
     font-weight: 700;
@@ -308,25 +296,13 @@
     min-width: 64px;
     min-height: 64px;
     border-radius: var(--radius-lg);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     font-size: var(--text-xl);
     cursor: pointer;
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
+
+
   .log summary {
     min-height: 44px;
     display: flex;
@@ -343,44 +319,12 @@
     flex-direction: column;
     gap: var(--space-1);
   }
-  .ghost {
-    min-height: 44px;
-    border-radius: var(--radius);
-    border: 0;
-    background: transparent;
-    color: var(--text-dim);
-    cursor: pointer;
-  }
-  .hint {
-    margin: 0;
-    color: var(--text-dim);
-    font-size: var(--text-sm);
-  }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
-  .field input {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-3);
-    font: inherit;
-  }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 48px;
-  }
-  .check input {
-    width: 24px;
-    height: 24px;
-  }
+
+
+
+
+
+
   .time-presets {
     display: flex;
     gap: var(--space-1);
@@ -389,23 +333,13 @@
     flex: 1;
     min-height: 44px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
   .time-presets button.active {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 700;
   }
-  .wide {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 0;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-    cursor: pointer;
-  }
+
 </style>

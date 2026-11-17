@@ -10,11 +10,16 @@ import type { PresetSchema, PresetValues } from './template/schema';
 import type { Clock } from './ticker';
 import type { UndoApi } from './undo';
 
+/** The six primitives, used as the colour identity of a tool's screens. */
+export type ToolFamily = 'randomize' | 'time' | 'track' | 'reveal' | 'reference' | 'flow';
+
 export interface ToolMeta {
   id: string;
   title: string;
   blurb: string;
-  /** Inline SVG markup. Trusted build-time constant, never user data. */
+  /** Which accent the tool's screen borrows. */
+  family: ToolFamily;
+  /** Inline SVG markup from `core/ui/icons.ts`. Trusted build-time constant. */
   icon: string;
   tags: string[];
 }

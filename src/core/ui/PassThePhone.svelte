@@ -119,8 +119,11 @@
     margin: 0;
     border: 0;
     padding: 0;
-    background: var(--bg);
+    background: var(--cover);
     color: var(--text);
+  }
+  .pass::backdrop {
+    background: var(--cover);
   }
   .cover,
   .secret {
@@ -135,66 +138,70 @@
       calc(var(--space-5) + env(safe-area-inset-bottom, 0px));
     overflow: auto;
     overscroll-behavior: contain;
+    background-image: radial-gradient(680px 420px at 50% 0%, var(--accent-soft), transparent 70%);
   }
   .lead {
     margin: 0;
     color: var(--text-dim);
     text-transform: uppercase;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.14em;
     font-size: var(--text-xs);
     font-weight: 700;
   }
   h2 {
     margin: 0;
-    font-size: clamp(1.8rem, 9vw, 2.8rem);
-    letter-spacing: -0.02em;
+    font-size: clamp(2.6rem, 14vw, 4.5rem);
+    line-height: 1;
+    color: var(--forest);
   }
   .hint {
     margin: 0;
     color: var(--text-dim);
   }
   .small {
-    margin: var(--space-2) 0 0;
+    margin: var(--space-3) 0 0;
     max-width: 22rem;
     color: var(--text-dim);
     font-size: var(--text-sm);
   }
   .primary {
-    min-height: 56px;
+    min-height: 62px;
     margin-top: var(--space-3);
-    padding: 0 var(--space-5);
-    border-radius: 999px;
-    border: 0;
+    padding: 0 var(--space-6);
+    border-radius: var(--radius-pill);
     background: var(--accent);
     color: var(--accent-text);
+    box-shadow: var(--shadow-key);
     font-size: var(--text-lg);
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .secondary {
+    min-height: 52px;
+    margin-top: var(--space-1);
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text);
     font-weight: 700;
     cursor: pointer;
   }
-  .secondary,
   .ghost {
     min-height: 48px;
     margin-top: var(--space-1);
     padding: 0 var(--space-4);
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    font-weight: 600;
-    cursor: pointer;
-  }
-  .ghost {
-    border-color: transparent;
+    border-radius: var(--radius-pill);
     background: transparent;
     color: var(--text-dim);
+    font-weight: 600;
+    cursor: pointer;
   }
   .hide {
     min-height: 52px;
     margin-top: var(--space-3);
     padding: 0 var(--space-5);
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--surface);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
     color: var(--text);
     font-weight: 700;
     cursor: pointer;

@@ -9,6 +9,21 @@ The application code is part of the pq-game-buddy project. Runtime dependencies:
 Svelte 5 is a build-time compiler; its emitted runtime is bundled, and Svelte is MIT
 licensed. Bun and `happy-dom` are development dependencies.
 
+## Fonts
+
+Two typefaces ship inside the app, subset to the characters the interface uses and
+inlined as base64 `@font-face` in `src/core/styles/fonts.css`. Nothing is fetched at
+runtime and no font file sits in `public/`.
+
+- **Dosis** by Edgar Tolentino, Pablo Impallari and Igino Marini (Impallari Type),
+  SIL Open Font License 1.1. Display face for headings, keys and numbers.
+- **Raleway** by Matt McInerney, Pablo Impallari, Rodrigo Fuenzalida and Igino Marini
+  (The League of Moveable Type), SIL Open Font License 1.1. Body face.
+
+Both are used unmodified apart from subsetting and woff2 compression, which the OFL
+allows. The full licence text is available from the upstream projects; the subsetting
+tooling is development-only and is not part of the shipped app.
+
 ## Game templates
 
 Every file in `src/data/templates/` follows the same rules:
@@ -55,6 +70,7 @@ The About panel in Settings lists:
 
 - the app version and format version,
 - every data pack with its licence and a one-line origin,
+- Dosis and Raleway, with their OFL 1.1 notice,
 - the Svelte licence notice,
 - a statement that the app collects nothing and contacts no server.
 

@@ -213,7 +213,7 @@
   .formats button.active {
     background: var(--surface);
     font-weight: 700;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    box-shadow: var(--shadow-soft);
   }
   .champion,
   .next {
@@ -221,7 +221,6 @@
     padding: var(--space-3);
     border-radius: var(--radius-lg);
     background: var(--accent-soft);
-    border: 2px solid var(--accent);
   }
   .champion strong {
     font-size: var(--text-xl);
@@ -231,7 +230,6 @@
     flex-direction: column;
     gap: var(--space-2);
     padding: var(--space-3);
-    border: 1px solid var(--line);
     border-radius: var(--radius-lg);
     background: var(--surface);
   }
@@ -253,12 +251,8 @@
     flex-direction: column;
     gap: var(--space-1);
     padding: var(--space-2);
-    border: 1px solid var(--line);
     border-radius: var(--radius);
     background: var(--surface-2);
-  }
-  .match.done {
-    border-color: var(--accent);
   }
   .sides {
     display: flex;
@@ -268,7 +262,6 @@
   .sides button {
     min-height: 44px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     text-align: left;
@@ -280,7 +273,6 @@
     cursor: default;
   }
   .sides button.won {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 800;
   }
@@ -295,10 +287,10 @@
     gap: var(--space-1);
   }
   .scores input {
+    border: 0;
     width: 3.5rem;
     min-height: 40px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     text-align: center;
@@ -312,45 +304,19 @@
     min-height: 40px;
     padding: 0 var(--space-2);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: transparent;
     color: var(--text-dim);
     cursor: pointer;
   }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-  }
-  th,
-  td {
-    text-align: right;
-    padding: var(--space-1) var(--space-2);
-    border-bottom: 1px solid var(--line);
-    font-variant-numeric: tabular-nums;
-  }
-  thead th {
-    color: var(--text-dim);
-    font-size: var(--text-xs);
-    text-transform: uppercase;
-  }
+
+
+
   .rank,
   .name {
     text-align: left;
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
+
+
   .inline {
     display: flex;
     align-items: center;
@@ -361,10 +327,9 @@
   }
   .inline input,
   .inline select {
+    border: 0;
     min-height: 44px;
     min-width: 8rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
@@ -389,10 +354,9 @@
     text-align: right;
   }
   .entrants input {
+    border: 0;
     flex: 1;
     min-height: 44px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
@@ -401,7 +365,6 @@
     min-width: 44px;
     min-height: 44px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: transparent;
     color: var(--text-dim);
     cursor: pointer;
@@ -409,39 +372,21 @@
   .entrants button:disabled {
     opacity: 0.5;
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
-  .field input {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-3);
-  }
+
+
   .wide,
   .primary-wide {
     min-height: 52px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
   .primary-wide {
-    border-color: var(--accent);
     background: var(--accent);
     color: var(--accent-text);
     font-weight: 700;
   }
-  .dim {
-    color: var(--text-dim);
-  }
-  .small {
-    font-size: var(--text-sm);
-  }
+
+
 </style>

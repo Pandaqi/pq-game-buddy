@@ -193,7 +193,6 @@
     padding: var(--space-2);
     border-radius: var(--radius);
     background: var(--surface-2);
-    border: 1px solid var(--line);
   }
   .num {
     font-size: var(--text-xl);
@@ -214,7 +213,6 @@
   .actions button {
     min-height: 52px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-weight: 600;
@@ -236,15 +234,7 @@
     background: var(--accent-soft);
     font-weight: 600;
   }
-  .block {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-  }
+
   h2 {
     margin: 0;
     font-size: var(--text-base);
@@ -264,7 +254,6 @@
     min-height: 58px;
     padding: 0 var(--space-2);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     font-weight: 700;
     font-variant-numeric: tabular-nums;
@@ -308,7 +297,6 @@
   .peek {
     min-height: 48px;
     border-radius: var(--radius);
-    border: 1px dashed var(--accent);
     background: var(--accent-soft);
     color: var(--text);
     cursor: pointer;
@@ -317,7 +305,6 @@
     min-height: 40px;
     padding: 0 var(--space-3);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: transparent;
     color: var(--text-dim);
     cursor: pointer;
@@ -331,74 +318,29 @@
     color: var(--text-dim);
     font-size: var(--text-sm);
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
+
+
+
   .field select,
   .field input,
   .field textarea {
+    border: 0;
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
     font: inherit;
   }
-  .field textarea {
-    padding: var(--space-2);
-    font-family: var(--font-mono);
-  }
+
   .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
     gap: var(--space-2);
   }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 48px;
-  }
-  .check input {
-    width: 24px;
-    height: 24px;
-  }
-  .wide {
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .wide.primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-  }
-  .dim {
-    color: var(--text-dim);
-    margin: 0;
-  }
-  .small {
-    font-size: var(--text-sm);
-  }
+
+
+
+
+
+
 </style>

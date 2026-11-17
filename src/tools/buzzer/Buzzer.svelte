@@ -98,13 +98,8 @@
     font-size: var(--text-lg);
     border-radius: var(--radius-lg);
     background: var(--surface-2);
-    border: 2px solid var(--line);
-  }
-  .status.waiting {
-    border-color: var(--warning);
   }
   .status.live {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-size: var(--text-2xl);
     font-weight: 800;
@@ -128,7 +123,7 @@
     min-height: 8rem;
     padding: var(--space-3);
     border-radius: var(--radius-lg);
-    border: 3px solid var(--player);
+    box-shadow: inset 0 0 0 3px var(--player), var(--shadow-card);
     background: var(--surface);
     color: var(--text);
     font-size: var(--text-lg);
@@ -139,9 +134,12 @@
     opacity: 0.55;
     cursor: default;
   }
+  /* The winner is named in the status line and tinted here: never colour alone,
+     and never white text on a mid-tone seat colour. */
   .pad.winner {
-    background: var(--player);
-    color: #fff;
+    background: var(--accent-soft);
+    border-width: 5px;
+    box-shadow: var(--shadow);
     opacity: 1;
   }
   .name {
@@ -151,52 +149,21 @@
     font-size: var(--text-xs);
     font-family: var(--font-mono);
     color: var(--text-dim);
-    border: 1px solid var(--line);
     border-radius: var(--radius-sm);
     padding: 2px 6px;
   }
   .pad.winner .key {
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.6);
-  }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 60px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
     color: var(--text);
-    font-size: var(--text-lg);
-    font-weight: 700;
-    cursor: pointer;
   }
-  .row .primary {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-  }
+
+
+
   .row button:disabled {
     opacity: 0.6;
     cursor: default;
   }
-  .panel {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-    padding: var(--space-3);
-    border: 1px solid var(--line);
-    border-radius: var(--radius-lg);
-    background: var(--surface);
-  }
-  .panel header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
+
+
   h2 {
     margin: 0;
     font-size: var(--text-base);
@@ -205,7 +172,6 @@
     min-height: 40px;
     padding: 0 var(--space-3);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: transparent;
     color: var(--text-dim);
     cursor: pointer;

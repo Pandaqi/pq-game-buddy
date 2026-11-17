@@ -1,90 +1,280 @@
+/* Design tokens: a lantern on the wooden table. Warm cream paper, deep forest
+   ink, one bright accent per tool family and soft coloured shadows. Change a
+   family here and every screen of that family follows; swap --font-display and
+   --font-body to restyle the typography. No view may name a colour of its own. */
+
 :root {
-  --font: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-display: 'Dosis', ui-rounded, 'Segoe UI Variable Display', 'Trebuchet MS', system-ui, sans-serif;
+  --font-body: 'Raleway', ui-sans-serif, system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial,
+    sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --font-num: var(--font-display);
+  /* Older views ask for --font; it is the body face. */
+  --font: var(--font-body);
 
-  --bg: #fbf7f0;
-  --surface: #ffffff;
-  --surface-2: #f3ece1;
-  --text: #211a12;
-  --text-dim: #5f5546;
-  --line: #ddd2c1;
-  --accent: #b4521b;
-  --accent-text: #ffffff;
-  --accent-soft: #f7e4d3;
-  --danger: #a52a1f;
-  --danger-soft: #fbe9e6;
+  /* Paper, ink, and the warm light in the room */
+  --paper: #fbf2dd;
+  --bg: var(--paper);
+  --surface: #fffaf0;
+  --surface-2: #f5e7cc;
+  --field: #f7ead1;
+  --ink: #2f2517;
+  --text: var(--ink);
+  --text-dim: #6d5c43;
+  --text-faint: #786444;
+  --line: #e7d7ba;
+  --line-soft: #efe3cc;
+  --line-ink: #3a2f1f;
+  --cover: #fbf2dd;
+  --forest: #1f5c40;
+  --glow: rgba(255, 236, 189, 0.95);
+  --glow-2: rgba(255, 211, 160, 0.55);
+  --grain: rgba(96, 66, 30, 0.05);
+  --row-tint: rgba(126, 92, 44, 0.045);
+  --shade: rgba(92, 60, 20, 0.16);
+  --danger: #a83224;
+  --danger-soft: #ffe0d8;
   --warning: #8a5a00;
-  --success: #2f6f3e;
+  --success: #246b45;
+  --focus: #1f5c40;
+  --on-accent: #fffaf0;
+  /* Dark ink for a mid-tone seat colour, in both themes. */
+  --on-seat: #241a10;
+  --warning-soft: #ffeccc;
 
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 18px;
+  /* One loud accent per tool family, with a deep tone for the candy shadow and
+     a wash for backgrounds. Randomize = berry, time = honey, track = teal,
+     reveal = plum, reference = moss, flow = sky. */
+  --fam-randomize: #c0403a;
+  --fam-randomize-deep: #8f2a26;
+  --fam-randomize-wash: #ffe2d9;
+  --fam-time: #9c6000;
+  --fam-time-deep: #744800;
+  --fam-time-wash: #ffedc2;
+  --fam-track: #0f6f60;
+  --fam-track-deep: #0a4e43;
+  --fam-track-wash: #d5f1e8;
+  --fam-reveal: #7d3f8c;
+  --fam-reveal-deep: #5a2b66;
+  --fam-reveal-wash: #f5dff7;
+  --fam-reference: #52711f;
+  --fam-reference-deep: #3a5213;
+  --fam-reference-wash: #e9f3ce;
+  --fam-flow: #2f63a8;
+  --fam-flow-deep: #204a7c;
+  --fam-flow-wash: #deeafc;
 
+  --accent: var(--fam-randomize);
+  --accent-deep: var(--fam-randomize-deep);
+  --accent-soft: var(--fam-randomize-wash);
+  --accent-text: var(--on-accent);
+
+  /* Rounded, generous shapes. Borders are a last resort. */
+  --bw: 1.5px;
+  --bw-strong: 2px;
+  --hairline: 1px;
+  --radius-xs: 4px;
+  --radius-sm: 10px;
+  --radius: 16px;
+  --radius-lg: 26px;
+  --radius-card: 28px;
+  --radius-round: 50%;
+  --radius-pill: 999px;
+
+  /* Soft coloured depth: cards float, keys sit on a deep edge. */
+  --shadow-card: 0 18px 40px -26px rgba(74, 46, 10, 0.45);
+  --shadow-key: 0 3px 0 var(--accent-deep);
+  --shadow: 0 4px 0 var(--accent-deep);
+  --shadow-soft: 0 2px 0 var(--shade);
+  --shadow-lift: 0 24px 60px -20px rgba(60, 35, 5, 0.45);
+  --shadow-glow: 0 0 0 4px var(--accent-soft);
+  --shadow-inset: inset 0 0 0 3px var(--player, var(--line-ink));
+  --scrim: rgba(28, 20, 10, 0.6);
+
+  /* Four-pixel spacing scale, used generously */
   --space-1: 0.25rem;
   --space-2: 0.5rem;
-  --space-3: 0.875rem;
-  --space-4: 1.25rem;
-  --space-5: 1.75rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
   --space-6: 2.5rem;
+  --space-7: 4rem;
 
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.5rem;
-  --text-2xl: 2rem;
+  /* Dosis and Raleway: 13 / 15 / 17 / 22 / 30 / 40 / 52 / 72 */
+  --text-xs: 0.8125rem;
+  --text-sm: 0.9375rem;
+  --text-base: 1.0625rem;
+  --text-lg: 1.375rem;
+  --text-xl: 1.875rem;
+  --text-2xl: 2.5rem;
+  --text-3xl: 3.25rem;
+  --text-4xl: 4.5rem;
+
+  /* Motion: a bounce, a settle, a secret. */
+  --motion-pop: 120ms;
+  --motion-settle: 200ms;
+  --motion-reveal: 280ms;
+  --motion-bounce: 340ms;
+  --ease-pop: cubic-bezier(0.2, 0.9, 0.3, 1.25);
+  --ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out: cubic-bezier(0.2, 0.8, 0.3, 1);
 
   color-scheme: light;
 }
 
+/* One accent per tool family, each with its deep edge and its wash. */
+[data-family='randomize'] {
+  --accent: var(--fam-randomize);
+  --accent-deep: var(--fam-randomize-deep);
+  --accent-soft: var(--fam-randomize-wash);
+}
+[data-family='time'] {
+  --accent: var(--fam-time);
+  --accent-deep: var(--fam-time-deep);
+  --accent-soft: var(--fam-time-wash);
+}
+[data-family='track'] {
+  --accent: var(--fam-track);
+  --accent-deep: var(--fam-track-deep);
+  --accent-soft: var(--fam-track-wash);
+}
+[data-family='reveal'] {
+  --accent: var(--fam-reveal);
+  --accent-deep: var(--fam-reveal-deep);
+  --accent-soft: var(--fam-reveal-wash);
+}
+[data-family='reference'] {
+  --accent: var(--fam-reference);
+  --accent-deep: var(--fam-reference-deep);
+  --accent-soft: var(--fam-reference-wash);
+}
+[data-family='flow'] {
+  --accent: var(--fam-flow);
+  --accent-deep: var(--fam-flow-deep);
+  --accent-soft: var(--fam-flow-wash);
+}
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #17130f;
-    --surface: #221c16;
-    --surface-2: #2c251d;
-    --text: #f4eee5;
-    --text-dim: #c3b8a8;
-    --line: #41372c;
-    --accent: #f0913f;
-    --accent-text: #1b1208;
-    --accent-soft: #3a2a1b;
-    --danger: #f2776a;
-    --danger-soft: #351a17;
-    --warning: #e0b25a;
-    --success: #79c08a;
+    --paper: #1c1710;
+    --surface: #262019;
+    --surface-2: #33291c;
+    --field: #2d2418;
+    --ink: #f7edd9;
+    --text-dim: #d2c1a4;
+    --text-faint: #a9967a;
+    --line: #3d3222;
+    --line-soft: #332a1c;
+    --line-ink: #a68c66;
+    --cover: #1c1710;
+    --forest: #8fd3b2;
+    --glow: rgba(120, 90, 40, 0.32);
+    --glow-2: rgba(90, 60, 30, 0.24);
+    --grain: rgba(255, 240, 210, 0.025);
+    --row-tint: rgba(255, 240, 200, 0.035);
+    --shade: rgba(0, 0, 0, 0.5);
+    --danger: #ff9a86;
+    --danger-soft: #3d221e;
+    --warning: #f6c05e;
+    --success: #8fd3a8;
+    --focus: #9cc4ff;
+    --on-accent: #1c1710;
+    --warning-soft: #3a2e14;
+
+    --fam-randomize: #ff9a86;
+    --fam-randomize-deep: #b45443;
+    --fam-randomize-wash: #3d221e;
+    --fam-time: #f6c05e;
+    --fam-time-deep: #a87c25;
+    --fam-time-wash: #3c2e17;
+    --fam-track: #74d8c6;
+    --fam-track-deep: #3e8d80;
+    --fam-track-wash: #173330;
+    --fam-reveal: #e3a6ee;
+    --fam-reveal-deep: #9a5fa8;
+    --fam-reveal-wash: #33223a;
+    --fam-reference: #bbd883;
+    --fam-reference-deep: #7a9445;
+    --fam-reference-wash: #2a3319;
+    --fam-flow: #9cc4ff;
+    --fam-flow-deep: #5d86bd;
+    --fam-flow-wash: #1d2c47;
+
     color-scheme: dark;
   }
 }
 
 :root[data-theme='dark'] {
-  --bg: #17130f;
-  --surface: #221c16;
-  --surface-2: #2c251d;
-  --text: #f4eee5;
-  --text-dim: #c3b8a8;
-  --line: #41372c;
-  --accent: #f0913f;
-  --accent-text: #1b1208;
-  --accent-soft: #3a2a1b;
-  --danger: #f2776a;
-  --danger-soft: #351a17;
-  --warning: #e0b25a;
-  --success: #79c08a;
+  --paper: #1c1710;
+  --surface: #262019;
+  --surface-2: #33291c;
+  --field: #2d2418;
+  --ink: #f7edd9;
+  --text-dim: #d2c1a4;
+  --text-faint: #a9967a;
+  --line: #3d3222;
+  --line-soft: #332a1c;
+  --line-ink: #a68c66;
+  --cover: #1c1710;
+  --forest: #8fd3b2;
+  --glow: rgba(120, 90, 40, 0.32);
+  --glow-2: rgba(90, 60, 30, 0.24);
+  --grain: rgba(255, 240, 210, 0.025);
+  --row-tint: rgba(255, 240, 200, 0.035);
+  --shade: rgba(0, 0, 0, 0.5);
+  --danger: #ff9a86;
+  --danger-soft: #3d221e;
+  --warning: #f6c05e;
+  --success: #8fd3a8;
+  --focus: #9cc4ff;
+  --on-accent: #1c1710;
+  --warning-soft: #3a2e14;
+
+  --fam-randomize: #ff9a86;
+  --fam-randomize-deep: #b45443;
+  --fam-randomize-wash: #3d221e;
+  --fam-time: #f6c05e;
+  --fam-time-deep: #a87c25;
+  --fam-time-wash: #3c2e17;
+  --fam-track: #74d8c6;
+  --fam-track-deep: #3e8d80;
+  --fam-track-wash: #173330;
+  --fam-reveal: #e3a6ee;
+  --fam-reveal-deep: #9a5fa8;
+  --fam-reveal-wash: #33223a;
+  --fam-reference: #bbd883;
+  --fam-reference-deep: #7a9445;
+  --fam-reference-wash: #2a3319;
+  --fam-flow: #9cc4ff;
+  --fam-flow-deep: #5d86bd;
+  --fam-flow-wash: #1d2c47;
+
   color-scheme: dark;
 }
 
 /* Table mode: a phone lying flat, four people leaning over it. */
 :root[data-table='on'] {
-  --text-xs: 0.85rem;
-  --text-sm: 1rem;
-  --text-base: 1.185rem;
-  --text-lg: 1.375rem;
-  --text-xl: 1.9rem;
-  --text-2xl: 2.6rem;
-  --space-1: 0.35rem;
-  --space-2: 0.7rem;
-  --space-3: 1.1rem;
-  --space-4: 1.5rem;
-  --space-5: 2rem;
-  --space-6: 2.8rem;
+  --text-xs: 1rem;
+  --text-sm: 1.125rem;
+  --text-base: 1.28rem;
+  --text-lg: 1.65rem;
+  --text-xl: 2.25rem;
+  --text-2xl: 3rem;
+  --text-3xl: 3.9rem;
+  --text-4xl: 5.4rem;
+  --space-1: 0.3rem;
+  --space-2: 0.6rem;
+  --space-3: 0.95rem;
+  --space-4: 1.3rem;
+  --space-5: 1.9rem;
+  --space-6: 3rem;
+  --text-dim: var(--ink);
+  --text-faint: #6d5c43;
+  --line: #cbb894;
+}
+
+:root[data-theme='dark'][data-table='on'],
+:root[data-table='on'][data-theme='dark'] {
+  --text-faint: #e0d2b8;
+  --line: #574934;
 }

@@ -515,27 +515,9 @@
     gap: var(--space-3);
     padding: var(--space-3);
   }
-  .modes {
-    display: flex;
-    gap: var(--space-1);
-    padding: var(--space-1);
-    border-radius: var(--radius);
-    background: var(--surface-2);
-  }
-  .modes button {
-    flex: 1;
-    min-height: 44px;
-    border-radius: var(--radius-sm);
-    border: 0;
-    background: transparent;
-    color: var(--text);
-    cursor: pointer;
-  }
-  .modes button.active {
-    background: var(--surface);
-    font-weight: 700;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
-  }
+
+
+
   .head {
     display: flex;
     justify-content: space-between;
@@ -553,8 +535,7 @@
   .reveal {
     min-height: 40px;
     padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--accent);
+    border-radius: var(--radius-pill);
     background: var(--accent-soft);
     color: var(--text);
     cursor: pointer;
@@ -564,7 +545,6 @@
     min-height: 40px;
     padding: 0 var(--space-3);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
@@ -583,11 +563,7 @@
   .formula.bad {
     color: var(--danger);
   }
-  .hint {
-    margin: 0;
-    color: var(--text-dim);
-    font-size: var(--text-sm);
-  }
+
   .hint-line {
     margin: 0;
     color: var(--text-dim);
@@ -602,17 +578,17 @@
     gap: var(--space-2);
   }
   .players li {
-    border: 2px solid var(--line);
-    border-radius: var(--radius-lg);
-    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-card);
+    padding: var(--space-3) var(--space-4);
     background: var(--surface);
+    box-shadow: var(--shadow-card);
     display: grid;
     grid-template-columns: 1fr auto;
     gap: var(--space-2);
     align-items: center;
   }
   .players li.leader {
-    border-color: var(--accent);
+    background: linear-gradient(180deg, var(--accent-soft), var(--surface) 70%);
   }
   .who {
     display: flex;
@@ -625,9 +601,10 @@
     place-items: center;
     width: 34px;
     height: 34px;
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     background: var(--player);
-    color: #fff;
+    color: var(--on-seat);
+    font-family: var(--font-display);
     font-size: var(--text-xs);
     font-weight: 800;
     flex: none;
@@ -645,15 +622,17 @@
   .total-button {
     grid-column: 2;
     grid-row: 1 / span 2;
-    min-width: 88px;
-    min-height: 56px;
+    min-width: 96px;
+    min-height: 64px;
+    padding: 0 var(--space-2);
     border: 0;
-    border-radius: var(--radius);
-    background: var(--surface-2);
-    color: var(--text);
-    font-size: var(--text-2xl);
+    border-radius: var(--radius-lg);
+    background: transparent;
+    color: var(--accent);
+    font-size: clamp(2.5rem, 10vw, 3.5rem);
     font-weight: 800;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
     cursor: pointer;
   }
   .total-button:disabled {
@@ -668,47 +647,21 @@
     min-width: 64px;
     min-height: 48px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-base);
     font-weight: 700;
     cursor: pointer;
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    cursor: pointer;
-    font: inherit;
-  }
+
+
   .table-wrap {
     overflow-x: auto;
-    border: 1px solid var(--line);
     border-radius: var(--radius);
   }
-  table {
-    border-collapse: collapse;
-    min-width: 100%;
-  }
-  th,
-  td {
-    padding: var(--space-1);
-    text-align: center;
-    border-bottom: 1px solid var(--line);
-  }
-  thead th {
-    font-size: var(--text-xs);
-    color: var(--text-dim);
-    text-transform: uppercase;
-  }
+
+
+
   tbody th {
     text-align: left;
     white-space: nowrap;
@@ -725,10 +678,13 @@
     gap: var(--space-1);
   }
   td input {
+    border: 0;
     width: 4.2rem;
     min-height: 44px;
-    border: 1px solid var(--line);
-    border-radius: var(--radius-sm);
+    border-radius: var(--radius);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
     background: var(--surface);
     color: var(--text);
     text-align: center;
@@ -739,14 +695,12 @@
     min-width: 32px;
     min-height: 32px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: transparent;
     color: var(--text-dim);
     cursor: pointer;
     font-size: var(--text-xs);
   }
   .note-btn.filled {
-    border-color: var(--accent);
     background: var(--accent-soft);
     color: var(--text);
   }
@@ -774,16 +728,12 @@
     gap: var(--space-2);
   }
   .ledger > li {
-    border: 2px solid var(--line);
     border-radius: var(--radius-lg);
     background: var(--surface);
     padding: var(--space-2) var(--space-3);
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-  }
-  .ledger > li.leader {
-    border-color: var(--accent);
   }
   .ledger-total {
     margin-left: auto;
@@ -823,10 +773,9 @@
   }
   .add-entry {
     min-height: 44px;
-    border-radius: var(--radius);
-    border: 1px dashed var(--line);
-    background: transparent;
-    color: var(--text);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text-dim);
     cursor: pointer;
   }
   .board {
@@ -858,44 +807,17 @@
   }
   .danger {
     min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--danger);
-    background: transparent;
+    border-radius: var(--radius-pill);
+    background: var(--danger-soft);
     color: var(--danger);
     cursor: pointer;
     padding: 0 var(--space-3);
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-  }
-  .field input,
-  .field select,
-  .field textarea {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-3);
-    font: inherit;
-  }
-  .field textarea {
-    padding: var(--space-2) var(--space-3);
-    font-family: var(--font-mono);
-  }
-  .check {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 48px;
-  }
-  .check input {
-    width: 24px;
-    height: 24px;
-  }
+
+
+
+
+
   .cat-list {
     display: flex;
     flex-direction: column;
@@ -911,9 +833,9 @@
     gap: var(--space-2);
   }
   .cat-row input {
+    border: 0;
     min-height: 44px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
@@ -923,7 +845,6 @@
   .cat-row button.remove {
     min-height: 44px;
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: transparent;
     color: var(--text-dim);
     cursor: pointer;
@@ -936,24 +857,14 @@
     flex: 1;
     min-height: 44px;
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface);
     color: var(--text);
     cursor: pointer;
     font: inherit;
   }
   .cat-actions button.save {
-    border-color: var(--accent);
     background: var(--accent-soft);
     font-weight: 700;
   }
-  .wide {
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 0;
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-    cursor: pointer;
-  }
+
 </style>

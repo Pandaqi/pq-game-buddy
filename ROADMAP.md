@@ -2,16 +2,19 @@
 
 **PQ-GAME-BUDDY** is a small library of tools that help people while playing _board games_, _video games_, or game-like activities in general.
 
-> Doc version 3 · 2026-11-17 · Owner: Tiamo / Pandaqi
+> Doc version 4 · 2026-11-17 · Owner: Tiamo / Pandaqi
 >
-> **Status: M0–M5 code shipped; M6 (style) is next and is deliberately unstarted.**
+> **Status: M0–M6 code shipped; M7 (stretch) and M8 (Pandaqi's own games) are planned.**
 > `bun run check` passes end to end: stale-manifest check, `tsc`, `svelte-check`
 > with 0 warnings, the full test suite, template lint (61 files · 0 errors · 0
-> warnings) and a build inside budget (192 KB gzipped app, 193 KB single file).
-> 21 tools are live and 40 game templates plus 21 tool examples ship. The release
-> gates that need a human — hosting, the device matrix, screen-reader passes, the
-> five-person first-use test, low-end profiling — are listed in §7 and are **not**
-> done.
+> warnings) and a build inside budget (125 KB gzipped first visit, 265 KB single
+> file). 21 tools are live and 40 game templates plus 21 tool examples ship. M6
+> replaced the visual language twice: the second pass is the woodland lantern table
+> in `docs/STYLE.md`, with self-hosted Dosis and Raleway, borderless fills, folds and
+> bouncy one-shot motion. The release gates
+> that need a human — hosting, the device matrix, screen-reader passes, the
+> five-person first-use test, low-end profiling, the daylight visual audit and the
+> screenshot set — are listed in §7 and are **not** done.
 
 This document is the build plan: what the thing must contain, the template system that makes it extensible, the architecture that keeps it tiny, and the milestones that get us to v1.0 and beyond. Detailed reference material lives in `docs/` and is not repeated here.
 
@@ -45,8 +48,9 @@ The trick to supporting "every tool anyone might want" is not to build a hundred
 | M3 | Depth and the launch library | Shipped | lives, counters, turns, reveal, rules, log; 27 templates |
 | M4 | Breadth: the long tail | Shipped | decks, bag, bracket, draft, buzzer, script, words, prompts, custom, splits, display mode |
 | M5 | Polish, accessibility and release | Code shipped, human gates open | Docs, print, i18n statement, a11y/device/profiling checklist |
-| M6 | **Style: the cozy table** | **Planned — do not start yet** | A full visual identity pass over every surface |
-| M7 | After v1.0 | Planned | PWA, gallery, QR sharing, voice, more languages |
+| M6 | Style: the lantern table | Shipped | Woodland tokens, Dosis/Raleway, borderless hierarchy, folds, motion |
+| M7 | After v1.0 | Planned | PWA, theme files, voice, a writing pass, more languages |
+| M8 | Pandaqi's own games | Planned | First-party templates for the pandaqi.com catalogue |
 
 ### How to read this document
 
@@ -242,12 +246,12 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 | Budget | Limit | Current |
 |--------|-------|---------|
 | One chunk, gzipped | 24 KB | 21 KB (words: view, logic and five language packs) |
-| All deferred chunks, gzipped | 250 KB | 167 KB |
+| All deferred chunks, gzipped | 250 KB | 168 KB |
 | Core JS and CSS, gzipped | 45 KB | inside |
-| First visit (entry + shared chunk + CSS), gzipped | 150 KB | 62 KB |
-| Single file, gzipped | no ceiling: the whole app in one file | 205 KB |
+| First visit (entry + shared chunk + CSS), gzipped | 150 KB | 125 KB |
+| Single file, gzipped | no ceiling: the whole app in one file | 265 KB |
 
-**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the 61 template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is just tokens and base (1.2 KB). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 21 KB (its view, logic and five language packs) and the next largest chunk is the 61 template texts at 11 KB, so a tool that passes it is one to split rather than a budget to raise. A total ceiling of 250 KB on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat; the deferred total is 167 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. These are ceilings, not targets.
+**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the 61 template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (60 KB gzipped, 56 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 21 KB (its view, logic and five language packs) and the next largest chunk is the 61 template texts at 11 KB, so a tool that passes it is one to split rather than a budget to raise. A total ceiling of 250 KB on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat; the deferred total is 168 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 96 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 25 KB of headroom left. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. These are ceilings, not targets.
 
 ### 5.3 Gates
 
@@ -257,50 +261,58 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 
 
 
-### M6 — Style: the cozy table (L, not started)
+### M6 — Style: the lantern table (L, shipped)
 
-**Goal:** keep every behaviour, replace the visual language. Today the app is correct, legible and a bit institutional: uniform 1 px borders, neutral gray surfaces, one accent, everything in the same rounded rectangle. It should feel like a well-loved game box on a kitchen table — warm, playful, a little handmade — while staying calm enough that four people can read a score from across the room.
+**Goal met:** every behaviour kept, the visual language replaced twice. The first pass
+was paper and ink with heavy outlines; the second answers the brief "cozy, playful,
+colourful, hierarchy first" with a woodland lantern table: cream paper, deep forest
+titles, six bright family accents, self-hosted Dosis and Raleway, almost no borders,
+secondary detail folded away and short bouncy entrances. `docs/STYLE.md` is the
+contract: tokens, family accents, type, radius, shadow, marks and doodles, motion,
+layout, a measured contrast table and a restyle checklist a second person can follow.
 
-Reference points: 
+Shipped steps:
 
-* Developer's other projects (<https://pandaqi.com>, <https://peerful.pages.dev>, <https://thewaywardmelody.com>, <https://tiamopastoor.com>, <https://eltroubadour.com>, <https://thesagaoflife.com>, <https://rodepanda.com>)
-  * Especially peerful and pandaqi are relevant here, as they are about playing games.
-* The better board-game companion sites and playful video-game sites (chunky type, hand-drawn marks, colour used as identity, generous whitespace, one loud thing per screen, some small wacky/weird/characteristic/unique thing or pattern to make it stand apart from the crowd).
+- **M6.1 Tokens.** `tokens.css` rewritten: cream paper (`#fbf2dd`), forest ink, six
+  family triplets (berry randomize, honey time, teal track, plum reveal, moss
+  reference, sky flow), soft coloured shadows, 10/16/26/28/999 radii, a dark room and
+  a table-mode override. Border tokens survive only for table rules and state rings.
+- **M6.2 Typography.** Dosis and Raleway, downloaded, subset to the app's characters,
+  base64-inlined in `fonts.css`; a rem scale at 13/15/17/22/30/40/52/72; 40–72 px
+  readouts, uppercase Raleway section labels, forest screen titles.
+- **M6.3 Shape and texture.** Fills instead of outlines everywhere; a card is a soft
+  coloured shadow; keys are pills that lift on hover via brightness so a coloured key
+  never loses its colour; fields are cushions; the hatch grain and two lantern glows
+  stay CSS-only.
+- **M6.4 Marks and doodles.** `core/ui/icons.ts` keeps the 24 px mark grid and gains a
+  distinct `notes` mark for the sound board; `core/ui/doodles.ts` adds the woodland
+  scene and five doodles as inline SVG placeholders.
+- **M6.5 Layout and hierarchy.** Home opens with a hero scene and a `clamp(3rem, 12vw,
+  5.5rem)` title, then the wash-tinted shelf; sessions are a quiet strip and the tool
+  owns the screen with no wrapper card; options, history and secondary settings fold
+  behind `core/ui/Fold.svelte`.
+- **M6.6 Motion.** `pop` 120 ms, `settle` 200 ms, `reveal` 280 ms, `bounce` 340 ms;
+  shelf tiles stagger in, a tool blooms when its tab is tapped, the fold chevron
+  bounces open. No continuous animation; confetti once, on a finished game with a
+  winner, skipped under reduced motion.
+- **M6.7 Copy.** Warm, short voice across empty states, confirms, errors and the cue
+  sheet; duration errors say what to type instead; no exclamation marks in errors.
+- **M6.8 Modes.** Light cream, warm-charcoal dark with pastel accents, table mode at
+  1.25× type with the shell header hidden, print at ink on white. The reveal cover
+  stays opaque in every mode.
+- **M6.9 Shared tool CSS.** The rules most tools repeated moved into
+  `core/styles/components.css`: `.panel`, `.block`, `.stage`, `.row`, `.field`, `.modes`,
+  `.wide`, `.primary`, `.ghost`, `.check`, `.dim`, `.small`, `.hint`, `.history`,
+  tables and `.fold`. 202 duplicated rules were deleted from the 21 tool views, and
+  the remaining ink outlines were stripped in the same pass. No view holds a hex
+  colour, a radius or a shadow outside `tokens.css`.
+- **M6.10 Handover.** `docs/STYLE.md`, licensing for both fonts, and this roadmap. The
+  screenshot set stays in §7: a picture of a real device in daylight is the point, and
+  the agent cannot take one.
 
-NOTE: 
-
-* These projects of mine also show millions of words in _my_ writing style. Investigate a representative part of it, then add a task to M7 (BEFORE localization) to update any texts to match more closely with this (using some bullet points results and examples to guide the work)
-* The Pandaqi website (<https://pandaqi.com>) contains nearly one hundred board games of mine. Check them and find the ones that would benefit from a default `.gamebuddy` template too. (Possibly mark these templates as "pandaqi" or something or place them in a different folder to keep them separate from popular published board games templates.) Do NOT actually create these yet, merely add another milestone (M8) with a specific plan for doing so.
-
-**Non-negotiables while restyling:** 
-
-* No network assets (no webfonts, no images fetched at runtime)
-* No new dependencies
-* Contrast and target sizes never regress
-* The byte budget is checked after every step
-* No (slow) animation may sit between the player and the score.
-* No objectively ugly/inaccessible stuff, like scrollbars within scrollbars (especially if using default scrollbar instead of nicely styled ones!), horizontal scrollbars, text/buttons/interactive elements that are far too tiny, etcetera.
-
-1. **M6.1 Identity and tokens.** Define the palette as tokens: a warm paper base (`--paper`), two or three ink tones, one playful accent per tool family (randomize = coral, time = amber, track = teal, reveal = plum, reference = moss, flow = sky), and a "table" set of six to eight colourblind-safe player colours that also work on paper. Replace the current gray ramp with warm neutrals. Radius scale (6/12/20/999), border weight (1.5–2 px, dark ink rather than gray), and a single shadow recipe. Deliverable: `tokens.css` rewritten, every view using tokens only, both themes verified, contrast table recorded.
-2. **M6.2 Typography.** Two families, both system or bundling-free: a friendly display face for tool titles, scores and big numbers (wide, slightly rounded, heavy weight) and a quiet humanist text face for body and tables. Use `ui-rounded` / `system-ui` stacks with explicit fallbacks so no font ships. Define a type scale in `rem` (12/14/16/20/26/34/48/72), tabular numerals for scores and timers, optical sizes for the huge readouts, and a rule that no number a player must read is under 20 px.
-   * You may download an open source/commercially available font and include it in the app, if you find one or two that would fit amazingly well.
-   * But make it easy for ME to change the heading/body/accent fonts later (because I intend to design my own custom fonts later on)
-   * Deliverable: scale in tokens, all views migrated, no font files added.
-3. **M6.3 Shape and texture.** Cards get hand-drawn energy without pictures: slightly irregular corner radii per surface class, a 2 px ink border with an offset "sticker" shadow, and one subtle paper-grain background generated purely in CSS (repeating gradients, no image bytes). Buttons become chunky keys with a pressed state that translates 2 px down. Inputs get a soft underline instead of a box. Deliverable: primitives in `core/ui/` restyled once, so all 21 tools inherit it.
-4. **M6.4 Illustration system.** A tiny set of inline SVG marks drawn on a single 24 px grid: dice, clock, card, chip, token, bracket, words, sparkle, paw, flag, heart, key. One line weight, round caps, slightly wobbly paths so they read as drawn rather than iconographic. Every tool gets a mark; the home tiles use a mark plus one accent wash. No emoji as UI (they render differently per OS and read as filler). Deliverable: an icon module of inline paths, under 6 KB gzipped total.
-5. **M6.5 Layout and rhythm.** A 4 px spacing scale, 12-column mobile grid, and a consistent "stage" for the primary readout: one huge number or name in the upper third, controls in thumb reach, secondary detail folded. Home becomes a playful shelf (2 columns on phone, 3–4 on tablet) with a one-line "what is this?" under each tile. Session header shrinks to a compact bar so the tool owns the screen. Deliverable: home, gallery, session, settings and every tool on the new rhythm.
-6. **M6.6 Motion and feedback.** Three named motions only: `pop` (120 ms scale on a tap), `settle` (180 ms slide on a state change), `reveal` (240 ms fade and lift for a secret). Dice and coins keep their shuffle but shorten; the buzzer gets a hard flash, not a bounce. Confetti is allowed exactly once: a finished game with a winner, dismissible, skipped under reduced motion. Every motion has a static end state, and `prefers-reduced-motion` removes all of them. Deliverable: motion tokens plus a per-tool audit that nothing animates continuously.
-7. **M6.7 Warm copy.** Voice: a friend who has played this game before, never a manual. Rewrite empty states ("Nothing drawn yet — tap the bag"), confirms ("Clear the whole sheet? The scores go, the players stay"), and errors ("That's not a duration. Try 3m or 180s."). Keep every string short enough for a 360 px screen. Add a tiny bit of personality to the cue sheet and the finish flow. No jokes that block comprehension; no exclamation marks in errors.
-8. **M6.8 Dark, light and table/high-contrast mode.** Light = paper and ink; dark = a dim room, not inverted neon (deep warm charcoal, desaturated accents, no pure white text); table mode = maximum contrast, 1.25× type, thicker targets, chrome hidden. Player colours need a dark variant with the same hue identity. Test every combination, including the reveal cover (must stay opaque) and print (ink on white, accents as hairlines).
-   * Bonus deliverable: an easy way for people to re-THEME / STYLE it themselves. Something that works both online and offline/local, maybe some `.gamebuddy-theme` format that is very easy to understand and write for regular people. (It can do anything: change fonts, change sizes, change colors, hide/show parts of the interface, etcetera---all to help people make this tool do exactly what they WANT it to do.)
-9.  **M6.9 The audit pass.** Walk every screen with a checklist: one primary action, readable at 2 m, no orphaned gray, no mixed metaphors (a sticker card next to a flat table), 44 px minimum, contrast AA, focus visible on a warm background, 200 percent zoom, 320 px width, print. Measure the gzipped delta after each step and keep the total under +8 KB.
-10. **M6.10 Handover.** A one-page style sheet in `docs/` (tokens, scale, radius, shadow, icon grid, motion names, do/don't examples), plus a screenshot set for the release page and the pandaqi.com tools index. Old screenshots replaced; no stale visual claims in the README.
-
-KEEP IN MIND: Visual styling is all about HIERARCHY. Any tool has things that are most important, things that are only sometimes important, and things that are least important (generally speaking). The style should reflect that. It should make the tool easy to use because the thing people need to click/see/read/understand is exactly the thing easiest to see now/attracting their attention. That is the core principle that will automatically lead to pretty designs.
-
-**DoD:** every surface uses tokens only; no view has a hard-coded colour, radius or shadow; contrast and target sizes pass in light, dark and table mode; the app still makes zero network requests and adds no font or image bytes; total gzipped growth stays under 8 KB; the style sheet exists and a second person could restyle a new tool from it without asking questions.
-
-**Explicitly not in M6:** new tools, new template keys, new settings, illustrations that need lots of files, custom webfonts, sound design changes, marketing pages.
+**Moved to M7 on purpose:** the `.gamebuddy-theme` file (a new format and a new settings
+surface, both outside M6) and the copy pass against the Pandaqi voice, which belongs with
+localization so the strings are written once.
 
 ### M7 — After v1.0 (stretch)
 
@@ -309,6 +321,8 @@ Each item needs its own mini-plan and must keep the offline, no-account, no-netw
 - **Dice lab** (custom symbol faces, saved sets) and **wheel / slot views** for `pick`.
 - **Initiative view** for `turns` (per-player initiative values, next and round reset), so D&D combat stops needing a manual order.
 - **Log filters and search**, playtime totals, win rates and "what should we play" by player count and time.
+- **A writing pass against the Pandaqi voice**, before localization so the strings are final once. Sampled from <https://pandaqi.com>: direct address ("Try any game that catches your eye"), a concrete picture instead of a category ("Be a math detective and guess the missing numbers"), short sentences, one aside after a dash, first person for the author and "we" for the table, and an exclamation mark at most on a marketing line (never in an error). Work: rewrite `docs/USER-GUIDE.md`, the About panel, the template `notes` and the tool blurbs in that voice, keep the copy rules in `AGENTS.md`, and add three example strings to `docs/STYLE.md` so later copy has a target.
+- **Theme files.** A `.gamebuddy-theme` text format: `key: value` lines over the tokens in `tokens.css` (paper, ink, families, fonts, radius, hide-chrome flags), imported from Settings, applied as custom properties on `:root`, validated with line-numbered diagnostics like templates, and never fetched. It works offline and hosted because it is a file the player owns. M6 left the seam: no view may hard-code a colour, radius or shadow.
 - **Full string extraction** through `t()` and a first translated UI, once the text is stable.
 - **PWA install** for the hosted build (service worker, hosted only; the single file stays the offline story).
 - **Community template gallery**: a static JSON index plus pull-request contributions; no runtime network requirement for the core app.
@@ -317,6 +331,36 @@ Each item needs its own mini-plan and must keep the offline, no-account, no-netw
 - **House-rule variants** as first-class template sections (`[variant]`), selectable at load time.
 - **Plugin authoring kit**: a documented example tool and a conformance test others can run.
 - **Accessibility extras**: a "huge mode" beyond table mode, switch-access-friendly layouts, a screen-reader tutorial for the reveal flow.
+
+### M8 — Pandaqi's own games (L, planned)
+
+**Why:** the shipping target is the `tools` folder at pandaqi.com, which already hosts
+nearly a hundred of Tiamo's own board games. A first-party template per game turns that
+catalogue into two-tap setups and gives the app a reason to live on the same site.
+
+**Plan**
+
+1. **Audit the catalogue** (`pandaqi.com/categories/board-game/`, by series: Bidding
+   Blocks, Mapped Out, Death by Digits, Fiddlefoo, The Luck Legends, Naivigation,
+   Chiptales, Feed the Beast, …). For each game record player count, length, whether a
+   device adds anything (scorepad, timer, secret deal, dice, word check) and which
+   primitives it needs. A game a phone cannot help is skipped, not forced.
+2. **Series first.** One template per series that composes the shared parts (timer +
+   score + rules), with per-game overrides only where the scoring really differs. A
+   series with one good template beats ten near-duplicates.
+3. **Keep them separate.** Store them in `src/data/templates/pandaqi/` with
+   `tags: pandaqi` plus the usual family tags, and give the gallery a "Pandaqi" filter.
+   The generator scans both folders, and the linter and round-trip test cover both.
+4. **Content rules unchanged.** Original summaries, a source link to the game's page, a
+   license field on every file; no copied rules text, art or logos.
+5. **Batches of ten**, each ending in `bun run check`, a template-lint pass, one real
+   play test and a CHANGELOG line. Do not start the next batch until the last is clean.
+6. **Not blocked on new tools.** If a game needs a primitive the app lacks, note it in
+   M7 instead of half-building a tool inside a template.
+
+**DoD:** every chosen game has a template that starts clean, passes lint and is reachable
+from the gallery's Pandaqi filter; the skipped games and the reason are listed in the
+template folder's README.
 
 ## 7. What needs you (not the agent)
 
@@ -329,6 +373,9 @@ These cannot be done from this environment and are **not** claimed as done anywh
 5. **Low-end profiling.** A 2018-era Android device with 4× CPU throttling: time to interactive, memory, long tasks.
 6. **A real second screen.** Projector or TV for display mode, to confirm the broadcast and the type size from across a room.
 7. **Content review.** Spot-check the licensing notes and the rules summaries before publishing under your name.
+8. **Visual audit in daylight.** Table mode on a phone at 2 m in a bright room: one primary action per screen, nothing orphaned or grey, no scrollbar inside a scrollbar. Checklist in `docs/STYLE.md` §9.
+9. **Screenshot set.** Capture home, a session, the gallery and the reveal cover in light, dark and table mode for the release page and the pandaqi.com tools index; replace the old screenshots and delete stale visual claims.
+10. **A second person restyles a tool** from `docs/STYLE.md` alone and reports where it was ambiguous.
 
 ## 8. Risks and mitigations
 
@@ -342,7 +389,7 @@ These cannot be done from this environment and are **not** claimed as done anywh
 | Content licensing | Word lists, rules summaries and art are easy to get wrong | Curated public-domain packs, original prose, `LICENSES.md`, About panel, review before release |
 | Accessibility debt | Retrofitting costs more and excludes players | Compiler warnings at zero, accessible primitives, audit before release |
 | Audio quirks (especially iOS) | Alarms silently fail | Unlock on gesture, visible mute state, every cue has a visual twin |
-| A restyle that fights the tools | Pretty can beat usable | M6 keeps behaviour, tokens and contrast fixed, and audits each screen for one primary action |
+| A restyle that fights the tools | Pretty can beat usable | M6 kept every behaviour and fixed tokens and contrast; every later style change re-runs the `docs/STYLE.md` checklist |
 | Old URL breakage on pandaqi.com | Bookmarks and search traffic | Redirect stubs for every old path, live link check in the release checklist |
 | Single implementer, long tail | Motivation and consistency | Milestones are shippable; content work batches; no deadline shortcuts on core |
 
@@ -356,6 +403,8 @@ M4 choices: word packs are hand-curated original lists (licensed, small) rather 
 
 M5 choices: secondary pages are code-split (`LazyView`, one chunk each, resolved component cached) and views compile with CSS injected, so a screen's styles arrive with its chunk instead of in a stylesheet every first visit pays for; template texts are generated into their own chunk and parsed at `bun run gen` time rather than at start-up. Tool modules became chunks of their own too: the generated manifest carries only each tool's metadata, `core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so a chunk is a whole tool. Each tool's view was then folded into that chunk instead of being fetched separately, which halved the requests a session makes; the per-chunk ceiling is 24 KB (one screen), with a 250 KB ceiling on the deferred total. `--mode=site` writes one page per tool and `--mode=single` writes one embedded `index.html`, so the shared app, the static site and the copy-around file all come from one build. The core ceiling did not move; the single-file ceiling was removed as meaningless. Print is a stylesheet plus a menu action, not a separate export pipeline. Localization is scaffolding only, and the docs say so instead of implying translations exist.
 
+M6 choices: one accent per tool family resolved from `data-family` and the `--fam-*` tokens, so a view never names a colour; seats stay stored hex (templates may name one) and are drawn as a filled dot with dark `--on-seat` initials, which clears 4.5:1 on every seat in both themes while keeping the name as the real cue; Dosis and Raleway are self-hosted, subset and base64-inlined rather than fetched, because the offline invariant outranks the bytes and the faces are what make the app feel warm — the 56 KB gzipped they add is the one deliberate large spend, with 25 KB of the first-visit ceiling left; borders are dropped for fills, space and warm coloured shadows, and the few edges that remain are table rules, the focus ring and inset state rings; secondary detail folds behind native `<details>` so a screen can breathe; four motion names, all one-shot, ending in a correct static state; confetti only for a finished game with a winner; the most repeated tool CSS is not copied into 21 views but lives once in `core/styles/components.css`; table mode hides shell chrome on a session screen by tagging the root with the route. The `.gamebuddy-theme` bonus and the Pandaqi voice pass moved to M7 because one adds a format and the other belongs before localization.
+
 ## 10. Global definition of done
 
 Every tool and mode, at every milestone, must satisfy all of these before it is considered finished:
@@ -368,6 +417,7 @@ Every tool and mode, at every milestone, must satisfy all of these before it is 
 - [ ] Every control is keyboard reachable, labeled and focus-visible.
 - [ ] Targets are at least 48 px; layout works at 320 px width and 200 percent zoom.
 - [ ] Contrast meets AA in light and dark modes; no colour-only meaning.
+- [ ] Uses tokens only: no colour, radius or shadow outside `core/styles/tokens.css`.
 - [ ] Reduced motion and muted sound are respected; every audio cue has a visual twin.
 - [ ] Has a preset schema and an `example.gamebuddy`; validates from it and serializes back to one.
 - [ ] Has an export path (text, CSV or print).

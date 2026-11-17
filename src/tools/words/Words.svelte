@@ -158,55 +158,28 @@
     align-items: flex-end;
     justify-content: space-between;
   }
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
-    color: var(--text-dim);
-    font-size: var(--text-sm);
-  }
+
   .field input,
   .field select {
+    border: 0;
     min-height: 44px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
     font: inherit;
   }
-  .modes {
-    display: flex;
-    gap: var(--space-1);
-    overflow-x: auto;
-    padding-bottom: var(--space-1);
-  }
-  .modes button {
-    min-height: 44px;
-    padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    white-space: nowrap;
-    cursor: pointer;
-  }
-  .modes button.active {
-    border-color: var(--accent);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
-  }
+
+
+
   .entry {
     display: flex;
     gap: var(--space-2);
     align-items: flex-end;
   }
   .entry input {
+    border: 0;
     flex: 1;
     min-height: 56px;
-    border-radius: var(--radius);
-    border: 2px solid var(--line);
     background: var(--surface);
     color: var(--text);
     padding: 0 var(--space-3);
@@ -214,16 +187,7 @@
     font-size: var(--text-lg);
     text-transform: uppercase;
   }
-  .primary {
-    min-height: 56px;
-    padding: 0 var(--space-4);
-    border: 0;
-    border-radius: var(--radius);
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 800;
-    cursor: pointer;
-  }
+
   .primary.wide {
     width: 100%;
   }
@@ -232,11 +196,9 @@
     padding: var(--space-3);
     border-radius: var(--radius);
     background: var(--accent-soft);
-    border: 1px solid var(--accent);
   }
   .verdict.bad {
     background: var(--danger-soft);
-    border-color: var(--danger);
   }
   .filters {
     display: grid;
@@ -252,10 +214,9 @@
     min-height: 48px;
   }
   .inline input {
+    border: 0;
     min-height: 44px;
     min-width: 8rem;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     padding: 0 var(--space-2);
@@ -274,7 +235,6 @@
     align-items: baseline;
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     font-family: var(--font-mono);
   }
@@ -310,28 +270,14 @@
     min-width: 56px;
     min-height: 64px;
     border-radius: var(--radius);
-    border: 2px solid var(--accent);
     background: var(--accent-soft);
     font-size: var(--text-xl);
     font-weight: 800;
     font-family: var(--font-mono);
   }
-  .row {
-    display: flex;
-    gap: var(--space-2);
-  }
-  .row button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    cursor: pointer;
-  }
-  .row .primary {
-    border-color: var(--accent);
-  }
+
+
+
   .board {
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -346,7 +292,6 @@
     min-height: 4.2rem;
     padding: var(--space-1);
     border-radius: var(--radius-sm);
-    border: 1px solid var(--line);
     background: var(--surface-2);
     color: var(--text);
     font-weight: 700;
@@ -354,19 +299,19 @@
     cursor: pointer;
   }
   .tile.keyed.red {
-    background: #f7d9d5;
-    border-color: #c0392b;
-    color: #5c1a13;
+    background: var(--team-red-wash);
+    color: var(--text);
   }
   .tile.keyed.blue {
-    background: #d8e3f5;
-    border-color: #2f6fc0;
-    color: #14294a;
+    background: var(--team-blue-wash);
+    color: var(--text);
+  }
+  .tile.keyed.neutral {
+    background: var(--surface-2);
   }
   .tile.keyed.assassin {
-    background: #2b2b2b;
-    border-color: #000;
-    color: #fff;
+    background: var(--team-black);
+    color: var(--on-accent);
   }
   .tile.revealed {
     text-decoration: line-through;
@@ -376,15 +321,7 @@
     font-size: var(--text-xs);
     font-weight: 600;
   }
-  .history {
-    margin: 0;
-    padding-left: var(--space-4);
-  }
-  .dim {
-    color: var(--text-dim);
-    margin: 0;
-  }
-  .small {
-    font-size: var(--text-sm);
-  }
+
+
+
 </style>

@@ -196,7 +196,7 @@
       {/each}
     </ul>
   {:else}
-    <p class="empty">Nothing matches those filters. Try “Any” or another tag.</p>
+    <p class="empty">No template matches those filters. Try “Any”, or clear the search.</p>
     <a class="primary link" href="#/editor">Write one in the editor</a>
   {/if}
 </div>
@@ -231,12 +231,12 @@
 
 <style>
   .gallery {
-    max-width: 46rem;
+    max-width: 48rem;
     margin: 0 auto;
     padding: var(--space-4) var(--space-3) var(--space-6);
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-5);
   }
   .head {
     display: flex;
@@ -247,6 +247,7 @@
   h1 {
     margin: 0;
     font-size: var(--text-2xl);
+    color: var(--forest);
   }
   .dim {
     margin: var(--space-1) 0 0;
@@ -256,52 +257,48 @@
     font-size: var(--text-sm);
   }
   .back {
-    min-height: 44px;
+    min-height: 46px;
     display: inline-flex;
     align-items: center;
-    padding: 0 var(--space-3);
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface);
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
     color: var(--text);
     text-decoration: none;
+    font-weight: 600;
   }
   .filters {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-3);
   }
   .search input {
     width: 100%;
-    min-height: 48px;
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
-    padding: 0 var(--space-3);
+    min-height: 52px;
   }
   .chips {
     display: flex;
-    gap: var(--space-1);
+    flex-wrap: wrap;
+    gap: var(--space-2);
   }
   .chips button {
-    min-height: 44px;
-    padding: 0 var(--space-3);
-    border-radius: 999px;
-    border: 1px solid var(--line);
-    background: var(--surface);
-    color: var(--text);
+    min-height: 46px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text-dim);
     cursor: pointer;
   }
   .chips button.active {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-    font-weight: 700;
+    background: var(--accent);
+    color: var(--accent-text);
+    font-weight: 800;
+    box-shadow: var(--shadow-key);
   }
   .selects {
     display: flex;
     align-items: flex-end;
-    gap: var(--space-2);
+    gap: var(--space-3);
     flex-wrap: wrap;
   }
   .field {
@@ -310,24 +307,21 @@
     gap: var(--space-1);
     color: var(--text-dim);
     font-size: var(--text-sm);
+    font-weight: 600;
   }
   .field select,
   .field input {
-    min-height: 44px;
-    border-radius: var(--radius);
-    border: 1px solid var(--line);
-    background: var(--surface-2);
-    color: var(--text);
-    padding: 0 var(--space-2);
+    min-height: 46px;
+    min-width: 8.5rem;
+    padding: 0 var(--space-3) 0 var(--space-4);
   }
   .surprise {
-    min-height: 44px;
-    padding: 0 var(--space-3);
-    border-radius: var(--radius);
-    border: 1px solid var(--accent);
+    min-height: 46px;
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-pill);
     background: var(--accent-soft);
-    color: var(--text);
-    font-weight: 700;
+    color: var(--accent-deep);
+    font-weight: 800;
     cursor: pointer;
   }
   .imports {
@@ -340,11 +334,10 @@
     font-size: var(--text-base);
   }
   .import-chip {
-    min-height: 44px;
-    padding: 0 var(--space-3);
-    border-radius: var(--radius);
-    border: 1px dashed var(--line);
-    background: var(--surface);
+    min-height: 46px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
@@ -353,7 +346,7 @@
     margin: 0;
     padding: 0;
     display: grid;
-    gap: var(--space-2);
+    gap: var(--space-3);
   }
   @media (min-width: 34rem) {
     .list {
@@ -371,19 +364,22 @@
     align-items: flex-start;
     gap: var(--space-1);
     text-align: left;
-    padding: var(--space-3) var(--space-5) var(--space-3) var(--space-3);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--line);
+    padding: var(--space-4) var(--space-6) var(--space-4) var(--space-4);
+    border-radius: var(--radius-card);
     background: var(--surface);
     color: var(--text);
+    box-shadow: var(--shadow-card);
     cursor: pointer;
   }
   .card:hover {
-    border-color: var(--accent);
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-lift);
   }
   .title {
+    font-family: var(--font-display);
     font-weight: 800;
-    font-size: var(--text-lg);
+    font-size: var(--text-xl);
+    line-height: 1.1;
   }
   .meta {
     color: var(--text-dim);
@@ -393,19 +389,20 @@
     color: var(--text-dim);
     font-size: var(--text-xs);
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
+    font-weight: 700;
   }
   .star {
     position: absolute;
-    top: var(--space-1);
-    right: var(--space-1);
+    top: var(--space-2);
+    right: var(--space-2);
     min-width: 44px;
     min-height: 44px;
-    border: 0;
-    border-radius: 50%;
+    border-radius: var(--radius-round);
     background: transparent;
-    color: var(--text-dim);
-    font-size: var(--text-lg);
+    box-shadow: none;
+    color: var(--text-faint);
+    font-size: var(--text-xl);
     cursor: pointer;
   }
   .star.on {
@@ -415,33 +412,33 @@
     color: var(--text-dim);
   }
   .primary {
-    min-height: 48px;
+    min-height: 50px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0 var(--space-4);
-    border-radius: var(--radius);
+    padding: 0 var(--space-5);
+    border-radius: var(--radius-pill);
     background: var(--accent);
     color: var(--accent-text);
     text-decoration: none;
-    font-weight: 700;
+    font-weight: 800;
   }
   .link {
     width: fit-content;
   }
   .wide {
-    min-height: 52px;
-    border-radius: var(--radius);
-    border: 0;
+    min-height: 54px;
+    border-radius: var(--radius-pill);
     background: var(--accent);
     color: var(--accent-text);
-    font-weight: 700;
+    box-shadow: var(--shadow-key);
+    font-weight: 800;
     cursor: pointer;
   }
   .wide.ghost {
-    background: var(--surface);
-    border: 1px solid var(--line);
-    color: var(--text);
+    background: transparent;
+    color: var(--text-dim);
+    box-shadow: none;
     font-weight: 600;
   }
 </style>
