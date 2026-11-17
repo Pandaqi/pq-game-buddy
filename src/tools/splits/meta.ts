@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'splits',
   title: 'Splits',
-  blurb: 'Speedrun split timer with a personal best, deltas and gold splits.',
+  blurb: 'Race the clock, then compare splits: your best run and gold splits.',
   family: 'time',
   seats: 'none',
-  icon: mark('stopwatch'),
+  icon: ICON,
   tags: ['time', 'speedrun'],
 };
 

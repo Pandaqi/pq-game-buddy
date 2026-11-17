@@ -5,6 +5,7 @@ name: Ticket to Ride
 players: 2-5
 time: 60m
 tags: board, strategy
+icon: train
 source: https://www.daysofwonder.com/tickettoride/
 author: pandaqi
 license: CC-BY-SA-4.0

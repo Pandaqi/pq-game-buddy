@@ -13,6 +13,7 @@ import {
   type Template,
 } from '../src/core/template/parse';
 import { serializeTemplate } from '../src/core/template/serialize';
+import { applyVariant, toolsForSession } from '../src/core/template/session-tools';
 import { formatDurationText, parseDuration, splitList } from '../src/core/template/schema';
 
 const root = join(import.meta.dir, '..');
@@ -207,6 +208,7 @@ describe('round trip', () => {
           : undefined,
         time: first.template.game.time,
         tags: first.template.game.tags,
+        icon: first.template.game.icon,
         source: first.template.game.source,
         author: first.template.game.author,
         license: first.template.game.license,
@@ -220,6 +222,13 @@ describe('round trip', () => {
       })),
       setup: first.template.setup,
       rules: first.template.rules,
+      variants: first.template.variants.map((variant) => ({
+        id: variant.id,
+        name: variant.name,
+        players: variant.players,
+        time: variant.time,
+        text: variant.text,
+      })),
     };
     const written = serializeTemplate(spec, (id) => schemas[id]);
     const second = parseTemplate(written);
@@ -227,6 +236,9 @@ describe('round trip', () => {
     expect(second.template.game.name).toBe(first.template.game.name);
     expect(second.template.players).toEqual(first.template.players);
     expect(second.template.tools.length).toBe(first.template.tools.length);
+    expect(second.template.variants.map((variant) => variant.id)).toEqual(
+      first.template.variants.map((variant) => variant.id),
+    );
     const again = resolveOf(second.template);
     expect(again.tools.map((tool) => tool.instanceId)).toEqual(resolved.tools.map((tool) => tool.instanceId));
     expect(again.tools.map((tool) => tool.values)).toEqual(resolved.tools.map((tool) => tool.values));
@@ -268,5 +280,77 @@ describe('round trip', () => {
     const merged = allDiagnostics(diagnostics, resolveOf(template).diagnostics);
     const lines = merged.map((item) => item.line);
     expect(lines).toEqual([...lines].sort((a, b) => a - b));
+  });
+});
+
+describe('template icons', () => {
+  test('reads a mark name from [game]', () => {
+    const { template, diagnostics } = parseTemplate('[game]\nname: X\nicon: dice\n');
+    expect(template.game.icon).toBe('dice');
+    expect(diagnostics).toEqual([]);
+  });
+
+  test('a known mark reaches the summary', () => {
+    expect(summariseTemplate('x', '[game]\nname: X\nicon: dice\n').icon).toBe('dice');
+  });
+
+  test('an unknown mark is carried through and ignored by the renderer', () => {
+    const text = '[game]\nname: X\nicon: hologram\n';
+    expect(parseTemplate(text).template.game.icon).toBe('hologram');
+    expect(summariseTemplate('x', text).icon).toBe('hologram');
+  });
+});
+
+
+describe("house-rule variants", () => {
+  test("reads a variant block, keeping metadata apart from prose", () => {
+    const text = [
+      "[game]",
+      "name: X",
+      "[rules]",
+      "Play to five points.",
+      "[variant quick]",
+      "name: Quick game",
+      "players: 2-3",
+      "time: 20m",
+      "Play to three points instead.",
+      "Note: skip the setup round.",
+    ].join("\n");
+    const { template, diagnostics } = parseTemplate(text);
+    expect(diagnostics).toEqual([]);
+    expect(template.variants).toHaveLength(1);
+    expect(template.variants[0]).toMatchObject({
+      id: "quick",
+      name: "Quick game",
+      players: "2-3",
+      time: "20m",
+    });
+    expect(template.variants[0].text).toContain("Play to three points");
+    expect(template.variants[0].text).toContain("Note: skip the setup round.");
+  });
+
+  test("a nameless variant warns and is skipped", () => {
+    const { template, diagnostics } = parseTemplate("[game]\nname: X\n[variant]\nMore rules.\n");
+    expect(template.variants).toEqual([]);
+    expect(diagnostics.some((item) => item.message.includes("needs a name"))).toBe(true);
+  });
+
+  test("a chosen variant is appended to the rules sheet", () => {
+    const { template } = parseTemplate(
+      "[game]\nname: X\n[rules]\nBase rules.\n[variant quick]\nname: Quick\nShorter game.\n",
+    );
+    const tools = toolsForSession(template, []);
+    const withVariant = applyVariant(tools, template.variants[0]);
+    const rules = withVariant.find((tool) => tool.toolId === "rules");
+    expect(String(rules?.values.rules)).toContain("Base rules.");
+    expect(String(rules?.values.rules)).toContain("Quick");
+    expect(String(rules?.values.rules)).toContain("Shorter game.");
+  });
+
+  test("a variant can create the rules sheet when the template had none", () => {
+    const { template } = parseTemplate("[game]\nname: X\n[variant quick]\nHouse rule text.\n");
+    const withVariant = applyVariant([], template.variants[0]);
+    expect(withVariant[0].toolId).toBe("rules");
+    expect(String(withVariant[0].values.rules)).toContain("House rule text.");
   });
 });

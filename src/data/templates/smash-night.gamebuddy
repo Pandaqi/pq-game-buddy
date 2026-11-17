@@ -2,6 +2,7 @@
 
 [game]
 name: Smash Night
+icon: smash-night
 players: 2-8
 time: 60m
 tags: video-game, tournament

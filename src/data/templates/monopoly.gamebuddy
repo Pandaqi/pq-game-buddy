@@ -5,6 +5,7 @@ name: Monopoly
 players: 2-6
 time: 120m
 tags: board, family
+icon: monopoly
 source: https://www.hasbro.com/en-us/product/monopoly
 author: pandaqi
 license: CC-BY-SA-4.0

@@ -2,6 +2,7 @@
 
 [game]
 name: The Mind
+icon: the-mind
 players: 2-4
 time: 20m
 tags: party, cooperative

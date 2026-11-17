@@ -8,6 +8,7 @@ is enough: `bun run gen` picks it up and it appears on the home screen.
 ```
 src/tools/<id>/
 ├─ meta.ts            # id, title, blurb, seats, icon, tags      (no Svelte)
+├─ icon.ts            # this tool's mark, imported by meta.ts
 ├─ preset.ts          # preset schema                                (no Svelte)
 ├─ logic.ts           # pure functions + state/action types          (no Svelte)
 ├─ tool.svelte.ts     # create(ctx, values) → ToolInstance + actions
@@ -85,7 +86,17 @@ Persist nothing yourself: the session store saves on its own.
 - [ ] No `setInterval`/`requestAnimationFrame`; use `ctx.clock`.
 - [ ] No `fetch`, no external assets, no new dependency.
 - [ ] Under 24 KB gzipped as one chunk (your logic, state, view, styles and data).
-- [ ] `bun run gen && bun run check` passes.
+- [ ] `bun run gen && bun run check` passes, including `tests/tool-contract.test.ts`,
+      which runs this contract against every folder in `src/tools/`.
+
+## Conformance test
+
+`tests/tool-contract.test.ts` is the authoring kit's referee: it loads every tool
+from the manifest, builds it with a fake context and default settings, and checks
+the metadata vocabulary, the JSON state round trip, tolerant `load`, `summary`,
+commands, `results` shape, preset keys and the example template. Add a folder and
+the test covers it automatically. Keep the file when you fork the framework; run
+it in CI and a tool that quietly breaks the contract cannot ship.
 
 ## Rules of thumb
 

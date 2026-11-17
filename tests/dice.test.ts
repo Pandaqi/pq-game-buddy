@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { createRng } from '../src/core/rng';
-import { parseDice, rollDice } from '../src/tools/dice/logic';
+import { cleanFaces, namedFaces, normaliseFaces, normaliseSets, parseDice, rollDice, rollFaces } from '../src/tools/dice/logic';
 
 function roll(notation: string, seed = 'TEST') {
   const parsed = parseDice(notation);
@@ -101,5 +101,48 @@ describe('dice rolling', () => {
     const result = roll('1d1+5'.replace('1d1', '2d2'));
     const sum = result.terms[0].rolls.reduce((a, b) => a + b, 0);
     expect(result.total).toBe(sum + 5);
+  });
+});
+
+describe('custom faces', () => {
+  test('faces are cleaned, capped and never fewer than two', () => {
+    expect(normaliseFaces(['Hit', ' Miss ', ''])).toEqual(['Hit', 'Miss']);
+    expect(normaliseFaces('Hit|Miss|Blank')).toEqual(['Hit', 'Miss', 'Blank']);
+    expect(normaliseFaces([])).toEqual(['Hit', 'Miss']);
+    expect(normaliseFaces(['One'])).toEqual(['Hit', 'Miss']);
+  });
+
+  test('saved sets read from pairs or lists', () => {
+    expect(normaliseSets({ combat: 'Hit|Miss|Crit' })).toEqual({
+      combat: ['Hit', 'Miss', 'Crit'],
+    });
+    expect(normaliseSets({ combat: ['Hit', 'Miss'] })).toEqual({ combat: ['Hit', 'Miss'] });
+    expect(normaliseSets(null)).toEqual({});
+  });
+
+  test('a lab roll throws the requested number of dice and tallies them', () => {
+    const result = rollFaces(['Hit', 'Miss'], 4, createRng('TEST'));
+    expect(result.results).toHaveLength(4);
+    expect(result.results.every((face) => face === 'Hit' || face === 'Miss')).toBe(true);
+    const counted = result.tally.reduce((sum, row) => sum + row.count, 0);
+    expect(counted).toBe(4);
+  });
+
+  test('counts are clamped and zero throws still roll one die', () => {
+    expect(rollFaces(['A', 'B'], 0, createRng('X')).results).toHaveLength(1);
+    expect(rollFaces(['A', 'B'], 99, createRng('X')).results).toHaveLength(12);
+  });
+});
+
+describe('face editing', () => {
+  test('a blank face stays a slot instead of collapsing the set', () => {
+    expect(cleanFaces(['Hit', '', 'Crit', ''])).toEqual(['Hit', '', 'Crit', '']);
+    expect(namedFaces(['Hit', '', 'Crit'])).toEqual(['Hit', 'Crit']);
+  });
+
+  test('there are always at least two slots, and blanks never roll', () => {
+    expect(cleanFaces([])).toEqual(['', '']);
+    expect(cleanFaces(['Only'])).toEqual(['Only', '']);
+    expect(normaliseFaces(['Hit', '', 'Crit'])).toEqual(['Hit', 'Crit']);
   });
 });

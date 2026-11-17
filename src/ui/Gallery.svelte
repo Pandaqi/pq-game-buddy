@@ -4,8 +4,9 @@
   import { schemas } from '../core/schemas.generated';
   import { store } from '../core/session-store.svelte';
   import { KEYS, readJson, writeJson } from '../core/storage';
-  import { parseTemplate, resolveTemplate } from '../core/template/parse';
-  import { toolsForSession } from '../core/template/session-tools';
+  import { parseTemplate, resolveTemplate, type TemplateVariant } from '../core/template/parse';
+  import { applyVariant, toolsForSession } from '../core/template/session-tools';
+  import { ensureTemplateMarks, templateMarkLazy, templateMarksVersion } from '../core/ui/marks.svelte';
   import Sheet from '../core/ui/Sheet.svelte';
   import { listTemplates, templateText, type TemplateSummary } from '../data/templates';
 
@@ -14,14 +15,22 @@
 
   let query = $state('');
   let playersFilter = $state('any');
+  let timeFilter = $state('any');
   let tagFilter = $state('any');
   let mode = $state<'all' | 'favourites' | 'recent'>('all');
   let favourites = $state<string[]>(readJson<string[]>(KEYS.favorites, []));
   let recent = $state<string[]>(readJson<string[]>(KEYS.recent, []));
   let chosen = $state<TemplateSummary | null>(null);
   let chosenText = $state('');
+  let chosenVariants = $state<TemplateVariant[]>([]);
+  let variantId = $state('');
   let seats = $state(2);
   let imports = $state<RecentImport[]>(listRecentImports());
+  let {
+    onupload,
+  }: {
+    onupload: (files: File[]) => void;
+  } = $props();
 
   const shown = $derived(
     templates
@@ -35,6 +44,13 @@
           if (playersFilter === '3-4' && (range.max < 3 || range.min > 4)) return false;
           if (playersFilter === '5+' && range.max < 5) return false;
         }
+        if (timeFilter !== 'any') {
+          const minutes = minutesOf(template);
+          if (minutes === null) return false;
+          if (timeFilter === 'short' && minutes > 20) return false;
+          if (timeFilter === 'medium' && (minutes < 21 || minutes > 60)) return false;
+          if (timeFilter === 'long' && minutes <= 60) return false;
+        }
         const needle = query.trim().toLowerCase();
         if (!needle) return true;
         return (
@@ -46,11 +62,31 @@
       .sort((a, b) => a.name.localeCompare(b.name)),
   );
 
+  $effect(() => {
+    ensureTemplateMarks();
+  });
+
+  /** A template may name a mark; unknown names simply draw nothing. */
+  function iconOf(template: TemplateSummary): string {
+    void templateMarksVersion();
+    return templateMarkLazy(template.icon, template.id);
+  }
+
   function rangeOf(template: TemplateSummary): { min: number; max: number } {
     const raw = template.players ?? '';
     const [min, max] = raw.split('-').map((value) => Number(value));
     if (!Number.isFinite(min)) return { min: 1, max: 8 };
     return { min, max: Number.isFinite(max) ? max : min };
+  }
+
+  /** Minutes from a free-text length: `20m`, `1h`, `10-60m`; null when unknown. */
+  function minutesOf(template: TemplateSummary): number | null {
+    const raw = (template.time ?? '').toLowerCase();
+    const match = raw.match(/(\d+)\s*(h|m)/);
+    if (!match) return null;
+    const value = Number(match[1]);
+    if (!Number.isFinite(value)) return null;
+    return match[2] === 'h' ? value * 60 : value;
   }
 
   function toggleFavourite(id: string): void {
@@ -62,9 +98,19 @@
     chosen = template;
     seats = rangeOf(template).min;
     chosenText = '';
+    chosenVariants = [];
+    variantId = '';
     void templateText(template.id).then((text) => {
-      if (chosen?.id === template.id) chosenText = text ?? '';
+      if (chosen?.id !== template.id) return;
+      chosenText = text ?? '';
+      chosenVariants = parseTemplate(chosenText).template.variants;
     });
+  }
+
+  /** A paired image, the template's own name, then the built-in drawing. */
+  function importIcon(entry: RecentImport): string {
+    void templateMarksVersion();
+    return templateMarkLazy(entry.icon, entry.source);
   }
 
   function chooseImport(entry: RecentImport): void {
@@ -81,12 +127,18 @@
       tools,
     };
     chosenText = entry.text;
+    chosenVariants = parsed.variants;
+    variantId = '';
     seats = range?.min ?? 2;
   }
 
+  /** "What should we play?" offers a game from the current filters, not all of them. */
   function surprise(): void {
-    if (!templates.length) return;
-    choose(templates[Math.floor(Math.random() * templates.length)]);
+    if (!shown.length) {
+      store.toast('No game matches those filters. Clear one and try again.', 'error');
+      return;
+    }
+    choose(shown[Math.floor(Math.random() * shown.length)]);
   }
 
   async function startChosen(): Promise<void> {
@@ -100,10 +152,13 @@
     const names = parsed.template.players.length
       ? parsed.template.players
       : Array.from({ length: count }, (_, index) => `Player ${index + 1}`);
+    const baseTools = toolsForSession(parsed.template, resolved.tools);
+    const variant = parsed.template.variants.find((item) => item.id === variantId);
+    const tools = variant ? applyVariant(baseTools, variant) : baseTools;
     await store.start({
       gameName: parsed.template.game.name || template.name,
       players: names,
-      tools: toolsForSession(parsed.template, resolved.tools).map((tool) => ({
+      tools: tools.map((tool) => ({
         toolId: tool.toolId,
         instanceId: tool.instanceId,
         values: tool.values,
@@ -150,6 +205,15 @@
         </select>
       </label>
       <label class="field">
+        <span>Length</span>
+        <select bind:value={timeFilter}>
+          <option value="any">Any</option>
+          <option value="short">20 min or less</option>
+          <option value="medium">20–60 min</option>
+          <option value="long">Over an hour</option>
+        </select>
+      </label>
+      <label class="field">
         <span>Tag</span>
         <select bind:value={tagFilter}>
           <option value="any">Any</option>
@@ -158,7 +222,7 @@
           {/each}
         </select>
       </label>
-      <button type="button" class="surprise" onclick={surprise}>Surprise me</button>
+      <button type="button" class="surprise" onclick={surprise}>What should we play?</button>
     </div>
   </div>
 
@@ -167,7 +231,10 @@
       <h2>Recently imported</h2>
       <div class="chips">
         {#each imports as entry (entry.at)}
-          <button type="button" class="import-chip" onclick={() => chooseImport(entry)}>{entry.name}</button>
+          <button type="button" class="import-chip" onclick={() => chooseImport(entry)}>
+            <span class="import-mark" aria-hidden="true">{@html importIcon(entry)}</span>
+            {entry.name}
+          </button>
         {/each}
       </div>
     </section>
@@ -178,7 +245,10 @@
       {#each shown as template (template.id)}
         <li>
           <button type="button" class="card" onclick={() => choose(template)}>
-            <span class="title">{template.name}</span>
+            <span class="card-head">
+              <span class="card-mark" aria-hidden="true">{@html iconOf(template)}</span>
+              <span class="title">{template.name}</span>
+            </span>
             <span class="meta">
               {template.players ?? 'any'} players{#if template.time} · {template.time}{/if}
             </span>
@@ -199,6 +269,32 @@
     <p class="empty">No template matches those filters. Try “Any”, or clear the search.</p>
     <a class="primary link" href="#/editor">Write one in the editor</a>
   {/if}
+
+  <section class="upload" aria-labelledby="upload-title">
+    <h2 id="upload-title">Bring your own</h2>
+    <p>
+      Upload a <code>.gamebuddy</code> template, its images and a <code>.gamebuddy-theme</code> in one go.
+      Everything stays on this device.
+    </p>
+    <label class="field">
+      <span>Files</span>
+      <input
+        type="file"
+        multiple
+        accept=".gamebuddy,.gamebuddy-theme,.txt,.json,image/svg+xml,image/png,image/jpeg,image/webp"
+        onchange={(event) => {
+          const input = event.currentTarget as HTMLInputElement;
+          const files = Array.from(input.files ?? []);
+          if (files.length) onupload(files);
+          input.value = '';
+        }}
+      />
+    </label>
+    <p class="hint">
+      An image named like the template's <code>icon:</code> value — or like the template file — becomes its
+      mark. A theme is applied straight away.
+    </p>
+  </section>
 </div>
 
 {#if chosen}
@@ -209,6 +305,14 @@
       {#if current.tags.length}· {current.tags.join(', ')}{/if}
     </p>
     <p class="dim small">Tools: {current.tools.join(', ') || 'none'}</p>
+    {#if chosenVariants.length}
+      <div class="variants" role="group" aria-label="House-rule variant">
+        <button type="button" class:active={variantId === ''} onclick={() => (variantId = '')}>Base rules</button>
+        {#each chosenVariants as variant (variant.id)}
+          <button type="button" class:active={variantId === variant.id} onclick={() => (variantId = variant.id)}>{variant.name}</button>
+        {/each}
+      </div>
+    {/if}
     {#if !current.players}
       <label class="field">
         <span>Seats</span>
@@ -334,12 +438,43 @@
     font-size: var(--text-base);
   }
   .import-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     min-height: 46px;
     padding: 0 var(--space-4);
     border-radius: var(--radius-pill);
     background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
+  }
+  .import-mark {
+    display: inline-flex;
+    width: 20px;
+    height: 20px;
+  }
+  .import-mark :global(svg),
+  .import-mark :global(img) {
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+  }
+  .upload {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .upload h2 {
+    margin: 0;
+    font-size: var(--text-lg);
+  }
+  .upload p {
+    margin: 0;
+    max-width: 46rem;
+    color: var(--text-dim);
   }
   .list {
     list-style: none;
@@ -375,7 +510,31 @@
     transform: translateY(-3px);
     box-shadow: var(--shadow-lift);
   }
+  .card-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    min-height: 44px;
+  }
+  .card-mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+  }
+  .card-mark :global(svg),
+  .card-mark :global(img) {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+  }
   .title {
+    min-width: 0;
     font-family: var(--font-display);
     font-weight: 800;
     font-size: var(--text-xl);
@@ -434,6 +593,22 @@
     box-shadow: var(--shadow-key);
     font-weight: 800;
     cursor: pointer;
+  }
+  .variants {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+  .variants button {
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .variants button.active {
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    font-weight: 800;
   }
   .wide.ghost {
     background: transparent;

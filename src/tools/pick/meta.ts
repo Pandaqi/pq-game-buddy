@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'pick',
   title: 'Pick',
-  blurb: 'Random numbers, lists, teams, seats and first player.',
+  blurb: 'Settle it: numbers, lists, teams, seats or who goes first.',
   family: 'randomize',
   seats: 'multi',
-  icon: mark('sparkle'),
+  icon: ICON,
   tags: ['random', 'party'],
 };
 

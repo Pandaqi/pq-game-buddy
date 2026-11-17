@@ -3,23 +3,33 @@
 import { audio } from './audio';
 import { haptics } from './haptics';
 import { KEYS, readJson, storage, writeJson } from './storage';
+import { applyThemeText } from './theme';
 
 export interface SettingsState {
   theme: 'system' | 'light' | 'dark';
   table: boolean;
+  /** Bigger than table mode: a large screen or low vision. */
+  huge: boolean;
+  /** Bigger targets and a thicker focus ring for one-switch and head-pointer use. */
+  switchAccess: boolean;
   motion: 'system' | 'reduce' | 'allow';
   volume: number;
   muted: boolean;
   haptics: boolean;
+  /** Raw text of the active `.gamebuddy-theme`, empty when none is used. */
+  themeText: string;
 }
 
 const DEFAULTS: SettingsState = {
   theme: 'system',
   table: false,
+  huge: false,
+  switchAccess: false,
   motion: 'system',
   volume: 0.7,
   muted: false,
   haptics: true,
+  themeText: '',
 };
 
 class SettingsStore {
@@ -50,7 +60,17 @@ class SettingsStore {
     if (this.values.theme === 'system') delete root.dataset.theme;
     else root.dataset.theme = this.values.theme;
     root.dataset.table = this.values.table ? 'on' : 'off';
+    root.dataset.huge = this.values.huge ? 'on' : 'off';
+    root.dataset.switch = this.values.switchAccess ? 'on' : 'off';
     root.dataset.motion = this.values.motion;
+    applyThemeText(this.values.themeText);
+  }
+
+  /** Replace the active theme file. Empty text removes it. */
+  setTheme(text: string): void {
+    this.values.themeText = text;
+    this.save();
+    this.apply();
   }
 
   reset(): void {

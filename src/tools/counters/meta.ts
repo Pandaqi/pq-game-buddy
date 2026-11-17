@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'counters',
   title: 'Counters',
-  blurb: 'Named counters and a shared bank, with transfers, denominations and a log.',
+  blurb: 'Keep money, tokens or points straight, with a shared bank.',
   family: 'track',
   seats: 'none',
-  icon: mark('token'),
+  icon: ICON,
   tags: ['tracking', 'economy'],
 };
 

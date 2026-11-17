@@ -2,6 +2,7 @@
 
 [game]
 name: Magic: the Gathering
+icon: mtg
 players: 2-4
 time: 30m
 tags: card, duel

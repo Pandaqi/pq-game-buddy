@@ -12,6 +12,11 @@
   let now = $state(Date.now());
   let editorOpen = $state(false);
   let stepsDraft = $state('');
+  // A device without speech still loses nothing: every step is written on screen.
+  const speechReady =
+    typeof window !== 'undefined' &&
+    'speechSynthesis' in window &&
+    typeof SpeechSynthesisUtterance !== 'undefined';
 
   $effect(() =>
     ctx.clock.subscribe(() => {
@@ -49,7 +54,7 @@
     <div class="progress" aria-hidden="true"><div style="width: {progress.percent}%"></div></div>
     <p class="counter">Step {Math.min(data.index + 1, data.steps.length)} of {data.steps.length}{#if step} · {stepLabel(step)}{/if}</p>
 
-    <section class="narration" aria-live="polite">
+    <section class="narration" aria-live={data.voice && speechReady ? 'off' : 'polite'}>
       {#if finished}
         <p class="big">That is the whole script.</p>
         <p class="dim">Restart it, or go back a step to repeat something.</p>
@@ -84,6 +89,13 @@
       <input type="checkbox" checked={data.autoAdvance} onchange={(event) => instance.setAutoAdvance((event.currentTarget as HTMLInputElement).checked)} />
       <span>Continue automatically when a wait ends</span>
     </label>
+    <label class="check">
+      <input type="checkbox" checked={data.voice} onchange={(event) => instance.setVoice((event.currentTarget as HTMLInputElement).checked)} />
+      <span>Read “say” steps aloud</span>
+    </label>
+    {#if !speechReady}
+      <p class="host">This device has no voice. Every step stays on screen anyway.</p>
+    {/if}
   {/if}
 
   {#if data.eventDeck || data.deck.length}

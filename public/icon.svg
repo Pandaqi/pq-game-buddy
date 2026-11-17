@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Game Buddy">
+  <rect width="64" height="64" rx="14" fill="#fbf2dd"/>
+  <path d="M32 8v7" stroke="#1f5c40" stroke-width="3" stroke-linecap="round"/>
+  <path d="M24 15h16l4 7H20z" fill="#1f5c40"/>
+  <path d="M20 22h24l5 28H15z" fill="#9c6000"/>
+  <path d="M24 28h16l3 18H21z" fill="#ffedc2"/>
+  <circle cx="32" cy="36" r="7" fill="#f2b134"/>
+  <path d="M32 31v3l2.5 1.7" stroke="#6b4a10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M15 50h34v5H15z" fill="#1f5c40"/>
+</svg>

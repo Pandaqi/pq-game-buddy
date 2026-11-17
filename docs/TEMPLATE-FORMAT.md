@@ -76,10 +76,27 @@ House rule: no phones at the table.
 | `[rules]` | free text; `:` and `#` inside have no special meaning |
 | `[notes]` | free text, stored with the session |
 | `[script <instance>]` | numbered steps: `1. verb: argument` |
+| `[variant <id>]` | optional house rules: `name:`, `players:`, `time:` and free text |
 
 `[rules]` and `[setup]` are mounted automatically as a **Rules** tool when the
 template does not already contain `[tool rules]`. That way the summary and
 checklist are visible in the session, not just in the file.
+
+### Variants
+
+A `[variant <id>]` block is optional house rules. The start screen offers
+"Base rules" plus every variant; choosing one appends its name and text to the rules
+sheet. A variant never changes tool settings, so it cannot break a scorepad or a
+timer. Only `name`, `players` and `time` are read as keys; every other line is text,
+so a sentence starting "Note:" stays prose.
+
+```ini
+[variant quick]
+name: Quick game
+players: 2-3
+time: 20m
+Play to three points instead of five. Skip the setup round.
+```
 
 ### `[game]` keys
 
@@ -89,6 +106,7 @@ checklist are visible in the session, not just in the file.
 | `players` | a count (`2`) or range (`2-5`); drives filters and the seat stepper |
 | `time` | free text such as `20m`, `10-60m`, `varies` |
 | `tags` | comma list used by gallery filters (`party`, `strategy`, `rpg`, …) |
+| `icon` | the name of a mark drawn beside the game in the gallery and on home: a bundled name such as `catan`, or the name of an image you upload with the template. An unknown name is ignored, not an error |
 | `source` | link to the publisher or a rules page |
 | `author` | who wrote the template |
 | `license` | license for the template text, normally `CC-BY-SA-4.0` |
@@ -102,6 +120,10 @@ range only filters the gallery.
 `say`, `wait`, `reveal`, `timer`, `note`. A step is `verb: argument`, optionally
 prefixed with `1.`, `2.`, … Unknown verbs warn and are skipped. The script tool
 ships in M4; the parser keeps the data now so templates do not need rewriting.
+
+A script tool also accepts `voice: yes` to read `say` steps aloud with the device's
+built-in voice. The text stays on screen either way, and a device without a voice
+simply stays silent.
 
 ## Values
 
@@ -129,15 +151,20 @@ template”. The generated, Svelte-free copy lives in
 | Tool | Keys |
 |------|------|
 | `timer` | `mode`, `duration`, `per-player`, `players`, `layout`, `warn-at`, `sound`, `haptic`, `increment`, `delay`, `interval`, `count`, `phases`, `start` |
-| `dice` | `roll`, `pool`, `advantage`, `success-at`, `seed`, `macros` |
+| `dice` | `roll`, `pool`, `advantage`, `success-at`, `seed`, `macros`, `faces`, `lab-count`, `sets` |
 | `coin` | `coins`, `fairness`, `mode`, `target` |
-| `pick` | `source`, `values`, `count`, `replacement`, `teams`, `view`, `seed` |
+| `pick` | `source`, `values`, `count`, `replacement`, `teams`, `view` (`list`/`cards`/`wheel`/`slot`), `seed` |
 | `score` | `mode` (`simple`/`rounds`/`categories`/`ledger`), `rounds`, `categories`, `formula`, `win`, `target`, `hidden`, `start`, `step` |
 | `lives` | `lives`, `max`, `step`, `mode`, `elimination`, `extras`, `conditions`, `hidden` |
 | `counters` | `counters`, `bank`, `denominations`, `step`, `hidden` |
-| `turns` | `order`, `phases`, `timer`, `pass`, `auto-start` |
+| `turns` | `order`, `phases`, `timer`, `pass`, `auto-start`, `mode`, `initiative` |
 | `reveal` | `mode`, `roles`, `descriptions`, `auto-hide`, `ballot`, `options`, `min-bid`, `max-bid` |
 | `rules` | `quick`, `rules`, `setup`, `glossary`, `scoring`, `source` |
+
+Two tools have a little extra shape. `turns` takes `mode: initiative` with
+`initiative: Ada=18, Bo=12`; the highest value acts first and a new round clears the
+values. `dice` takes `faces: Hit, Miss, Crit` for a custom die and saved sets as
+`sets: combat=Hit|Miss|Crit`; `lab-count` sets how many custom dice roll at once.
 
 Score formula language: names come from category names, lowercased with spaces
 turned into hyphens. A name evaluates to the points earned in that category
@@ -165,13 +192,36 @@ Every problem carries a line number and a severity.
 - A session exports as JSON (`{ version: 1, session }`) and imports through the
   same drag-and-drop, picker or paste flow.
 
+## Icons and images
+
+A bundled template keeps its drawing **next to itself**: `src/data/templates/catan.gamebuddy`
+and `src/data/templates/catan.icon.svg`. The `icon:` line names it; the file is what
+the app draws. There is no central icon catalogue to update, and deleting a template
+takes its mark with it. Community templates may do the same in `src/data/community/`.
+
+For a template you bring yourself, upload the images with the `.gamebuddy` file (the
+upload panel on the templates page, or drag and drop). Names decide the pairing:
+
+- `icon: catan` finds `catan.svg`, `catan.png`, `catan.jpg`, `catan.jpeg` or `catan.webp`.
+- With no `icon:` line, the template file's own name is used: `my-game.gamebuddy` finds
+  `my-game.png`. `My Game.Icon.svg` works too; case, spaces and punctuation are ignored.
+- Images stay on the device as data URLs, under 350 KB each and 1.5 MB in total. SVG is
+  drawn through `<img>`, so a script inside one cannot run.
+- A `.gamebuddy-theme` uploaded in the same batch is applied immediately.
+
+The drawing should read at 20 px: a single object, thick strokes, no text. Bundled
+marks use a 24 px grid, 1.8 stroke width, round caps and joins.
+
 ## Author checklist
 
-1. Name the game, set `players`, `time`, `tags`, `source`, `author`, `license`.
+1. Name the game, set `players`, `time`, `tags`, `icon`, `source`, `author`, `license`.
+   If the icon is custom, put the image beside the template file.
 2. Add only the tools the game needs; configure each with real values.
 3. Write a short original rules summary in `[rules]`; never paste rulebook text.
 4. Add a setup checklist in `[setup]` that a first-time player can follow.
 5. Lint with `bun run lint:templates` and test-drive it from the editor.
+6. Add a `[variant <id>]` for any house rule people actually play with; keep it text
+   only so the tools stay untouched.
 6. Check the scorepad model against the real scoring, and the win condition.
 7. Keep the file readable: one blank line between sections, comments for anything
    surprising.

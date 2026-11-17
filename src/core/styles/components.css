@@ -194,36 +194,41 @@
 
 /* --- Segmented switches ------------------------------------------------- */
 
+/* Modes are separate pills, not one big rounded box: with six of them the old
+   wrapper read as a slab and its pill radius fought the type inside. */
 .modes {
-  display: inline-flex;
-  align-self: flex-start;
+  display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
-  padding: var(--space-1);
-  border-radius: var(--radius-pill);
-  background: var(--surface-2);
+  gap: var(--space-2);
 }
 
 .modes button {
   min-height: 44px;
   padding: 0 var(--space-4);
-  background: transparent;
+  background: var(--surface-2);
   color: var(--text-dim);
   box-shadow: none;
   border-radius: var(--radius-pill);
 }
 
 .modes button.active {
-  background: var(--surface);
-  color: var(--text);
-  box-shadow: var(--shadow-soft);
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+  box-shadow: none;
 }
 
 @media (hover: hover) {
   .modes button:hover:not(:disabled) {
     background: var(--surface);
+    color: var(--text);
     box-shadow: none;
     transform: none;
+  }
+
+  .modes button.active:hover:not(:disabled) {
+    background: var(--accent);
+    color: var(--accent-text);
   }
 }
 
@@ -262,10 +267,10 @@ tbody tr:hover {
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-card);
-  overflow: hidden;
 }
 
 .fold > summary {
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: space-between;

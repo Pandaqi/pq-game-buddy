@@ -2,6 +2,7 @@
 
 [game]
 name: Azul
+icon: azul
 players: 2-4
 time: 40m
 tags: board, puzzle

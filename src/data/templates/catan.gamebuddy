@@ -5,6 +5,7 @@ name: Catan
 players: 3-4
 time: 90m
 tags: board, strategy
+icon: catan
 source: https://www.catan.com/
 author: pandaqi
 license: CC-BY-SA-4.0

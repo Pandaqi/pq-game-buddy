@@ -2,6 +2,7 @@
 
 [game]
 name: Hanabi
+icon: hanabi
 players: 2-5
 time: 25m
 tags: card, cooperative

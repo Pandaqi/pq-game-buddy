@@ -57,6 +57,8 @@ export interface ScriptState {
   /** Milliseconds left when a wait was paused. */
   pausedRemaining: number;
   autoAdvance: boolean;
+  /** Read `say` steps aloud when the device has a voice. */
+  voice: boolean;
   eventDeck: boolean;
   deck: string[];
   drawn: string[];

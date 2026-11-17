@@ -15,6 +15,13 @@ if (existsSync(templatesDir)) {
   }
 }
 
+const communityDir = join(root, 'src/data/community');
+if (existsSync(communityDir)) {
+  for (const file of readdirSync(communityDir).filter((name) => name.endsWith('.gamebuddy')).sort()) {
+    files.push({ label: `community/${file}`, path: join(communityDir, file) });
+  }
+}
+
 const toolsDir = join(root, 'src/tools');
 for (const dir of readdirSync(toolsDir, { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
   const file = join(toolsDir, dir.name, 'example.gamebuddy');

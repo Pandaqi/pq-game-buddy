@@ -2,6 +2,7 @@
 
 [game]
 name: 7 Wonders
+icon: seven-wonders
 players: 3-7
 time: 45m
 tags: board, strategy

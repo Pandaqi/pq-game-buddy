@@ -6,7 +6,7 @@ const preset: PresetSchema = {
   count: { type: 'number', default: 1, min: 1, max: 50 },
   replacement: { type: 'boolean', default: true },
   teams: { type: 'number', default: 2, min: 2, max: 12 },
-  view: { type: 'enum', values: ['list', 'cards'], default: 'list' },
+  view: { type: 'enum', values: ['list', 'cards', 'wheel', 'slot'], default: 'list' },
   seed: { type: 'string', default: '' },
 };
 

@@ -1,13 +1,19 @@
 import { describe, expect, test } from 'bun:test';
 import {
   advance,
+  advanceInitiative,
   currentName,
   currentPhase,
+  initiativeFromPreset,
+  initiativeRanking,
   jumpTo,
+  newInitiativeRound,
+  normaliseInitiative,
   normaliseOrder,
   normalisePhases,
   remainingMs,
   rewind,
+  rewindInitiative,
   type TurnsState,
 } from '../src/tools/turns/logic';
 
@@ -21,6 +27,8 @@ function state(overrides: Partial<TurnsState> = {}): TurnsState {
     timer: { duration: 60000, remaining: 60000, running: false, startedWall: 0, startedMono: 0 },
     pass: true,
     autoStart: false,
+    mode: 'order',
+    initiative: [0, 0, 0],
     log: [],
     ...overrides,
   };
@@ -100,4 +108,51 @@ describe('turn clock', () => {
     expect(remainingMs(state({ timer: { ...timer, duration: 0 } }), 10, 10)).toBe(0);
   });
 
+});
+
+describe('initiative', () => {
+  test('ranks seats by value, highest first, ties in turn order', () => {
+    const sheet = state({ mode: 'initiative', initiative: [12, 18, 12] });
+    expect(initiativeRanking(sheet)).toEqual([1, 0, 2]);
+  });
+
+  test('next walks the ranking and rolls the round at the bottom', () => {
+    const sheet = state({ mode: 'initiative', initiative: [12, 18, 12], index: 1 });
+    advanceInitiative(sheet);
+    expect(currentName(sheet)).toBe('Ada');
+    advanceInitiative(sheet);
+    expect(currentName(sheet)).toBe('Cy');
+    expect(sheet.round).toBe(1);
+    advanceInitiative(sheet);
+    expect(currentName(sheet)).toBe('Bo');
+    expect(sheet.round).toBe(2);
+  });
+
+  test('previous walks back and rolls back only above the first round', () => {
+    const sheet = state({ mode: 'initiative', initiative: [12, 18, 12], index: 1, round: 1 });
+    rewindInitiative(sheet);
+    expect(currentName(sheet)).toBe('Bo');
+    expect(sheet.round).toBe(1);
+    sheet.index = 1;
+    sheet.round = 2;
+    rewindInitiative(sheet);
+    expect(sheet.round).toBe(1);
+    expect(currentName(sheet)).toBe('Cy');
+  });
+
+  test('a new round clears every value and restarts at the first seat', () => {
+    const sheet = state({ mode: 'initiative', initiative: [5, 9, 3], index: 1, round: 4 });
+    newInitiativeRound(sheet);
+    expect(sheet.initiative).toEqual([0, 0, 0]);
+    expect(sheet.index).toBe(0);
+    expect(sheet.round).toBe(5);
+  });
+
+  test('initiative values are whole numbers and the preset may name players', () => {
+    expect(normaliseInitiative([5.4, 'x'], 3)).toEqual([5, 0, 0]);
+    expect(normaliseInitiative(undefined, 2)).toEqual([0, 0]);
+    expect(initiativeFromPreset({ Ada: 18, Bo: '12' }, ['Ada', 'Bo', 'Cy'])).toEqual([18, 12, 0]);
+    expect(initiativeFromPreset([4, 2], ['Ada', 'Bo', 'Cy'])).toEqual([4, 2, 0]);
+    expect(initiativeFromPreset(null, ['Ada'])).toEqual([0]);
+  });
 });

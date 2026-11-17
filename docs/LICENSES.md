@@ -24,6 +24,15 @@ Both are used unmodified apart from subsetting and woff2 compression, which the 
 allows. The full licence text is available from the upstream projects; the subsetting
 tooling is development-only and is not part of the shipped app.
 
+## Marks and uploaded images
+
+The line drawings beside templates and inside tool folders are original work for this
+project, under the same terms as the code. Images a player uploads belong to that
+player: they are stored only on the device, never bundled, never uploaded, and the app
+claims no licence over them. A community submission that ships `my-game.icon.svg` must
+be the contributor's own drawing (or carry a compatible licence recorded in the pull
+request).
+
 ## Game templates
 
 Every file in `src/data/templates/` follows the same rules:
@@ -39,6 +48,14 @@ Every file in `src/data/templates/` follows the same rules:
 
 If you are a rights holder and want a template changed or removed, that request wins
 immediately; the file is content, not architecture.
+
+## QR encoder
+
+`src/core/qr/qrcodegen.ts` is Project Nayuki's QR Code generator (TypeScript),
+MIT licensed. It is vendored rather than installed: it has no dependencies, it is
+copied with its licence header, and the only change is an `export` at the end so the
+app can import it. It loads on demand, in its own chunk, when a player asks for a QR
+code; nothing else imports it.
 
 ## Word lists
 
@@ -66,16 +83,11 @@ third-party prompt deck is reproduced.
 
 ## Player-facing attribution
 
-The About panel in Settings lists:
-
-- the app version and format version,
-- every data pack with its licence and a one-line origin,
-- Dosis and Raleway, with their OFL 1.1 notice,
-- the Svelte licence notice,
-- a statement that the app collects nothing and contacts no server.
-
-That panel is generated from the data index, so a new pack cannot ship uncredited
-without failing review.
+Settings ends with a small footer, not a licence dossier: who made the framework, the
+version read from `package.json`, and links to pandaqi.com and the repository. The
+licences above are recorded here and next to each data file, which is where a
+contributor and a rights holder look. The app collects nothing and contacts no server,
+and the About text says so.
 
 ## What the app never does
 

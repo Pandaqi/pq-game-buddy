@@ -312,8 +312,8 @@
     margin: 0;
     padding: 0;
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-1);
-    overflow-x: auto;
   }
   .preview li {
     display: flex;

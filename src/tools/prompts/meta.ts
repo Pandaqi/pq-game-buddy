@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'prompts',
   title: 'Prompts',
-  blurb: 'Random ideas, party prompts and design constraints from themed packs.',
+  blurb: 'When the table goes quiet: prompts, ideas and design constraints.',
   family: 'randomize',
   seats: 'none',
-  icon: mark('paw'),
+  icon: ICON,
   tags: ['random', 'ideas', 'party'],
 };
 

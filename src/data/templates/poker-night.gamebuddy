@@ -5,6 +5,7 @@ name: Poker Night
 players: 2-9
 time: 180m
 tags: card, betting
+icon: poker
 source: Traditional game — no official source
 author: pandaqi
 license: CC-BY-SA-4.0

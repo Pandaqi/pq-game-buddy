@@ -2,12 +2,16 @@
 
 **PQ-GAME-BUDDY** is a small library of tools that help people while playing _board games_, _video games_, or game-like activities in general.
 
-> Doc version 4 · 2026-11-17 · Owner: Tiamo / Pandaqi
+> Doc version 5 · 2026-11-17 · Owner: Tiamo / Pandaqi
 >
-> **Status: M0–M6 code shipped; M7 (stretch) and M8 (Pandaqi's own games) are planned.**
+> **Status: M0–M7 code shipped. M7 closed with theme files, dice lab, initiative
+> order, log filters and stats, pick wheel/slot views, house-rule variants, per-game
+> marks, narrator voice, huge and switch-access modes, the PWA, QR sharing, the
+> community template folder, the conformance test and the voice pass. M8 (Pandaqi's
+> games), M9 (marks beyond the bundled catalogue) and M10 (localization) are planned.**
 > `bun run check` passes end to end: stale-manifest check, `tsc`, `svelte-check`
 > with 0 warnings, the full test suite, template lint (61 files · 0 errors · 0
-> warnings) and a build inside budget (125 KB gzipped first visit, 265 KB single
+> warnings) and a build inside budget (132 KB gzipped first visit, 290 KB single
 > file). 21 tools are live and 40 game templates plus 21 tool examples ship. M6
 > replaced the visual language twice: the second pass is the woodland lantern table
 > in `docs/STYLE.md`, with self-hosted Dosis and Raleway, borderless fills, folds and
@@ -49,7 +53,7 @@ The trick to supporting "every tool anyone might want" is not to build a hundred
 | M4 | Breadth: the long tail | Shipped | decks, bag, bracket, draft, buzzer, script, words, prompts, custom, splits, display mode |
 | M5 | Polish, accessibility and release | Code shipped, human gates open | Docs, print, i18n statement, a11y/device/profiling checklist |
 | M6 | Style: the lantern table | Shipped | Woodland tokens, Dosis/Raleway, borderless hierarchy, folds, motion |
-| M7 | After v1.0 | Planned | PWA, theme files, voice, a writing pass, more languages |
+| M7 | After v1.0 | Shipped | Theme files, dice lab, initiative, log stats, pick views, variants, icons, conformance test, PWA, QR, community templates, switch access, voice pass |
 | M8 | Pandaqi's own games | Planned | First-party templates for the pandaqi.com catalogue |
 
 ### How to read this document
@@ -246,12 +250,12 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 | Budget | Limit | Current |
 |--------|-------|---------|
 | One chunk, gzipped | 24 KB | 21 KB (words: view, logic and five language packs) |
-| All deferred chunks, gzipped | 250 KB | 168 KB |
+| All deferred chunks, gzipped | 250 KB | 182 KB |
 | Core JS and CSS, gzipped | 45 KB | inside |
-| First visit (entry + shared chunk + CSS), gzipped | 150 KB | 125 KB |
-| Single file, gzipped | no ceiling: the whole app in one file | 265 KB |
+| First visit (entry + shared chunk + CSS), gzipped | 150 KB | 132 KB |
+| Single file, gzipped | no ceiling: the whole app in one file | 290 KB |
 
-**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the 61 template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (60 KB gzipped, 56 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 21 KB (its view, logic and five language packs) and the next largest chunk is the 61 template texts at 11 KB, so a tool that passes it is one to split rather than a budget to raise. A total ceiling of 250 KB on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat; the deferred total is 168 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 96 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 25 KB of headroom left. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. These are ceilings, not targets.
+**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the 61 template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (60 KB gzipped, 56 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 21 KB (its view, logic and five language packs) and the next largest chunk is the 61 template texts at 11 KB, so a tool that passes it is one to split rather than a budget to raise. A total ceiling of 250 KB on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat; the deferred total is 182 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 47 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 22 KB of headroom left. M7 has added about 3 KB to the first visit (theme parsing and template icons in the core) and about 10 KB to the single file, with no new dependency. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. These are ceilings, not targets.
 
 ### 5.3 Gates
 
@@ -260,29 +264,6 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 ## 6. Milestones
 
 
-### M7 — After v1.0 (stretch)
-
-Each item needs its own mini-plan and must keep the offline, no-account, no-network default. None block v1.0.
-
-- **Dice lab** (custom symbol faces, saved sets) and **wheel / slot views** for `pick`.
-- **Initiative view** for `turns` (per-player initiative values, next and round reset), so D&D combat stops needing a manual order.
-- **Log filters and search**, playtime totals, win rates and "what should we play" by player count and time.
-- **A writing pass against the Pandaqi voice**, before localization so the strings are final once. Sampled from <https://pandaqi.com>: direct address ("Try any game that catches your eye"), a concrete picture instead of a category ("Be a math detective and guess the missing numbers"), short sentences, one aside after a dash, first person for the author and "we" for the table, and an exclamation mark at most on a marketing line (never in an error). Work: rewrite `docs/USER-GUIDE.md`, the About panel, the template `notes` and the tool blurbs in that voice, keep the copy rules in `AGENTS.md`, and add three example strings to `docs/STYLE.md` so later copy has a target.
-- **Theme files.** A `.gamebuddy-theme` text format: `key: value` lines over the tokens in `tokens.css` (paper, ink, families, fonts, radius, hide-chrome flags), imported from Settings, applied as custom properties on `:root`, validated with line-numbered diagnostics like templates, and never fetched. It works offline and hosted because it is a file the player owns. M6 left the seam: no view may hard-code a colour, radius or shadow.
-- **Full string extraction** through `t()` and a first translated UI, once the text is stable. 
-  - Make the UI available in English for now, plan a new milestone (M10) to support Dutch and one other language.
-  - Add a clean language switcher in the header (click icon -> reveals all languages -> pick)
-  - Lazy load all localized/language data instead of bundling into everything by default.
-  - Allow filtered builds that only include one language (or some subset of languages chosen), for smaller file sizes (most people only use one language anyway).
-  - EVEN BETTER (architecture improvement): keep localized data _with the tool_. Example: each tool has a folder called `locales` within its bundle with one data file per supported language inside. This would keep data close to where it's needed (instead of having one massive localization file) + allow even more fine-grained filtering and lazy loading.
-- **PWA install** for the hosted build (service worker, hosted only; the single file stays the offline story).
-- **Template improvements**: add the option for a `.gamebuddy` template to have an _icon_. Then plan a new milestone (M9) for giving all the popular game templates a matching icon. (You can do this, you've done it before: check their look/info, create some simple stylized SVG icon to represent that.)
-- **Community template gallery**: a static JSON index plus pull-request contributions; no runtime network requirement for the core app.
-- **QR sharing** with a tiny in-house encoder, for passing a template to a phone across the table.
-- **Narrator voice** using Web Speech (offline voice availability varies; always paired with readable text).
-- **House-rule variants** as first-class template sections (`[variant]`), selectable at load time.
-- **Plugin authoring kit**: a documented example tool and a conformance test others can run.
-- **Accessibility extras**: a "huge mode" beyond table mode, switch-access-friendly layouts, a screen-reader tutorial for the reveal flow.
 
 ### M8 — Pandaqi's own games (L, planned)
 
@@ -313,6 +294,36 @@ catalogue into two-tap setups and gives the app a reason to live on the same sit
 **DoD:** every chosen game has a template that starts clean, passes lint and is reachable
 from the gallery's Pandaqi filter; the skipped games and the reason are listed in the
 template folder's README.
+
+### M9 — Marks for the rest of the catalogue (M, planned)
+
+Every bundled template now ships its own mark beside the file. M9 draws marks for the
+wider catalogue, one batch at a time, led by the templates that people actually load:
+each mark is a stylised SVG on the 24 px grid, recognisable at 20 px, drawn from
+`currentColor`, and checked beside its title in the gallery in both themes.
+
+**DoD:** every template outside the bundled forty either names its own game mark or
+borrows a house mark on purpose, and no mark is a letter in a box.
+
+### M10 — Localization (L, planned)
+
+M7 makes the English text final first, because translating moving copy doubles the
+work. M10 then:
+
+1. **Extract** every player-facing string through `t()`, keeping the writing rules in
+   `AGENTS.md` and `docs/STYLE.md`.
+2. **Keep data with the tool:** `src/tools/<id>/locales/<lang>.ts`, plus core strings in
+   `core/locales/<lang>.ts`, so a tool's words ship in its own chunk.
+3. **Add the switcher:** a header control that reveals the available languages; the
+   choice is stored with settings, never fetched.
+4. **Translate** English → Dutch (the owner's language) and one more, with a native
+   speaker pass on the template notes and the About panel.
+5. **Filter builds** so a hosted or single-file build can carry one language or a
+   subset; the default build carries English plus the chosen extras.
+
+**DoD:** the app is fully usable in Dutch, no raw `t()` key can reach the screen (a test
+asserts every key resolves), and a one-language build is measurably smaller than the
+multi-language one.
 
 ## 7. What needs you (not the agent)
 
@@ -356,6 +367,10 @@ M4 choices: word packs are hand-curated original lists (licensed, small) rather 
 M5 choices: secondary pages are code-split (`LazyView`, one chunk each, resolved component cached) and views compile with CSS injected, so a screen's styles arrive with its chunk instead of in a stylesheet every first visit pays for; template texts are generated into their own chunk and parsed at `bun run gen` time rather than at start-up. Tool modules became chunks of their own too: the generated manifest carries only each tool's metadata, `core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so a chunk is a whole tool. Each tool's view was then folded into that chunk instead of being fetched separately, which halved the requests a session makes; the per-chunk ceiling is 24 KB (one screen), with a 250 KB ceiling on the deferred total. `--mode=site` writes one page per tool and `--mode=single` writes one embedded `index.html`, so the shared app, the static site and the copy-around file all come from one build. The core ceiling did not move; the single-file ceiling was removed as meaningless. Print is a stylesheet plus a menu action, not a separate export pipeline. Localization is scaffolding only, and the docs say so instead of implying translations exist.
 
 M6 choices: one accent per tool family resolved from `data-family` and the `--fam-*` tokens, so a view never names a colour; seats stay stored hex (templates may name one) and are drawn as a filled dot with dark `--on-seat` initials, which clears 4.5:1 on every seat in both themes while keeping the name as the real cue; Dosis and Raleway are self-hosted, subset and base64-inlined rather than fetched, because the offline invariant outranks the bytes and the faces are what make the app feel warm — the 56 KB gzipped they add is the one deliberate large spend, with 25 KB of the first-visit ceiling left; borders are dropped for fills, space and warm coloured shadows, and the few edges that remain are table rules, the focus ring and inset state rings; secondary detail folds behind native `<details>` so a screen can breathe; four motion names, all one-shot, ending in a correct static state; confetti only for a finished game with a winner; the most repeated tool CSS is not copied into 21 views but lives once in `core/styles/components.css`; table mode hides shell chrome on a session screen by tagging the root with the route. The `.gamebuddy-theme` bonus and the Pandaqi voice pass moved to M7 because one adds a format and the other belongs before localization.
+
+M7 choices (first pass): a theme is a validated *token* file, not CSS — keys come from a fixed map, values must match a colour, length or font-stack pattern, and the result is one generated `<style>` element plus a `data-hide` flag, so a theme cannot inject rules. `dark-` keys exist because a theme that set only light values would lose its contrast in dark mode. Custom dice faces are text rather than SVG or images: they read aloud, print in black and white and cost no bytes. Initiative is a pure ranking function over `initiative: number[]`, so ties keep turn order and the tool keeps one source of truth; switching back to fixed order loses nothing. Finish-game duration is rounded up so a four-minute game is not logged as nothing, and the log exports whatever the filters show rather than quietly exporting everything. The gallery's suggestion uses the filtered list, because a twenty-minute window that offers Gloomhaven is not an answer. Settings is deliberately not hideable by a theme: it is the page that removes a theme, so a theme that could hide it could lock the player out, and `hide-chrome: settings` warns instead. Custom faces keep empty slots while editing so clearing one label cannot collapse the set; only named faces roll and save. `icon:` is validated where the summary is built rather than in the parser, so an unknown mark is ignored (never an error) and no image file is ever shipped. Narrator voice is optional, never fetched, and always paired with the written step; huge mode is a token scale, not a second layout.
+
+M7 choices (second pass): the version is written once in `package.json` and copied by `gen`, because two hand-kept copies plus a test only proved they could drift. Template marks moved out of the start-up chunk: the gallery reserves the slot, house marks paint at once and the 40 game drawings arrive after first paint. Modes became separate pills because six options inside one pill wrapper read as a slab; chrome rows fold and wrap instead of scrolling, which is also why the shared fold lost its `overflow: hidden`. QR uses a vendored MIT encoder rather than a new dependency or a home-made Reed-Solomon table, and it loads only when a code is asked for; its symbols stay black on white because a theme could otherwise make them unscannable. Community templates are files in `src/data/community` compiled at build time: a static index without a runtime fetch. Switch access is a token and target-size mode, not a second navigation model. Marks became owner-local files because a central drawing table is a second place to forget; the generated map is disposable and the lazy chunk is unchanged in shape. Imported images are stored as data URLs rather than object URLs so they survive a reload, and they render only through `<img>` so a contributed SVG cannot execute. The home shelf is curated plus recent rather than ranked from analytics, because there are no analytics and never will be.
 
 ## 10. Global definition of done
 

@@ -25,9 +25,15 @@ Artifacts:
 | `dist/index.html` from `bun run build:single` | Everything embedded, nothing else in `dist/`: the copy-around file |
 | `dist/pq-game-buddy.html` | One self-contained file, works from `file://` |
 | `dist/size.json` | Size report read by `bun run size` |
+| `dist/manifest.webmanifest`, `dist/icon.svg`, `dist/sw.js` | Hosted install: manifest, lantern icon and service worker. The single file ships without them |
 
 Never ship source maps, `node_modules`, the `vault/` reference folder, or anything from
 `tests/`.
+
+The service worker is network-first with a cache fallback, and its cache name lives in
+`public/sw.js`. Change caching rules, not just files: bump `CACHE` there when the
+strategy changes. The build injects the manifest link and the `pq-pwa` marker into
+hosted pages only, so the dev shell and the single file never register a worker.
 
 ## 2. Version and changelog
 
@@ -35,7 +41,9 @@ Never ship source maps, `node_modules`, the `vault/` reference folder, or anythi
    and only changes with a compatibility note.
 2. Add a `CHANGELOG.md` entry: what changed for players, what changed for template
    authors, and any known limitation that is new.
-3. Bump `package.json`. The About panel reads the version, so check it after building.
+3. Bump `package.json`. It is the only place the number is written: `bun run gen`
+   copies it into `src/core/version.generated.ts`, and `bun run check` rejects a stale
+   copy. Versions follow semantic versioning (`MAJOR.MINOR.PATCH`).
 
 ## 3. Verify a downloaded copy
 
@@ -58,9 +66,14 @@ These steps are the owner's, not an agent's:
    `/tools/dictionary/`, `/tools/randomness/`, `/tools/categorizer/` each point at the
    matching `#/tool/<id>` route. Keep the old paths alive; do not rely on search
    engines noticing a new URL.
-3. Check the live site over HTTPS: home, one tool, one template, one download.
-4. Check that the About panel credits every data source and shows the right version.
-5. Confirm the download link serves `pq-game-buddy.html` with a sensible filename.
+3. Check the live site over HTTPS: home, one tool, one template, one download. HTTPS is
+   required for install; service workers do not run from `file://`, which is why the
+   single file does not use one.
+4. Install the hosted build, open it once online, then go offline and reopen it: home
+   and the last-used tool must still load. Reload while online and confirm the version
+   in Settings changed, proving the worker is network-first.
+5. Check that the About panel credits every data source and shows the right version.
+6. Confirm the download link serves `pq-game-buddy.html` with a sensible filename.
 
 ## 5. Human gates
 

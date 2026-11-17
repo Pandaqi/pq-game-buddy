@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'buzzer',
   title: 'Buzzer',
-  blurb: 'First tap wins, with a random start, reaction times and false starts.',
+  blurb: 'Who tapped first? Random start, reaction times and false starts.',
   family: 'time',
   seats: 'multi',
-  icon: mark('key'),
+  icon: ICON,
   tags: ['time', 'party', 'quiz'],
 };
 

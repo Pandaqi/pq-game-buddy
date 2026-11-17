@@ -1,5 +1,5 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'demo',
@@ -7,7 +7,7 @@ const meta: ToolMeta = {
   blurb: 'A tiny counter that proves tool folders are picked up automatically.',
   family: 'track',
   seats: 'none',
-  icon: mark('sparkle'),
+  icon: ICON,
   tags: ['dev'],
 };
 

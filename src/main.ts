@@ -18,3 +18,17 @@ if (target) {
   const bootTool = document.body.dataset.tool ?? '';
   mount(App, { target, props: { bootTool } });
 }
+
+// The build adds the manifest link to hosted pages only, and to tool pages as
+// `../manifest.webmanifest`. The single file and the dev shell never see it, so
+// neither tries to register a worker that is not there. The worker lives next to
+// the manifest, so its scope is the app root even when the page is /tool/.
+const manifestLink = document.querySelector<HTMLLinkElement>('link[rel="manifest"]');
+if (manifestLink && 'serviceWorker' in navigator) {
+  const root = new URL('./', manifestLink.href);
+  window.addEventListener('load', () => {
+    void navigator.serviceWorker.register(new URL('sw.js', root).href, { scope: root.pathname }).catch(() => {
+      /* installed file, private mode or an unsupported browser: the app still works */
+    });
+  });
+}

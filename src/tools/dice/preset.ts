@@ -7,6 +7,9 @@ const preset: PresetSchema = {
   'success-at': { type: 'number', default: 0, min: 0, max: 100 },
   seed: { type: 'string', default: '' },
   macros: { type: 'pairs', default: {} },
+  faces: { type: 'list', default: ['Hit', 'Miss'], label: 'Custom faces' },
+  'lab-count': { type: 'number', default: 1, min: 1, max: 12, label: 'Custom dice per roll' },
+  sets: { type: 'pairs', default: {}, label: 'Saved face sets' },
 };
 
 export default preset;

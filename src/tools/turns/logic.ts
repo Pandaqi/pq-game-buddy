@@ -14,6 +14,9 @@ export interface TurnTimer {
   startedMono: number;
 }
 
+/** `order` walks the list; `initiative` picks the highest roll first each round. */
+export type TurnsMode = 'order' | 'initiative';
+
 export interface TurnsState {
   order: string[];
   index: number;
@@ -25,6 +28,9 @@ export interface TurnsState {
   pass: boolean;
   /** Start the turn clock when a turn begins. */
   autoStart: boolean;
+  mode: TurnsMode;
+  /** Initiative per seat, aligned with `order`. Higher goes first. */
+  initiative: number[];
   log: TurnLogEntry[];
 }
 
@@ -39,6 +45,9 @@ export interface TurnsActions {
   setAutoStart(value: boolean): void;
   setDuration(ms: number): void;
   setPhases(phases: string[]): void;
+  setMode(mode: TurnsMode): void;
+  setInitiative(index: number, value: number): void;
+  newInitiativeRound(): void;
   startTimer(): void;
   pauseTimer(): void;
   resetTimer(): void;
@@ -107,4 +116,66 @@ export function jumpTo(state: TurnsState, index: number): void {
   const next = Math.max(0, Math.min(state.order.length - 1, Math.round(index)));
   state.index = next;
   state.phase = 0;
+}
+
+/** Initiative per seat, cleaned to one whole number each. */
+export function normaliseInitiative(values: unknown, count: number): number[] {
+  const list = Array.isArray(values) ? values : [];
+  return Array.from({ length: count }, (_, index) => Math.round(Number(list[index]) || 0));
+}
+
+/** Seats sorted by initiative, highest first; ties keep the turn order. */
+export function initiativeRanking(state: TurnsState): number[] {
+  return state.order
+    .map((_, index) => index)
+    .sort((a, b) => (state.initiative[b] ?? 0) - (state.initiative[a] ?? 0) || a - b);
+}
+
+/** The next seat in initiative order, rolling the round when the list wraps. */
+export function advanceInitiative(state: TurnsState): void {
+  const ranking = initiativeRanking(state);
+  const at = ranking.indexOf(state.index);
+  const next = at + 1;
+  if (next >= ranking.length) {
+    state.round += 1;
+    state.index = ranking[0] ?? 0;
+  } else {
+    state.index = ranking[next];
+  }
+  state.phase = 0;
+}
+
+/** Back one seat in initiative order, rolling the round back at the top. */
+export function rewindInitiative(state: TurnsState): void {
+  const ranking = initiativeRanking(state);
+  const at = ranking.indexOf(state.index);
+  if (at === 0) {
+    if (state.round <= 1) return;
+    state.round -= 1;
+    state.index = ranking[ranking.length - 1] ?? 0;
+  } else {
+    state.index = ranking[at - 1];
+  }
+  state.phase = 0;
+}
+
+/** A new round clears every initiative value and starts at the top seat. */
+export function newInitiativeRound(state: TurnsState): void {
+  state.initiative = state.order.map(() => 0);
+  state.index = 0;
+  state.round += 1;
+  state.phase = 0;
+}
+
+/**
+ * A template may write `initiative: Ada=18, Bo=12` (a pairs object) or a plain
+ * list; anything missing is zero.
+ */
+export function initiativeFromPreset(raw: unknown, names: string[]): number[] {
+  if (Array.isArray(raw)) return normaliseInitiative(raw, names.length);
+  if (raw && typeof raw === 'object') {
+    const map = raw as Record<string, unknown>;
+    return names.map((name) => Math.round(Number(map[name]) || 0));
+  }
+  return names.map(() => 0);
 }

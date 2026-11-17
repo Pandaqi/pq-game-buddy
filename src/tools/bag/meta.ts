@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'bag',
   title: 'Bag',
-  blurb: 'Blind draws from tiles or tokens, with values and a tray.',
+  blurb: 'Pull a tile blind, with values and a tray.',
   family: 'randomize',
   seats: 'one',
-  icon: mark('token'),
+  icon: ICON,
   tags: ['random', 'words', 'tokens'],
 };
 

@@ -1,12 +1,29 @@
 <script lang="ts">
   import type { ToolContext } from '../../core/registry';
   import EmptyState from '../../core/ui/EmptyState.svelte';
-  import type { PickInstance, PickSource } from './logic';
+  import {
+    slotOffset,
+    slicePath,
+    viewPool,
+    winnerAngle,
+    winnerIndex,
+    type PickInstance,
+    type PickSource,
+  } from './logic';
 
   let { ctx, instance }: { ctx: ToolContext; instance: PickInstance } = $props();
   const data = $derived(instance.data);
 
   let draft = $state('');
+
+  const playerNames = $derived(ctx.session.players().map((player) => player.name));
+  const pool = $derived(viewPool(data, playerNames, data.view === 'slot' ? 40 : 12));
+  const winner = $derived(data.result[0] ?? '');
+  const winnerAt = $derived(winnerIndex(pool, winner));
+  const angle = $derived(winnerAngle(winnerAt, pool.length));
+  const offset = $derived(slotOffset(winnerAt));
+  const showWheel = $derived(data.view === 'wheel' && !data.teamResult && data.result.length > 0 && pool.length > 1);
+  const showSlot = $derived(data.view === 'slot' && !data.teamResult && data.result.length > 0 && pool.length > 1);
 
   const SOURCES: { id: PickSource; label: string }[] = [
     { id: 'number', label: 'Number' },
@@ -41,6 +58,8 @@
   <div class="views" role="group" aria-label="Result view">
     <button type="button" class:active={data.view === 'list'} onclick={() => instance.setView('list')} aria-pressed={data.view === 'list'}>List</button>
     <button type="button" class:active={data.view === 'cards'} onclick={() => instance.setView('cards')} aria-pressed={data.view === 'cards'}>Cards</button>
+    <button type="button" class:active={data.view === 'wheel'} onclick={() => instance.setView('wheel')} aria-pressed={data.view === 'wheel'}>Wheel</button>
+    <button type="button" class:active={data.view === 'slot'} onclick={() => instance.setView('slot')} aria-pressed={data.view === 'slot'}>Slot</button>
   </div>
 
   {#if data.source === 'number'}
@@ -133,6 +152,30 @@
           </div>
         {/each}
       </div>
+    {:else if showWheel}
+      <div class="wheel-wrap">
+        <span class="pointer" aria-hidden="true"></span>
+        <div class="wheel" style="transform: rotate({angle}deg)" aria-hidden="true">
+          <svg viewBox="0 0 100 100">
+            {#each pool as item, index (item + '-' + index)}
+              <path d={slicePath(index, pool.length)} class:win={index === winnerAt} class:odd={index % 2 === 1} />
+            {/each}
+            <circle cx="50" cy="50" r="9" />
+          </svg>
+        </div>
+        <p class="landed">{winner}</p>
+      </div>
+    {:else if showSlot}
+      <div class="slot-wrap">
+        <div class="slot" aria-hidden="true">
+          <div class="slot-track" style="transform: translateY({offset * 3.4}rem)">
+            {#each pool as item, index (item + '-' + index)}
+              <span class="slot-row" class:win={index === winnerAt}>{item}</span>
+            {/each}
+          </div>
+        </div>
+        <p class="landed">{winner}</p>
+      </div>
     {:else if data.result.length}
       {#if data.view === 'cards'}
         <div class="results">
@@ -201,9 +244,8 @@
   }
   .sources {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-1);
-    overflow-x: auto;
-    padding-bottom: var(--space-1);
   }
   .sources button {
     min-height: 44px;
@@ -331,6 +373,100 @@
   }
   .reveal-all {
     margin-top: var(--space-2);
+  }
+  .wheel-wrap,
+  .slot-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+  }
+  .wheel-wrap {
+    position: relative;
+    padding-top: var(--space-3);
+  }
+  .pointer {
+    width: 0;
+    height: 0;
+    border-left: 11px solid transparent;
+    border-right: 11px solid transparent;
+    border-top: 18px solid var(--accent-deep);
+    z-index: 1;
+  }
+  .wheel {
+    width: min(17rem, 72vw);
+    aspect-ratio: 1;
+    margin-top: calc(var(--space-2) * -1);
+    transition: transform calc(var(--motion-bounce) * 2) var(--ease-out);
+  }
+  .wheel svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+  .wheel path {
+    fill: var(--accent-soft);
+    stroke: var(--surface);
+    stroke-width: 0.8;
+  }
+  .wheel path.odd {
+    fill: var(--surface);
+  }
+  .wheel path.win {
+    fill: var(--accent);
+  }
+  .wheel circle {
+    fill: var(--surface);
+    stroke: var(--accent-deep);
+    stroke-width: 2;
+  }
+  .slot {
+    height: 10.2rem;
+    width: min(18rem, 82vw);
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 22%, #000 78%, transparent);
+  }
+  .slot-track {
+    display: flex;
+    flex-direction: column;
+    transition: transform calc(var(--motion-reveal) * 1.6) var(--ease-out);
+  }
+  .slot-row {
+    height: 3.4rem;
+    display: grid;
+    place-items: center;
+    padding: 0 var(--space-3);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    font-weight: 700;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .slot-row.win {
+    color: var(--accent-deep);
+  }
+  .landed {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 10vw, 3rem);
+    font-weight: 800;
+    color: var(--accent-deep);
+    text-align: center;
+    animation: pop-in var(--motion-bounce) var(--ease-bounce);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wheel,
+    .slot-track,
+    .landed {
+      transition: none;
+      animation: none;
+    }
   }
   .placeholder {
     color: var(--text-dim);

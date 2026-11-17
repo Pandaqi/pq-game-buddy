@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'coin',
   title: 'Coin',
-  blurb: 'Flip one coin or ten, fair or weighted, with call-it.',
+  blurb: 'Call it in the air. One coin or ten, fair or weighted.',
   family: 'randomize',
   seats: 'none',
-  icon: mark('chip'),
+  icon: ICON,
   tags: ['random', 'party'],
 };
 

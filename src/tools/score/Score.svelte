@@ -656,16 +656,18 @@
 
 
   .table-wrap {
-    overflow-x: auto;
     border-radius: var(--radius);
+  }
+  .table-wrap table {
+    table-layout: fixed;
   }
 
 
 
   tbody th {
     text-align: left;
-    white-space: nowrap;
     font-size: var(--text-sm);
+    overflow-wrap: anywhere;
   }
   tbody th small {
     display: block;
@@ -679,7 +681,9 @@
   }
   td input {
     border: 0;
-    width: 4.2rem;
+    width: 100%;
+    max-width: 4.2rem;
+    min-width: 0;
     min-height: 44px;
     border-radius: var(--radius);
     font-family: var(--font-display);

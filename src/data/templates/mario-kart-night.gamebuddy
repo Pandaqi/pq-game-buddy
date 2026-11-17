@@ -5,6 +5,7 @@ name: Mario Kart Night
 players: 2-8
 time: 60m
 tags: video-game, tournament
+icon: wheel
 source: Fan-made helper; Mario Kart is a trademark of Nintendo
 author: pandaqi
 license: CC-BY-SA-4.0

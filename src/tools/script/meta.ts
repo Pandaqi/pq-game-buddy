@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'script',
   title: 'Script',
-  blurb: 'Run a game flow step by step: say, wait, reveal and time.',
+  blurb: 'Walk the evening step by step: say this, wait, reveal, start the timer.',
   family: 'flow',
   seats: 'none',
-  icon: mark('scroll'),
+  icon: ICON,
   tags: ['flow', 'narrator', 'party'],
 };
 

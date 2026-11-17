@@ -19,6 +19,7 @@ export interface ScriptActions {
   restart(): void;
   togglePause(): void;
   setAutoAdvance(value: boolean): void;
+  setVoice(value: boolean): void;
   drawCard(): void;
   reshuffle(): void;
   setSteps(text: string): void;
@@ -38,6 +39,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
     paused: false,
     pausedRemaining: 0,
     autoAdvance: !!values['auto-advance'],
+    voice: !!values.voice,
     eventDeck: !!values['event-deck'],
     deck: ctx.rng.shuffle(events),
     drawn: [],
@@ -47,6 +49,38 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
 
   function note(text: string): void {
     data.log = [text, ...data.log].slice(0, 12);
+  }
+
+  /** The Web Speech API is optional and never fetched: no voice simply means text only. */
+  function canSpeak(): boolean {
+    return (
+      typeof window !== 'undefined' &&
+      'speechSynthesis' in window &&
+      typeof SpeechSynthesisUtterance !== 'undefined'
+    );
+  }
+
+  function stopVoice(): void {
+    if (!canSpeak()) return;
+    try {
+      window.speechSynthesis.cancel();
+    } catch {
+      /* a cancelled or absent voice is not an error */
+    }
+  }
+
+  function speak(text: string): void {
+    if (!data.voice || !text.trim() || !canSpeak()) return;
+    try {
+      const synth = window.speechSynthesis;
+      synth.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.95;
+      utterance.lang = typeof document === 'undefined' ? 'en' : document.documentElement.lang || 'en';
+      synth.speak(utterance);
+    } catch {
+      /* the text is already on screen; a failed voice is not worth a warning */
+    }
   }
 
   function callExternal(arg: string): void {
@@ -71,6 +105,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
     data.index = Math.max(0, index);
     data.waitUntil = null;
     data.paused = false;
+    stopVoice();
     const step: ScriptStep | undefined = data.steps[data.index];
     if (!step) return;
     if (step.verb === 'wait') {
@@ -78,6 +113,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
       return;
     }
     if (run && (step.verb === 'timer' || step.verb === 'reveal')) callExternal(step.arg);
+    if (run && step.verb === 'say') speak(step.arg);
   }
 
   function remaining(): number {
@@ -102,6 +138,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
       data.pausedRemaining = 0;
       if (typeof raw.lastCard === 'string') data.lastCard = raw.lastCard;
       if (typeof raw.autoAdvance === 'boolean') data.autoAdvance = raw.autoAdvance;
+      if (typeof raw.voice === 'boolean') data.voice = raw.voice;
       if (typeof raw.eventDeck === 'boolean') data.eventDeck = raw.eventDeck;
       if (Array.isArray(raw.deck)) data.deck = raw.deck.map(String);
       if (Array.isArray(raw.drawn)) data.drawn = raw.drawn.map(String).slice(0, 20);
@@ -113,6 +150,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
         events: data.deck.length ? data.deck : data.drawn,
         'event-deck': data.eventDeck,
         'auto-advance': data.autoAdvance,
+        voice: data.voice,
       };
     },
     remaining,
@@ -138,6 +176,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
       }
       if (data.index >= data.steps.length - 1) {
         note('Script finished');
+        stopVoice();
         ctx.audio.play('success');
         data.index = data.steps.length;
         data.waitUntil = null;
@@ -176,6 +215,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
       ctx.undo.push('auto advance');
       data.autoAdvance = value;
     },
+    setVoice(value) {
+      if (data.voice === value) return;
+      ctx.undo.push('narrator voice');
+      data.voice = value;
+      if (!value) stopVoice();
+      else if (data.steps[data.index]?.verb === 'say') speak(data.steps[data.index].arg);
+    },
     drawCard() {
       if (!data.eventDeck && !data.deck.length) {
         ctx.toast('This script has no event deck');
@@ -209,6 +255,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
       ctx.undo.push('script steps');
       data.steps = next;
       begin(Math.min(data.index, next.length));
+    },
+    dispose() {
+      stopVoice();
     },
   };
 

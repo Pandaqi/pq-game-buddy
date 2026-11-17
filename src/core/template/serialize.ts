@@ -9,6 +9,7 @@ export interface TemplateSpec {
     players?: string;
     time?: string;
     tags?: string[];
+    icon?: string;
     source?: string;
     author?: string;
     license?: string;
@@ -19,6 +20,7 @@ export interface TemplateSpec {
   setup?: string[];
   rules?: string;
   notes?: string;
+  variants?: { id: string; name?: string; players?: string; time?: string; text?: string }[];
 }
 
 function formatValue(spec: FieldSpec | undefined, value: unknown): string {
@@ -63,6 +65,7 @@ export function serializeTemplate(spec: TemplateSpec, schemaOf?: (toolId: string
   if (spec.game.players) out.push(`players: ${spec.game.players}`);
   if (spec.game.time) out.push(`time: ${spec.game.time}`);
   if (spec.game.tags?.length) out.push(`tags: ${spec.game.tags.join(', ')}`);
+  if (spec.game.icon) out.push(`icon: ${spec.game.icon}`);
   if (spec.game.source) out.push(`source: ${spec.game.source}`);
   if (spec.game.author) out.push(`author: ${spec.game.author}`);
   if (spec.game.license) out.push(`license: ${spec.game.license}`);
@@ -117,6 +120,18 @@ export function serializeTemplate(spec: TemplateSpec, schemaOf?: (toolId: string
     out.push('');
     out.push('[notes]');
     out.push(spec.notes.trim());
+  }
+
+  for (const variant of spec.variants ?? []) {
+    out.push('');
+    out.push(`[variant ${variant.id}]`);
+    if (variant.name) out.push(`name: ${variant.name}`);
+    if (variant.players) out.push(`players: ${variant.players}`);
+    if (variant.time) out.push(`time: ${variant.time}`);
+    if (variant.text?.trim()) {
+      out.push('');
+      out.push(variant.text.trim());
+    }
   }
 
   out.push('');

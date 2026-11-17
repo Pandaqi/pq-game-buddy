@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'score',
   title: 'Score',
-  blurb: 'Totals, rounds or categories, with formulas, hidden scores and a leaderboard.',
+  blurb: 'Write down the points. Totals, rounds or categories, with formulas if you need them.',
   family: 'track',
   seats: 'multi',
-  icon: mark('sheet'),
+  icon: ICON,
   tags: ['track', 'board', 'card'],
 };
 

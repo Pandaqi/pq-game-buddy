@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'custom',
   title: 'Custom',
-  blurb: 'Build your own tracker: fields, counters, a checklist, a table and formulas.',
+  blurb: 'Build the tracker no tool covers: fields, counters, a checklist, a table.',
   family: 'track',
   seats: 'multi',
-  icon: mark('sheet'),
+  icon: ICON,
   tags: ['track', 'tracker'],
 };
 

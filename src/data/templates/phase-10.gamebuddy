@@ -2,6 +2,7 @@
 
 [game]
 name: Phase 10
+icon: phase-10
 players: 2-6
 time: 45m
 tags: card, family

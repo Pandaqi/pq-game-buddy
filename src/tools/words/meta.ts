@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'words',
   title: 'Words',
-  blurb: 'Is it a word? Find anagrams, solve a rack, draw letters or a Codenames board.',
+  blurb: 'Is “QI” a word? Check it, find anagrams, solve a rack or deal Codenames.',
   family: 'reference',
   seats: 'none',
-  icon: mark('words'),
+  icon: ICON,
   tags: ['reference', 'words', 'solver'],
 };
 

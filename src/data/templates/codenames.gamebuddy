@@ -5,6 +5,7 @@ name: Codenames
 players: 4-8
 time: 20m
 tags: party, words
+icon: codenames
 source: https://boardgamegeek.com/boardgame/178900/codenames
 author: pandaqi
 license: CC-BY-SA-4.0

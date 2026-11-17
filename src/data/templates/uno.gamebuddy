@@ -5,6 +5,7 @@ name: Uno
 players: 2-10
 time: 30m
 tags: cards, family
+icon: uno
 source: https://en.wikipedia.org/wiki/Uno_(card_game)
 author: pandaqi
 license: CC-BY-SA-4.0

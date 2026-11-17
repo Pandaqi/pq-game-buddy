@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'timer',
   title: 'Timer',
-  blurb: 'Countdowns, stopwatch, flip timers and chess clocks.',
+  blurb: 'Count down, count up, flip between turns, or run a chess clock.',
   family: 'time',
   seats: 'one',
-  icon: mark('clock'),
+  icon: ICON,
   tags: ['time', 'clock', 'party'],
 };
 

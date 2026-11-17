@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'bracket',
   title: 'Bracket',
-  blurb: 'Tournaments: single or double elimination, round robin, groups and Swiss.',
+  blurb: 'Run the tournament: single or double elimination, groups or Swiss.',
   family: 'flow',
   seats: 'multi',
-  icon: mark('bracket'),
+  icon: ICON,
   tags: ['flow', 'tournament'],
 };
 

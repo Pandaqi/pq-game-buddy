@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'lives',
   title: 'Lives',
-  blurb: 'Track lives, extra tracks and conditions, with elimination and game over.',
+  blurb: 'Three hearts, two extra tracks, one last chance.',
   family: 'track',
   seats: 'multi',
-  icon: mark('heart'),
+  icon: ICON,
   tags: ['tracking', 'health'],
 };
 

@@ -1,5 +1,5 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'draft',
@@ -7,7 +7,7 @@ const meta: ToolMeta = {
   blurb: 'Snake or linear pick order, a pick clock, and auctions.',
   family: 'flow',
   seats: 'multi',
-  icon: mark('flag'),
+  icon: ICON,
   tags: ['flow', 'draft', 'auction'],
 };
 

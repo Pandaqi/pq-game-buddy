@@ -50,7 +50,7 @@ adding a tool or a dependency.
 | Layer | Path | Rules |
 |-------|------|-------|
 | Shell | `src/App.svelte`, `src/main.ts`, `src/ui/` | Router, home, session view, settings, import flow |
-| Core services | `src/core/*.ts` | Storage, ticker, RNG, audio, haptics, wake lock, undo, router, session model, share, i18n |
+| Core services | `src/core/*.ts` | Storage, ticker, RNG, audio, haptics, wake lock, undo, router, session model, share, theme files, i18n |
 | Template engine | `src/core/template/` | Tokenizer, diagnostics, preset schema, coercion, serialization |
 | Runtime store | `src/core/session-store.svelte.ts` | Runes mirror of the session; creates tool instances and contexts |
 | UI primitives | `src/core/ui/*.svelte` | Sheet, stepper, number pad, chips, empty state, confetti |
@@ -67,8 +67,9 @@ repeats (panels, stages, rows, fields, mode switches, tables, folds), and
 `core/styles/fonts.css` holds the base64 Dosis and Raleway faces. `core/ui/icons.ts`
 holds every mark on one grid and `core/ui/doodles.ts` the decorative woodland SVG. A tool inherits all of it; it sets `data-family` through its
 `meta.family` and gets that family's accent, and it must not name a colour itself.
-`docs/STYLE.md` is the contract and the restyle checklist, and the tokens are the seam
-a future `.gamebuddy-theme` file will write to (M7).
+`docs/STYLE.md` is the contract and the restyle checklist. `core/theme.ts` parses a
+player's `.gamebuddy-theme` into validated custom properties, so the tokens are the
+only seam a theme needs; see `docs/THEME-FORMAT.md`.
 
 ## Tool lifecycle
 
@@ -89,10 +90,25 @@ a future `.gamebuddy-theme` file will write to (M7).
 5. Autosave is debounced by 250 ms; each tool's state is pulled into
    `session.instances[].state` before writing.
 
+## Icons and imported images
+
+A mark belongs to its owner. Bundled templates keep `<id>.icon.svg` in
+`src/data/templates/` beside the `.gamebuddy`; tools keep `icon.ts` in their own folder
+and import it from `meta.ts`. `bun run gen` reads the template SVGs into
+`template-icons.generated.ts`, which only the lazy mark chunk imports. `core/ui/icons.ts`
+holds just the shell's four chrome marks.
+
+Images the player uploads with a template live in localStorage as data URLs
+(`pqgb:v1:template-assets`), keyed by a normalised base name. The resolver
+(`core/ui/marks.svelte.ts`) checks those first, by `icon:` then by template name, and
+falls back to the built-in drawing. They are always rendered through `<img>`, never
+inlined.
+
 ## Storage
 
 `pqgb:v1:settings`, `pqgb:v1:sessions` (index), `pqgb:v1:session:<id>`,
-`pqgb:v1:recent`. The adapter chain is localStorage → sessionStorage → memory,
+`pqgb:v1:recent`, `pqgb:v1:imports`, `pqgb:v1:template-assets`,
+`pqgb:v1:recent-tools`. The adapter chain is localStorage → sessionStorage → memory,
 probed at boot; a banner tells the user when saving is not durable.
 
 ## Build

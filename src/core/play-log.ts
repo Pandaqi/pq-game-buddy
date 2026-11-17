@@ -15,11 +15,26 @@ export interface PlayRecord {
   results: PlayResult[];
   winner: string;
   templateId?: string;
+  /** Minutes on the table, from the session's start to the finish sheet. */
+  minutes?: number;
+}
+
+export interface WinRate {
+  name: string;
+  plays: number;
+  wins: number;
+  /** Wins divided by plays, 0–1. */
+  rate: number;
 }
 
 export interface PlayStats {
   plays: number;
+  /** Sum of the recorded durations. */
+  minutes: number;
+  /** Distinct game names. */
+  games: number;
   wins: { name: string; wins: number }[];
+  winRates: WinRate[];
   streak: { name: string; length: number } | null;
   lastPlayed: number | null;
 }
@@ -44,6 +59,10 @@ function cleanRecord(value: unknown): PlayRecord | null {
     results,
     winner: typeof raw.winner === 'string' ? raw.winner : '',
     templateId: typeof raw.templateId === 'string' ? raw.templateId : undefined,
+    minutes:
+      typeof raw.minutes === 'number' && Number.isFinite(raw.minutes) && raw.minutes > 0
+        ? Math.round(raw.minutes)
+        : undefined,
   };
 }
 
@@ -62,7 +81,12 @@ export function recordPlay(input: {
   winner: string;
   templateId?: string;
   at?: number;
+  minutes?: number;
 }): PlayRecord {
+  const minutes =
+    typeof input.minutes === 'number' && Number.isFinite(input.minutes) && input.minutes > 0
+      ? Math.round(input.minutes)
+      : undefined;
   const record: PlayRecord = {
     id: `play${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`,
     at: input.at ?? Date.now(),
@@ -71,6 +95,7 @@ export function recordPlay(input: {
     results: input.results ?? [],
     winner: input.winner.trim(),
     templateId: input.templateId,
+    minutes,
   };
   const next = [record, ...listPlays()].slice(0, 100);
   writeJson(KEYS.plays, next);
@@ -79,7 +104,7 @@ export function recordPlay(input: {
 
 export function updatePlay(
   id: string,
-  input: Pick<PlayRecord, 'winner'> & Partial<Pick<PlayRecord, 'results' | 'players'>>,
+  input: Pick<PlayRecord, 'winner'> & Partial<Pick<PlayRecord, 'results' | 'players' | 'minutes'>>,
 ): PlayRecord | null {
   const records = listPlays();
   const index = records.findIndex((record) => record.id === id);
@@ -89,6 +114,7 @@ export function updatePlay(
     winner: input.winner.trim(),
     results: input.results ?? records[index].results,
     players: input.players ?? records[index].players,
+    minutes: input.minutes ?? records[index].minutes,
   };
   records[index] = next;
   writeJson(KEYS.plays, records);
@@ -99,7 +125,7 @@ export function clearPlays(): void {
   writeJson(KEYS.plays, []);
 }
 
-/** Plays, wins and the current winning streak, newest first. */
+/** Plays, wins, win rates, playtime and the current winning streak. */
 export function statsFor(records: PlayRecord[]): PlayStats {
   const wins = new Map<string, number>();
   for (const record of records) {
@@ -118,14 +144,37 @@ export function statsFor(records: PlayRecord[]): PlayStats {
     }
     streak = { name, length };
   }
+  const plays = new Map<string, number>();
+  for (const record of records) {
+    for (const name of new Set(record.players)) plays.set(name, (plays.get(name) ?? 0) + 1);
+  }
+  const winRates: WinRate[] = [...plays.entries()]
+    .map(([name, seated]) => {
+      const won = wins.get(name) ?? 0;
+      return { name, plays: seated, wins: won, rate: seated ? won / seated : 0 };
+    })
+    .sort((a, b) => b.rate - a.rate || b.wins - a.wins || a.name.localeCompare(b.name));
+
   return {
     plays: records.length,
+    minutes: records.reduce((sum, record) => sum + (record.minutes ?? 0), 0),
+    games: new Set(records.map((record) => record.game)).size,
     wins: [...wins.entries()]
       .map(([name, count]) => ({ name, wins: count }))
       .sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
+    winRates,
     streak,
     lastPlayed: ordered.length ? ordered[0].at : null,
   };
+}
+
+/** "45 min", "2h 05m". Minutes under an hour stay in minutes. */
+export function formatMinutes(total: number): string {
+  const minutes = Math.max(0, Math.round(total));
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return rest ? `${hours}h ${String(rest).padStart(2, '0')}m` : `${hours}h`;
 }
 
 function quote(value: string): string {
@@ -133,7 +182,7 @@ function quote(value: string): string {
 }
 
 export function playsToCsv(records: PlayRecord[]): string {
-  const rows = ['Game,Date,Winner,Players,Results'];
+  const rows = ['Game,Date,Winner,Players,Results,Minutes'];
   for (const record of records) {
     const results = record.results
       .map((item) => (typeof item.score === 'number' ? `${item.name}=${item.score}` : item.name))
@@ -145,6 +194,7 @@ export function playsToCsv(records: PlayRecord[]): string {
         quote(record.winner),
         quote(record.players.join(', ')),
         quote(results),
+        record.minutes ? String(record.minutes) : '',
       ].join(','),
     );
   }

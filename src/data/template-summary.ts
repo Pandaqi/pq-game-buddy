@@ -9,6 +9,8 @@ export interface TemplateSummary {
   time?: string;
   tags: string[];
   tools: string[];
+  /** A mark name the gallery draws; the renderer ignores an unknown one. */
+  icon?: string;
 }
 
 /**
@@ -20,6 +22,7 @@ export function summariseTemplate(id: string, text: string): TemplateSummary {
   const range = parsed.game.players;
   const tools = parsed.tools.map((tool) => tool.toolId);
   if (!tools.includes('rules') && (parsed.rules.trim() || parsed.setup.length)) tools.push('rules');
+  const icon = parsed.game.icon || undefined;
   return {
     id,
     name: parsed.game.name || id,
@@ -27,5 +30,6 @@ export function summariseTemplate(id: string, text: string): TemplateSummary {
     time: parsed.game.time,
     tags: parsed.game.tags,
     tools,
+    icon,
   };
 }

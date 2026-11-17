@@ -40,7 +40,7 @@ bun run lint:templates
 bun run gen          # regenerate manifest/schemas/templates after adding a tool
 ```
 
-## What exists today (M0–M6)
+## What exists today (M0–M7, in progress)
 
 - App shell, hash router, error boundary, settings, light/dark/system themes,
   table mode, reduced-motion override, storage adapter chain with honest banners.
@@ -62,11 +62,11 @@ bun run gen          # regenerate manifest/schemas/templates after adding a tool
   interval, sequence, multi-timer grid, wake lock), **dice** (notation, keep/drop,
   reroll, exploding, success counting, pools, macros, Fate, percentile), **coin**
   (fair or weighted, call-it, best-of series), **pick** (numbers, lists, teams,
-  seats, card view), **score** (totals, rounds, categories with formulas,
+  seats, list/card/wheel/slot views), **score** (totals, rounds, categories with formulas,
   ledger, per-cell notes, targets, ties, CSV), **lives** (shared or per-player,
   extra tracks, conditions, elimination), **counters** (named counters, bank,
-  transfers, denominations, log), **turns** (order, rounds, phases, turn clock,
-  pass-the-phone), **reveal** (role dealing, hold-to-reveal, ballots, blind bids),
+  transfers, denominations, log), **turns** (order or initiative, rounds, phases,
+  turn clock, pass-the-phone), **reveal** (role dealing, hold-to-reveal, ballots, blind bids),
   **rules** (quick card, setup checklist, text, scoring, glossary, source),
   **decks** (standard, Euchre, Skat, Rummy, UNO, tarot, domino, custom; deal and
   hidden hands), **bag** (tiles with values, weighted draws, trays), **bracket**
@@ -79,8 +79,19 @@ bun run gen          # regenerate manifest/schemas/templates after adding a tool
 - Display mode: `#/display/<instance>` shows a huge read-only readout in a second tab
   or on a projector, fed by `BroadcastChannel` from the controlling tab. Print
   styles cover score sheets, brackets, rules and summaries.
-- Play log with wins and streaks, CSV/JSON export, and a finish flow that never
-  deletes a saved game without an explicit choice.
+- Play log with search, game and player filters, playtime totals, win rates, CSV/JSON
+export (which follows the filters), and a finish flow that never deletes a saved game
+without an explicit choice.
+- Theme files: a `.gamebuddy-theme` text file writes the design tokens from Settings,
+  with `dark-` values and a line-numbered checker. Nothing is fetched.
+- Dice lab: custom word faces and saved face sets. Initiative order in the turns tool.
+  The gallery answers "what should we play?" from the current player and length filters.
+- **Installable hosted build**: a web app manifest and a network-first service worker, so
+  the site opens offline after one visit. The downloaded single file needs neither.
+- Template marks kept beside their templates (`catan.icon.svg` next to
+  `catan.gamebuddy`), an upload panel that takes a template, its images and a theme in
+  one batch, house-rule `[variant]` blocks chosen at load time, a narrator voice for the
+  script tool, and huge and switch-access modes.
 - Core services: one ticker, seeded + crypto RNG, snapshot undo, synthesized cue
   sheet, haptics, wake lock, clipboard/download, pass-the-phone cover.
 - The cozy-table style system: warm paper tokens, one accent per tool family,
@@ -88,8 +99,8 @@ bun run gen          # regenerate manifest/schemas/templates after adding a tool
   is `docs/STYLE.md`.
 - `#/selftest` boots every tool headlessly and asserts zero network requests.
 
-`ROADMAP.md` is the source of truth for what comes next (M7 stretch items, then M8
-Pandaqi templates) and for the release gates that need a human. Finished milestone detail is
+`ROADMAP.md` is the source of truth for what comes next (the rest of the M7 stretch
+list, then M8 Pandaqi templates) and for the release gates that need a human. Finished milestone detail is
 compressed there as it ships. The development contract is `AGENTS.md`; player and
 author docs are in `docs/`.
 

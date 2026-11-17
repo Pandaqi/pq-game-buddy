@@ -5,6 +5,7 @@ name: Sushi Go!
 players: 2-5
 time: 20m
 tags: card, party
+icon: sushi
 source: https://gamewright.com/product/Sushi-Go
 author: pandaqi
 license: CC-BY-SA-4.0

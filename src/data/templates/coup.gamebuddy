@@ -2,6 +2,7 @@
 
 [game]
 name: Coup
+icon: coup
 players: 2-6
 time: 15m
 tags: party, bluffing

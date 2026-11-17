@@ -5,6 +5,7 @@ name: Chess / Blitz
 players: 2
 time: 10-60m
 tags: board, duel
+icon: knight
 source: https://www.fide.com/
 author: pandaqi
 license: CC-BY-SA-4.0

@@ -278,3 +278,54 @@
   --text-faint: #e0d2b8;
   --line: #574934;
 }
+
+/* Huge mode: for a large screen or low vision. It sits after table mode, so
+   turning on both takes the bigger of the two. */
+:root[data-huge='on'] {
+  --text-xs: 1.15rem;
+  --text-sm: 1.32rem;
+  --text-base: 1.5rem;
+  --text-lg: 1.95rem;
+  --text-xl: 2.6rem;
+  --text-2xl: 3.4rem;
+  --text-3xl: 4.4rem;
+  --text-4xl: 6rem;
+  --space-1: 0.35rem;
+  --space-2: 0.7rem;
+  --space-3: 1.05rem;
+  --space-4: 1.45rem;
+  --space-5: 2.1rem;
+  --space-6: 3.4rem;
+  --space-7: 5rem;
+  --text-dim: var(--ink);
+  --text-faint: #6d5c43;
+  --line: #cbb894;
+}
+
+:root[data-theme='dark'][data-huge='on'],
+:root[data-huge='on'][data-theme='dark'] {
+  --text-faint: #e0d2b8;
+  --line: #574934;
+}
+
+/* Switch access: one switch or a head pointer steps through focus, so targets
+   are bigger, the ring is thick and hover never moves the thing under it. */
+:root[data-switch='on'] button,
+:root[data-switch='on'] select,
+:root[data-switch='on'] summary,
+:root[data-switch='on'] input,
+:root[data-switch='on'] a.wide,
+:root[data-switch='on'] a.link,
+:root[data-switch='on'] a.back {
+  min-height: 64px;
+}
+
+:root[data-switch='on'] :focus-visible {
+  outline-width: 5px;
+  outline-offset: 4px;
+}
+
+:root[data-switch='on'] button:hover:not(:disabled),
+:root[data-switch='on'] .tool:hover:not(:disabled) {
+  transform: none;
+}

@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'reveal',
   title: 'Reveal',
-  blurb: 'Deal secret roles, run a ballot or take blind bids without leaking.',
+  blurb: 'Hand out secret roles without anyone seeing the wrong card.',
   family: 'reveal',
   seats: 'multi',
-  icon: mark('eye'),
+  icon: ICON,
   tags: ['reveal', 'secrets'],
 };
 

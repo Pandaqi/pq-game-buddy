@@ -11,12 +11,15 @@
   import type { Session } from './core/session';
   import { readFileText } from './core/share';
   import { storage, storagePersistent } from './core/storage';
-  import { allDiagnostics, parseTemplate, resolveTemplate, type Diagnostic, type ResolvedTool } from './core/template/parse';
-  import { toolsForSession } from './core/template/session-tools';
+  import { allDiagnostics, parseTemplate, resolveTemplate, type Diagnostic, type ResolvedTool, type TemplateVariant } from './core/template/parse';
+  import { assetName, isImageFile, isTemplateFile, isThemeFile, rememberAsset } from './core/template/assets';
+  import { applyVariant, toolsForSession } from './core/template/session-tools';
   import { decodeTemplateLink } from './core/template/share-link';
+  import { parseTheme } from './core/theme';
   import LazyView, { lazyView } from './core/ui/LazyView.svelte';
   import { doodle } from './core/ui/doodles';
   import { mark } from './core/ui/icons';
+  import { rememberTool } from './core/ui/tool-shelf';
   import { templateText } from './data/templates';
   import Sheet from './core/ui/Sheet.svelte';
   import Home from './ui/Home.svelte';
@@ -71,11 +74,13 @@
   let dragActive = $state(false);
   let cueOpen = $state(false);
   let diagnostics = $state<Diagnostic[]>([]);
+  let variantId = $state('');
   let pending = $state<{
     text: string;
     gameName: string;
     players: string[];
     tools: ResolvedTool[];
+    variants: TemplateVariant[];
     range?: { min: number; max: number };
     notes: string;
   } | null>(null);
@@ -127,11 +132,9 @@
     const onDrop = (event: DragEvent): void => {
       event.preventDefault();
       dragActive = false;
-      const file = event.dataTransfer?.files?.[0];
-      if (!file) return;
-      void readFileText(file)
-        .then((text) => beginImport(text))
-        .catch(() => store.toast('That file would not open. Try saving it again.', 'error'));
+      const files = Array.from(event.dataTransfer?.files ?? []);
+      if (!files.length) return;
+      void importFiles(files);
     };
     window.addEventListener('dragover', onDragOver);
     window.addEventListener('dragleave', onDragLeave);
@@ -145,7 +148,64 @@
     };
   });
 
-  function beginImport(text: string): void {
+  /**
+   * One drop or one file picker can carry a template, its images and a theme.
+   * Images are stored under their base name, so the template's `icon:` finds
+   * one, and a template with no `icon:` falls back to its own file name.
+   */
+  async function importFiles(files: File[]): Promise<void> {
+    const images = files.filter((file) => isImageFile(file));
+    const themes = files.filter((file) => isThemeFile(file.name));
+    const templates = files.filter((file) => isTemplateFile(file.name) && !isThemeFile(file.name));
+
+    let imagesSaved = 0;
+    for (const file of images) {
+      if (await rememberAsset(file)) imagesSaved += 1;
+    }
+
+    let themeName = '';
+    if (themes.length) {
+      try {
+        const text = await readFileText(themes[0]);
+        const theme = parseTheme(text);
+        settings.setTheme(text);
+        themeName = theme.name || themes[0].name.replace(/\.(gamebuddy-theme|theme)$/i, '');
+      } catch {
+        store.toast('That theme file would not open. Try saving it again.', 'error');
+      }
+    }
+
+    let extra = 0;
+    for (const [index, file] of templates.entries()) {
+      try {
+        const text = await readFileText(file);
+        const source = assetName(file.name);
+        if (index === 0) {
+          beginImport(text, source);
+        } else {
+          const parsed = parseTemplate(text);
+          rememberImport(text, parsed.template.game.name, source, parsed.template.game.icon);
+          extra += 1;
+        }
+      } catch {
+        store.toast(`${file.name} would not open. Try saving it again.`, 'error');
+      }
+    }
+
+    const parts: string[] = [];
+    if (templates.length) parts.push(templates.length === 1 ? '1 template' : `${templates.length} templates`);
+    if (imagesSaved) parts.push(imagesSaved === 1 ? '1 image' : `${imagesSaved} images`);
+    if (themeName) parts.push(`theme “${themeName}”`);
+    if (!parts.length) {
+      store.toast('Nothing to import. Add a .gamebuddy, an image or a theme.', 'error');
+      return;
+    }
+    if (!templates.length) flow = 'none';
+    if (extra) parts.push(`${extra} kept in Recently imported`);
+    store.toast(`${parts.join(', ')} ready.`);
+  }
+
+  function beginImport(text: string, source = ''): void {
     const trimmed = text.trim();
     if (trimmed.startsWith('{')) {
       try {
@@ -162,15 +222,17 @@
     const parsed = parseTemplate(text);
     const resolved = resolveTemplate(parsed.template, (id) => schemas[id]);
     diagnostics = allDiagnostics(parsed.diagnostics, resolved.diagnostics);
-    rememberImport(text, parsed.template.game.name);
+    rememberImport(text, parsed.template.game.name, source, parsed.template.game.icon);
     pending = {
       text,
       gameName: parsed.template.game.name,
       players: parsed.template.players,
       tools: toolsForSession(parsed.template, resolved.tools),
+      variants: parsed.template.variants,
       range: parsed.template.game.players,
       notes: parsed.template.notes,
     };
+    variantId = '';
     const range = parsed.template.game.players;
     seatCount = range ? range.min : 2;
     flow = 'start';
@@ -191,10 +253,12 @@
     const names = target.players.length
       ? target.players
       : Array.from({ length: Math.max(1, Math.min(20, seatCount)) }, (_, index) => `Player ${index + 1}`);
+    const variant = target.variants.find((item) => item.id === variantId);
+    const tools = variant ? applyVariant(target.tools, variant) : target.tools;
     await store.start({
       gameName: target.gameName,
       players: names,
-      tools: target.tools.map((tool) => ({
+      tools: tools.map((tool) => ({
         toolId: tool.toolId,
         instanceId: tool.instanceId,
         values: tool.values,
@@ -214,6 +278,7 @@
     // a tool that seats everyone starts with two.
     const players = tool.seats === 'multi' ? ['Player 1', 'Player 2'] : ['Player 1'];
     // The tool's own chunk arrives here; the shell only knew its name until now.
+    rememberTool(toolId);
     await store.start({
       gameName: tool?.title ?? toolId,
       players,
@@ -259,12 +324,12 @@
       Game Buddy
     </a>
     <div class="top-actions">
-      <button type="button" class="icon" onclick={() => (cueOpen = true)} aria-label="Sound board">
+      <button type="button" class="icon chrome-sound" onclick={() => (cueOpen = true)} aria-label="Sound board">
         {@html mark('notes')}
       </button>
       <button
         type="button"
-        class="icon"
+        class="icon chrome-mute"
         onclick={toggleMute}
         aria-pressed={settings.values.muted}
         aria-label={settings.values.muted ? 'Unmute sounds' : 'Mute sounds'}
@@ -316,7 +381,11 @@
     {:else if route.name === 'log'}
       <LazyView load={pageLoaders.log} label="the play log" />
     {:else if route.name === 'templates'}
-      <LazyView load={pageLoaders.templates} label="templates" />
+      <LazyView
+        load={pageLoaders.templates}
+        label="templates"
+        props={{ onupload: (files: File[]) => void importFiles(files) }}
+      />
     {:else if route.name === 'editor'}
       <LazyView load={pageLoaders.editor} label="the editor" />
     {:else if route.name === 'notfound'}
@@ -335,7 +404,7 @@
   </main>
 
   {#if dragActive}
-    <div class="dropzone" aria-hidden="true"><p>Drop a .gamebuddy file</p></div>
+    <div class="dropzone" aria-hidden="true"><p>Drop a template, images or a theme</p></div>
   {/if}
 
   {#if store.notice}
@@ -370,26 +439,32 @@
 {/if}
 
 {#if flow === 'paste'}
-  <Sheet title="Import a template" onclose={() => (flow = 'none')}>
+  <Sheet title="Import your own" onclose={() => (flow = 'none')}>
+    <p class="dim">
+      Pick a template, its images and a theme together. Everything stays on this device; nothing is uploaded.
+    </p>
     <label class="field">
-      <span>Template text or session JSON</span>
-      <textarea rows="10" bind:value={pasteText} placeholder="[game]&#10;name: My Game&#10;…" spellcheck="false"></textarea>
-    </label>
-    <label class="field">
-      <span>Or choose a file</span>
+      <span>Files</span>
       <input
         type="file"
-        accept=".gamebuddy,.txt,.json,text/plain,application/json"
+        multiple
+        accept=".gamebuddy,.gamebuddy-theme,.txt,.json,image/svg+xml,image/png,image/jpeg,image/webp"
         onchange={(event) => {
-          const file = (event.currentTarget as HTMLInputElement).files?.[0];
-          if (!file) return;
-          void readFileText(file)
-            .then((text) => beginImport(text))
-            .catch(() => store.toast('That file would not open. Try saving it again.', 'error'));
+          const input = event.currentTarget as HTMLInputElement;
+          const files = Array.from(input.files ?? []);
+          if (files.length) void importFiles(files);
+          input.value = '';
         }}
       />
     </label>
-    <button type="button" class="primary" onclick={() => beginImport(pasteText)}>Check template</button>
+    <p class="hint">
+      An image named like the template's <code>icon:</code> value — or like the template file — becomes its mark.
+    </p>
+    <label class="field">
+      <span>Or paste a template</span>
+      <textarea rows="7" bind:value={pasteText} placeholder="[game]&#10;name: My Game&#10;…" spellcheck="false"></textarea>
+    </label>
+    <button type="button" class="primary" onclick={() => beginImport(pasteText)}>Check pasted template</button>
   </Sheet>
 {/if}
 
@@ -413,6 +488,17 @@
         <span>Seats</span>
         <input type="number" min="1" max="20" bind:value={seatCount} />
       </label>
+    {/if}
+
+    {#if pending.variants.length}
+      <div class="variants" role="group" aria-label="House-rule variant">
+        <button type="button" class:active={variantId === ''} onclick={() => (variantId = '')}>Base rules</button>
+        {#each pending.variants as variant (variant.id)}
+          <button type="button" class:active={variantId === variant.id} onclick={() => (variantId = variant.id)}>
+            {variant.name}
+          </button>
+        {/each}
+      </div>
     {/if}
 
     <p class="dim">
@@ -449,6 +535,11 @@
   }
   .skip:focus {
     left: var(--space-2);
+  }
+  /* A theme file may hide the sound buttons; the settings door always stays. */
+  :global(:root[data-hide~='sound']) .chrome-sound,
+  :global(:root[data-hide~='mute']) .chrome-mute {
+    display: none;
   }
   .top {
     display: flex;
@@ -649,6 +740,22 @@
   .field input {
     font-family: var(--font-mono);
     font-size: var(--text-sm);
+  }
+  .variants {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+  .variants button {
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    background: var(--surface-2);
+    color: var(--text);
+  }
+  .variants button.active {
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    font-weight: 800;
   }
   .diags {
     list-style: none;

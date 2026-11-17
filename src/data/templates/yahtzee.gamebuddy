@@ -5,6 +5,7 @@ name: Yahtzee
 players: 2-6
 time: 30m
 tags: dice, score
+icon: yahtzee
 source: https://www.hasbro.com/en-us/product/yahtzee
 author: pandaqi
 license: CC-BY-SA-4.0

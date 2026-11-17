@@ -2,6 +2,7 @@
 
 [game]
 name: Love Letter
+icon: love-letter
 players: 2-4
 time: 20m
 tags: card, deduction

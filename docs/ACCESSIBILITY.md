@@ -10,6 +10,14 @@ rules below, and the manual matrix at the end is the release gate.
   `bun run check`; a new warning fails the build. Nothing is suppressed.
 - **Targets.** 48 × 48 px minimum (56 in table mode), with spacing that avoids
   mis-taps. Primary actions sit in the lower third of a 360 px phone screen.
+- **Huge mode.** Settings offers a type and space scale above table mode, for a large
+  screen or low vision. It enlarges type and spacing, strengthens dim text and never
+  hides a control; at 320 px the page scrolls rather than clips.
+- **Switch access.** A separate settings mode raises every target to 64 px, thickens
+  the focus ring to 5 px and removes hover movement, so a single switch or head pointer
+  always sees where it is and never chases a shifting target.
+- **No sideways scrolling.** The tool row and player strip wrap onto new lines. Chips,
+  modes and folds are containers that grow, not strips with a hidden scrollbar.
 - **Focus.** Every control is keyboard reachable, in a logical order, with a visible
   focus ring that survives dark, light and table themes. Sheets, covers and dialogs
   return focus to the control that opened them.
@@ -17,7 +25,9 @@ rules below, and the manual matrix at the end is the release gate.
   have an explicit cancel path; no keyboard trap exists, including on the reveal
   cover.
 - **Labels.** Icon-only buttons carry `aria-label`; inputs have real labels; tables
-  use `th` with row and column scopes.
+  use `th` with row and column scopes. The reveal flow carries a folded guide for
+  screen-reader and keyboard players on the dealt-roles screen: hold Space or Enter to
+  reveal, release to hide, Escape to cancel, and Next player to move on without a swipe.
 - **Live regions.** Score, turn and life changes announce politely. Timers announce
   only at meaningful thresholds (one minute, thirty seconds, zero), never every
   second, and never interrupt another announcement.
@@ -28,7 +38,9 @@ rules below, and the manual matrix at the end is the release gate.
   sound never removes information.
 - **Motion is optional.** Every animation has a static end state. `prefers-reduced-
   motion` removes motion, and Settings offers an override for people whose OS setting
-  is wrong for them.
+  is wrong for them. The pick tool's wheel and slot are decoration: both are
+  `aria-hidden`, and the winner is always a line of text, so the result is announced
+  once and is readable at rest.
 - **Zoom and width.** Layout works at 320 px and at 200 percent zoom or 200 percent
   text size, with no horizontal scrolling and no clipped numbers.
 - **Contrast.** Text at least 4.5:1, large text and UI edges at least 3:1, verified in

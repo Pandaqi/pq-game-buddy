@@ -20,6 +20,9 @@
   let finishSourceId = $state('');
   let finishWinner = $state('');
   let finishSaved = $state(false);
+  let qrOpen = $state(false);
+  let qrImage = $state('');
+  let qrError = $state('');
   let forgetOnClose = $state(false);
   const display = createDisplayChannel();
 
@@ -67,6 +70,7 @@
   // folded away everywhere else. The choice sticks per tool instance.
   const seats = $derived(entry?.module.seats ?? 'multi');
   let seatPrefs = $state<Record<string, boolean>>({});
+  let toolsOpen = $state(false);
   const seatsOpen = $derived(seatPrefs[entry?.id ?? ''] ?? seats === 'multi');
   const seatCount = $derived(session?.players.length ?? 0);
   const seatSummary = $derived(seatCount === 1 ? '1 player' : `${seatCount} players`);
@@ -107,6 +111,30 @@
   function addPlayerNow(): void {
     store.addPlayer(newName);
     newName = '';
+  }
+
+  /** QR needs a real origin; a file:// path cannot be opened by a phone camera. */
+  async function showQr(): Promise<void> {
+    menuOpen = false;
+    if (typeof location === 'undefined' || !/^https?:$/.test(location.protocol)) {
+      store.toast('QR needs the hosted version. Save the template instead.', 'error');
+      return;
+    }
+    const link = templateShareUrl(store.exportTemplate());
+    // One symbol holds 2953 bytes in byte mode; the share URL is ASCII, so length is bytes.
+    if (new TextEncoder().encode(link).length > 2953) {
+      store.toast('Too big for one QR. Copy the share link instead.', 'error');
+      return;
+    }
+    qrImage = '';
+    qrError = '';
+    qrOpen = true;
+    try {
+      const { qrSvg } = await import('../core/qr');
+      qrImage = qrSvg(link).svg;
+    } catch {
+      qrError = 'That template is too big for one QR. Copy the share link instead.';
+    }
   }
 
   function shareLink(): void {
@@ -169,8 +197,10 @@
   function savePlay(): void {
     if (!session) return;
     const players = session.players.map((player) => player.name);
+    // Rounded up: a 4½ minute game still counts as 5 minutes of table time.
+    const minutes = Math.max(1, Math.ceil((Date.now() - session.createdAt) / 60000));
     if (session.playId) {
-      const updated = updatePlay(session.playId, { results: finishResults, winner: finishWinner, players });
+      const updated = updatePlay(session.playId, { results: finishResults, winner: finishWinner, players, minutes });
       if (updated) {
         finishSaved = true;
         store.toast('Play log updated');
@@ -183,6 +213,7 @@
       results: finishResults,
       winner: finishWinner,
       templateId: session.templateId,
+      minutes,
     });
     store.markPlaySaved(saved.id);
     finishSaved = true;
@@ -269,20 +300,39 @@
   {/if}
 
   {#if entries.length > 1}
-    <div class="tabs" role="tablist" aria-label="Tools">
-      {#each entries as item (item.id)}
-        <button
-          type="button"
-          role="tab"
-          aria-selected={store.activeId === item.id}
-          class:active={store.activeId === item.id}
-          onclick={() => store.setTab(item.id)}
-          data-family={item.module.family}
-        >
-          <span class="tab-mark" aria-hidden="true">{@html item.module.icon}</span>
-          {item.label}
-        </button>
-      {/each}
+    <div class="tools">
+      <button
+        type="button"
+        class="tools-toggle"
+        aria-expanded={toolsOpen}
+        aria-controls="session-tools"
+        onclick={() => (toolsOpen = !toolsOpen)}
+      >
+        <span class="tab-marks" aria-hidden="true">
+          {#each entries.slice(0, 3) as item (item.id)}
+            <span class="tab-mark">{@html item.module.icon}</span>
+          {/each}
+        </span>
+        <span>{entry?.label ?? 'Tools'} · {entries.length} tools</span>
+        <span class="chev" class:open={toolsOpen} aria-hidden="true">▾</span>
+      </button>
+      {#if toolsOpen}
+        <div class="tabs" id="session-tools" role="tablist" aria-label="Tools">
+          {#each entries as item (item.id)}
+            <button
+              type="button"
+              role="tab"
+              aria-selected={store.activeId === item.id}
+              class:active={store.activeId === item.id}
+              onclick={() => store.setTab(item.id)}
+              data-family={item.module.family}
+            >
+              <span class="tab-mark" aria-hidden="true">{@html item.module.icon}</span>
+              {item.label}
+            </button>
+          {/each}
+        </div>
+      {/if}
     </div>
   {/if}
 
@@ -415,6 +465,21 @@
   </Sheet>
 {/if}
 
+{#if qrOpen}
+  <Sheet title="Scan this template" onclose={() => (qrOpen = false)}>
+    {#if qrImage}
+      <div class="qr">{@html qrImage}</div>
+      <p class="dim small">
+        Point a phone camera at the code. It opens the same template in this app, on this site.
+      </p>
+    {:else if qrError}
+      <p class="dim">{qrError}</p>
+    {:else}
+      <p class="dim">Drawing the code…</p>
+    {/if}
+  </Sheet>
+{/if}
+
 {#if menuOpen}
   <Sheet title="Game menu" onclose={() => (menuOpen = false)}>
     <button type="button" class="wide" onclick={copySummary}>Copy summary</button>
@@ -424,6 +489,7 @@
     {/if}
     <button type="button" class="wide" onclick={saveTemplate}>Save as template</button>
     <button type="button" class="wide" onclick={shareLink}>Share as link</button>
+    <button type="button" class="wide" onclick={showQr}>Show QR code</button>
     <button type="button" class="wide" onclick={exportSession}>Export session JSON</button>
     <a class="wide link" href="#/log">Play log</a>
     <a class="wide link" href="#/settings">Settings</a>
@@ -457,9 +523,8 @@
     font-size: var(--text-xl);
     margin: 0;
     color: var(--forest);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    line-height: 1.15;
+    overflow-wrap: break-word;
   }
   .title {
     min-width: 0;
@@ -493,7 +558,8 @@
     gap: var(--space-1);
     padding: 0 var(--space-2);
   }
-  .seats-toggle {
+  .seats-toggle,
+  .tools-toggle {
     align-self: flex-start;
     display: inline-flex;
     align-items: center;
@@ -507,7 +573,8 @@
     font-size: var(--text-sm);
     font-weight: 600;
   }
-  .seats-toggle:hover {
+  .seats-toggle:hover,
+  .tools-toggle:hover {
     background: var(--surface-2);
     color: var(--text);
     transform: none;
@@ -540,8 +607,8 @@
   }
   .players {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
-    overflow-x: auto;
     padding: 0 0 var(--space-1);
   }
   .add-player {
@@ -561,21 +628,43 @@
     background: var(--danger-soft);
     font-size: var(--text-sm);
   }
+  .tools {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: 0 var(--space-2);
+  }
+  .tab-marks {
+    display: inline-flex;
+  }
+  .tab-marks .tab-mark {
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+  }
+  .tab-marks .tab-mark :global(svg) {
+    width: 17px;
+    height: 17px;
+  }
+  .tab-marks .tab-mark + .tab-mark {
+    margin-left: -6px;
+  }
   .tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-2);
-    overflow-x: auto;
-    padding: 0 var(--space-2) var(--space-1);
+    padding: 0 0 var(--space-1);
   }
   .tabs button {
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
     min-height: 46px;
-    padding: 0 var(--space-4);
+    padding: var(--space-1) var(--space-4);
     background: var(--surface-2);
     color: var(--text-dim);
-    white-space: nowrap;
+    text-align: left;
     box-shadow: none;
   }
   .tabs button.active {
@@ -776,5 +865,17 @@
     align-items: center;
     gap: var(--space-2);
     min-height: 48px;
+  }
+  .qr {
+    display: grid;
+    place-items: center;
+    padding: var(--space-3);
+    border-radius: var(--radius);
+    background: #ffffff;
+  }
+  .qr :global(svg) {
+    display: block;
+    width: min(22rem, 78vw);
+    height: auto;
   }
 </style>

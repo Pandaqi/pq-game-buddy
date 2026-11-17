@@ -10,8 +10,10 @@ HTML file. Read this page, then follow the links. Everything else lives in `docs
 | What we are building and why, milestone order | [ROADMAP.md](ROADMAP.md) |
 | Non-negotiable invariants, layers, build pipeline | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | `.gamebuddy` template format (frozen v1) | [docs/TEMPLATE-FORMAT.md](docs/TEMPLATE-FORMAT.md) |
+| `.gamebuddy-theme` keys and validation | [docs/THEME-FORMAT.md](docs/THEME-FORMAT.md) |
 | Add or change a tool | [docs/TOOL-AUTHORING.md](docs/TOOL-AUTHORING.md) |
 | Using the app, template errors, limitations | [docs/USER-GUIDE.md](docs/USER-GUIDE.md) |
+| Contributing a community template | [docs/COMMUNITY.md](docs/COMMUNITY.md) |
 | Visual language: tokens, type, marks, motion | [docs/STYLE.md](docs/STYLE.md) |
 | Accessibility rules and manual checklist | [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) |
 | Data sources, licences, attribution | [docs/LICENSES.md](docs/LICENSES.md) |

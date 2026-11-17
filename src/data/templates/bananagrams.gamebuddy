@@ -2,6 +2,7 @@
 
 [game]
 name: Bananagrams
+icon: bananagrams
 players: 2-8
 time: 15m
 tags: words, realtime

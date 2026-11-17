@@ -2,6 +2,7 @@
 
 [game]
 name: Skull
+icon: skull
 players: 3-6
 time: 20m
 tags: party, bluffing

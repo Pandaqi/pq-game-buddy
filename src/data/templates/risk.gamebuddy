@@ -2,6 +2,7 @@
 
 [game]
 name: Risk
+icon: risk
 players: 2-6
 time: 120m
 tags: board, war

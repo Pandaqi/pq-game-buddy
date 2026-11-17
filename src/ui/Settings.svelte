@@ -1,10 +1,43 @@
 <script lang="ts">
   import { settings } from '../core/settings.svelte';
+  import { readFileText } from '../core/share';
   import { storage, storagePersistent } from '../core/storage';
+  import { parseTheme } from '../core/theme';
+  import { AUTHOR, REPO_URL, SITE_URL } from '../core/about';
+  import { VERSION } from '../core/version.generated';
   import Sheet from '../core/ui/Sheet.svelte';
 
   let resetOpen = $state(false);
   let confirmText = $state('');
+  let themeDraft = $state(settings.values.themeText);
+  let themeName = $state('');
+
+  const activeTheme = $derived(parseTheme(settings.values.themeText));
+  const draft = $derived(parseTheme(themeDraft));
+  const themeDiags = $derived(draft.diagnostics);
+
+  function useTheme(): void {
+    settings.setTheme(themeDraft);
+    themeName = '';
+  }
+
+  function removeTheme(): void {
+    themeDraft = '';
+    themeName = '';
+    settings.setTheme('');
+  }
+
+  function loadThemeFile(event: Event): void {
+    const file = (event.currentTarget as HTMLInputElement).files?.[0];
+    if (!file) return;
+    void readFileText(file)
+      .then((text) => {
+        themeDraft = text;
+        themeName = file.name;
+        useTheme();
+      })
+      .catch(() => (themeName = ''));
+  }
 
   const storageText = $derived(
     storagePersistent
@@ -23,7 +56,10 @@
 </script>
 
 <div class="settings">
-  <h1>Settings</h1>
+  <header class="head">
+    <h1>Settings</h1>
+    <a class="back" href="#/">Home</a>
+  </header>
 
   <section>
     <h2>Light or dark</h2>
@@ -42,10 +78,63 @@
   </section>
 
   <section>
+    <h2>Theme file</h2>
+    <p class="dim small">
+      A .gamebuddy-theme is plain text with a few colours, sizes and fonts. It stays on this device and is never fetched.
+    </p>
+    {#if activeTheme.name}
+      <p class="dim small">Active theme: {activeTheme.name}</p>
+    {/if}
+    <label class="field">
+      <span>Paste a theme</span>
+      <textarea rows="6" bind:value={themeDraft} spellcheck="false" placeholder="name: Lantern night&#10;paper: #fdf6e3&#10;ink: #2b2118"></textarea>
+    </label>
+    <label class="field">
+      <span>Or choose a file</span>
+      <input type="file" accept=".gamebuddy-theme,.txt,text/plain" onchange={loadThemeFile} />
+    </label>
+    {#if themeName}
+      <p class="dim small">{themeName}</p>
+    {/if}
+    {#if themeDiags.length}
+      <ul class="diags">
+        {#each themeDiags as item, index (index)}
+          <li class:error={item.severity === 'error'}>
+            <span class="line">line {item.line}</span>
+            <span>{item.message}</span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    <div class="row">
+      <button type="button" class="wide" onclick={useTheme} disabled={!themeDraft.trim()}>Use this theme</button>
+      {#if settings.values.themeText}
+        <button type="button" class="wide" onclick={removeTheme}>Remove theme</button>
+      {/if}
+    </div>
+  </section>
+
+  <section>
     <h2>Table mode</h2>
     <label class="check">
       <input type="checkbox" checked={settings.values.table} onchange={(event) => settings.set('table', (event.currentTarget as HTMLInputElement).checked)} />
       <span>Bigger type, thicker targets and less chrome, for a phone lying flat on the table.</span>
+    </label>
+  </section>
+
+  <section>
+    <h2>Huge mode</h2>
+    <label class="check">
+      <input type="checkbox" checked={settings.values.huge} onchange={(event) => settings.set('huge', (event.currentTarget as HTMLInputElement).checked)} />
+      <span>Bigger than table mode, for a large screen or low vision. Screens scroll more.</span>
+    </label>
+  </section>
+
+  <section>
+    <h2>Switch access</h2>
+    <label class="check">
+      <input type="checkbox" checked={settings.values.switchAccess} onchange={(event) => settings.set('switchAccess', (event.currentTarget as HTMLInputElement).checked)} />
+      <span>Bigger targets and a thicker focus ring, for a single switch or a head pointer.</span>
     </label>
   </section>
 
@@ -102,10 +191,27 @@
   <section>
     <h2>About</h2>
     <p class="dim">
-      Game Buddy runs entirely offline. No accounts, no tracking, no network requests. Templates are plain text you own.
+      Game Buddy lives on your device. No account, no tracking, no requests. I built it for my own
+      table first, then kept going.
+    </p>
+    <p class="dim small">
+      Templates are plain text: write one in Notepad, send it in the group chat, drop it here.
     </p>
     <p class="dim small">Game names are used descriptively; this is not affiliated with or endorsed by any publisher.</p>
   </section>
+
+  <footer class="made-by">
+    <p>
+      Made by <a href={SITE_URL} target="_blank" rel="noopener noreferrer">{AUTHOR}</a>.
+      Game Buddy version {VERSION}.
+    </p>
+    <p class="small">
+      More games and tools at
+      <a href={SITE_URL} target="_blank" rel="noopener noreferrer">pandaqi.com</a>.
+      The source lives at
+      <a href={REPO_URL} target="_blank" rel="noopener noreferrer">github.com/Pandaqi/pq-game-buddy</a>.
+    </p>
+  </footer>
 </div>
 
 {#if resetOpen}
@@ -130,10 +236,27 @@
     flex-direction: column;
     gap: var(--space-5);
   }
+  .head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
   h1 {
     font-size: var(--text-2xl);
     margin: 0;
     color: var(--forest);
+  }
+  .back {
+    min-height: 46px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text);
+    text-decoration: none;
+    font-weight: 600;
   }
   h2 {
     font-family: var(--font-body);
@@ -223,5 +346,76 @@
   }
   .wide {
     width: 100%;
+    min-height: 52px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .wide:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .row .wide {
+    width: auto;
+    flex: 1;
+  }
+  .field textarea {
+    min-height: 8rem;
+    padding: var(--space-3);
+    font-family: var(--font-mono);
+    font-size: var(--text-sm);
+  }
+  .diags {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+    color: var(--text-dim);
+  }
+  .diags li {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .diags li.error {
+    color: var(--danger);
+  }
+  .line {
+    font-family: var(--font-mono);
+    flex: none;
+  }
+  .made-by {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-card);
+    background: var(--accent-soft);
+  }
+  .made-by p {
+    margin: 0;
+    color: var(--text);
+  }
+  .made-by .small {
+    font-size: var(--text-sm);
+    color: var(--text-dim);
+  }
+  .made-by a {
+    color: var(--accent-deep);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .made-by a:hover,
+  .made-by a:focus-visible {
+    text-decoration: underline;
   }
 </style>

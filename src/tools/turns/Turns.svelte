@@ -3,7 +3,7 @@
   import PassThePhone from '../../core/ui/PassThePhone.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { formatClock } from '../../core/template/schema';
-  import { currentName, currentPhase, type TurnsInstance } from './logic';
+  import { currentName, currentPhase, initiativeRanking, type TurnsInstance } from './logic';
 
   let { ctx, instance }: { ctx: ToolContext; instance: TurnsInstance } = $props();
   const data = $derived(instance.data);
@@ -63,7 +63,7 @@
   </div>
 
   <div class="stage">
-    <p class="lead">It is the turn of</p>
+    <p class="lead">{data.mode === 'initiative' ? 'Acting now' : 'It is the turn of'}</p>
     <h2 aria-live="polite">{who}</h2>
     <p class="phase">{phase}</p>
 
@@ -80,7 +80,35 @@
     {/if}
   </div>
 
-  {#if data.order.length > 1}
+  {#if data.mode === 'initiative'}
+    <div class="initiative">
+      <div class="init-head">
+        <span>Initiative this round</span>
+        <button type="button" onclick={() => instance.newInitiativeRound()}>New round</button>
+      </div>
+      {#each initiativeRanking(data) as seat (seat)}
+        <div class="init-row" class:active={seat === data.index}>
+          <button type="button" class="who" onclick={() => jump(seat)} aria-current={seat === data.index ? 'true' : undefined}>
+            {data.order[seat]}
+          </button>
+          <div class="stepper" role="group" aria-label="Initiative for {data.order[seat]}">
+            <button
+              type="button"
+              aria-label="Lower initiative for {data.order[seat]}"
+              onclick={() => instance.setInitiative(seat, (data.initiative[seat] ?? 0) - 1)}
+            >−</button>
+            <span class="value">{data.initiative[seat] ?? 0}</span>
+            <button
+              type="button"
+              aria-label="Raise initiative for {data.order[seat]}"
+              onclick={() => instance.setInitiative(seat, (data.initiative[seat] ?? 0) + 1)}
+            >+</button>
+          </div>
+        </div>
+      {/each}
+      <p class="hint">Highest goes first. New round clears every value and starts again.</p>
+    </div>
+  {:else if data.order.length > 1}
     <div class="order" role="group" aria-label="Turn order">
       {#each data.order as item, index (item + index)}
         <button
@@ -151,6 +179,10 @@
           {seconds === 0 ? 'Off' : seconds < 60 ? `${seconds}s` : `${seconds / 60}m`}
         </button>
       {/each}
+    </div>
+    <div class="segment" role="group" aria-label="Turn style">
+      <button type="button" class:active={data.mode === 'order'} onclick={() => instance.setMode('order')}>Turn order</button>
+      <button type="button" class:active={data.mode === 'initiative'} onclick={() => instance.setMode('initiative')}>Initiative</button>
     </div>
     <label class="check">
       <input
@@ -258,9 +290,8 @@
   }
   .order {
     display: flex;
+    flex-wrap: wrap;
     gap: var(--space-1);
-    overflow-x: auto;
-    padding-bottom: var(--space-1);
   }
   .order button {
     flex: 0 0 auto;
@@ -276,6 +307,101 @@
     background: var(--accent);
     color: var(--accent-text);
     font-weight: 700;
+  }
+  .initiative {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .init-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    color: var(--text-dim);
+    font-size: var(--text-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    font-weight: 700;
+  }
+  .init-head button {
+    min-height: 44px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text);
+    text-transform: none;
+    letter-spacing: normal;
+    font-size: var(--text-sm);
+    cursor: pointer;
+  }
+  .init-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-1) var(--space-1) var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+  }
+  .init-row.active {
+    background: var(--accent-soft);
+  }
+  .init-row .who {
+    flex: 1;
+    min-height: 46px;
+    background: transparent;
+    color: var(--text);
+    font-weight: 700;
+    text-align: left;
+    box-shadow: none;
+    cursor: pointer;
+  }
+  .init-row.active .who {
+    color: var(--accent-deep);
+  }
+  .stepper {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
+  .stepper button {
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text);
+    font-size: var(--text-lg);
+    cursor: pointer;
+  }
+  .stepper .value {
+    min-width: 2.2rem;
+    text-align: center;
+    font-family: var(--font-num);
+    font-size: var(--text-lg);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .segment {
+    display: flex;
+    gap: var(--space-1);
+    padding: var(--space-1);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+  }
+  .segment button {
+    flex: 1;
+    min-height: 46px;
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .segment button.active {
+    background: var(--surface);
+    color: var(--text);
+    font-weight: 700;
+    box-shadow: var(--shadow-soft);
   }
   .turn-actions {
     display: flex;

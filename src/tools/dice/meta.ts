@@ -1,5 +1,5 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'dice',
@@ -7,7 +7,7 @@ const meta: ToolMeta = {
   blurb: 'Roll any die or notation, with keep, reroll and exploding dice.',
   family: 'randomize',
   seats: 'none',
-  icon: mark('dice'),
+  icon: ICON,
   tags: ['random', 'dice'],
 };
 

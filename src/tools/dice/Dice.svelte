@@ -7,10 +7,32 @@
   const data = $derived(instance.data);
 
   const QUICK = ['1d6', '2d6', '1d20', '4d6kh3', '2d20kh1', '1d100', '8d10>7', '4dF'];
+  let setName = $state('');
 
   function submit(event: SubmitEvent): void {
     event.preventDefault();
     instance.roll();
+  }
+
+  function editFace(index: number, value: string): void {
+    const next = data.faces.slice();
+    next[index] = value;
+    instance.setFaces(next);
+  }
+
+  function addFace(): void {
+    if (data.faces.length >= 12) return;
+    instance.setFaces([...data.faces, 'New face']);
+  }
+
+  function removeFace(index: number): void {
+    if (data.faces.length <= 2) return;
+    instance.setFaces(data.faces.filter((_, at) => at !== index));
+  }
+
+  function saveSet(): void {
+    instance.saveSet(setName);
+    setName = '';
   }
 </script>
 
@@ -22,39 +44,125 @@
     <button type="button" class:active={data.mode === 'pool'} onclick={() => instance.setMode('pool')}>
       Pool
     </button>
+    <button type="button" class:active={data.mode === 'lab'} onclick={() => instance.setMode('lab')}>
+      Faces
+    </button>
   </div>
 
-  <form class="entry" onsubmit={submit}>
-    {#if data.mode === 'pool'}
-      <label class="sr-only" for="dice-pool">Dice pool</label>
-      <input
-        id="dice-pool"
-        value={data.pool}
-        placeholder="4d6+2d8"
-        autocomplete="off"
-        spellcheck="false"
-        oninput={(event) => instance.setPool((event.currentTarget as HTMLInputElement).value)}
-      />
-    {:else}
-      <label class="sr-only" for="dice-notation">Dice notation</label>
-      <input
-        id="dice-notation"
-        value={data.notation}
-        placeholder="2d6+1"
-        autocomplete="off"
-        spellcheck="false"
-        oninput={(event) => instance.setNotation((event.currentTarget as HTMLInputElement).value)}
-      />
-    {/if}
-    <button type="submit" class="roll">Roll</button>
-  </form>
+  {#if data.mode === 'lab'}
+    <div class="lab">
+      <div class="faces-edit">
+        {#each data.faces as face, index (index)}
+          <div class="face-row">
+            <label>
+              <span class="sr-only">Face {index + 1}</span>
+              <input
+                value={face}
+                maxlength="20"
+                autocomplete="off"
+                oninput={(event) => editFace(index, (event.currentTarget as HTMLInputElement).value)}
+              />
+            </label>
+            <button
+              type="button"
+              onclick={() => removeFace(index)}
+              disabled={data.faces.length <= 2}
+              aria-label="Remove the face {face}"
+            >✕</button>
+          </div>
+        {/each}
+      </div>
+      {#if data.faces.length < 12}
+        <button type="button" class="add-face" onclick={addFace}>Add a face</button>
+      {/if}
+      <p class="breakdown">Two named faces are the minimum. A blank face is skipped.</p>
+
+      <div class="lab-roll">
+        <div class="lab-count" role="group" aria-label="Custom dice per roll">
+          <button
+            type="button"
+            aria-label="One fewer die"
+            onclick={() => instance.setLabCount(data.labCount - 1)}
+            disabled={data.labCount <= 1}
+          >−</button>
+          <span>{data.labCount} {data.labCount === 1 ? 'die' : 'dice'}</span>
+          <button
+            type="button"
+            aria-label="One more die"
+            onclick={() => instance.setLabCount(data.labCount + 1)}
+            disabled={data.labCount >= 12}
+          >+</button>
+        </div>
+        <button type="button" class="roll" onclick={() => instance.rollLab()}>Roll</button>
+      </div>
+
+      <div class="sets">
+        <label>
+          <span class="sr-only">Name for this face set</span>
+          <input bind:value={setName} placeholder="Name this face set" autocomplete="off" />
+        </label>
+        <button type="button" onclick={saveSet}>Save set</button>
+      </div>
+      {#if Object.keys(data.sets).length}
+        <div class="quick">
+          {#each Object.entries(data.sets) as [name, faces] (name)}
+            <span class="set-chip">
+              <button type="button" class="macro" onclick={() => instance.loadSet(name)} title={faces.join(' · ')}>
+                {name}
+              </button>
+              <button type="button" class="drop" aria-label="Delete the face set {name}" onclick={() => instance.deleteSet(name)}>✕</button>
+            </span>
+          {/each}
+        </div>
+      {/if}
+    </div>
+  {:else}
+    <form class="entry" onsubmit={submit}>
+      {#if data.mode === 'pool'}
+        <label class="sr-only" for="dice-pool">Dice pool</label>
+        <input
+          id="dice-pool"
+          value={data.pool}
+          placeholder="4d6+2d8"
+          autocomplete="off"
+          spellcheck="false"
+          oninput={(event) => instance.setPool((event.currentTarget as HTMLInputElement).value)}
+        />
+      {:else}
+        <label class="sr-only" for="dice-notation">Dice notation</label>
+        <input
+          id="dice-notation"
+          value={data.notation}
+          placeholder="2d6+1"
+          autocomplete="off"
+          spellcheck="false"
+          oninput={(event) => instance.setNotation((event.currentTarget as HTMLInputElement).value)}
+        />
+      {/if}
+      <button type="submit" class="roll">Roll</button>
+    </form>
+  {/if}
 
   {#if data.error}
     <p class="error" role="alert">{data.error}</p>
   {/if}
 
   <div class="result" aria-live="polite">
-    {#if data.result}
+    {#if data.mode === 'lab'}
+      {#if data.lab}
+        <div class="faces">
+          {#each data.lab.results as face, index (index)}
+            <span class="face custom">{face}</span>
+          {/each}
+        </div>
+        <p class="breakdown">
+          {data.lab.tally.map((row) => `${row.face} × ${row.count}`).join(' · ')}
+        </p>
+      {:else}
+        <p class="total idle">—</p>
+        <p class="breakdown">Set the faces, then roll. Saved sets are one tap away.</p>
+      {/if}
+    {:else if data.result}
       <p class="total">
         {data.result.total}
         {#if data.result.successes}
@@ -94,7 +202,7 @@
     </div>
   {/if}
 
-  {#if Object.keys(data.macros).length}
+  {#if data.mode !== 'lab' && Object.keys(data.macros).length}
     <div class="quick">
       {#each Object.entries(data.macros) as [name, notation] (name)}
         <button type="button" class="macro" onclick={() => instance.roll(notation)}>{name}</button>
@@ -165,8 +273,6 @@
     gap: var(--space-3);
     padding: var(--space-3);
   }
-
-
 
   .entry {
     display: flex;
@@ -247,6 +353,14 @@
     font-size: var(--text-xl);
     font-weight: 700;
   }
+  .face.custom {
+    padding: var(--space-1) var(--space-3);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    background: var(--accent-soft);
+    color: var(--accent-deep);
+    animation: pop-in var(--motion-bounce) var(--ease-bounce);
+  }
   .face.fate {
     color: var(--text-dim);
   }
@@ -284,6 +398,125 @@
     font-weight: 700;
     background: var(--accent-soft);
     color: var(--accent-deep);
+  }
+  .lab {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .faces-edit {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: var(--space-2);
+  }
+  .face-row {
+    display: flex;
+    gap: var(--space-1);
+  }
+  .face-row label {
+    flex: 1;
+  }
+  .face-row input {
+    width: 100%;
+    min-height: 48px;
+    font-family: var(--font);
+    font-size: var(--text-base);
+  }
+  .face-row button {
+    min-width: 44px;
+    min-height: 48px;
+    border-radius: var(--radius);
+    background: var(--surface-2);
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .face-row button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .add-face {
+    align-self: flex-start;
+    min-height: 46px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .lab-roll {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+  .lab-count {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+  }
+  .lab-count button {
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: var(--radius-pill);
+    background: var(--surface);
+    color: var(--text);
+    font-size: var(--text-lg);
+    cursor: pointer;
+  }
+  .lab-count button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .lab-count span {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .lab-roll .roll {
+    flex: 1;
+    min-width: 8rem;
+  }
+  .sets {
+    display: flex;
+    gap: var(--space-2);
+  }
+  .sets label {
+    flex: 1;
+  }
+  .sets input {
+    width: 100%;
+    min-height: 48px;
+    font-family: var(--font);
+    font-size: var(--text-base);
+  }
+  .sets > button {
+    min-height: 48px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .set-chip {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-pill);
+    background: var(--accent-soft);
+  }
+  .set-chip .macro {
+    background: transparent;
+    color: var(--accent-deep);
+    border-radius: var(--radius-pill) 0 0 var(--radius-pill);
+  }
+  .set-chip .drop {
+    min-width: 44px;
+    min-height: 46px;
+    background: transparent;
+    color: var(--accent-deep);
+    cursor: pointer;
   }
   .options {
     display: grid;

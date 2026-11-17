@@ -1,13 +1,13 @@
 import type { ToolMeta } from '../../core/registry';
-import { mark } from '../../core/ui/icons';
+import { ICON } from './icon';
 
 const meta: ToolMeta = {
   id: 'turns',
   title: 'Turns',
-  blurb: 'Whose turn it is, the round, the phase and an optional turn clock.',
+  blurb: 'Whose turn, which round, which phase, with a clock if the table wants one.',
   family: 'flow',
   seats: 'multi',
-  icon: mark('flag'),
+  icon: ICON,
   tags: ['flow', 'tracking'],
 };
 

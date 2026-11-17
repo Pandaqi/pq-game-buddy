@@ -5,6 +5,7 @@ name: Wingspan
 players: 1-5
 time: 70m
 tags: board, engine
+icon: bird
 source: https://stonemaiergames.com/games/wingspan/
 author: pandaqi
 license: CC-BY-SA-4.0

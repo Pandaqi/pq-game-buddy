@@ -2,6 +2,7 @@
 
 [game]
 name: Dominion
+icon: dominion
 players: 2-4
 time: 30m
 tags: card, deckbuilder

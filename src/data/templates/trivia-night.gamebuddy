@@ -5,6 +5,7 @@ name: Trivia Night
 players: 2-20
 time: 60m
 tags: party, quiz
+icon: trivia
 source: Generic pub-quiz format
 author: pandaqi
 license: CC-BY-SA-4.0

@@ -202,14 +202,30 @@ export interface DiceRollRecord {
   at: number;
 }
 
+export type DiceMode = 'single' | 'pool' | 'lab';
+
+/** One roll of a die whose faces are words instead of numbers. */
+export interface LabRoll {
+  faces: string[];
+  results: string[];
+  tally: { face: string; count: number }[];
+}
+
 export interface DiceState {
   notation: string;
   pool: string;
-  mode: 'single' | 'pool';
+  mode: DiceMode;
   advantage: 'none' | 'advantage' | 'disadvantage';
   successAt: number;
   seed: string;
   macros: Record<string, string>;
+  /** Custom faces for the lab, in the order the player wrote them. */
+  faces: string[];
+  /** How many custom dice one lab roll throws. */
+  labCount: number;
+  /** Saved face sets, name to faces. */
+  sets: Record<string, string[]>;
+  lab: LabRoll | null;
   result: DiceResult | null;
   error: string;
   history: DiceRollRecord[];
@@ -220,11 +236,17 @@ export interface DiceActions {
   roll(notation?: string): void;
   setNotation(notation: string): void;
   setPool(pool: string): void;
-  setMode(mode: DiceState['mode']): void;
+  setMode(mode: DiceMode): void;
   setAdvantage(mode: DiceState['advantage']): void;
   setSuccessAt(value: number): void;
   setSeed(code: string): void;
   clearHistory(): void;
+  setFaces(faces: string[]): void;
+  setLabCount(count: number): void;
+  saveSet(name: string): void;
+  loadSet(name: string): void;
+  deleteSet(name: string): void;
+  rollLab(): void;
 }
 
 /** Count every kept die at or above the target. */
@@ -247,6 +269,52 @@ export function normaliseMacros(input: unknown): Record<string, string> {
     if (name.trim() && notation) out[name.trim()] = notation;
   }
   return out;
+}
+
+/**
+ * Trim and cap the faces, but keep blank slots. Editing one face clears its text
+ * for a moment; collapsing the list there would throw the whole set away.
+ */
+export function cleanFaces(input: unknown): string[] {
+  const list = Array.isArray(input) ? input : typeof input === 'string' ? input.split(/[|,]/) : [];
+  const faces = list.map((value) => String(value ?? '').trim().slice(0, 20)).slice(0, 12);
+  while (faces.length < 2) faces.push('');
+  return faces;
+}
+
+/** The faces that actually count: named ones, in order. */
+export function namedFaces(faces: string[]): string[] {
+  return faces.map((face) => face.trim()).filter(Boolean);
+}
+
+/** A usable die: the named faces, or the two defaults when fewer than two are named. */
+export function normaliseFaces(input: unknown): string[] {
+  const faces = namedFaces(cleanFaces(input));
+  return faces.length >= 2 ? faces : ['Hit', 'Miss'];
+}
+
+/** Saved sets arrive as `Hit|Miss|Blank` from a template or as a list in state. */
+export function normaliseSets(input: unknown): Record<string, string[]> {
+  const out: Record<string, string[]> = {};
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return out;
+  for (const [name, value] of Object.entries(input as Record<string, unknown>)) {
+    const clean = String(name ?? '').trim().slice(0, 24);
+    if (!clean) continue;
+    const faces = normaliseFaces(value);
+    if (faces.length >= 2) out[clean] = faces;
+  }
+  return out;
+}
+
+/** Throw `count` dice over the given faces and tally what came up. */
+export function rollFaces(faces: string[], count: number, rng: Rng): LabRoll {
+  const die = normaliseFaces(faces);
+  const throws = Math.max(1, Math.min(12, Math.round(count) || 1));
+  const results = Array.from({ length: throws }, () => die[rng.int(die.length)]);
+  const tally = die
+    .map((face) => ({ face, count: results.filter((result) => result === face).length }))
+    .filter((row) => row.count > 0);
+  return { faces: die, results, tally };
 }
 
 export function facesFor(value: number, sides: number): string {

@@ -2,6 +2,7 @@
 
 [game]
 name: Pandemic
+icon: pandemic
 players: 2-4
 time: 45m
 tags: board, cooperative

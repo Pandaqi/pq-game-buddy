@@ -3,6 +3,130 @@
 All notable changes to Game Buddy. The template format is versioned separately
 (`format: 1`) and only changes with a compatibility note.
 
+## Unreleased — M7 (partly)
+
+### Added
+
+- **Theme files.** A `.gamebuddy-theme` is plain text over the design tokens: paper,
+  ink, the six family accents, radii, font stacks, `hide-chrome` flags, and `dark-`
+  values for dark mode. Settings holds a paste box and a file picker, the checker
+  reports line numbers, and everything is applied as custom properties. Values are
+  validated against a fixed key list and strict colour, length and font patterns, so a
+  theme cannot add CSS rules or fetch anything. Contract: `docs/THEME-FORMAT.md`.
+- **Dice lab.** The dice tool has a third mode for custom word faces: type the faces,
+  choose one to twelve dice, roll, and see the tally. **Save set** keeps a face list by
+  name, and a template can carry faces and sets with `faces`, `lab-count` and `sets`.
+  Faces are text, not pictures, so they read aloud and print in black and white.
+- **Initiative order.** The turns tool can follow initiative instead of a fixed order:
+  a value per seat, highest first, next and previous through that ranking, and a new
+  round that clears the values. A template can start from `mode: initiative` plus
+  `initiative: Ada=18, Bo=12`.
+- **Play log: search, filters, playtime and win rates.** Filter by text, game, player
+  or "won by someone"; the stats show time at the table and win rate per player, and
+  CSV/JSON export follows the filters. The finish flow now records how long the session
+  ran.
+- **"What should we play?"** The gallery gained a length filter and its suggestion
+  button now picks from the filtered list instead of the whole catalogue.
+- **Docs and tests**: `docs/THEME-FORMAT.md`, theme, initiative, custom-face and log
+  stats tests, and the user guide entries for each feature.
+
+### Changed
+
+- Play records carry `minutes`; the CSV gains a `Minutes` column.
+- The `turns` preset gains `mode` and `initiative`; the `dice` preset gains `faces`,
+  `lab-count` and `sets`.
+
+### Fixed and continued (second M7 pass)
+
+- **Settings can no longer be locked away.** A theme could hide the gear, and the only
+  page that removes a theme is Settings. `hide-chrome` now accepts `sound` and `mute`
+  only; `settings` warns and is ignored, the Settings page has its own Home link, and
+  docs say where else Settings is always reachable.
+- **Clearing a dice face no longer wipes the set.** Editing one face left the list with
+  an empty slot, which the cleanup treated as a one-face die and reset to Hit/Miss.
+  Blanks now stay slots while editing; rolling and saving only use named faces, with a
+  clear message when fewer than two are named.
+- **Huge mode.** A settings scale above table mode for a large screen or low vision:
+  bigger type and spacing, full-strength dim text, no control hidden.
+- **Narrator voice.** The script tool can read `say` steps aloud with the device's own
+  voice (`voice: yes` in a template). It is always paired with the written step, and a
+  device without speech stays silent instead of failing.
+- **Template icons.** `[game]` accepts `icon: catan` (a bundled mark name) and the gallery and
+  home draw it beside the game. Unknown names are ignored rather than becoming an
+  error, so older and newer files both open.
+- **Specific game marks.** Forty-one hand-drawn SVGs, one per bundled template, name
+  the games directly (`icon: catan`, `werewolf`, `uno`, `monopoly`, `scrabble`, `poker`,
+  `d20`, `azul`, `dixit`, `gloomhaven`, `hanabi`, `pandemic`, `risk`, …) instead of a
+  generic house mark standing in for all of them.
+- **Title beside the mark.** In the gallery and on home the template's name sits next
+  to its icon on one line, vertically centred, rather than wrapping underneath on
+  narrow screens. Tool screens keep their icon above the name.
+- **Pick views: wheel and slot.** A result can be shown as a spinning wheel (slice
+  geometry and the stopping angle are pure functions) or a slot strip that lands the
+  winner in the middle. Both keep the winner as readable text, hide the decoration from
+  screen readers and stop moving when reduced motion is on.
+- **House-rule variants.** `[variant quick]` adds optional rules with `name:`, `players:`
+  and `time:` keys plus free text. The start sheet offers "Base rules" and each
+  variant; choosing one appends its text to the rules sheet. It never changes tool
+  settings, so a variant cannot break a scorepad or timer.
+- **Tool authoring kit.** `tests/tool-contract.test.ts` runs the contract in
+  `docs/TOOL-AUTHORING.md` against every tool folder: metadata vocabulary, JSON state,
+  tolerant `load`, `summary`, commands, `results`, preset keys and the example file.
+  A new folder is covered automatically.
+- **Installable hosted build.** The hosted build now carries a web app manifest, a
+  lantern icon and a small service worker. The worker is network-first and falls back
+  to its cache, so an update is picked up immediately and a lost connection still
+  opens the app; the single-file copy deliberately ships without a worker.
+- **Reveal screen-reader tutorial.** The dealt-roles screen has a folded guide for
+  screen-reader and keyboard players: hold Space or Enter to reveal, release to hide,
+  Escape to cancel, Next player to move on, and roles are text and untimed by default.
+- **QR sharing.** The game menu can draw a QR of the template's share link, for a phone
+  across the table. The encoder is vendored MIT code in its own chunk and only loads
+  when a code is requested; the code is black on white so it scans in any theme. A
+  template too large for one symbol says so and offers the link instead.
+- **Community templates.** `src/data/community/*.gamebuddy` is compiled in at build
+  time, tagged `community` in the gallery and checked by the same linter. Submission
+  rules are in `docs/COMMUNITY.md`.
+- **Switch access.** A settings option enlarges every target to 64 px, thickens the
+  focus ring and removes hover movement, for one-switch and head-pointer use.
+- **Modes are separate pills.** The shared `.modes` control no longer puts six choices
+  inside one heavily rounded slab: each mode is its own pill, the active one takes the
+  family accent, and they wrap.
+- **Tool and player rows wrap and fold.** A session with many tools shows one quiet line
+  (marks, active tool, count, chevron) that opens into wrapped chips; the player strip
+  wraps too. Neither scrolls sideways, and neither clips its own focus ring.
+- **Mark chunk.** The template marks now load in their own chunk after first paint
+  instead of riding in the start-up payload; house marks still draw immediately and the
+  gallery reserves their slot.
+- **Pandaqi copy pass.** Tool blurbs, the About text and the style guide's copy examples
+  are rewritten in the project voice; the user guide already spoke that way.
+- **Icons live with their owners.** Each bundled template keeps its drawing beside the
+  file (`catan.gamebuddy` and `catan.icon.svg`); each tool keeps its own mark in
+  `src/tools/<id>/icon.ts` and imports it from its metadata. There is no central icon
+  file left to update, and deleting a template or tool deletes its drawing with it.
+- **Bring your own files, images and theme.** The templates page ends with an upload
+  panel: pick or drop a `.gamebuddy`, its images and a `.gamebuddy-theme` together. An
+  image named like the template's `icon:` — or like the template file — becomes its
+  mark, stored on the device; the theme applies at once. No server is involved.
+- **The shelf is shorter.** Home shows the everyday tools plus the last three opened,
+  with one button for the full list; search still looks at every tool.
+- **Version and attribution.** Settings ends with who made the framework, the version
+  and links to pandaqi.com and the repository. The version is written once, in
+  `package.json`; `bun run gen` copies it out and the stale-file check catches drift.
+  Versions follow semantic versioning. The version is now 0.2.0.
+
+### Known limitations
+
+- The rest of M7 is not in this pass: the writing pass, full string extraction and
+  translation (M10 plan), marks for games beyond the bundled forty (M9), the community
+  gallery, QR sharing and single-switch layouts. They stay listed in `ROADMAP.md` §6.
+- The service worker is network-first, not a full precache, so the very first offline
+  visit needs the app to have been opened once online. Offline install verification
+  needs a real hosted HTTPS origin; the offline single file remains the sure path.
+- The file picker button is styled with `::file-selector-button` and the WebKit
+  pseudo-element; browsers that support neither keep the native control, which is
+  usable but does not match the rest of the sheet.
+
 ## Unreleased — M4, M5 and M6
 
 ### Style (M6)

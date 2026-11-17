@@ -217,6 +217,19 @@
           <button type="button" onclick={() => instance.revealAll()}>Reveal all</button>
           <button type="button" onclick={() => instance.clearDeal()}>Redeal</button>
         </div>
+        <details class="how">
+          <summary>Using a screen reader or keyboard</summary>
+          <p>
+            Open <strong>Pass the phone</strong>, then hold <kbd>Space</kbd> or <kbd>Enter</kbd> on
+            <em>Hold to reveal</em>. The role is announced, and letting go of the key hides it again.
+            <kbd>Escape</kbd> closes the cover without revealing anything, and
+            <strong>Next player</strong> moves to the next person without a swipe.
+          </p>
+          <p>
+            Nothing is timed unless the auto-hide setting is on, so there is no rush to find the
+            button. The role is text, never a colour or a picture.
+          </p>
+        </details>
       </div>
     {/if}
   {:else if data.mode === 'ballot'}
@@ -520,6 +533,33 @@
   .winner {
     margin: 0;
     font-weight: 800;
+  }
+  .how {
+    margin-top: var(--space-3);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: var(--space-1) var(--space-3);
+  }
+  .how summary {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+  .how p {
+    margin: 0 0 var(--space-2);
+    color: var(--text-dim);
+    font-size: var(--text-sm);
+    line-height: 1.5;
+  }
+  .how kbd {
+    display: inline-block;
+    padding: 0 var(--space-1);
+    border-radius: var(--radius-sm);
+    background: var(--surface-2);
+    color: var(--text);
+    font: inherit;
   }
 
 

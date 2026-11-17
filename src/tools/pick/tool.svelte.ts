@@ -1,6 +1,15 @@
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import { drawFromPool, drawNumbers, seatOrder, splitTeams, type PickInstance, type PickSource, type PickState } from './logic';
+import {
+  drawFromPool,
+  drawNumbers,
+  seatOrder,
+  splitTeams,
+  type PickInstance,
+  type PickSource,
+  type PickState,
+  type PickView,
+} from './logic';
 import Pick from './Pick.svelte';
 import meta from './meta';
 import preset from './preset';
@@ -110,7 +119,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
       if (typeof raw.teams === 'number') data.teams = Math.max(2, raw.teams);
       if (Array.isArray(raw.values)) data.values = raw.values.map(String);
       if (Array.isArray(raw.history)) data.history = raw.history.slice(0, 20);
-      if (raw.view === 'cards' || raw.view === 'list') data.view = raw.view;
+      if (raw.view === 'cards' || raw.view === 'list' || raw.view === 'wheel' || raw.view === 'slot') {
+        data.view = raw.view;
+      }
       if (typeof raw.seed === 'string') data.seed = raw.seed;
       data.drawn = [];
       data.result = [];
@@ -181,7 +192,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
       data.min = Number.isFinite(min) ? min : data.min;
       data.max = Number.isFinite(max) ? max : data.max;
     },
-    setView(view) {
+    setView(view: PickView) {
       data.view = view;
     },
     revealAt(index) {

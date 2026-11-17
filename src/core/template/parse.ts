@@ -24,6 +24,8 @@ export interface GameMeta {
   players?: PlayerRange;
   time?: string;
   tags: string[];
+  /** A mark name from `core/ui/icons.ts`, e.g. `dice`. Unknown names are ignored. */
+  icon?: string;
   source?: string;
   author?: string;
   license?: string;
@@ -55,6 +57,16 @@ export interface ScriptBlock {
   steps: ScriptStep[];
 }
 
+/** `[variant quick]`: an optional house-rule text chosen when the game starts. */
+export interface TemplateVariant {
+  id: string;
+  name: string;
+  players?: string;
+  time?: string;
+  text: string;
+  line: number;
+}
+
 export interface Template {
   game: GameMeta;
   players: string[];
@@ -63,6 +75,7 @@ export interface Template {
   rules: string;
   notes: string;
   scripts: ScriptBlock[];
+  variants: TemplateVariant[];
   raw: string;
 }
 
@@ -73,13 +86,31 @@ export interface ParseResult {
 
 export const SCRIPT_VERBS = ['say', 'wait', 'reveal', 'timer', 'note'];
 
-type SectionKind = 'game' | 'tool' | 'players' | 'setup' | 'rules' | 'notes' | 'script' | 'unknown';
+type SectionKind =
+  | 'game'
+  | 'tool'
+  | 'players'
+  | 'setup'
+  | 'rules'
+  | 'notes'
+  | 'script'
+  | 'variant'
+  | 'unknown';
 
 interface Section {
   kind: SectionKind;
   toolId?: string;
   instanceId?: string;
   line: number;
+}
+
+interface VariantBlock {
+  id: string;
+  line: number;
+  name: string;
+  players: string;
+  time: string;
+  textLines: string[];
 }
 
 const SECTION_RE = /^\s*\[([^\]]*)\]\s*$/;
@@ -112,12 +143,14 @@ export function parseTemplate(text: string): ParseResult {
   const tools: ToolBlock[] = [];
   const setup: string[] = [];
   const scripts: ScriptBlock[] = [];
+  const variants: VariantBlock[] = [];
   const rulesLines: string[] = [];
   const notesLines: string[] = [];
 
   let section: Section | null = null;
   let currentTool: ToolBlock | null = null;
   let currentScript: ScriptBlock | null = null;
+  let currentVariant: VariantBlock | null = null;
   let currentKV: Record<string, RawValue> | null = null;
   let lastKey: string | null = null;
   let blockKey: string | null = null;
@@ -127,6 +160,7 @@ export function parseTemplate(text: string): ParseResult {
     kv: Record<string, RawValue> | null;
     tool: ToolBlock | null;
     script: ScriptBlock | null;
+    variant: VariantBlock | null;
   }
 
   const openSection = (name: string, line: number): OpenedSection => {
@@ -137,26 +171,40 @@ export function parseTemplate(text: string): ParseResult {
       const instanceId = (tokens[2] ?? tokens[1] ?? '').toLowerCase();
       if (!toolId) {
         diagnostics.push({ severity: 'error', message: 'A [tool] section needs a tool id', line });
-        return { section: { kind: 'unknown', line }, kv: null, tool: null, script: null };
+        return { section: { kind: 'unknown', line }, kv: null, tool: null, script: null, variant: null };
       }
       const block: ToolBlock = { toolId, instanceId, line, values: {} };
       tools.push(block);
-      return { section: { kind: 'tool', toolId, instanceId, line }, kv: block.values, tool: block, script: null };
+      return { section: { kind: 'tool', toolId, instanceId, line }, kv: block.values, tool: block, script: null, variant: null };
     }
     if (head === 'script') {
       const instanceId = (tokens[1] ?? 'script').toLowerCase();
       const block: ScriptBlock = { instanceId, line, steps: [] };
       scripts.push(block);
-      return { section: { kind: 'script', instanceId, line }, kv: null, tool: null, script: block };
+      return { section: { kind: 'script', instanceId, line }, kv: null, tool: null, script: block, variant: null };
+    }
+    if (head === 'variant') {
+      const id = (tokens[1] ?? '').toLowerCase();
+      if (!id) {
+        diagnostics.push({
+          severity: 'warning',
+          message: 'A [variant] section needs a name, like [variant quick]',
+          line,
+        });
+        return { section: { kind: 'unknown', line }, kv: null, tool: null, script: null, variant: null };
+      }
+      const block: VariantBlock = { id, line, name: '', players: '', time: '', textLines: [] };
+      variants.push(block);
+      return { section: { kind: 'variant', instanceId: id, line }, kv: null, tool: null, script: null, variant: block };
     }
     if (head === 'game') {
-      return { section: { kind: 'game', line }, kv: gameRaw, tool: null, script: null };
+      return { section: { kind: 'game', line }, kv: gameRaw, tool: null, script: null, variant: null };
     }
     if (head === 'players' || head === 'setup' || head === 'rules' || head === 'notes') {
-      return { section: { kind: head, line }, kv: null, tool: null, script: null };
+      return { section: { kind: head, line }, kv: null, tool: null, script: null, variant: null };
     }
     diagnostics.push({ severity: 'warning', message: `Unknown section [${tokens.join(' ')}] ignored`, line });
-    return { section: { kind: 'unknown', line }, kv: null, tool: null, script: null };
+    return { section: { kind: 'unknown', line }, kv: null, tool: null, script: null, variant: null };
   };
 
   for (let index = 0; index < lines.length; index += 1) {
@@ -190,6 +238,7 @@ export function parseTemplate(text: string): ParseResult {
       currentKV = opened.kv;
       currentTool = opened.tool;
       currentScript = opened.script;
+      currentVariant = opened.variant;
       lastKey = null;
       continue;
     }
@@ -246,6 +295,21 @@ export function parseTemplate(text: string): ParseResult {
       case 'notes':
         notesLines.push(line);
         break;
+      case 'variant': {
+        if (!currentVariant) break;
+        // Only three keys are metadata; every other line is house-rule text,
+        // so a variant can say "Note: this changes the scoring" without confusion.
+        const meta = line.trim().match(/^(name|players|time)\s*[:=]\s*(.+)$/i);
+        if (meta) {
+          const value = meta[2].trim();
+          if (meta[1].toLowerCase() === 'name') currentVariant.name = value;
+          else if (meta[1].toLowerCase() === 'players') currentVariant.players = value;
+          else currentVariant.time = value;
+          break;
+        }
+        currentVariant.textLines.push(line);
+        break;
+      }
       case 'script': {
         const stepMatch = line.trim().match(/^(?:(\d+)[.)]\s*)?([a-zA-Z]+)\s*:\s*([\s\S]*)$/);
         if (!stepMatch) {
@@ -304,6 +368,7 @@ export function parseTemplate(text: string): ParseResult {
     }
   }
   if (gameRaw.time) game.time = gameRaw.time.raw;
+  if (gameRaw.icon) game.icon = gameRaw.icon.raw.trim().slice(0, 24);
   if (gameRaw.source) game.source = gameRaw.source.raw;
   if (gameRaw.author) game.author = gameRaw.author.raw;
   if (gameRaw.license) game.license = gameRaw.license.raw;
@@ -322,7 +387,7 @@ export function parseTemplate(text: string): ParseResult {
   }
 
   for (const key of Object.keys(gameRaw)) {
-    if (!['name', 'players', 'time', 'tags', 'source', 'author', 'license', 'format'].includes(key)) {
+    if (!['name', 'players', 'time', 'tags', 'icon', 'source', 'author', 'license', 'format'].includes(key)) {
       diagnostics.push({
         severity: 'warning',
         message: `Unknown [game] key "${key}" ignored`,
@@ -352,6 +417,18 @@ export function parseTemplate(text: string): ParseResult {
     return copy.join('\n');
   };
 
+  const seenVariants = new Set<string>();
+  for (const block of variants) {
+    if (seenVariants.has(block.id)) {
+      diagnostics.push({
+        severity: 'warning',
+        message: `Duplicate variant "${block.id}" (first on line ${block.line}); the last one wins`,
+        line: block.line,
+      });
+    }
+    seenVariants.add(block.id);
+  }
+
   return {
     template: {
       game,
@@ -361,6 +438,14 @@ export function parseTemplate(text: string): ParseResult {
       rules: trimBlock(rulesLines),
       notes: trimBlock(notesLines),
       scripts,
+      variants: variants.map((block) => ({
+        id: block.id,
+        name: block.name.trim() || block.id,
+        players: block.players.trim() || undefined,
+        time: block.time.trim() || undefined,
+        text: trimBlock(block.textLines),
+        line: block.line,
+      })),
       raw: text,
     },
     diagnostics,

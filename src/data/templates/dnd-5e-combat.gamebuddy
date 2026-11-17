@@ -5,6 +5,7 @@ name: D&D 5e combat
 players: 3-7
 time: varies
 tags: rpg, combat
+icon: d20
 source: https://dnd.wizards.com/
 author: pandaqi
 license: CC-BY-SA-4.0

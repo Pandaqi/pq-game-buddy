@@ -101,25 +101,53 @@ section labels are uppercase Raleway at `--text-xs` with 0.12em tracking.
   while `filter: brightness(1.04)` keeps its own colour. Press pushes it back down.
   Never swap a coloured key's background on hover.
 - **A field is a cushion:** pill (`--radius-pill`) or 16 px for a textarea, `--field`
-  fill, 48 px tall, no underline, no box.
+  fill, 48 px tall, no underline, no box. A **file picker** is the same cushion: the
+  native button is restyled once in `base.css` through `::file-selector-button` (and
+  the WebKit alias), so a view never styles its own and every picker in the app
+  matches.
 - **A fold is a details element:** secondary settings, history and options live behind
   `core/ui/Fold.svelte`. Summary is Dosis at `--text-lg`, the chevron is the accent,
   and the open state animates the chevron with `--ease-bounce`.
+- **A list of modes is a row of separate pills**, not one rounded slab: each is a
+  `--surface-2` pill, the active one takes the family accent. Six options wrap onto a
+  second line; a strip never scrolls sideways.
+- **Chrome rows fold.** The player strip and the tool row are one quiet line (marks,
+  a count, a chevron) that opens into chips. A session with six tools does not push
+  the score off screen or grow a scrollbar.
 
 ## 4. Marks and doodles
 
-`src/core/ui/icons.ts` holds every mark: one 24 px grid, one 1.8 px stroke, round caps
-and joins. Dots may be filled; nothing else is. `mark('name')` returns the SVG string;
-each tool's `meta.ts` stores its mark. `sound` is the speaker, `notes` is the sound
-board: never give two header controls the same icon.
+A mark belongs to its owner: one 24 px grid, one 1.8 px stroke, round caps and joins.
+Dots may be filled; nothing else is. `src/core/ui/icons.ts` holds only the shell's four
+marks (`sound`, `notes`, `muted`, `gear`); `sound` is the speaker, `notes` is the sound
+board, so never give two header controls the same icon.
+
+Each tool keeps its own drawing in `src/tools/<id>/icon.ts`, imported by its `meta.ts`.
+Deleting the tool deletes the mark, and no central table has to be edited. A bundled
+template keeps `<id>.icon.svg` beside its `.gamebuddy` and names it with `icon:` in
+`[game]` (Catan's hex and road, Werewolf's fang, Uno's tilted card, Monopoly's top hat).
+An imported template may pair an image instead, named like `icon:` or like the template
+file; that image renders through `<img>` and never inlines.
+
+The template marks are their own chunk (`core/ui/marks.svelte.ts`): a list paints the
+name and the reserved slot immediately, and the 40 drawings arrive after the first
+paint from `template-icons.generated.ts`. Nothing in the start-up payload imports them.
+
+**Layout:** on a gallery card and on home, the mark and the name are one flex row,
+centred on each other (`align-items: center`), so the title sits *beside* the mark and
+never wraps underneath it. A tool screen is the other case: the mark is large, above
+the title, because it is the screen's identity.
 
 `src/core/ui/doodles.ts` holds the decorative woodland set — a home scene of moss
 hills, pines, a honey moon and fireflies, plus leaf, mushroom, acorn, star and firefly
 marks. They are placeholders for Tiamo's illustrations and are inline SVG, drawn from
 tokens, so no request and no bytes in `public/`. Decorative SVG is `aria-hidden`.
 
-Rules: no emoji as UI; no raster images; no per-tool icon files. A new tool picks an
-existing mark or adds one path to `icons.ts`.
+Rules: no emoji as UI; no raster images in the built-in set. A new tool adds `icon.ts`
+next to its `meta.ts`; a new bundled template adds its `.icon.svg` next to the file. Both
+use the same 24 px grid, 1.8 px stroke and `currentColor` only, so they work on every
+surface and in both themes. A player's uploaded image is the one exception, and it is
+their file, not the app's.
 
 ## 5. Motion
 
@@ -167,6 +195,9 @@ does not render under reduced motion. Dice and the coin change instantly.
 - **Table mode** is a phone lying flat: 1.25× type, thicker targets, `--text-dim`
   raised to full ink, and the shell header hidden on a session screen. The session menu
   still reaches every page.
+- **Huge mode** is one step past table mode, for a large screen or low vision. It only
+  raises the type and space scale and strengthens dim text; it never hides a control.
+  With both on, huge wins because its token block comes last.
 - **Print** is ink on white: no grain, no shadows, no chrome, hairlines instead of
   accent fills, `11pt` body. Score sheets, brackets and rules must stay legible in
   black and white.
@@ -221,9 +252,28 @@ change a token, re-measure it and update this table in the same change.
 | Empty states that say what to do next | "No data" |
 | Marks and doodles drawn on one grid | Emoji, icon fonts, raster art |
 
-## 11. Not in this milestone
+## 11. Theme files
 
-A `.gamebuddy-theme` file that lets a player restyle colours, fonts and chrome without
-writing CSS is planned for M7 (`ROADMAP.md` §6). The tokens above are the seam it will
-write to; nothing else should need to change to support it. The illustrations in
-`doodles.ts` are placeholders for Tiamo's own art and are expected to be replaced.
+A `.gamebuddy-theme` file lets a player restyle colours, fonts, radii and the header
+chrome without writing CSS (`docs/THEME-FORMAT.md`). It writes the tokens above as
+custom properties on `:root`, is validated against a fixed key list, and can set
+`dark-` values for dark mode. Nothing in a view knows it exists: keep using tokens,
+never a raw colour, and a theme keeps working.
+
+The illustrations in `doodles.ts` are placeholders for Tiamo's own art and are
+expected to be replaced.
+
+## 12. Copy
+
+The voice is Pandaqi: warm, direct, concrete, short. Address the player as "you" and
+the table as "we". One aside after a dash is plenty; an exclamation mark belongs in a
+marketing line, never in an error. Say what happened, then what to do next.
+
+| Instead of | Write |
+|------------|-------|
+| "Random number generator with configurable parameters" | "Settle it: numbers, lists, teams, seats or who goes first." |
+| "Error: invalid template syntax on line 4" | "Line 4 is not a setting this build knows. Fix the name, or delete the line." |
+| "No data available" | "Nothing here yet. Add a player and the score pad wakes up." |
+
+Keep the rules in `AGENTS.md` (§Code conventions) and this table in step: they are
+the target for every later string, before localization freezes the words.

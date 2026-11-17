@@ -3,14 +3,21 @@ import type { PresetValues } from '../../core/template/schema';
 import { wake } from '../../core/wake';
 import {
   advance,
+  advanceInitiative,
   currentName,
   currentPhase,
+  initiativeFromPreset,
+  initiativeRanking,
   jumpTo,
+  newInitiativeRound,
+  normaliseInitiative,
   normaliseOrder,
   normalisePhases,
   remainingMs,
   rewind,
+  rewindInitiative,
   type TurnsInstance,
+  type TurnsMode,
   type TurnsState,
 } from './logic';
 import Turns from './Turns.svelte';
@@ -24,6 +31,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
   const presetPhases = normalisePhases(Array.isArray(values.phases) ? (values.phases as string[]) : []);
   const phases = presetPhases.length ? presetPhases : ['Turn'];
   const duration = Math.max(0, Number(values.timer ?? 0));
+  const mode: TurnsMode = values.mode === 'initiative' ? 'initiative' : 'order';
 
   const data = $state<TurnsState>({
     order,
@@ -34,6 +42,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     timer: { duration, remaining: duration, running: false, startedWall: 0, startedMono: 0 },
     pass: values.pass !== false,
     autoStart: values['auto-start'] === true,
+    mode,
+    initiative: initiativeFromPreset(values.initiative, order),
     log: [],
   });
 
@@ -111,6 +121,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       if (typeof raw.phase === 'number') data.phase = Math.max(0, Math.min(data.phases.length - 1, Math.round(raw.phase)));
       if (typeof raw.pass === 'boolean') data.pass = raw.pass;
       if (typeof raw.autoStart === 'boolean') data.autoStart = raw.autoStart;
+      if (raw.mode === 'order' || raw.mode === 'initiative') data.mode = raw.mode;
+      data.initiative = normaliseInitiative(raw.initiative, data.order.length);
       if (Array.isArray(raw.log)) {
         data.log = raw.log
           .filter((entry) => entry && typeof entry.text === 'string')
@@ -140,12 +152,18 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       }
     },
     presetFromState() {
+      const initiative: Record<string, number> = {};
+      data.order.forEach((name, index) => {
+        initiative[name] = data.initiative[index] ?? 0;
+      });
       return {
         order: data.order.slice(),
         phases: data.phases.slice(),
         timer: data.timer.duration,
         pass: data.pass,
         'auto-start': data.autoStart,
+        mode: data.mode,
+        initiative,
       };
     },
     commands: {
@@ -154,13 +172,21 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       phase: (arg) => instance.setPhase(Number(arg ?? 0) || 0),
       start: () => instance.startTimer(),
       pause: () => instance.pauseTimer(),
+      round: () => instance.newInitiativeRound(),
     },
     summary() {
       const lines = [
         `Round ${data.round} · ${currentPhase(data)}`,
         `Turn: ${currentName(data)}`,
-        `Order: ${data.order.join(' → ')}`,
       ];
+      if (data.mode === 'initiative') {
+        const ranking = initiativeRanking(data);
+        lines.push(
+          `Initiative: ${ranking.map((seat) => `${data.order[seat]} ${data.initiative[seat] ?? 0}`).join(' → ')}`,
+        );
+      } else {
+        lines.push(`Order: ${data.order.join(' → ')}`);
+      }
       if (data.timer.duration) {
         lines.push(`Clock: ${Math.ceil(data.timer.remaining / 1000)}s left${data.timer.running ? ' (running)' : ''}`);
       }
@@ -168,7 +194,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     },
     next() {
       ctx.undo.push('next turn');
-      advance(data);
+      if (data.mode === 'initiative') advanceInitiative(data);
+      else advance(data);
       stopTimer();
       data.timer.remaining = data.timer.duration;
       log(`Round ${data.round} · ${currentName(data)}`);
@@ -177,6 +204,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       if (data.autoStart && data.timer.duration > 0 && !data.pass) beginTimer(false);
     },
     previous() {
+      if (data.mode === 'initiative') {
+        const ranking = initiativeRanking(data);
+        if (ranking.indexOf(data.index) === 0 && data.round <= 1) return;
+        ctx.undo.push('previous turn');
+        rewindInitiative(data);
+        stopTimer();
+        data.timer.remaining = data.timer.duration;
+        return;
+      }
       if (data.index === 0 && data.round <= 1) return;
       ctx.undo.push('previous turn');
       rewind(data);
@@ -205,8 +241,34 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       if (next.join('|') === data.order.join('|')) return;
       ctx.undo.push('turn order');
       data.order = next;
+      data.initiative = normaliseInitiative([], next.length);
       data.index = 0;
       data.round = 1;
+    },
+    setMode(next) {
+      const modeNext: TurnsMode = next === 'initiative' ? 'initiative' : 'order';
+      if (modeNext === data.mode) return;
+      ctx.undo.push('turn style');
+      data.mode = modeNext;
+      data.initiative = normaliseInitiative(data.initiative, data.order.length);
+      data.index = 0;
+      data.phase = 0;
+    },
+    setInitiative(index, value) {
+      const seat = Math.max(0, Math.min(data.order.length - 1, Math.round(index)));
+      const next = Math.max(-99, Math.min(999, Math.round(Number.isFinite(value) ? value : 0)));
+      if ((data.initiative[seat] ?? 0) === next) return;
+      ctx.undo.push('initiative', `initiative:${seat}`);
+      const copy = data.order.map((_, at) => data.initiative[at] ?? 0);
+      copy[seat] = next;
+      data.initiative = copy;
+    },
+    newInitiativeRound() {
+      ctx.undo.push('new initiative round');
+      newInitiativeRound(data);
+      stopTimer();
+      data.timer.remaining = data.timer.duration;
+      log(`Round ${data.round} · initiative reset`);
     },
     syncPlayers() {
       const names = ctx.session.players().map((player) => player.name);

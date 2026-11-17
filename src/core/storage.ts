@@ -20,6 +20,8 @@ export const KEYS = {
   plays: 'pqgb:v1:plays',
   favorites: 'pqgb:v1:favorites',
   imports: 'pqgb:v1:imports',
+  templateAssets: 'pqgb:v1:template-assets',
+  recentTools: 'pqgb:v1:recent-tools',
 };
 
 function wrap(raw: Storage | null, kind: StorageKind): StorageAdapter | null {

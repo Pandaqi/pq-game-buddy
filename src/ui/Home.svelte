@@ -2,6 +2,8 @@
   import { manifest } from '../core/manifest.generated';
   import { store } from '../core/session-store.svelte';
   import { doodle, HERO_SCENE } from '../core/ui/doodles';
+  import { ensureTemplateMarks, templateMarkLazy, templateMarksVersion } from '../core/ui/marks.svelte';
+  import { recentTools, shelfIds } from '../core/ui/tool-shelf';
   import { listTemplates } from '../data/templates';
 
   let {
@@ -17,21 +19,44 @@
   } = $props();
 
   let query = $state('');
+  let showAll = $state(false);
   const templates = listTemplates();
+  const recent = recentTools();
 
-  const tools = $derived(
-    manifest
-      .filter((module) => !module.tags.includes('dev'))
-      .filter((module) => {
-        const needle = query.trim().toLowerCase();
-        if (!needle) return true;
-        return (
-          module.title.toLowerCase().includes(needle) ||
-          module.blurb.toLowerCase().includes(needle) ||
-          module.tags.some((tag) => tag.includes(needle))
-        );
-      }),
-  );
+  // The mark set is its own chunk; reading the version here redraws the list
+  // when it arrives, so no other screen pays for 40 game drawings up front.
+  $effect(() => {
+    ensureTemplateMarks();
+  });
+
+  function iconOf(template: { icon?: string; id: string }): string {
+    void templateMarksVersion();
+    return templateMarkLazy(template.icon, template.id);
+  }
+
+  const allTools = $derived(manifest.filter((module) => !module.tags.includes('dev')));
+
+  /** Search looks at every tool; the shelf itself is the everyday few. */
+  const matches = $derived.by(() => {
+    const needle = query.trim().toLowerCase();
+    if (!needle) return allTools;
+    return allTools.filter(
+      (module) =>
+        module.title.toLowerCase().includes(needle) ||
+        module.blurb.toLowerCase().includes(needle) ||
+        module.tags.some((tag) => tag.includes(needle)),
+    );
+  });
+
+  const tools = $derived.by(() => {
+    if (query.trim()) return matches;
+    const ids = shelfIds(
+      allTools.map((module) => module.id),
+      recent,
+      showAll,
+    );
+    return ids.map((id) => allTools.find((module) => module.id === id)).filter((module) => module !== undefined);
+  });
 </script>
 
 <!-- The shelf: every tool is a coloured paper tile with its own mark, so the
@@ -62,8 +87,8 @@
     <header class="section-head">
       <h2>Tools</h2>
       <label class="search">
-        <span class="sr-only">Search tools</span>
-        <input type="search" bind:value={query} placeholder="Search tools" />
+        <span class="sr-only">Search all tools</span>
+        <input type="search" bind:value={query} placeholder="Search all tools" />
       </label>
     </header>
 
@@ -87,6 +112,15 @@
     {:else}
       <p class="dim">No tool matches “{query}”. Try a shorter word.</p>
     {/if}
+
+    {#if !query.trim()}
+      <div class="shelf-foot">
+        <p class="hint">{showAll ? `All ${allTools.length} tools.` : 'The everyday shelf. Search finds everything.'}</p>
+        <button type="button" class="wide ghost" onclick={() => (showAll = !showAll)}>
+          {showAll ? 'Show fewer tools' : `Show all ${allTools.length} tools`}
+        </button>
+      </div>
+    {/if}
   </section>
 
   <section>
@@ -94,14 +128,17 @@
       <summary>Or start from a game template</summary>
       <div class="fold-body">
         <p class="hint">
-          Forty games, already set up. Drop a .gamebuddy file anywhere on this page to load your
-          own.
+          {templates.length} games, already set up. Bring your own on the templates page: a .gamebuddy
+          file, its images and a theme, all at once.
         </p>
         <ul class="templates">
           {#each templates as template (template.id)}
             <li>
               <button type="button" class="template" onclick={() => ontemplate(template.id)}>
-                <span class="title">{template.name}</span>
+                <span class="template-head">
+                  <span class="template-mark" aria-hidden="true">{@html iconOf(template)}</span>
+                  <span class="title">{template.name}</span>
+                </span>
                 <span class="meta">
                   {template.players ?? 'any'} players{#if template.time} · {template.time}{/if}
                   {#if template.tools.length}· {template.tools.join(', ')}{/if}
@@ -110,7 +147,7 @@
             </li>
           {/each}
         </ul>
-        <button type="button" class="wide ghost" onclick={onimport}>Import a template file</button>
+        <button type="button" class="wide ghost" onclick={onimport}>Import your own</button>
       </div>
     </details>
   </section>
@@ -194,6 +231,17 @@
   }
   .dim {
     color: var(--text-dim);
+  }
+  .shelf-foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .shelf-foot .hint {
+    margin: 0;
   }
   .continue {
     display: flex;
@@ -357,7 +405,30 @@
     background: var(--surface-2);
     color: var(--text);
   }
+  .template-head {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+  }
+  .template-mark {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--accent-deep);
+  }
+  .template-mark :global(svg),
+  .template-mark :global(img) {
+    width: 23px;
+    height: 23px;
+    object-fit: contain;
+  }
   .template .title {
+    min-width: 0;
     font-size: var(--text-lg);
   }
   .template .meta {

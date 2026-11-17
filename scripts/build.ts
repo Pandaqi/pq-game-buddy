@@ -6,7 +6,7 @@
  * The spa and site builds also write dist/pq-game-buddy.html, the offline copy.
  */
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { svelteCompile } from './svelte-compile';
@@ -191,6 +191,12 @@ if (!toolCount) {
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
 
+/** Static files the hosted build serves as-is: the manifest, the icon, the worker. */
+function copyPublic(): void {
+  const publicDir = join(root, 'public');
+  if (existsSync(publicDir)) cpSync(publicDir, dist, { recursive: true });
+}
+
 const scratch = join(dist, '.single');
 
 if (mode === 'single') {
@@ -214,6 +220,7 @@ if (mode === 'single') {
 }
 
 // Hosted build: the shell, the chunks it shares with lazy screens, and one chunk per screen.
+copyPublic();
 const hosted = await bundle(dist, true);
 const files = new Map<string, string>();
 for (const output of hosted) {
@@ -234,7 +241,7 @@ const chunks = [...files.keys()]
 
 const hostedHtml = shell.replace(
   scriptTag,
-  `<link rel="stylesheet" href="./app.css" />\n    <script type="module" src="./app.js"></script>`,
+  `<link rel="manifest" href="./manifest.webmanifest" />\n    <meta name="pq-pwa" content="1" />\n    <link rel="stylesheet" href="./app.css" />\n    <script type="module" src="./app.js"></script>`,
 );
 writeFileSync(join(dist, 'index.html'), hostedHtml);
 
@@ -334,6 +341,7 @@ function toolPage(html: string, meta: PageMeta): string {
     .replace(/(<meta name="description" content=")[^"]*(")/, `$1${escapeHtml(meta.blurb)}$2`)
     .replace('href="./app.css"', 'href="../app.css"')
     .replace('src="./app.js"', 'src="../app.js"')
+    .replace('href="./manifest.webmanifest"', 'href="../manifest.webmanifest"')
     .replace('<body>', `<body data-tool="${escapeHtml(meta.id)}">`);
   const built =
     page.includes('src="../app.js"') && page.includes(`data-tool="${escapeHtml(meta.id)}"`);

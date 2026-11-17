@@ -5,6 +5,7 @@ name: Splendor
 players: 2-4
 time: 30m
 tags: board, engine
+icon: gem
 source: https://www.spacecowboys.fr/splendor
 author: pandaqi
 license: CC-BY-SA-4.0

@@ -2,6 +2,7 @@
 
 [game]
 name: Gloomhaven
+icon: gloomhaven
 players: 1-4
 time: 90m
 tags: rpg, campaign
