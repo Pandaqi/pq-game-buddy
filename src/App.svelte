@@ -2,15 +2,22 @@
   import { onMount } from 'svelte';
   import { audio } from './core/audio';
   import { manifest } from './core/manifest.generated';
+  import { rememberImport } from './core/recent-imports';
   import { navigate, parseRoute } from './core/router';
   import { schemas } from './core/schemas.generated';
   import { store } from './core/session-store.svelte';
   import { settings } from './core/settings.svelte';
+  import type { Session } from './core/session';
   import { readFileText } from './core/share';
   import { storage, storagePersistent } from './core/storage';
   import { allDiagnostics, parseTemplate, resolveTemplate, type Diagnostic, type ResolvedTool } from './core/template/parse';
+  import { toolsForSession } from './core/template/session-tools';
+  import { decodeTemplateLink } from './core/template/share-link';
   import Sheet from './core/ui/Sheet.svelte';
+  import Editor from './ui/Editor.svelte';
+  import Gallery from './ui/Gallery.svelte';
   import Home from './ui/Home.svelte';
+  import Log from './ui/Log.svelte';
   import SelfTest from './ui/SelfTest.svelte';
   import SettingsPage from './ui/Settings.svelte';
   import SessionView from './ui/SessionView.svelte';
@@ -22,6 +29,7 @@
   let flow = $state<Flow>('none');
   let pasteText = $state('');
   let seatCount = $state(2);
+  let handledImport = $state('');
   let dragActive = $state(false);
   let cueOpen = $state(false);
   let diagnostics = $state<Diagnostic[]>([]);
@@ -41,6 +49,21 @@
 
   $effect(() => {
     if (route.name === 'session' && route.tab) store.setTab(route.tab);
+  });
+
+  // A share link is just template text in the fragment: decode, then import it.
+  $effect(() => {
+    if (route.name !== 'import') return;
+    const payload = route.payload;
+    if (!payload || payload === handledImport) return;
+    handledImport = payload;
+    const text = decodeTemplateLink(payload);
+    if (!text) {
+      store.toast('That share link is damaged', 'error');
+      return;
+    }
+    beginImport(text);
+    navigate({ name: 'home' });
   });
 
   onMount(() => {
@@ -83,14 +106,29 @@
   });
 
   function beginImport(text: string): void {
+    const trimmed = text.trim();
+    if (trimmed.startsWith('{')) {
+      try {
+        const parsedJson = JSON.parse(trimmed) as { session?: Session } | Session;
+        const record = (parsedJson as { session?: Session }).session ?? (parsedJson as Session);
+        if (record && Array.isArray(record.instances) && Array.isArray(record.players)) {
+          store.resume(record);
+          navigate({ name: 'session' });
+          return;
+        }
+      } catch {
+        /* not a session file: try it as a template */
+      }
+    }
     const parsed = parseTemplate(text);
     const resolved = resolveTemplate(parsed.template, (id) => schemas[id]);
     diagnostics = allDiagnostics(parsed.diagnostics, resolved.diagnostics);
+    rememberImport(text, parsed.template.game.name);
     pending = {
       text,
       gameName: parsed.template.game.name,
       players: parsed.template.players,
-      tools: resolved.tools,
+      tools: toolsForSession(parsed.template, resolved.tools),
       range: parsed.template.game.players,
       notes: parsed.template.notes,
     };
@@ -209,10 +247,22 @@
       <SettingsPage />
     {:else if route.name === 'selftest'}
       <SelfTest />
-    {:else}
+    {:else if route.name === 'log'}
+      <Log />
+    {:else if route.name === 'templates'}
+      <Gallery />
+    {:else if route.name === 'editor'}
+      <Editor />
+    {:else if route.name === 'notfound'}
       <section class="page">
         <h1>That page does not exist</h1>
         <p class="dim">The link "{route.path}" points nowhere.</p>
+        <a class="primary link" href="#/">Go home</a>
+      </section>
+    {:else}
+      <section class="page">
+        <h1>Reading that link…</h1>
+        <p class="dim">If nothing happens, the link was cut short. Import the template text instead.</p>
         <a class="primary link" href="#/">Go home</a>
       </section>
     {/if}
@@ -256,14 +306,14 @@
 {#if flow === 'paste'}
   <Sheet title="Import a template" onclose={() => (flow = 'none')}>
     <label class="field">
-      <span>Template text</span>
+      <span>Template text or session JSON</span>
       <textarea rows="10" bind:value={pasteText} placeholder="[game]&#10;name: My Game&#10;…" spellcheck="false"></textarea>
     </label>
     <label class="field">
       <span>Or choose a file</span>
       <input
         type="file"
-        accept=".gamebuddy,.txt,text/plain"
+        accept=".gamebuddy,.txt,.json,text/plain,application/json"
         onchange={(event) => {
           const file = (event.currentTarget as HTMLInputElement).files?.[0];
           if (!file) return;

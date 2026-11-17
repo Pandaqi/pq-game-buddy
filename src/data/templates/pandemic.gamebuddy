@@ -1,0 +1,32 @@
+# pandemic.gamebuddy — cubes, outbreaks and a ticking clock
+
+[game]
+name: Pandemic
+players: 2-4
+time: 45m
+tags: board, cooperative
+source: https://www.zmangames.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player a role card and a pawn
+- Place three cubes of each colour on the starting cities
+- Shuffle the infection deck and infect nine cities
+- Put the outbreak and cure markers within reach
+
+[rules]
+A cooperative race to cure four diseases before the world runs out of time.
+- Each turn: four actions, then draw cards, then infect cities
+- The infection rate rises with every outbreak
+- Five outbreaks or running out of cubes loses the game
+- Track the cube supply and outbreaks here; cure all four to win
+
+[tool counters]
+counters: red=24, yellow=24, blue=24, black=24, outbreaks=0
+bank: 0
+
+[tool timer]
+mode: up
+sound: none

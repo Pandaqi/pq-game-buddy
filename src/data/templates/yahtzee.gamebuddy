@@ -1,0 +1,30 @@
+# yahtzee.gamebuddy — thirteen categories and five dice
+
+[game]
+name: Yahtzee
+players: 2-6
+time: 30m
+tags: dice, score
+source: https://www.hasbro.com/en-us/product/yahtzee
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player a score sheet and a pen
+- Put five dice and the cup in the middle
+- Agree on the order of play
+
+[rules]
+Roll up to three times, keeping any dice, then score one empty category.
+- Upper section counts the matching faces; 63 or more is a 35 point bonus
+- Lower section has three and four of a kind, full house, small and large straight, Yahtzee and chance
+- The highest total after thirteen rounds wins
+
+[tool dice]
+roll: 5d6
+
+[tool score]
+mode: rounds
+rounds: 13
+win: highest

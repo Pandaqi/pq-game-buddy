@@ -1,17 +1,32 @@
-# chess-blitz.gamebuddy — two clocks with a three second increment
+# chess-blitz.gamebuddy — two clocks, one increment
 
 [game]
-name: Blitz Chess
+name: Chess / Blitz
 players: 2
-time: 10m
-tags: competitive, two-player
+time: 10-60m
+tags: board, duel
+source: https://www.fide.com/
 author: pandaqi
 license: CC-BY-SA-4.0
 format: 1
 
-[tool timer clock]
+[setup]
+- Set up the board with the queen on her own colour
+- Agree on the time control, for example five minutes plus three seconds
+- Decide who plays white
+- Put the clocks where both players can reach them
+
+[rules]
+Standard chess. Checkmate wins; a flag fall loses on time.
+- White moves first, then players alternate
+- The clock only runs for the player to move
+- Tap the clock to hand the turn over; the increment is added
+- Resign, draw or checkmate ends the game
+
+[tool timer]
 mode: chess
 duration: 5m
-increment: 3s
 players: 2
+increment: 3s
 sound: bell
+haptic: short

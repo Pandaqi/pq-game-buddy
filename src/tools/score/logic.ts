@@ -1,7 +1,7 @@
 import type { ToolInstance } from '../../core/registry';
 
-export type ScoreMode = 'simple' | 'rounds' | 'categories';
-export const SCORE_MODES: ScoreMode[] = ['simple', 'rounds', 'categories'];
+export type ScoreMode = 'simple' | 'rounds' | 'categories' | 'ledger';
+export const SCORE_MODES: ScoreMode[] = ['simple', 'rounds', 'categories', 'ledger'];
 
 export interface ScorePlayer {
   id: string;
@@ -14,6 +14,12 @@ export interface ScoreCategory {
   points: number;
 }
 
+export interface LedgerEntry {
+  id: string;
+  label: string;
+  amount: number;
+}
+
 export interface ScoreState {
   mode: ScoreMode;
   players: ScorePlayer[];
@@ -23,11 +29,17 @@ export interface ScoreState {
   rounds: Record<string, number[]>;
   /** Counts per player per category for categories mode. */
   counts: Record<string, Record<string, number>>;
+  /** Free-form entries for ledger mode: poker buy-ins, Catan-style tallies. */
+  ledger: Record<string, LedgerEntry[]>;
+  /** Per-cell notes, keyed `playerId|cell`. */
+  notes: Record<string, string>;
   categories: ScoreCategory[];
   formula: string;
   roundCount: number;
   step: number;
   target: number;
+  /** Optional "typical winning score" hint from the template. */
+  hint: string;
   win: 'highest' | 'lowest';
   start: number;
   hidden: boolean;
@@ -54,9 +66,17 @@ export interface ScoreActions {
   syncPlayers(): void;
   clearAll(): void;
   setMode(mode: ScoreMode): void;
+  setWin(win: ScoreState['win']): void;
+  setStep(value: number): void;
+  setTarget(value: number): void;
+  setHint(text: string): void;
   setCategoryCount(id: string, category: string, value: number): void;
   setCategories(categories: ScoreCategory[]): void;
   setFormula(text: string): void;
+  addLedgerEntry(id: string, label: string, amount: number): void;
+  removeLedgerEntry(id: string, entryId: string): void;
+  note(playerId: string, cell: string): string;
+  setNote(playerId: string, cell: string, text: string): void;
   setHidden(value: boolean): void;
   reveal(): void;
   totalFor(id: string): number;
@@ -64,6 +84,11 @@ export interface ScoreActions {
 }
 
 export type ScoreInstance = ToolInstance<ScoreState> & ScoreActions;
+
+/** Stable key for a cell note: one per player per round or category. */
+export function noteKey(playerId: string, cell: string): string {
+  return `${playerId}|${cell}`;
+}
 
 /* ------------------------------------------------------------------ */
 /* Formula evaluation                                                  */
@@ -315,6 +340,10 @@ export function categoryTotal(state: ScoreState, playerId: string): number {
   return state.categories.reduce((sum, category) => sum + categoryValue(state, playerId, category.name), 0);
 }
 
+export function ledgerTotal(state: ScoreState, playerId: string): number {
+  return (state.ledger[playerId] ?? []).reduce((sum, entry) => sum + entry.amount, 0);
+}
+
 export function totalFor(state: ScoreState, id: string): number {
   if (state.mode === 'rounds') {
     const row = state.rounds[id] ?? [];
@@ -322,6 +351,9 @@ export function totalFor(state: ScoreState, id: string): number {
   }
   if (state.mode === 'categories') {
     return categoryTotal(state, id) + state.start;
+  }
+  if (state.mode === 'ledger') {
+    return state.start + ledgerTotal(state, id);
   }
   return state.totals[id] ?? state.start;
 }
@@ -353,6 +385,12 @@ export function standingsFor(state: ScoreState): Standing[] {
   return out;
 }
 
+function ledgerDetail(state: ScoreState, playerId: string): string {
+  return (state.ledger[playerId] ?? [])
+    .map((entry) => `${entry.label} ${entry.amount >= 0 ? '+' : ''}${entry.amount}`)
+    .join(', ');
+}
+
 export function scoreSheet(state: ScoreState): string {
   const rows = standingsFor(state);
   const lines = [`${state.win === 'lowest' ? 'Lowest' : 'Highest'} score wins`];
@@ -365,8 +403,14 @@ export function scoreSheet(state: ScoreState): string {
         ? state.categories.map((cat) => `${cat.name} ${state.counts[row.id]?.[cat.name] ?? 0}`).join(', ')
         : state.mode === 'rounds'
           ? (state.rounds[row.id] ?? []).filter((value) => Number.isFinite(value) && value !== 0).join(', ')
-          : '';
+          : state.mode === 'ledger'
+            ? ledgerDetail(state, row.id)
+            : '';
     lines.push(`${row.rank}. ${row.name}: ${row.total}${detail ? ` (${detail})` : ''}`);
+    const notes = Object.entries(state.notes)
+      .filter(([key, value]) => value.trim() && key.startsWith(`${row.id}|`))
+      .map(([key, value]) => `${key.split('|')[1]}: ${value}`);
+    if (notes.length) lines.push(`   notes — ${notes.join('; ')}`);
   }
   return lines.join('\n');
 }
@@ -380,6 +424,8 @@ export function csvSheet(state: ScoreState): string {
     for (const category of state.categories) header.push(category.name);
     if (state.formula.trim()) header.push('Formula');
   }
+  if (state.mode === 'ledger') header.push('Entries');
+  header.push('Notes');
   const rows = [header.join(',')];
   for (const player of state.players) {
     const cells: string[] = [quote(player.name), String(totalFor(state, player.id))];
@@ -392,6 +438,12 @@ export function csvSheet(state: ScoreState): string {
       for (const category of state.categories) cells.push(String(state.counts[player.id]?.[category.name] ?? 0));
       if (state.formula.trim()) cells.push(quote(state.formula));
     }
+    if (state.mode === 'ledger') cells.push(quote(ledgerDetail(state, player.id)));
+    const notes = Object.entries(state.notes)
+      .filter(([key, value]) => value.trim() && key.startsWith(`${player.id}|`))
+      .map(([key, value]) => `${key.split('|')[1]}=${value}`)
+      .join('; ');
+    cells.push(quote(notes));
     rows.push(cells.join(','));
   }
   return rows.join('\n');

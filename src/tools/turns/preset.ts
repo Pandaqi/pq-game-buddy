@@ -1,0 +1,11 @@
+import type { PresetSchema } from '../../core/template/schema';
+
+const preset: PresetSchema = {
+  order: { type: 'list', default: [], label: 'Turn order (empty = session players)' },
+  phases: { type: 'list', default: ['Turn'], label: 'Phases' },
+  timer: { type: 'duration', default: '0s', label: 'Turn timer (0 = off)' },
+  pass: { type: 'boolean', default: true, label: 'Pass-the-phone cover' },
+  'auto-start': { type: 'boolean', default: false, label: 'Start the clock automatically' },
+};
+
+export default preset;

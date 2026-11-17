@@ -1,0 +1,39 @@
+# decrypto.gamebuddy — clues, interceptions and a two minute clock
+
+[game]
+name: Decrypto
+players: 3-8
+time: 30m
+tags: party, deduction
+source: https://www.scorpionmasque.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Split into two teams and sit so each team shares a screen
+- Deal four keyword cards to each team
+- Give each team a code card and a pen
+- Put the interception tokens where both teams can reach them
+
+[rules]
+Give clues that point at your keywords without giving them away.
+- The clue giver writes a three number code, then says three clues
+- Their team guesses which keyword matches each number
+- The other team may try to intercept the code
+- Two interceptions or two miscommunications end the game; log tokens per team here
+
+[tool timer]
+mode: countdown
+duration: 2m
+sound: bell
+start: manual
+
+[tool score]
+mode: ledger
+win: lowest
+
+[tool reveal]
+mode: ballot
+ballot: Did the other team intercept?
+options: Intercepted, Missed

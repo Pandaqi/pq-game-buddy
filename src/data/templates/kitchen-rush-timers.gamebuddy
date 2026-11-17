@@ -1,27 +1,37 @@
-# kitchen-rush-timers.gamebuddy — one three minute hourglass per player
+# kitchen-rush-timers.gamebuddy — one hourglass per cook
 
 [game]
-name: Kitchen Rush (timers)
+name: Kitchen Rush
 players: 2-4
 time: 45m
-tags: realtime, cooperative, party
+tags: board, realtime
+source: https://boardgamegeek.com/boardgame/224783/kitchen-rush
 author: pandaqi
 license: CC-BY-SA-4.0
 format: 1
 
-[players]
-Alice
-Bob
-Charlie
-Dave
+[setup]
+- Give every player an hourglass timer
+- Shuffle the order deck and deal the opening orders
+- Put the ingredients within reach of the whole table
+- Start the shift together
 
-# One big tap target per player: tap to flip your hourglass.
-[tool timer kitchen]
+[rules]
+A realtime cooperative kitchen. Your hourglass is your worker.
+- Flip your timer to take actions while it runs
+- When it empties, you must stop and wait for someone to flip it again
+- Complete orders before the shift ends
+- Track coins and wasted ingredients in the counters tool
+
+[tool timer]
 mode: flip
-duration: 3m
+duration: 90s
 per-player: yes
 players: 4
 layout: grid
-warn-at: 20s
 sound: bell
 haptic: short
+
+[tool counters]
+counters: coins=0, wasted=0
+bank: 0

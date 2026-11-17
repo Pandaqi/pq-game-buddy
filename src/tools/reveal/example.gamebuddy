@@ -1,0 +1,13 @@
+# reveal.example.gamebuddy — secret roles for a hidden-role game
+
+[game]
+name: Secret Roles
+players: 4-10
+time: 20m
+tags: secrets, party
+
+[tool reveal]
+mode: roles
+roles: werewolf=2, seer=1, villager=4
+descriptions: werewolf=Wakes at night and picks a victim, seer=Checks one player each night, villager=No power, just talk
+auto-hide: 8

@@ -11,7 +11,7 @@ import {
   type Template,
 } from '../src/core/template/parse';
 import { serializeTemplate } from '../src/core/template/serialize';
-import { formatDurationText, parseDuration } from '../src/core/template/schema';
+import { formatDurationText, parseDuration, splitList } from '../src/core/template/schema';
 
 const root = join(import.meta.dir, '..');
 
@@ -44,6 +44,12 @@ describe('duration parsing', () => {
     expect(formatDurationText(180000)).toBe('3m');
     expect(formatDurationText(90000)).toBe('1m30s');
     expect(formatDurationText(5400000)).toBe('1h30m');
+  });
+
+  test('an explicit empty list is not a one-item list', () => {
+    expect(splitList('[]')).toEqual([]);
+    expect(splitList('')).toEqual([]);
+    expect(splitList('Ada, "Bo, Jr", Cy')).toEqual(['Ada', 'Bo, Jr', 'Cy']);
   });
 });
 

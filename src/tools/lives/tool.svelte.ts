@@ -1,11 +1,10 @@
 import type { ToolContext } from '../../core/registry';
+import { PLAYER_COLORS } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
 import Lives from './Lives.svelte';
-import { isGameOver, isOut, type LivesInstance, type LivesState } from './logic';
+import { clampLives, isGameOver, isOut, resultsFor, type LivesInstance, type LivesState } from './logic';
 import meta from './meta';
 import preset from './preset';
-
-const COLORS = ['#c0392b', '#2f6fc0', '#3d8b55', '#c2631b', '#7550c8', '#23807f', '#bd4d8c', '#b58a12'];
 
 function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
   const start = Math.max(0, Number(values.lives ?? 3));
@@ -26,7 +25,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
     name: player.name,
     lives: Math.min(start, max),
     max,
-    color: (player as { color?: string }).color ?? COLORS[index % COLORS.length],
+    color: (player as { color?: string }).color || PLAYER_COLORS[index % PLAYER_COLORS.length],
   }));
 
   const extras = Object.entries((values.extras as Record<string, unknown>) ?? {}).map(([name, value]) => ({
@@ -55,14 +54,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
     revealed: !hidden,
   });
 
-  function clamp(value: number, limit: number): number {
-    return Math.max(0, Math.min(limit, value));
-  }
-
   function adjust(id: string, delta: number): void {
-    ctx.undo.push('change lives', `lives-${id}`);
+    if (!Number.isFinite(delta) || delta === 0) return;
     if (data.mode === 'shared' || id === 'shared') {
-      data.lives = clamp(data.lives + delta, data.max);
+      const next = clampLives(data.lives + delta, data.max);
+      if (next === data.lives) return;
+      ctx.undo.push('change lives', 'lives-shared');
+      data.lives = next;
       ctx.haptics.buzz('short');
       if (isGameOver(data)) ctx.audio.play('buzzer');
       return;
@@ -70,7 +68,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
     const track = data.players.find((player) => player.id === id);
     if (!track) return;
     const before = track.lives;
-    track.lives = clamp(track.lives + delta, track.max);
+    const next = clampLives(before + delta, track.max);
+    if (next === before) return;
+    ctx.undo.push('change lives', `lives-${id}`);
+    track.lives = next;
     ctx.haptics.buzz('short');
     if (elimination && before > 0 && isOut(data, track)) {
       ctx.audio.play('buzzer');
@@ -100,7 +101,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
             name: typeof player.name === 'string' ? player.name : `Player ${index + 1}`,
             lives: Math.max(0, Number(player.lives) || 0),
             max: Math.max(1, Number(player.max) || data.max),
-            color: typeof player.color === 'string' ? player.color : COLORS[index % COLORS.length],
+            color: typeof player.color === 'string' ? player.color : PLAYER_COLORS[index % PLAYER_COLORS.length],
           }));
       }
       if (Array.isArray(raw.extras)) {
@@ -153,17 +154,26 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
       if (isGameOver(data)) lines.push('Game over');
       return lines.join('\n');
     },
+    results: () => resultsFor(data),
     adjust,
     setLives(id, value) {
-      ctx.undo.push('set lives');
       if (data.mode === 'shared' || id === 'shared') {
-        data.lives = clamp(Math.round(value), data.max);
+        const next = clampLives(value, data.max);
+        if (next === data.lives) return;
+        ctx.undo.push('set lives');
+        data.lives = next;
         return;
       }
       const track = data.players.find((player) => player.id === id);
-      if (track) track.lives = clamp(Math.round(value), track.max);
+      if (!track) return;
+      const next = clampLives(value, track.max);
+      if (next === track.lives) return;
+      ctx.undo.push('set lives');
+      track.lives = next;
     },
     setMode(mode) {
+      if (data.mode === mode) return;
+      ctx.undo.push('lives mode');
       data.mode = mode;
     },
     addPlayer(name) {
@@ -175,13 +185,37 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
         name: trimmed,
         lives: Math.min(Math.max(1, data.lives || 3), data.max),
         max: data.max,
-        color: COLORS[data.players.length % COLORS.length],
+        color: PLAYER_COLORS[data.players.length % PLAYER_COLORS.length],
       });
     },
     removePlayer(id) {
       if (data.players.length <= 1) return;
       ctx.undo.push('remove player');
       data.players = data.players.filter((player) => player.id !== id);
+    },
+    syncPlayers() {
+      const source = ctx.session.players();
+      if (!source.length) return;
+      if (
+        source.length === data.players.length &&
+        source.every(
+          (player, index) =>
+            player.id === data.players[index]?.id && player.name === data.players[index]?.name,
+        )
+      ) {
+        return;
+      }
+      ctx.undo.push('use session players');
+      data.players = source.map((player, index) => {
+        const existing = data.players.find((track) => track.id === player.id);
+        return {
+          id: player.id,
+          name: player.name,
+          lives: existing ? existing.lives : Math.min(start, max),
+          max: existing ? existing.max : max,
+          color: (player as { color?: string }).color || PLAYER_COLORS[index % PLAYER_COLORS.length],
+        };
+      });
     },
     adjustExtra(name, delta) {
       const extra = data.extras.find((item) => item.name === name);

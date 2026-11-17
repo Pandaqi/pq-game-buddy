@@ -1,0 +1,47 @@
+# poker-night.gamebuddy — stacks, a pot and blind levels
+
+[game]
+name: Poker Night
+players: 2-9
+time: 180m
+tags: card, betting
+source: Traditional game — no official source
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Agree on a buy-in and give everyone the same starting stack
+- Put the chip bank in the middle
+- Set the blind level timer
+- Deal for the button
+
+[rules]
+Texas Hold'em: two hole cards, five community cards, best hand wins the pot.
+- Track each stack with a ledger entry; start everyone at the same number
+- The shared bank holds the pot and the chips not in play
+- Blind levels go up on the interval timer
+- Blind bids record secret all-in amounts
+
+[tool score]
+mode: ledger
+start: 1000
+win: highest
+
+[tool counters]
+counters: pot=0
+bank: 1000
+denominations: 1, 5, 25, 100
+
+[tool turns]
+phases: Preflop, Flop, Turn, River, Showdown
+
+[tool reveal]
+mode: bid
+min-bid: 0
+max-bid: 10000
+
+[tool timer]
+mode: interval
+interval: 15m
+sound: bell

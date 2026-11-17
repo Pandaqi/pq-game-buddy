@@ -7,8 +7,11 @@ import tool_demoPreset from '../tools/demo/preset.ts';
 import tool_dicePreset from '../tools/dice/preset.ts';
 import tool_livesPreset from '../tools/lives/preset.ts';
 import tool_pickPreset from '../tools/pick/preset.ts';
+import tool_revealPreset from '../tools/reveal/preset.ts';
+import tool_rulesPreset from '../tools/rules/preset.ts';
 import tool_scorePreset from '../tools/score/preset.ts';
 import tool_timerPreset from '../tools/timer/preset.ts';
+import tool_turnsPreset from '../tools/turns/preset.ts';
 
 export const schemas: Record<string, PresetSchema> = {
   coin: tool_coinPreset,
@@ -17,6 +20,9 @@ export const schemas: Record<string, PresetSchema> = {
   dice: tool_dicePreset,
   lives: tool_livesPreset,
   pick: tool_pickPreset,
+  reveal: tool_revealPreset,
+  rules: tool_rulesPreset,
   score: tool_scorePreset,
   timer: tool_timerPreset,
+  turns: tool_turnsPreset,
 };

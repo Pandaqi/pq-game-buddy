@@ -116,11 +116,14 @@ export function parseBoolean(raw: string): boolean | null {
 
 /** Split a comma list, honouring double quotes. */
 export function splitList(raw: string): string[] {
+  const text = String(raw ?? '').trim();
+  // `[]` is how an explicitly empty list is written in a template.
+  if (!text || text === '[]') return [];
   const out: string[] = [];
   let current = '';
   let quoted = false;
-  for (let i = 0; i < raw.length; i += 1) {
-    const char = raw[i];
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
     if (char === '"') {
       quoted = !quoted;
       continue;

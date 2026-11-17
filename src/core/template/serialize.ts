@@ -79,7 +79,14 @@ export function serializeTemplate(spec: TemplateSpec, schemaOf?: (toolId: string
     for (const key of keys) {
       if (tool.values[key] === undefined) continue;
       const spec2 = schema?.[key];
-      const text = formatValue(spec2, tool.values[key]);
+      const value = tool.values[key];
+      // Multi-line text uses the block form so newlines survive a re-parse.
+      if (spec2?.type === 'text' && typeof value === 'string' && value.includes('\n')) {
+        out.push(`${key}: |`);
+        for (const line of value.split('\n')) out.push(`  ${line}`);
+        continue;
+      }
+      const text = formatValue(spec2, value);
       if (text === '') continue;
       out.push(`${key}: ${text}`);
     }

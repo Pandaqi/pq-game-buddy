@@ -1,0 +1,32 @@
+# dominion.gamebuddy — deck building and victory cards
+
+[game]
+name: Dominion
+players: 2-4
+time: 30m
+tags: card, deckbuilder
+source: https://www.riograndegames.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Lay out ten kingdom cards plus the base treasures and victory cards
+- Give every player a starting deck: seven coppers and three estates
+- Shuffle and draw five cards
+- Put the trash pile in the middle
+
+[rules]
+Each turn: action, buy, clean up, draw five.
+- Treasures buy cards; kingdom cards change the rules
+- The game ends when the province pile or three other piles run out
+- Count victory points: provinces 6, duchies 3, estates 1, curses -1
+- The highest total wins
+
+[tool score]
+mode: categories
+categories: provinces=6, duchies=3, estates=1, curses=-1
+win: highest
+
+[tool turns]
+phases: Action, Buy, Cleanup

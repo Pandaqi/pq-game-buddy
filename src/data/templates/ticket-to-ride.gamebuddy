@@ -1,0 +1,33 @@
+# ticket-to-ride.gamebuddy — routes, tickets and the longest path
+
+[game]
+name: Ticket to Ride
+players: 2-5
+time: 60m
+tags: board, strategy
+source: https://www.daysofwonder.com/tickettoride/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player 45 trains and a matching score marker
+- Deal three destination tickets and keep at least two
+- Shuffle the train deck and deal five cards to each player
+- Lay out the five face-up cards
+
+[rules]
+Claim routes by spending matching train cards, then score at the end.
+- A route is worth its printed points
+- Destination tickets add or subtract their value if completed
+- The longest continuous path is worth 10 bonus points
+- The highest total wins
+
+[tool score]
+mode: ledger
+win: highest
+
+[tool turns]
+phases: Draw, Play, End
+timer: 0s
+pass: no

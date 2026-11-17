@@ -1,0 +1,33 @@
+# dixit.gamebuddy — one sentence, six pictures, one guess
+
+[game]
+name: Dixit
+players: 3-6
+time: 30m
+tags: party, cards
+source: https://www.libellud.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Deal six cards to each player
+- Give every player a voting dial or tokens
+- Shuffle the rest of the deck as the draw pile
+
+[rules]
+The storyteller says a sentence about a card, everyone else adds a card, then the table votes.
+- Score three points if your card is guessed
+- The storyteller scores if some but not all players guess their card
+- Everyone who votes for the storyteller's card scores too
+- First to 30 points wins
+
+[tool score]
+mode: simple
+target: 30
+win: highest
+
+[tool reveal]
+mode: ballot
+ballot: Was the storyteller found?
+options: Found, Missed

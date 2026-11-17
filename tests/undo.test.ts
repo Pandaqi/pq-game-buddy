@@ -49,4 +49,30 @@ describe('undo', () => {
     undo.push('score change');
     expect(undo.label()).toBe('score change');
   });
+
+  test('a batch becomes one undo step labelled by the batch', () => {
+    let state = { a: 0, b: 0 };
+    const undo = createUndo({
+      read: () => state,
+      write: (next) => {
+        state = next as { a: number; b: number };
+      },
+    });
+    undo.batch('settings', () => {
+      undo.push('a');
+      state = { ...state, a: 1 };
+      undo.push('b');
+      state = { ...state, b: 2 };
+    });
+    expect(undo.size()).toBe(1);
+    expect(undo.label()).toBe('settings');
+    undo.undo();
+    expect(state).toEqual({ a: 0, b: 0 });
+  });
+
+  test('a batch with no change adds nothing', () => {
+    const undo = createUndo({ read: () => ({}), write: () => undefined });
+    undo.batch('nothing', () => undefined);
+    expect(undo.canUndo()).toBe(false);
+  });
 });

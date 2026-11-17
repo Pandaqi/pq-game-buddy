@@ -1,0 +1,27 @@
+# sushi-go.gamebuddy — three quick rounds of card picking
+
+[game]
+name: Sushi Go!
+players: 2-5
+time: 20m
+tags: card, party
+source: https://gamewright.com/product/Sushi-Go
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the deck and deal the right number of cards per player
+- Agree on who starts the first pass
+- Keep the pudding cards visible; they score at the end
+
+[rules]
+Pick one card, pass the rest, repeat. Three rounds in total.
+- Maki rolls, tempura, sashimi and dumplings score in their own ways
+- Pudding is scored after the last round
+- Add each round here; the highest total wins
+
+[tool score]
+mode: rounds
+rounds: 3
+win: highest

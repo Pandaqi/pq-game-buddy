@@ -155,6 +155,7 @@ class SessionStore {
       haptics,
       undo: {
         push: (label, key) => entry.undo.push(label, key),
+        batch: (label, run) => entry.undo.batch(label, run),
         undo: () => entry.undo.undo(),
         canUndo: () => entry.undo.canUndo(),
         label: () => entry.undo.label(),
@@ -203,6 +204,9 @@ class SessionStore {
       updatedAt: now,
     };
 
+    // Tools read session players while they are created, so the new session
+    // has to be live before the first tool starts.
+    this.session = session;
     for (const spec of input.tools) {
       const module = toolById.get(spec.toolId);
       if (!module) {
@@ -218,7 +222,6 @@ class SessionStore {
       session.instances.push({ id: entry.id, toolId: entry.toolId, state: entry.instance.state() });
     }
 
-    this.session = session;
     this.activeId = this.entriesList.length ? this.entriesList[0].id : null;
     this.saveNow();
   }
@@ -226,6 +229,7 @@ class SessionStore {
   resume(record: Session): void {
     this.disposeEntries();
     this.unavailable = [];
+    this.session = record;
     for (const saved of record.instances) {
       const module = toolById.get(saved.toolId);
       if (!module) {
@@ -236,7 +240,6 @@ class SessionStore {
       entry.instance.load(saved.state);
       this.entriesList.push(entry);
     }
-    this.session = record;
     this.activeId = this.entriesList.length ? this.entriesList[0].id : null;
     this.version += 1;
   }
@@ -346,6 +349,31 @@ class SessionStore {
       tools,
     };
     return serializeTemplate(spec, (id) => schemas[id]);
+  }
+
+  /** Full session (players, tools and live state) as a portable JSON file. */
+  exportSessionJson(): string {
+    this.saveNow();
+    return JSON.stringify({ version: 1, session: this.session }, null, 2);
+  }
+
+  /** Remember that this game already produced a play-log entry. */
+  markPlaySaved(playId: string): void {
+    if (!this.session) return;
+    this.session.playId = playId;
+    this.bump();
+  }
+
+  /** Ask every tool that knows how to re-read the session players to do so. */
+  syncPlayersToTools(): number {
+    let count = 0;
+    for (const entry of this.entriesList) {
+      const sync = (entry.instance as { syncPlayers?: () => void }).syncPlayers;
+      if (typeof sync !== 'function') continue;
+      sync.call(entry.instance);
+      count += 1;
+    }
+    return count;
   }
 
   setNotes(notes: string): void {

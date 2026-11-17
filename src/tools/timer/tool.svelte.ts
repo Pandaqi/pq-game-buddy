@@ -1,5 +1,6 @@
 import { announce } from '../../core/dom';
 import type { ToolContext } from '../../core/registry';
+import { PLAYER_COLORS } from '../../core/session';
 import { wake } from '../../core/wake';
 import type { PresetValues } from '../../core/template/schema';
 import { formatClock, formatDurationText, parseDuration } from '../../core/template/schema';
@@ -27,8 +28,6 @@ import {
   type TimerState,
 } from './logic';
 
-const COLORS = ['#c0392b', '#2f6fc0', '#3d8b55', '#c2631b', '#7550c8', '#23807f', '#bd4d8c', '#b58a12'];
-
 function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
   const mode = (values.mode as TimerMode) ?? 'countdown';
   const duration = Number(values.duration ?? 300000);
@@ -51,12 +50,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
     if (mode === 'sequence') {
       if (phases.length) {
         return phases.map((phase, index) =>
-          newClock({ id: `t${index + 1}`, name: phase.name, color: COLORS[index % COLORS.length], duration: phase.duration, delay }),
+          newClock({ id: `t${index + 1}`, name: phase.name, color: PLAYER_COLORS[index % PLAYER_COLORS.length], duration: phase.duration, delay }),
         );
       }
       return [
-        newClock({ id: 't1', name: 'Phase 1', color: COLORS[0], duration, delay }),
-        newClock({ id: 't2', name: 'Phase 2', color: COLORS[1], duration, delay }),
+        newClock({ id: 't1', name: 'Phase 1', color: PLAYER_COLORS[0], duration, delay }),
+        newClock({ id: 't2', name: 'Phase 2', color: PLAYER_COLORS[1], duration, delay }),
       ];
     }
     const total = mode === 'chess' ? Math.max(2, count) : perPlayer || layout === 'grid' ? count : 1;
@@ -65,7 +64,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
       return newClock({
         id: `t${index + 1}`,
         name: playerNames[index] ?? (total > 1 ? `Timer ${index + 1}` : 'Timer'),
-        color: COLORS[index % COLORS.length],
+        color: PLAYER_COLORS[index % PLAYER_COLORS.length],
         duration: limit,
         delay,
       });
@@ -238,7 +237,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
       newClock({
         id: `t${index + 1}-${Date.now().toString(36)}`,
         name: playerNames[index] ?? `Timer ${index + 1}`,
-        color: COLORS[index % COLORS.length],
+        color: PLAYER_COLORS[index % PLAYER_COLORS.length],
         duration: data.mode === 'interval' ? data.interval : data.timers[0]?.duration ?? 300000,
         delay: data.delay,
       }),
@@ -367,7 +366,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
       newClock({
         id: `t${index + 1}`,
         name: player.name,
-        color: player.color ?? COLORS[index % COLORS.length],
+        color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
         duration: data.timers[0]?.duration ?? 300000,
         delay: data.delay,
       }),

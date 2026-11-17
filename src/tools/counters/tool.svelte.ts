@@ -1,16 +1,16 @@
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
 import Counters from './Counters.svelte';
-import { transfer, type CountersInstance, type CountersState } from './logic';
+import { denominationsFrom, resultsFor, transfer, type CountersInstance, type CountersState } from './logic';
 import meta from './meta';
 import preset from './preset';
 
 function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
   const step = Math.max(1, Number(values.step ?? 1));
   const pairs = (values.counters as Record<string, unknown>) ?? {};
-  const denominations = (Array.isArray(values.denominations) ? (values.denominations as string[]) : [])
-    .map((value) => Number(value))
-    .filter((value) => Number.isFinite(value) && value > 0);
+  const denominations = denominationsFrom(
+    (Array.isArray(values.denominations) ? (values.denominations as string[]) : []).map((value) => Number(value)),
+  );
   const hidden = !!values.hidden;
 
   const counters = Object.entries(pairs).map(([name, value], index) => ({
@@ -80,6 +80,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
       for (const counter of data.counters) lines.push(`${counter.name}: ${counter.value}`);
       return lines.join('\n');
     },
+    results: () => resultsFor(data),
     adjust(id, delta) {
       const counter = data.counters.find((item) => item.id === id);
       if (!counter) return;
@@ -95,9 +96,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
       ctx.haptics.buzz('short');
     },
     adjustBank(delta) {
-      if (delta === 0) return;
-      ctx.undo.push('bank change', 'bank');
+      if (!Number.isFinite(delta) || delta === 0) return;
       const next = Math.max(0, data.bank + delta);
+      if (next === data.bank) return;
+      ctx.undo.push('bank change', 'bank');
       const moved = next - data.bank;
       data.bank = next;
       log(`Bank ${moved > 0 ? '+' : ''}${moved}`);
@@ -128,14 +130,18 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
       counter.name = name.trim() || counter.name;
     },
     removeCounter(id) {
-      ctx.undo.push('remove counter');
       const counter = data.counters.find((item) => item.id === id);
-      if (counter) data.bank += counter.value;
+      if (!counter) return;
+      ctx.undo.push('remove counter');
+      data.bank += counter.value;
       data.counters = data.counters.filter((item) => item.id !== id);
     },
     setStep(value) {
-      data.step = Math.max(1, Math.round(value));
-      for (const counter of data.counters) counter.step = data.step;
+      const next = Math.max(1, Math.round(Number.isFinite(value) ? value : 1));
+      if (next === data.step) return;
+      ctx.undo.push('counter step');
+      data.step = next;
+      for (const counter of data.counters) counter.step = next;
     },
     setHidden(value) {
       ctx.undo.push('hidden counters');
@@ -147,6 +153,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): CountersInstance {
       ctx.audio.play('success');
     },
     reset() {
+      const untouched =
+        data.bank === 0 && data.history.length === 0 && data.counters.every((counter) => counter.value === 0);
+      if (untouched) return;
       ctx.undo.push('reset counters');
       for (const counter of data.counters) counter.value = 0;
       data.bank = 0;

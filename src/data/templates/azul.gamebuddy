@@ -1,0 +1,28 @@
+# azul.gamebuddy — draft tiles, fill a wall
+
+[game]
+name: Azul
+players: 2-4
+time: 40m
+tags: board, puzzle
+source: https://boardgamegeek.com/boardgame/230802/azul
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player a player board
+- Fill the round factory displays with four tiles each
+- Put the first player marker in the middle
+- Shuffle the bag
+
+[rules]
+Take tiles from a factory, place them on a pattern line, then score when the line completes.
+- A completed line scores its tile and every connected tile on the wall
+- Floor tiles cost points
+- The game ends when a player completes a row
+- Add end-of-game bonuses; the highest total wins
+
+[tool score]
+mode: ledger
+win: highest

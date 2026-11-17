@@ -1,0 +1,35 @@
+# the-mind.gamebuddy — play the cards in order without talking
+
+[game]
+name: The Mind
+players: 2-4
+time: 20m
+tags: party, cooperative
+source: https://www.pandasaurusgames.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the deck of 1 to 100 cards
+- Deal one card per player for level one
+- Put the lives and throwing stars in the middle
+- Agree that nobody may talk about their cards
+
+[rules]
+Everyone holds numbered cards. Play them in ascending order without speaking.
+- Any card played out of order costs a life
+- Clear the level and deal one more card per player
+- A throwing star lets the table discard the lowest card
+- Lose all lives and the run ends; track them here
+
+[tool lives]
+mode: shared
+lives: 3
+max: 5
+step: 1
+elimination: yes
+
+[tool counters]
+counters: shurikens=1
+bank: 0

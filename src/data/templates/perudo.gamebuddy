@@ -1,0 +1,39 @@
+# perudo.gamebuddy — dice under cups and escalating bids
+
+[game]
+name: Perudo / Liar's Dice
+players: 2-6
+time: 30m
+tags: dice, bluffing
+source: https://boardgamegeek.com/boardgame/45/perudo
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player a cup and five dice
+- Agree on the starting player
+- Everyone rolls and peeks under their own cup
+
+[rules]
+Bid on how many dice of a face are on the table, then call the bluff.
+- A bid is a quantity and a face; each bid must raise the last
+- Calling a bid reveals every cup; the loser loses a die
+- Ones are wild unless someone has bid them
+- Last player with dice wins; use lives and blind bids here
+
+[tool dice]
+roll: 1d6
+pool: 5d6
+macros: cup=5d6
+
+[tool lives]
+mode: players
+lives: 5
+max: 5
+elimination: yes
+
+[tool reveal]
+mode: bid
+min-bid: 1
+max-bid: 30

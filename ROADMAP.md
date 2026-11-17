@@ -6,12 +6,13 @@ This document used to be a wishlist. It is now the build plan: every tool the th
 
 > Doc version 2 · 2026-11-16 · Owner: Tiamo / Pandaqi
 >
-> **Implementation status (2026-11-17): M0 and M1 shipped.** `bun run check` passes
-> end to end (stale-manifest check, `tsc`, `svelte-check` with 0 warnings, 105 tests,
-> template lint, build inside budget at ~70 KB gzipped). Six tools are live: `timer`,
-> `dice`, `coin`, `pick`, `score` and a dev-only `demo`; three demo templates lint and
-> round-trip. **M2 is next and not started.** See the notes at the end of §8 for
-> choices taken while building.
+> **Implementation status (2026-11-17): M0, M1, M2 and M3 shipped.** `bun run check`
+> passes end to end (stale-manifest check, `tsc`, `svelte-check` with 0 warnings, 258
+> tests, template lint, build inside budget at 109 KB gzipped / 120 KB single file). Eleven tools are live: `timer`, `dice`,
+> `coin`, `pick`, `score`, `lives`, `counters`, `turns`, `reveal`, `rules` and a
+> dev-only `demo`. Format v1 is frozen and documented; 27 game templates ship. **M4 is
+> next.** Finished milestone detail has been removed from §6; the notes at the end of
+> §8 record the choices that shaped M2–M3.
 
 ## 0. Summary
 
@@ -28,24 +29,19 @@ The trick to supporting "every tool anyone might want" is not to build a hundred
 
 | # | Milestone | Size | What it ships | You can already play |
 |---|-----------|------|---------------|----------------------|
-| M0 | Foundations | S | Build pipeline, app shell, router, registry, storage, test harness | Nothing useful yet |
-| M1 | Core primitives and the vertical slice | L | Players, clock, audio, timer, dice/coin/pick, undo, basic scorepad, template parser, sessions | A simple game night |
-| M2 | Tracking, secrets and turns | L | Full scorepad, lives, counters, turn manager, secret reveal, session log, rules | Most board, card and party games |
-| M3 | Templates 1.0 and the game library | L | Frozen format, editor, gallery, sharing, template library part 1 (27), linter | "Insert game, press play" |
 | M4 | Breadth: the long tail | L | Decks, bag, dice lab, dictionary and solvers, brackets, drafts, buzzer, script runner, overlay, splits, custom builder | Anything, including word games, tournaments, RPGs and streams |
 | M5 | Polish, accessibility and release | M | Accessibility audit, performance pass, docs, publish to pandaqi.com | Public v1.0 |
 | M6 | After v1.0 | — | PWA, community gallery, QR sharing, text-to-speech, more languages | — |
 
 ### What ships when
 
-- **After M1** the app is already genuinely useful: four flip timers for Kitchen Rush, dice, a coin, a random picker, and a scorepad.
-- **After M3** it delivers the original promise: download a `.gamebuddy` file for a popular game, load it, and everything is configured.
+- **Shipped (M0–M3)** the app covers most board, card and party nights and delivers the original promise: pick a bundled game, load it, and everything is configured.
 - **After M4** there is no realistic game-night need left uncovered without dropping to the custom builder or a script.
 - **After M5** it can be dropped into `pandaqi.com/tools/` and handed to strangers.
 
 ### How to read this document
 
-- **M0.3**, **M1.4**, **M2.6**, etc. are step IDs. The sequencing table at the end of §6 keeps dependencies straight.
+- **M4.1**, **M4.2**, etc. are step IDs. The sequencing table at the end of §6 keeps dependencies straight. Shipped step IDs (M0–M3) are gone with their milestones.
 - **S / M / L** are relative effort, not calendar promises. S is a sitting, M is a few sittings, L is a solid chunk of work.
 - "Preset:" lists the keys a tool accepts in a template. Every tool has a schema; §4 is the contract.
 - Every milestone ends with a **definition of done** (DoD). Do not start the next milestone until it is met.
@@ -54,7 +50,7 @@ The trick to supporting "every tool anyone might want" is not to build a hundred
 
 This plan is written to be executed by someone (or something) that has not seen the design discussions. These rules override personal preference:
 
-1. **Order is the plan.** Build M0 to M5 in sequence. Do not start a later tool because it looks fun; the schemas and primitives it needs will not exist yet.
+1. **Order is the plan.** Build M4 then M5. Do not start a later tool because it looks fun; the schemas and primitives it needs will not exist yet.
 2. **Zero runtime package dependencies.** Svelte 5 is a build-time compiler; its emitted runtime is counted in the core budget. No other framework, icon pack, CSS library or polyfill. Svelte stays in the view layer: parser, storage, ticker, RNG and session remain plain TypeScript. Adding anything else is a design decision for §8, not an implementation detail.
 3. **No network, ever.** If a feature seems to need a request, it is the wrong feature. Data ships in the build or is imported by the user.
 4. **Schema first.** A tool is not started until its preset schema, state shape and export format are written down. That schema drives the UI, templates, save files and tests.
@@ -224,23 +220,23 @@ Non-negotiable, checked at every milestone:
 
 | Tool | id | One-liner | Milestone |
 |------|----|-----------|-----------|
-| Timer | `timer` | Every kind of clock, many at once | M1 |
-| Dice | `dice` | Any die, any notation, custom faces | M1 |
-| Coin | `coin` | Flips with bias and call-it | M1 |
-| Pick | `pick` | Numbers, lists, teams, seats, wheels | M1 |
-| Score | `score` | Rounds, categories, targets, leaderboard | M1 (basic) / M2 (full) |
-| Lives | `lives` | HP, lives, conditions, elimination | M2 |
-| Counters | `counters` | Tokens, money, resources, tallies | M2 |
-| Turns | `turns` | Order, rounds, phases, pass-the-phone | M2 |
-| Reveal | `reveal` | Secret roles, deals, ballots, bids | M2 |
-| Log | `log` | History, winners, stats, streaks | M2 |
+| Timer | `timer` | Every kind of clock, many at once | Shipped |
+| Dice | `dice` | Any die, any notation, custom faces | Shipped |
+| Coin | `coin` | Flips with bias and call-it | Shipped |
+| Pick | `pick` | Numbers, lists, teams, seats, wheels | Shipped |
+| Score | `score` | Rounds, categories, ledger, targets, leaderboard | Shipped |
+| Lives | `lives` | HP, lives, conditions, elimination | Shipped |
+| Counters | `counters` | Tokens, money, resources, tallies | Shipped |
+| Turns | `turns` | Order, rounds, phases, pass-the-phone | Shipped |
+| Reveal | `reveal` | Secret roles, deals, ballots, bids | Shipped |
+| Log | — | History, winners, stats, streaks | Shipped (page, not a tool) |
 | Decks | `decks` | Shuffle, deal, draw, flip, hide | M4 |
 | Bag | `bag` | Blind draws from tiles or tokens | M4 |
 | Bracket | `bracket` | Tournaments and standings | M4 |
 | Draft | `draft` | Snake and linear drafts, auctions | M4 |
 | Buzzer | `buzzer` | First tap wins, reaction timing | M4 |
 | Script | `script` | Run a game flow step by step | M4 |
-| Rules | `rules` | Cheat sheets, setup, glossary, scoring refs | M2 |
+| Rules | `rules` | Cheat sheets, setup, glossary, scoring refs | Shipped |
 | Words | `words` | Dictionary, filters, solvers, Codenames | M4 |
 | Prompts | `prompts` | Random ideas, prompts, random tables | M4 |
 | Custom | `custom` | Build your own tracker | M4 |
@@ -883,43 +879,16 @@ quick: First to 10 victory points wins.
 
 ### 4.7 The template library
 
-Ship 40 hand-written templates in total, each with a source link, author, license and "not an official product" note. The Ships column is exact: 27 templates use only M1–M2 tools and ship in M3; the remaining 13 ship with their M4 family. The gallery groups them by context (party, strategy, card, word, RPG, video, tournament) and filters by players, time and tools used, reusing the categorizer's taxonomy as metadata.
+Ship 40 hand-written templates in total, each with a source link, author, license and "not an official product" note. The 27 M3 templates shipped with the format freeze; the 13 rows below remain and ship with their M4 family. The gallery groups them by context (party, strategy, card, word, RPG, video, tournament) and filters by players, time and tools used, reusing the categorizer's taxonomy as metadata.
 
 | Game | Players | Time | Tools wired | Ships |
 |------|---------|------|-------------|-------|
-| Catan | 3-4 | 90 m | score, rules | M3 |
-| Ticket to Ride | 2-5 | 60 m | score, turns, rules | M3 |
-| 7 Wonders | 3-7 | 45 m | score, rules | M3 |
-| Wingspan | 1-5 | 70 m | score, rules | M3 |
-| Sushi Go! | 2-5 | 20 m | score, rules | M3 |
-| Yahtzee | 2-6 | 30 m | score, dice, rules | M3 |
-| Phase 10 | 2-6 | 45 m | score, rules | M3 |
-| Monopoly | 2-6 | 120 m | counters, turns, rules | M3 |
-| Risk | 2-6 | 120 m | counters, turns, dice | M3 |
 | Scrabble | 2-4 | 60 m | score, words, bag, timer | M4 |
 | Boggle | 2-8 | 15 m | timer, words, score | M4 |
 | Bananagrams | 2-8 | 15 m | bag, timer, words | M4 |
 | Codenames | 4-8 | 20 m | words, timer, score | M4 |
-| Decrypto | 3-8 | 30 m | timer, score, reveal | M3 |
 | Just One | 3-7 | 20 m | score, words | M4 |
-| Dixit | 3-6 | 30 m | score, reveal | M3 |
 | Werewolf / Mafia | 5-10 | 10 m | reveal, script, timer | M4 |
-| Coup | 2-6 | 15 m | lives, reveal, rules | M3 |
-| Love Letter | 2-4 | 20 m | score, reveal | M3 |
-| The Mind | 2-4 | 20 m | lives, rules | M3 |
-| Hanabi | 2-5 | 25 m | score, timer, rules | M3 |
-| Skull | 3-6 | 20 m | reveal, score | M3 |
-| Azul | 2-4 | 40 m | score, rules | M3 |
-| Splendor | 2-4 | 30 m | score, counters, rules | M3 |
-| Dominion | 2-4 | 30 m | score, turns, rules | M3 |
-| Poker night | 2-9 | 180 m | counters, turns, reveal, timer | M3 |
-| Perudo / Liar's Dice | 2-6 | 30 m | dice, lives, reveal | M3 |
-| Chess / Blitz | 2 | 10-60 m | timer, rules | M3 |
-| Kitchen Rush | 2-4 | 45 m | timer, counters, rules | M3 |
-| Pandemic | 2-4 | 45 m | counters, timer, rules | M3 |
-| Gloomhaven | 1-4 | 90 m | lives, counters, turns, rules | M3 |
-| D&D 5e combat | 3-7 | varies | turns, lives, dice, rules | M3 |
-| Magic: the Gathering | 2-4 | 30 m | lives, counters, timer | M3 |
 | Uno | 2-10 | 30 m | decks, score, rules | M4 |
 | Exploding Kittens | 2-5 | 15 m | decks, lives, rules | M4 |
 | Mario Kart night | 2-8 | 60 m | score, bracket | M4 |
@@ -1242,75 +1211,6 @@ Deployment (M5): copy `dist/` into the pandaqi.com `tools` folder, keep old path
 
 Each milestone is shippable. Do not open the next one before its definition of done is met.
 
-### M0 — Foundations (S)
-
-**Goal:** a skeleton that will not need to be rewritten at M4. Correctness and budget come before features.
-
-1. **M0.1 Repo and toolchain.** `package.json` (`type: module`; scripts `dev`, `build`, `build:single`, `typecheck`, `test`, `lint:templates`, `size`, `check`), `tsconfig.json` (strict, DOM, ES2020, `module: ESNext`, `moduleResolution: bundler`), `svelte.config.js` (`compilerOptions.runes: true`; no SvelteKit), `bunfig.toml` (dev-server plugin and test preload), `.gitignore`, `.editorconfig`. `typecheck` runs `tsc --noEmit` and `svelte-check`; `src/app.d.ts` declares `*.svelte` so `tsc` can follow component imports, while `svelte-check` supplies precise prop types. Dev dependencies: `svelte`, `bun-plugin-svelte`, `svelte-check`, `typescript`, `@types/bun`, `happy-dom` (6 total, 0 runtime). Pin Bun 1.4+ in `engines` (the Svelte plugin needs ≥1.3).
-2. **M0.2 Folder skeleton.** Create the tree from §5.2 with placeholder modules so imports resolve, including `App.svelte`, `svelte.config.js` and one `Demo.svelte`. Add `docs/ARCHITECTURE.md` stating the invariants (core knows no tools, no network, budgets, Svelte only in the view layer).
-3. **M0.3 Svelte mount and CSS base.** `App.svelte` and `main.ts` (`mount()`), a tiny `core/dom.ts` (`focus`, `portal`, `announce`), token stylesheet (color, space, radius, type), base resets, focus ring, reduced-motion query, table-mode variables.
-4. **M0.4 Shell and router.** Svelte shell with header, settings, home grid, continue session, templates and search; hash router with 404; skip link; `<svelte:boundary>` error boundary that shows the error and a reset action instead of a white screen.
-5. **M0.5 Registry and manifest.** `ToolMeta`, `ToolModule`, `ToolInstance` with the `component` and `data` fields; `gen-manifest.ts`; dev watcher; a dummy `demo` tool with `tool.svelte.ts` and `Demo.svelte` proving auto-discovery by appearing in the UI when its folder exists.
-6. **M0.6 Storage and session.** Adapter chain, feature probe, versioned keys, settings and sessions, debounced autosave, resume prompt, storage-unavailable banner.
-7. **M0.7 Settings and theme.** Light, dark and system; table mode; reduced-motion override; sound volume and mute; haptics; reset all data with typed confirmation.
-8. **M0.8 Build scripts.** `build.ts` calls `Bun.build` with `bun-plugin-svelte`, emits `dist/` and the single-file HTML, prints a per-file size table and exits non-zero over budget. Extract and inline CSS. No source maps in production builds.
-9. **M0.9 Test harness.** `bun test` configured, `happy-dom` (dev-only) and `scripts/svelte-preload.ts` registered so tests can import `.svelte` files, first tests for router, storage, RNG and ticker, plus a component smoke test that mounts `Demo.svelte`. `bun run check` starts with `tsc --noEmit`, `svelte-check`, tests, size and stale-manifest checks; template lint joins it in M3.
-10. **M0.10 Docs skeleton.** README run instructions; `TEMPLATE-FORMAT.md` stub; tool-authoring checklist stub.
-
-**DoD:** `bun run build` produces both artifacts; both open over `file://` and show the shell plus the demo tool; adding a folder makes a tool appear without editing imports; `bun run check` passes; core is at most 45 KB gzipped (including the ~6 KB Svelte runtime); the self-test sees zero network requests; no console errors.
-
-### M1 — Core primitives and the vertical slice (L)
-
-**Goal:** a genuinely playable app. After this, someone can run a simple game night. This milestone proves the architecture on the hardest interactions (timers, sharing, templates) before breadth.
-
-1. **M1.1 Players and seats.** Player list with name, color, initial and active state; add, remove, rename, reorder; persisted; exposed to every tool through `ToolContext`. This is the most-used primitive in the app; get it right.
-2. **M1.2 Ticker and clock.** One rAF loop, one coarse interval, `now()`, monotonic timestamps, visibility and focus resync. Fake-clock test helper.
-3. **M1.3 Timer engine.** The modes from §3.1 (`countdown`, `up`, `flip`, `chess` with increment, delay and Bronstein, `interval`, `sequence`), drift-free arithmetic, pause and resume, alarm queue, serialize and restore from wall-clock time. Unit tests for every mode and for sleep catch-up.
-4. **M1.4 Audio, haptics and wake lock.** WebAudio synth cues (bell, buzzer, tick, gong, drumroll, success), unlock on first gesture, volume and mute, vibration patterns, Wake Lock service with a graceful fallback, and the global cue sheet accessible from every screen.
-5. **M1.5 UI kit.** BigTap, Stepper, NumberPad, Sheet, Toast, Confirm, Toolbar, EmptyState, PlayerChip, PlayerPicker. Keyboard and screen-reader behavior built in, not bolted on.
-6. **M1.6 Timer tool UI.** Single timer (digits, scrub-to-set, plus and minus 30 seconds, presets); multi-timer grid (tap to flip or pause, long-press menu, add and remove, start, pause and reset all); chess layout; sequence view. Layout must survive four players on a 360 px phone.
-7. **M1.7 Randomness MVP.** RNG service (crypto plus seed); dice with notation parser and pip visuals; coin; pick (numbers, lists, teams, seats, first player). Shared result animation and history.
-8. **M1.8 Undo service.** Snapshot stack per instance, shared undo bar, coalescing, restore correctness after reload.
-9. **M1.9 Basic scorepad.** Simple totals, plus and minus steps, leaderboard, edit and clear. Enough to finish a game; the full version lands in M2.
-10. **M1.10 Template parser MVP.** `[game]`, `[players]`, `[tool <id>]`, keys, units, lists and comments; defaults; warnings versus errors with line numbers; `parse()` and `validate()`. No rules rendering yet. At least 20 unit tests, including malformed files.
-11. **M1.11 Session bootstrap and start-from-template.** Import by drag and drop, file picker or paste; create a session with players and tool instances, including a seat stepper when the template has no `[players]` list; tab bar for multiple tools; "save as template" from the current session (state to text).
-12. **M1.12 Demo content.** `kitchen-rush-timers.gamebuddy`, `yahtzee-lite.gamebuddy` and `chess-blitz.gamebuddy`, using only M1 tools; a "Try a template" card on home.
-
-**DoD:** the Kitchen Rush timer template (four flip timers) survives a reload, a phone rotation and a tab switch with correct remaining time; dice, coin and pick produce reproducible results with a seed; a session created from a template persists and resumes; every control is keyboard-operable; a first-time user can start a timer without instructions; core plus tools stay at or below 120 KB gzipped; each M1 tool ships an example template; the three demos pass the linter and round-trip tests.
-
-### M2 — Tracking, secrets and turns (L)
-
-**Goal:** cover most of board, card and party game night with real tools, not placeholders.
-
-1. **M2.1 Scorepad v2.** The modes from §3.5 (simple, rounds, categories, ledger), formulas, targets, ties, hidden mode, per-cell notes, CSV and summary export. Unit tests for formulas and tie ranking.
-2. **M2.2 Score presets and references.** Category schemas for templates; optional bundled "typical winning score" hints; three demo templates prove the model before the full library lands in M3.
-3. **M2.3 Lives tool.** Big totals, extra tracks, conditions, elimination, game-over detection, hidden mode.
-4. **M2.4 Counters tool.** Named counters, shared bank, transfers, denominations, tallies, history.
-5. **M2.5 Hidden-information UX.** Shared pass-the-phone component, anti-peek patterns, "who is holding the device" state, an opaque cover between players, a one-player inspect flow, and no back navigation into another player's secret.
-6. **M2.6 Turns tool.** Order, rounds, phases, turn timer integration, pass-the-phone overlay, log.
-7. **M2.7 Reveal tool.** Role dealing with counts and descriptions, hold-to-reveal, auto-hide, ballots, blind bids, reveal-all.
-8. **M2.8 Session log and finish flow.** Record a play from any tool; history list; basic stats (plays, wins, streaks); JSON and CSV export. "Finish game" collects results, offers log and save, then returns home with a clean state; never auto-delete without an explicit choice.
-9. **M2.9 Rules tool.** Quick card, setup checklist, markdown sections, scoring reference shared with the scorepad, glossary search and source links. Print lands in M5.
-
-**DoD:** a full Catan game, a poker night, an MTG duel and a D&D combat can each be run end-to-end with templates; hidden information never appears twice or to the wrong player; every state survives reload and undo; the log records correct winners from score and lives; all tests green and budgets held.
-
-### M3 — Templates 1.0 and the game library (L)
-
-**Goal:** fulfill the original promise: download a file for a popular game, load it, play. Freeze the format here, because every later tool must ship a preset schema.
-
-1. **M3.1 Freeze format v1.** Complete the grammar from §4.3 (multi-line values, quoted strings, multiple named tool instances, `[setup]`, `[rules]`, `[script]`, `[notes]`), write `docs/TEMPLATE-FORMAT.md` with a reference table, and add golden-file tests.
-2. **M3.2 Preset schemas for every shipped tool.** Declare schemas, defaults, validation messages, `presetFromState` and "unknown key" suggestions. Add a registry-wide test that every tool has a schema and can round-trip a minimal preset.
-3. **M3.3 In-app template editor.** Raw text editing with line numbers, live validation, jump-to-error, preview of the resulting session and a "Test drive" button. No rich text; plain text is the point.
-4. **M3.4 Import, export and share.** Drag and drop, picker, paste, recent imports, `.gamebuddy` download, copy to clipboard, URL fragment sharing with a size warning, session JSON export and import.
-5. **M3.5 Template gallery.** Search and filters (players, time, tags, tools), favorites, recently used, "surprise me", and a detail sheet showing what the template configures before loading, with a seat stepper when no `[players]` list exists.
-6. **M3.6 Template linter and fixtures.** `lint-templates.ts` with the checks from §5.12; a fixture test that loads every bundled template and every tool's `example.gamebuddy` headlessly; CI fails on warnings that matter.
-7. **M3.7 Author the launch library (part 1).** The 27 templates marked M3 in §4.7, each with source, author, license, disclaimer, rules summary and setup checklist. Verification per template: does the scorepad model match the real game, are player counts and win conditions right.
-8. **M3.8 Save current game as template.** Serialize players and every tool instance (including custom settings) into clean, commented template text; strip session data; suggest a filename.
-9. **M3.9 Authoring docs and contribution guide.** Ten-minute tutorial, annotated examples (timer-only, score-only, reveal plus script), naming conventions, attribution rules and a reviewer checklist.
-10. **M3.10 Template import smoke test.** Import five representative templates over `file://` in Chrome and Safari; fix storage and import edge cases. The full device matrix is M5.4.
-
-**DoD:** all templates bundled at this milestone lint, round-trip and load with zero console errors; a first-time user can go home, template, play in at most 3 taps; a new author can follow the docs and produce a valid template without asking questions; format v1 is documented as frozen; budgets still met.
-
 ### M4 — Breadth: the long tail (L, ship per family)
 
 **Goal:** nothing realistic is left uncovered. Each family is independently shippable, so cut or defer whole families rather than half-building tools. Each family also authors the §4.7 templates marked M4.
@@ -1358,10 +1258,6 @@ Each item needs its own mini-plan and must keep the offline, no-account, no-netw
 
 | Milestone | Depends on | Gate before starting |
 |-----------|------------|----------------------|
-| M0 | — | Repo access and Bun available |
-| M1 | M0 | Both build artifacts open over `file://`; budgets enforced in CI |
-| M2 | M1 | Timer and scorepad survive reload and rotation; undo works |
-| M3 | M2 | Every shipped tool has a preset schema and a passing round-trip test |
 | M4 | M3 | Format v1 frozen and documented; linter and fixtures in CI |
 | M5 | M4 | All 21 tools in the index; the need table has no dead entries |
 | M6 | M5 | v1.0 stable with no open release blockers |
@@ -1387,7 +1283,7 @@ Ship a preview after M1 (internal), a second after M3 (usable by friends), and t
 
 ## 8. Open decisions
 
-Settle these during M0 and M1; each has a recommended default so work never blocks.
+Settled for v1.0; each has a recommended default so work never blocks.
 
 | Decision | Recommended default | Notes |
 |----------|---------------------|-------|
@@ -1410,17 +1306,47 @@ Settle these during M0 and M1; each has a recommended default so work never bloc
 - Tests compile Svelte themselves with `css: 'injected'` in `scripts/svelte-preload.ts`; `bun-plugin-svelte`'s virtual CSS modules do not survive the test runner's module graph. Dev server and build still use the plugin.
 - No `color-mix()`, `:has()`, container queries or `structuredClone`, per the Tier A floor.
 
-**Status after the M2 session** (paused for review, not a milestone gate):
+**Decisions taken while building M2–M3** (smaller option chosen where the spec was open):
 
-- Shipped: M2.1 scorepad v2 (simple, rounds and categories; count x points; formula
-  language with `+ - * /`, brackets and min/max/sum/if; ties; hidden totals; CSV),
-  M2.2 score category presets, M2.3 lives (shared or per-player tracks, extra tracks,
-  conditions, elimination, game over, hidden mode) and M2.4 counters (named counters,
-  shared bank, transfers, denominations, log).
-- Also fixed dead settings from M1: dice pool / success-at / macros, coin best-of,
-  pick cards view, and Wake Lock now follows running timers (released on close).
-- Still open in M2: ledger mode and per-cell notes in the scorepad, M2.5 shared
-  pass-the-phone overlay, M2.6 turns, M2.7 reveal, M2.8 session log/finish, M2.9 rules.
+- Scorepad v2 has four modes: simple, rounds, categories and ledger. Ledger is the
+  honest model for poker stacks, Ticket to Ride end-game scoring and Monopoly cash;
+  it stores labelled amounts, so no spreadsheet grid was needed.
+- Per-cell notes are keyed `playerId|cell` and shown under the cell. They travel in
+  CSV and the summary, and never change a total.
+- Every score setting (win condition, step, target, mode, categories, formula, hidden,
+  notes) goes through an action that pushes undo. Views only bind drafts.
+- Hidden information uses one shared `PassThePhone` modal dialog: a new holder always
+  starts covered, so navigating back cannot land on the previous player's secret. The
+  native dialog makes the board behind it inert, and every cover offers an escape
+  hatch (`onnext` / `oncancel`) so a secret screen can never trap the table.
+- Reveal roles use press-and-hold (pointer and keyboard) plus an auto-hide timer.
+  Ballots and blind bids walk players one at a time behind the same cover; revealed
+  ballots and bids feed the finish-game standings.
+- A turn clock with a pass cover starts only when the next player dismisses the cover,
+  not while the phone is still travelling.
+- Turns keeps its clock arithmetic in `logic.ts` and starts the ticker only while the
+  clock runs; the wake lock follows it and is released on pause, zero and dispose.
+- `[rules]` and `[setup]` in a template mount an implicit Rules tool when the template
+  does not wire one, so summaries are visible instead of being parsed and ignored.
+- The play log is a core page plus `results()` on tools, not a thirteenth tool: the
+  finish flow asks each tool for standings, lets the table pick the source when several
+  disagree, and updates the same entry if the result is corrected rather than adding
+  a duplicate.
+- The scorepad takes an optional `hint` ("typical winning score") from a template and
+  shows it above the sheet; `target` still drives end-of-game notices.
+- Session players are attached before a tool is created; later header edits do not
+  silently rewrite a half-played tool. “Sync players to tools” in the game menu (and
+  the players sheet) asks each tool to re-read them.
+- Recent imports keep the last five pasted or opened templates on the device; the
+  gallery lists them above the bundled set, and the editor can load any of them.
+- Format v1 is frozen with a golden fixture (`tests/fixtures/format-v1.*`). Unknown
+  keys and tools warn instead of failing, so old builds still open newer files.
+- Five of the 27 launch templates wire fewer tools than the catalogue sketch (for
+  example Love Letter is score + rules rather than a forced ballot); the score model
+  and win condition were checked against the game instead.
+- M3.10's cross-browser `file://` smoke test cannot be automated in this environment;
+  import, round trip, lint and golden tests cover the same paths, and the device
+  matrix stays a manual gate at M5.4.
 - Formula names resolve to the points earned in that category (count x points), not the
   raw count; a formula that fails to parse falls back to plain category totals.
 

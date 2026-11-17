@@ -1,0 +1,27 @@
+# seven-wonders.gamebuddy — seven kinds of points
+
+[game]
+name: 7 Wonders
+players: 3-7
+time: 45m
+tags: board, strategy
+source: https://www.rprod.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Deal a wonder board and three coins to each player
+- Shuffle the three age decks separately
+- Put the military conflict tokens within reach
+
+[rules]
+Three ages of card drafting. Every card is played, sold or used to build a wonder.
+- Military wins beat neighbours
+- Science sets score by their combinations
+- Coins, civilian buildings, commerce and guilds all add points
+- Add up everything at the end; the highest total wins
+
+[tool score]
+mode: ledger
+win: highest

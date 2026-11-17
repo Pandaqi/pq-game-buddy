@@ -1,0 +1,13 @@
+# turns.example.gamebuddy — round-robin turns with a 90 second clock
+
+[game]
+name: Take Turns
+players: 2-6
+time: 30m
+tags: flow, turns
+
+[tool turns]
+phases: Turn, Buy, Resolve
+timer: 90s
+pass: yes
+auto-start: yes

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { commitOnEnter } from '../../core/dom';
   import type { ToolContext } from '../../core/registry';
   import { copyText } from '../../core/share';
   import NumberPad from '../../core/ui/NumberPad.svelte';
@@ -23,6 +24,10 @@
   let formulaDraft = $state('');
   let categoryDraft = $state<ScoreCategory[]>([]);
   let newName = $state('');
+  let entryFor = $state<string | null>(null);
+  let entryLabel = $state('');
+  let entryAmount = $state('');
+  let noteEdit = $state<{ playerId: string; cell: string; label: string; draft: string } | null>(null);
 
   const standings = $derived(standingsFor(data));
   const hiddenNow = $derived(data.hidden && !data.revealed);
@@ -36,6 +41,7 @@
     { id: 'simple', label: 'Totals' },
     { id: 'rounds', label: 'Rounds' },
     { id: 'categories', label: 'Categories' },
+    { id: 'ledger', label: 'Ledger' },
   ];
 
   function rankOf(id: string): number {
@@ -73,6 +79,32 @@
   function saveFormula(): void {
     instance.setFormula(formulaDraft);
   }
+
+  function openEntry(id: string): void {
+    entryFor = id;
+    entryLabel = '';
+    entryAmount = '';
+  }
+
+  function saveEntry(): void {
+    if (!entryFor) return;
+    instance.addLedgerEntry(entryFor, entryLabel, Number(entryAmount));
+    entryFor = null;
+  }
+
+  function openNote(playerId: string, cell: string, label: string): void {
+    noteEdit = { playerId, cell, label, draft: instance.note(playerId, cell) };
+  }
+
+  function saveNote(): void {
+    if (!noteEdit) return;
+    instance.setNote(noteEdit.playerId, noteEdit.cell, noteEdit.draft);
+    noteEdit = null;
+  }
+
+  function playerName(id: string): string {
+    return data.players.find((player) => player.id === id)?.name ?? 'Player';
+  }
 </script>
 
 <div class="score">
@@ -90,7 +122,9 @@
         ? `Rounds · ${data.roundCount}`
         : data.mode === 'categories'
           ? `${data.categories.length} ${data.categories.length === 1 ? 'category' : 'categories'}`
-          : 'Totals'}
+          : data.mode === 'ledger'
+            ? 'Ledger · running entries'
+            : 'Totals'}
     </span>
     <div class="head-actions">
       {#if data.target}<span class="target">Target {data.target}</span>{/if}
@@ -100,6 +134,10 @@
       <button type="button" class="settings" onclick={openSettings} aria-label="Score settings">Settings</button>
     </div>
   </div>
+
+  {#if data.hint}
+    <p class="hint-line">Typical winning score: {data.hint}</p>
+  {/if}
 
   {#if data.mode === 'categories'}
     {#if data.categories.length === 0}
@@ -123,19 +161,32 @@
                   <small>{category.points} pt{category.points === 1 ? '' : 's'}</small>
                 </th>
                 {#each data.players as player (player.id)}
+                  {@const cell = `c:${category.name}`}
+                  {@const note = instance.note(player.id, cell)}
                   <td>
-                    <input
-                      type="number"
-                      min="0"
-                      aria-label="{player.name} {category.name} count"
-                      value={data.counts[player.id]?.[category.name] ?? 0}
-                      onchange={(event) =>
-                        instance.setCategoryCount(
-                          player.id,
-                          category.name,
-                          Number((event.currentTarget as HTMLInputElement).value),
-                        )}
-                    />
+                    <div class="cell">
+                      <input
+                        type="number"
+                        min="0"
+                        aria-label="{player.name} {category.name} count"
+                        value={data.counts[player.id]?.[category.name] ?? 0}
+                        onkeydown={commitOnEnter}
+                        onchange={(event) =>
+                          instance.setCategoryCount(
+                            player.id,
+                            category.name,
+                            Number((event.currentTarget as HTMLInputElement).value),
+                          )}
+                      />
+                      <button
+                        type="button"
+                        class="note-btn"
+                        class:filled={!!note}
+                        aria-label="Note for {player.name} {category.name}"
+                        onclick={() => openNote(player.id, cell, `${player.name} · ${category.name}`)}
+                      >✎</button>
+                    </div>
+                    {#if note}<small class="cell-note">{note}</small>{/if}
                   </td>
                 {/each}
               </tr>
@@ -175,14 +226,27 @@
                 {player.name}
               </th>
               {#each Array(data.roundCount) as _, round (round)}
+                {@const cell = `r:${round}`}
+                {@const note = instance.note(player.id, cell)}
                 <td>
-                  <input
-                    type="number"
-                    aria-label="{player.name} round {round + 1}"
-                    value={data.rounds[player.id]?.[round] ?? 0}
-                    onchange={(event) =>
-                      instance.setRound(player.id, round, Number((event.currentTarget as HTMLInputElement).value))}
-                  />
+                  <div class="cell">
+                    <input
+                      type="number"
+                      aria-label="{player.name} round {round + 1}"
+                      value={data.rounds[player.id]?.[round] ?? 0}
+                      onkeydown={commitOnEnter}
+                      onchange={(event) =>
+                        instance.setRound(player.id, round, Number((event.currentTarget as HTMLInputElement).value))}
+                    />
+                    <button
+                      type="button"
+                      class="note-btn"
+                      class:filled={!!note}
+                      aria-label="Note for {player.name} round {round + 1}"
+                      onclick={() => openNote(player.id, cell, `${player.name} · round ${round + 1}`)}
+                    >✎</button>
+                  </div>
+                  {#if note}<small class="cell-note">{note}</small>{/if}
                 </td>
               {/each}
               <td class="total">{shownTotal(player.id)}</td>
@@ -195,6 +259,36 @@
       <button type="button" onclick={() => instance.addRound()}>Add round</button>
       <button type="button" onclick={() => instance.removeRound()}>Remove round</button>
     </div>
+  {:else if data.mode === 'ledger'}
+    <ul class="ledger">
+      {#each data.players as player (player.id)}
+        <li class:leader={rankOf(player.id) === 1 && data.players.length > 1}>
+          <div class="who">
+            <span class="dot" style="--player: {player.color}">{player.name.slice(0, 2).toUpperCase()}</span>
+            <span class="name">{player.name}</span>
+            <span class="ledger-total">{shownTotal(player.id)}</span>
+          </div>
+          {#if !hiddenNow}
+            <ul class="entries">
+              {#each data.ledger[player.id] ?? [] as entry (entry.id)}
+                <li>
+                  <span>{entry.label}</span>
+                  <span class="amount">{entry.amount >= 0 ? '+' : ''}{entry.amount}</span>
+                  <button
+                    type="button"
+                    aria-label="Remove {entry.label} from {player.name}"
+                    onclick={() => instance.removeLedgerEntry(player.id, entry.id)}
+                  >✕</button>
+                </li>
+              {/each}
+            </ul>
+          {/if}
+          <button type="button" class="add-entry" disabled={hiddenNow} onclick={() => openEntry(player.id)}>
+            Add entry
+          </button>
+        </li>
+      {/each}
+    </ul>
   {:else}
     <ul class="players">
       {#each data.players as player (player.id)}
@@ -234,7 +328,6 @@
   </div>
   <div class="row">
     <button type="button" onclick={copySheet}>Copy sheet</button>
-    <button type="button" onclick={openSettings}>Settings</button>
   </div>
 
   {#if data.players.length > 1}
@@ -280,15 +373,40 @@
   </Sheet>
 {/if}
 
+{#if entryFor}
+  <Sheet title="Add entry" onclose={() => (entryFor = null)}>
+    <p class="hint">For {playerName(entryFor)}. Negative amounts take points away.</p>
+    <label class="field">
+      <span>Label</span>
+      <input type="text" bind:value={entryLabel} placeholder="Tickets made" />
+    </label>
+    <label class="field">
+      <span>Amount</span>
+      <input type="number" bind:value={entryAmount} placeholder="12" />
+    </label>
+    <button type="button" class="wide" onclick={saveEntry}>Add entry</button>
+  </Sheet>
+{/if}
+
+{#if noteEdit}
+  <Sheet title="Cell note" onclose={() => (noteEdit = null)}>
+    <p class="hint">{noteEdit.label}</p>
+    <label class="field">
+      <span>Note</span>
+      <textarea rows="3" bind:value={noteEdit.draft} placeholder="Why this score changed" spellcheck="true"></textarea>
+    </label>
+    <button type="button" class="wide" onclick={saveNote}>Save note</button>
+  </Sheet>
+{/if}
+
 {#if settingsOpen}
   <Sheet title="Score settings" onclose={() => (settingsOpen = false)}>
     <label class="field">
       <span>Win condition</span>
       <select
         value={data.win}
-        onchange={(event) => {
-          data.win = (event.currentTarget as HTMLSelectElement).value as 'highest' | 'lowest';
-        }}
+        onchange={(event) =>
+          instance.setWin((event.currentTarget as HTMLSelectElement).value as 'highest' | 'lowest')}
       >
         <option value="highest">Highest wins</option>
         <option value="lowest">Lowest wins</option>
@@ -302,7 +420,8 @@
         min="1"
         max="1000"
         value={data.step}
-        onchange={(event) => (data.step = Math.max(1, Number((event.currentTarget as HTMLInputElement).value)))}
+        onkeydown={commitOnEnter}
+        onchange={(event) => instance.setStep(Number((event.currentTarget as HTMLInputElement).value))}
       />
     </label>
 
@@ -312,7 +431,19 @@
         type="number"
         min="0"
         value={data.target}
-        onchange={(event) => (data.target = Math.max(0, Number((event.currentTarget as HTMLInputElement).value)))}
+        onkeydown={commitOnEnter}
+        onchange={(event) => instance.setTarget(Number((event.currentTarget as HTMLInputElement).value))}
+      />
+    </label>
+
+    <label class="field">
+      <span>Typical winning score (optional)</span>
+      <input
+        type="text"
+        value={data.hint}
+        placeholder="about 10 points"
+        onkeydown={commitOnEnter}
+        onchange={(event) => instance.setHint((event.currentTarget as HTMLInputElement).value)}
       />
     </label>
 
@@ -457,6 +588,11 @@
     color: var(--text-dim);
     font-size: var(--text-sm);
   }
+  .hint-line {
+    margin: 0;
+    color: var(--text-dim);
+    font-size: var(--text-sm);
+  }
   .players {
     list-style: none;
     margin: 0;
@@ -583,6 +719,11 @@
     color: var(--text-dim);
     font-weight: 400;
   }
+  .cell {
+    display: flex;
+    align-items: center;
+    gap: var(--space-1);
+  }
   td input {
     width: 4.2rem;
     min-height: 44px;
@@ -594,12 +735,99 @@
     font: inherit;
     font-variant-numeric: tabular-nums;
   }
+  .note-btn {
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--line);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: var(--text-xs);
+  }
+  .note-btn.filled {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    color: var(--text);
+  }
+  .cell-note {
+    display: block;
+    max-width: 9rem;
+    margin-top: 2px;
+    color: var(--text-dim);
+    font-size: var(--text-xs);
+    line-height: 1.2;
+  }
   td.total {
     font-weight: 800;
     font-variant-numeric: tabular-nums;
   }
   .totals-row th {
     font-weight: 700;
+  }
+  .ledger {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .ledger > li {
+    border: 2px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    padding: var(--space-2) var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .ledger > li.leader {
+    border-color: var(--accent);
+  }
+  .ledger-total {
+    margin-left: auto;
+    font-size: var(--text-xl);
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .entries {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    font-size: var(--text-sm);
+  }
+  .entries li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    border-bottom: 1px dotted var(--line);
+    padding-bottom: var(--space-1);
+  }
+  .entries .amount {
+    margin-left: auto;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .entries button {
+    min-width: 32px;
+    min-height: 32px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+  }
+  .add-entry {
+    min-height: 44px;
+    border-radius: var(--radius);
+    border: 1px dashed var(--line);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
   }
   .board {
     list-style: none;

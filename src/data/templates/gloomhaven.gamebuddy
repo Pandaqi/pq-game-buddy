@@ -1,0 +1,36 @@
+# gloomhaven.gamebuddy — initiative, hit points and loot
+
+[game]
+name: Gloomhaven
+players: 1-4
+time: 90m
+tags: rpg, campaign
+source: https://cephalofair.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Pick a scenario and lay out the map tiles
+- Place monsters and treasure as the scenario says
+- Choose two ability cards per character
+- Shuffle the monster ability deck
+
+[rules]
+A scenario is a series of rounds. Everyone picks two cards, then acts in initiative order.
+- Track hit points with the lives tool
+- Gold and experience go in the ledger as they are earned
+- A short rest or long rest costs a turn
+- Complete the scenario goal to win
+
+[tool lives]
+mode: players
+lives: 10
+max: 30
+elimination: yes
+
+[tool score]
+mode: ledger
+
+[tool turns]
+phases: Initiative, Player, Monster, End

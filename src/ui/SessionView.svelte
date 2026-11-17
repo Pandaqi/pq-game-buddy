@@ -1,14 +1,28 @@
 <script lang="ts">
+  import { recordPlay, updatePlay, type PlayResult } from '../core/play-log';
   import { navigate } from '../core/router';
   import { store } from '../core/session-store.svelte';
   import { copyText, download } from '../core/share';
   import { suggestFilename } from '../core/template/serialize';
+  import { shareTooLong, templateShareUrl } from '../core/template/share-link';
   import PlayerChip from '../core/ui/PlayerChip.svelte';
   import Sheet from '../core/ui/Sheet.svelte';
 
   let playersOpen = $state(false);
   let menuOpen = $state(false);
   let newName = $state('');
+  let finishOpen = $state(false);
+  let finishResults = $state<PlayResult[]>([]);
+  let finishSources = $state<{ id: string; label: string; results: PlayResult[] }[]>([]);
+  let finishSourceId = $state('');
+  let finishWinner = $state('');
+  let finishSaved = $state(false);
+  let forgetOnClose = $state(false);
+  const finishTied = $derived(
+    finishResults.length > 1 &&
+      typeof finishResults[0]?.score === 'number' &&
+      finishResults[0].score === finishResults[1]?.score,
+  );
 
   const session = $derived(store.session);
   const entries = $derived.by(() => {
@@ -59,6 +73,120 @@
   function addPlayerNow(): void {
     store.addPlayer(newName);
     newName = '';
+  }
+
+  function shareLink(): void {
+    const text = store.exportTemplate();
+    if (shareTooLong(text)) {
+      store.toast('Too big for a link. Save the file instead.', 'error');
+      menuOpen = false;
+      return;
+    }
+    void copyText(templateShareUrl(text)).then((ok) => {
+      store.toast(ok ? 'Share link copied' : 'Could not copy', ok ? 'info' : 'error');
+    });
+    menuOpen = false;
+  }
+
+  function exportSession(): void {
+    if (!session) return;
+    const name = suggestFilename(session.gameName).replace(/\.gamebuddy$/, '-session.json');
+    download(name, store.exportSessionJson(), 'application/json');
+    store.toast('Session file exported');
+    menuOpen = false;
+  }
+
+  function fallbackResults(): PlayResult[] {
+    return (session?.players ?? []).map((player) => ({ name: player.name }));
+  }
+
+  function defaultWinner(rows: PlayResult[]): string {
+    const first = rows[0];
+    if (!first) return '';
+    if (rows.length > 1 && typeof first.score === 'number' && first.score === rows[1].score) return '';
+    return first.name;
+  }
+
+  function useSource(id: string): void {
+    finishSourceId = id;
+    const source = finishSources.find((item) => item.id === id);
+    finishResults = source ? source.results.map((row) => ({ ...row })) : fallbackResults();
+    finishWinner = defaultWinner(finishResults);
+  }
+
+  function openFinish(): void {
+    finishSources = entries
+      .map((item) => ({
+        id: item.id,
+        label: item.label,
+        results: (item.instance.results?.() ?? []).map((row) => ({ ...row })),
+      }))
+      .filter((source) => source.results.length);
+    const initial = finishSources.find((source) => source.id === store.activeId) ?? finishSources[0];
+    finishResults = initial ? initial.results.map((row) => ({ ...row })) : fallbackResults();
+    finishSourceId = initial?.id ?? '';
+    finishWinner = defaultWinner(finishResults);
+    finishSaved = !!session?.playId;
+    forgetOnClose = false;
+    finishOpen = true;
+    menuOpen = false;
+  }
+
+  function savePlay(): void {
+    if (!session) return;
+    const players = session.players.map((player) => player.name);
+    if (session.playId) {
+      const updated = updatePlay(session.playId, { results: finishResults, winner: finishWinner, players });
+      if (updated) {
+        finishSaved = true;
+        store.toast('Play log updated');
+        return;
+      }
+    }
+    const saved = recordPlay({
+      game: session.gameName,
+      players,
+      results: finishResults,
+      winner: finishWinner,
+      templateId: session.templateId,
+    });
+    store.markPlaySaved(saved.id);
+    finishSaved = true;
+    store.toast('Saved to the play log');
+  }
+
+  function saveAndClose(): void {
+    if (!finishSaved) savePlay();
+    finishAndClose();
+  }
+
+  function syncPlayers(): void {
+    const count = store.syncPlayersToTools();
+    const message = count
+      ? `Players synced in ${count} tool${count === 1 ? '' : 's'}`
+      : 'No tools can sync players';
+    store.toast(message, count ? 'info' : 'error');
+    menuOpen = false;
+  }
+
+  function finishAndClose(): void {
+    const id = session?.id;
+    if (id && forgetOnClose) store.forgetSession(id);
+    store.close();
+    finishOpen = false;
+    menuOpen = false;
+    navigate({ name: 'home' });
+  }
+
+  function copyResult(): void {
+    const lines = [`${session?.gameName ?? 'Game'} — ${new Date().toLocaleString()}`];
+    lines.push(finishWinner ? `Winner: ${finishWinner}` : 'No single winner');
+    for (const row of finishResults) {
+      lines.push(`${row.name}${typeof row.score === 'number' ? `: ${row.score}` : ''}`);
+    }
+    void copyText(lines.join('\n')).then((ok) => {
+      store.toast(ok ? 'Result copied' : 'Could not copy', ok ? 'info' : 'error');
+    });
   }
 </script>
 
@@ -153,6 +281,76 @@
       <input type="text" bind:value={newName} onkeydown={(event) => { if (event.key === 'Enter') addPlayerNow(); }} />
     </label>
     <button type="button" class="primary" onclick={addPlayerNow}>Add player</button>
+    <button type="button" class="wide" onclick={() => { syncPlayers(); playersOpen = false; }}>Sync tools with these players</button>
+  </Sheet>
+{/if}
+
+{#if finishOpen}
+  <Sheet title="Finish game" onclose={() => (finishOpen = false)}>
+    <p class="dim small">Results come from the tools in this game. Pick the source and the winner, then save.</p>
+
+    {#if finishSources.length > 1}
+      <div class="sources" role="group" aria-label="Results source">
+        {#each finishSources as source (source.id)}
+          <button type="button" class:active={finishSourceId === source.id} onclick={() => useSource(source.id)}>
+            {source.label}
+          </button>
+        {/each}
+      </div>
+    {/if}
+
+    {#if finishTied}
+      <p class="tie" role="status">That score is tied. Choose who won, or pick “no single winner”.</p>
+    {/if}
+
+    <ul class="finish-list">
+      {#each finishResults as row (row.name)}
+        <li>
+          <label>
+            <input
+              type="radio"
+              name="finish-winner"
+              value={row.name}
+              checked={finishWinner === row.name}
+              onchange={() => (finishWinner = row.name)}
+            />
+            <span>{row.name}</span>
+          </label>
+          {#if typeof row.score === 'number'}<span class="finish-score">{row.score}</span>{/if}
+        </li>
+      {/each}
+      <li>
+        <label>
+          <input
+            type="radio"
+            name="finish-winner"
+            value=""
+            checked={finishWinner === ''}
+            onchange={() => (finishWinner = '')}
+          />
+          <span>No single winner (co-op or abandoned)</span>
+        </label>
+      </li>
+    </ul>
+
+    {#if finishSaved}
+      <p class="saved" role="status">This game is in the play log.</p>
+      <button type="button" class="wide" onclick={savePlay}>Update play log</button>
+      <button type="button" class="wide primary-wide" onclick={finishAndClose}>
+        {forgetOnClose ? 'Forget game and close' : 'Close game and go home'}
+      </button>
+    {:else}
+      <button type="button" class="wide" onclick={savePlay}>Save to the play log</button>
+      <button type="button" class="wide primary-wide" onclick={saveAndClose}>Save and close</button>
+      <button type="button" class="wide danger" onclick={finishAndClose}>Close without saving</button>
+    {/if}
+    <button type="button" class="wide" onclick={copyResult}>Copy result</button>
+
+    <label class="check">
+      <input type="checkbox" bind:checked={forgetOnClose} />
+      <span>Also forget the saved game on this device</span>
+    </label>
+    <p class="dim small">Closing keeps the game resumable unless you tick the box. Nothing is deleted without that choice.</p>
   </Sheet>
 {/if}
 
@@ -160,7 +358,12 @@
   <Sheet title="Game menu" onclose={() => (menuOpen = false)}>
     <button type="button" class="wide" onclick={copySummary}>Copy summary</button>
     <button type="button" class="wide" onclick={saveTemplate}>Save as template</button>
+    <button type="button" class="wide" onclick={shareLink}>Share as link</button>
+    <button type="button" class="wide" onclick={exportSession}>Export session JSON</button>
+    <a class="wide link" href="#/log">Play log</a>
     <button type="button" class="wide" onclick={() => { store.saveNow(); store.toast('Saved'); }}>Save now</button>
+    <button type="button" class="wide" onclick={syncPlayers}>Sync players to tools</button>
+    <button type="button" class="wide primary-wide" onclick={openFinish}>Finish game</button>
     <button type="button" class="wide danger" onclick={closeGame}>Close game</button>
     <p class="dim small">Closing keeps the game saved on this device, ready to resume from home.</p>
   </Sheet>
@@ -369,5 +572,95 @@
   .wide.danger {
     border-color: var(--danger);
     color: var(--danger);
+  }
+  .link {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 52px;
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--text);
+    text-decoration: none;
+  }
+  .primary-wide {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--accent-text);
+    font-weight: 700;
+  }
+  .finish-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+  .finish-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    min-height: 48px;
+    border-bottom: 1px solid var(--line);
+  }
+  .finish-list label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+  }
+  .finish-list input {
+    width: 22px;
+    height: 22px;
+  }
+  .finish-score {
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+  }
+  .sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1);
+  }
+  .sources button {
+    min-height: 44px;
+    padding: 0 var(--space-3);
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface-2);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .sources button.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+    font-weight: 700;
+  }
+  .tie {
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    font-size: var(--text-sm);
+  }
+  .saved {
+    margin: 0;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius);
+    background: var(--accent-soft);
+    font-weight: 700;
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 48px;
+  }
+  .check input {
+    width: 24px;
+    height: 24px;
   }
 </style>

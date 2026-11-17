@@ -38,6 +38,7 @@ export interface LivesActions {
   setMode(mode: LivesState['mode']): void;
   addPlayer(name: string): void;
   removePlayer(id: string): void;
+  syncPlayers(): void;
   adjustExtra(name: string, delta: number): void;
   toggleCondition(name: string): void;
   resetAll(): void;
@@ -46,6 +47,13 @@ export interface LivesActions {
 }
 
 export type LivesInstance = ToolInstance<LivesState> & LivesActions;
+
+/** Lives never go below zero or above the track maximum. */
+export function clampLives(value: number, max: number): number {
+  const limit = Math.max(1, Math.round(max));
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(limit, Math.round(value)));
+}
 
 export function isOut(state: LivesState, track: LifeTrack): boolean {
   return state.elimination && track.lives <= 0;
@@ -68,4 +76,12 @@ export function gameOverLabel(state: LivesState): string {
   if (state.mode === 'shared') return 'Out of lives';
   const alive = alivePlayers(state);
   return alive.length === 1 ? `${alive[0].name} wins` : 'Everyone is out';
+}
+
+/** Final standings for the finish-game flow: players by lives, shared pool last. */
+export function resultsFor(state: LivesState): { name: string; score: number }[] {
+  if (state.mode === 'shared') return [{ name: 'Table', score: state.lives }];
+  return state.players
+    .map((track) => ({ name: track.name, score: track.lives }))
+    .sort((a, b) => b.score - a.score);
 }

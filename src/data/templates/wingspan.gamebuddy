@@ -1,0 +1,28 @@
+# wingspan.gamebuddy — birds, bonuses and round goals
+
+[game]
+name: Wingspan
+players: 1-5
+time: 70m
+tags: board, engine
+source: https://stonemaiergames.com/games/wingspan/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player a player mat, eight action cubes and five food
+- Deal five bird cards and keep any you can afford
+- Shuffle the bird deck and lay out the tray
+- Reveal the first round goal
+
+[rules]
+Build an engine of birds across four rounds. Each turn is one action: play a bird, gain food, lay eggs or draw cards.
+- Birds score their printed points
+- Bonus cards and round goals add points
+- Eggs, cached food and tucked cards score at the end
+- The highest total after round four wins
+
+[tool score]
+mode: ledger
+win: highest

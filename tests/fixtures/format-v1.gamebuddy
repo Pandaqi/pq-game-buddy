@@ -1,0 +1,45 @@
+# golden file: every format feature in one template
+
+[game]
+name: Golden Game
+players: 2-4
+time: 45m
+tags: party, fast
+source: https://example.com/golden
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[players]
+Ada
+Bo
+
+[tool timer main]
+mode: flip
+duration: 90s
+phases: Setup=1m, Play=10m
+
+[tool dice extra]
+roll: 2d6
+
+[tool rules]
+quick: Lowest wins
+rules: |
+  # Goal
+  Finish first.
+  - One action per turn
+
+[setup]
+- Shuffle
+- Deal
+
+[rules]
+Fast party game. Keep it moving.
+
+[notes]
+House rule: no phones.
+
+[script night]
+1. say: Welcome
+2. wait: 3s
+3. timer: 90s

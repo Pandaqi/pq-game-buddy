@@ -58,6 +58,8 @@ export interface Session {
   gameName: string;
   templateId?: string;
   templateText?: string;
+  /** Set once the play has been written to the play log. */
+  playId?: string;
   players: Player[];
   instances: InstanceRecord[];
   notes: string;
@@ -86,6 +88,7 @@ export function parseSession(text: string): Session | null {
       gameName: data.gameName,
       templateId: data.templateId,
       templateText: data.templateText,
+      playId: typeof data.playId === 'string' ? data.playId : undefined,
       players: players.filter((player) => player && typeof player.name === 'string') as Player[],
       instances: instances.filter(
         (record) => record && typeof record.id === 'string' && typeof record.toolId === 'string',

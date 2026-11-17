@@ -17,6 +17,9 @@ export const KEYS = {
   sessions: 'pqgb:v1:sessions',
   session: (id: string): string => `pqgb:v1:session:${id}`,
   recent: 'pqgb:v1:recent',
+  plays: 'pqgb:v1:plays',
+  favorites: 'pqgb:v1:favorites',
+  imports: 'pqgb:v1:imports',
 };
 
 function wrap(raw: Storage | null, kind: StorageKind): StorageAdapter | null {

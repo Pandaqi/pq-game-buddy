@@ -3,6 +3,8 @@
 export interface UndoApi {
   /** Capture the current state before a change. */
   push(label?: string, coalesceKey?: string): void;
+  /** Run several actions as one undo step, without intermediate snapshots. */
+  batch(label: string, run: () => void): void;
   undo(): boolean;
   canUndo(): boolean;
   label(): string | null;
@@ -33,6 +35,16 @@ export function createUndo(options: {
   const limit = options.limit ?? DEFAULT_LIMIT;
   const byteLimit = options.byteLimit ?? DEFAULT_BYTES;
   const now = options.now ?? (() => Date.now());
+  let batchEntry: { snapshot: string; label: string } | null = null;
+  let batchDepth = 0;
+
+  const capture = (): string => {
+    try {
+      return JSON.stringify(options.read());
+    } catch {
+      return 'null';
+    }
+  };
 
   const trim = (): void => {
     while (stack.length > limit) stack.shift();
@@ -46,6 +58,10 @@ export function createUndo(options: {
 
   return {
     push(label = 'change', coalesceKey) {
+      if (batchDepth > 0) {
+        if (!batchEntry) batchEntry = { snapshot: capture(), label };
+        return;
+      }
       const at = now();
       const last = stack[stack.length - 1];
       if (last && coalesceKey && last.key === coalesceKey && at - last.at < COALESCE_MS) {
@@ -53,13 +69,26 @@ export function createUndo(options: {
         options.onChange?.();
         return;
       }
-      let snapshot = '';
-      try {
-        snapshot = JSON.stringify(options.read());
-      } catch {
-        snapshot = 'null';
+      stack.push({ snapshot: capture(), label, key: coalesceKey ?? null, at });
+      trim();
+      options.onChange?.();
+    },
+    batch(label, run) {
+      if (batchDepth > 0) {
+        run();
+        return;
       }
-      stack.push({ snapshot, label, key: coalesceKey ?? null, at });
+      batchDepth = 1;
+      batchEntry = null;
+      try {
+        run();
+      } finally {
+        batchDepth = 0;
+      }
+      const entry = batchEntry as { snapshot: string; label: string } | null;
+      batchEntry = null;
+      if (!entry) return;
+      stack.push({ snapshot: entry.snapshot, label, key: null, at: now() });
       trim();
       options.onChange?.();
     },

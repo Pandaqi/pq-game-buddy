@@ -1,0 +1,40 @@
+# mtg.gamebuddy — twenty life, poison and commander damage
+
+[game]
+name: Magic: the Gathering
+players: 2-4
+time: 30m
+tags: card, duel
+source: https://magic.wizards.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle your decks and draw seven cards
+- Start at 20 life, or 40 in Commander
+- Agree on mulligans and who plays first
+- Keep a turn timer if the table tends to stall
+
+[rules]
+Cast spells, summon creatures and reduce your opponents to zero life.
+- Life goes down and up; use the lives tool
+- Poison counters and commander damage are tracked separately
+- A player with ten poison counters loses
+- Last player standing wins
+
+[tool lives]
+mode: players
+lives: 20
+max: 40
+elimination: yes
+
+[tool counters]
+counters: poison=0, commander=0, treasures=0
+bank: 0
+
+[tool timer]
+mode: countdown
+duration: 2m
+sound: bell
+start: manual

@@ -7,7 +7,10 @@ import tool_demo from '../tools/demo/tool.svelte.ts';
 import tool_dice from '../tools/dice/tool.svelte.ts';
 import tool_lives from '../tools/lives/tool.svelte.ts';
 import tool_pick from '../tools/pick/tool.svelte.ts';
+import tool_reveal from '../tools/reveal/tool.svelte.ts';
+import tool_rules from '../tools/rules/tool.svelte.ts';
 import tool_score from '../tools/score/tool.svelte.ts';
 import tool_timer from '../tools/timer/tool.svelte.ts';
+import tool_turns from '../tools/turns/tool.svelte.ts';
 
-export const manifest: AnyToolModule[] = [tool_coin, tool_counters, tool_demo, tool_dice, tool_lives, tool_pick, tool_score, tool_timer];
+export const manifest: AnyToolModule[] = [tool_coin, tool_counters, tool_demo, tool_dice, tool_lives, tool_pick, tool_reveal, tool_rules, tool_score, tool_timer, tool_turns];

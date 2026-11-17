@@ -1,0 +1,21 @@
+# rules.example.gamebuddy — a quick card, setup and scoring reference
+
+[game]
+name: Rule Book
+players: 2-6
+time: 10m
+tags: reference, rules
+
+[tool rules]
+quick: Lowest score wins; ties share the win.
+setup: Shuffle the deck, Deal five cards each, Put the rest in the middle
+scoring: cards left=2, bonus tokens=5, completed sets=10
+glossary: meeple=The little wooden person, trick=One round of played cards
+source: https://example.com/rules
+rules: |
+  # Goal
+  Finish with the fewest penalty points after three rounds.
+
+  - Play one card each turn
+  - Draw back up to five
+  - The lowest total wins

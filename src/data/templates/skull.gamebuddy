@@ -1,0 +1,33 @@
+# skull.gamebuddy — place a rose, make a bid, flip the skulls
+
+[game]
+name: Skull
+players: 3-6
+time: 20m
+tags: party, bluffing
+source: https://boardgamegeek.com/boardgame/92415/skull
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player one mat and four discs: three roses and one skull
+- Agree on a starting player
+- Keep the discs hidden from the other players
+
+[rules]
+Two phases: place discs face down, then bid on how many you can flip.
+- The highest bidder flips that many discs, starting with their own
+- One skull ends the attempt and costs a disc
+- Two successful bids win the game
+- Use the blind bid tool for the bidding and the scorepad for wins
+
+[tool reveal]
+mode: bid
+min-bid: 1
+max-bid: 8
+
+[tool score]
+mode: simple
+target: 2
+win: highest

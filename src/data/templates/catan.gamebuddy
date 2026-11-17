@@ -1,0 +1,29 @@
+# catan.gamebuddy — victory points on the table, not on scrap paper
+
+[game]
+name: Catan
+players: 3-4
+time: 90m
+tags: board, strategy
+source: https://www.catan.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the hexes, ring the board with sea and place the desert
+- Shuffle the number tokens onto the hexes in order
+- Place one settlement and road per player in turn, then a second pair in reverse
+- Take the starting resources from the second settlement
+
+[rules]
+Race to 10 victory points. Settlements are 1 point, cities 2, longest road and largest army 2 each, and a few development cards add a point.
+- Roll for resources, trade, then build
+- The first player to reach 10 points on their own turn wins
+- Track the counts here; the totals follow the category points
+
+[tool score]
+mode: categories
+categories: settlements=1, cities=2, longest-road=2, largest-army=2, cards=1
+target: 10
+win: highest

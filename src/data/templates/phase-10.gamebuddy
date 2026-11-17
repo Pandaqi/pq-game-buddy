@@ -1,0 +1,29 @@
+# phase-10.gamebuddy — ten phases, lowest score wins
+
+[game]
+name: Phase 10
+players: 2-6
+time: 45m
+tags: card, family
+source: https://www.mattelgames.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the deck and deal ten cards to each player
+- Turn one card face up for the discard pile
+- Put the phase cards where everyone can see the ten goals
+
+[rules]
+Each round has one phase to complete, from two sets of three up to a run of nine.
+- Complete your phase, then go out by discarding your last card
+- Cards left in hand count against you
+- Penalty points go in the next round cell
+- The lowest total after ten rounds wins
+
+[tool score]
+mode: rounds
+rounds: 10
+win: lowest
+step: 5

@@ -1,0 +1,33 @@
+# splendor.gamebuddy — gems, cards and fifteen points
+
+[game]
+name: Splendor
+players: 2-4
+time: 30m
+tags: board, engine
+source: https://www.spacecowboys.fr/splendor
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the three development decks and lay out four of each
+- Give every player a starting tile
+- Sort the gem tokens by colour
+- Reveal five nobles
+
+[rules]
+Collect gems, buy development cards and attract nobles.
+- A turn is one action: take gems, reserve a card or buy a card
+- Cards give permanent discounts and points
+- Nobles visit at fifteen points of card bonuses
+- First to fifteen points wins; the gem counters track the bank
+
+[tool score]
+mode: simple
+target: 15
+win: highest
+
+[tool counters]
+counters: emerald=7, sapphire=7, ruby=7, diamond=7, onyx=7, gold=5
+bank: 0

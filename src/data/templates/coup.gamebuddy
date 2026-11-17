@@ -1,0 +1,38 @@
+# coup.gamebuddy — two influences and a pile of coins
+
+[game]
+name: Coup
+players: 2-6
+time: 15m
+tags: party, bluffing
+source: https://boardgamegeek.com/boardgame/131357/coup
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the role deck and deal two face-down cards to each player
+- Give every player two coins
+- Put the rest of the deck face down as the court deck
+
+[rules]
+Bluff your way to being the last player with influence.
+- Coins buy actions: income, foreign aid, coup and character powers
+- Anyone may challenge a claim; the loser loses an influence
+- Track coins as ledger entries and influences with the lives tool
+- The last player with a face-down card wins
+
+[tool lives]
+mode: players
+lives: 2
+max: 2
+elimination: yes
+
+[tool score]
+mode: ledger
+
+[tool reveal]
+mode: roles
+roles: duke=3, assassin=3, captain=3, ambassador=3, contessa=3
+descriptions: duke=Take three coins as tax, assassin=Pay three to assassinate, captain=Steal two coins, ambassador=Swap cards with the court, contessa=Blocks assassination
+auto-hide: 6

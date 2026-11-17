@@ -1,0 +1,29 @@
+# love-letter.gamebuddy — tokens of affection, one card in hand
+
+[game]
+name: Love Letter
+players: 2-4
+time: 20m
+tags: card, deduction
+source: https://www.zmangames.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the sixteen card deck and remove one card face down
+- Deal one card to each player
+- Put the remaining cards face down as the draw pile
+- Give the first player the tokens of affection
+
+[rules]
+Draw one card, play one card, knock players out until one is left.
+- Each card has a number and an effect; guards guess a card
+- The last player in the round wins a token of affection
+- Play until someone has four tokens
+- Add a point per round win here
+
+[tool score]
+mode: simple
+target: 4
+win: highest

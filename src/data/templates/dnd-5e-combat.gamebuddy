@@ -1,0 +1,40 @@
+# dnd-5e-combat.gamebuddy — initiative, hit points and dice macros
+
+[game]
+name: D&D 5e combat
+players: 3-7
+time: varies
+tags: rpg, combat
+source: https://dnd.wizards.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Roll initiative for every combatant and write the order
+- Note each character's maximum hit points
+- Put the dice where everyone can reach them
+- Agree on how long a turn may take
+
+[rules]
+Combat runs in rounds. Each turn has movement, one action and possibly a bonus action.
+- Roll initiative once; highest goes first
+- Attack, cast or dash as your action
+- Track hit points and conditions here
+- The fight ends when one side is down or flees
+
+[tool turns]
+phases: Action, Bonus action, Move, End
+timer: 1m
+pass: no
+auto-start: no
+
+[tool lives]
+mode: players
+lives: 30
+max: 60
+elimination: yes
+
+[tool dice]
+roll: 1d20
+macros: attack=1d20+5, damage=2d6+3, save=1d20

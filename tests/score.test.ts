@@ -18,6 +18,8 @@ function state(overrides: Partial<ScoreState> = {}): ScoreState {
     totals: { a: 4, b: 6 },
     rounds: { a: [1, 2], b: [3, 1] },
     counts: { a: { cities: 2, roads: 3 }, b: { cities: 1, roads: 0 } },
+    ledger: { a: [], b: [] },
+    notes: {},
     categories: [
       { name: 'cities', points: 2 },
       { name: 'roads', points: 1 },
@@ -26,6 +28,7 @@ function state(overrides: Partial<ScoreState> = {}): ScoreState {
     roundCount: 2,
     step: 1,
     target: 0,
+    hint: '',
     win: 'highest',
     start: 0,
     hidden: false,
@@ -92,10 +95,39 @@ describe('standings and export', () => {
     expect(low[0].rank).toBe(1);
   });
 
-  test('csv includes category counts', () => {
+  test('csv includes category counts and notes', () => {
     const csv = csvSheet(state({ mode: 'categories' }));
     const [header, ada] = csv.split('\n');
-    expect(header).toBe('Player,Total,cities,roads');
-    expect(ada).toBe('Ada,7,2,3');
+    expect(header).toBe('Player,Total,cities,roads,Notes');
+    expect(ada).toBe('Ada,7,2,3,');
+
+    const noted = csvSheet(
+      state({ mode: 'categories', notes: { 'a|c:cities': 'doubled then traded' } }),
+    );
+    expect(noted.split('\n')[1]).toBe('Ada,7,2,3,c:cities=doubled then traded');
+  });
+});
+
+describe('ledger mode', () => {
+  const entries = {
+    a: [
+      { id: 'e1', label: 'Tickets made', amount: 12 },
+      { id: 'e2', label: 'Tickets missed', amount: -8 },
+    ],
+    b: [{ id: 'e3', label: 'Tickets made', amount: 5 }],
+  };
+
+  test('adds entries to the starting total and ranks them', () => {
+    const sheet = state({ mode: 'ledger', ledger: entries });
+    expect(totalFor(sheet, 'a')).toBe(4);
+    expect(totalFor(sheet, 'b')).toBe(5);
+    expect(standingsFor(sheet)[0].id).toBe('b');
+  });
+
+  test('starts from the configured start value and reports entries', () => {
+    const sheet = state({ mode: 'ledger', ledger: entries, start: 100 });
+    expect(totalFor(sheet, 'a')).toBe(104);
+    expect(csvSheet(sheet).split('\n')[1]).toContain('Tickets made +12, Tickets missed -8');
+    expect(standingsFor(state({ mode: 'ledger', ledger: entries, start: 100 })).length).toBe(2);
   });
 });

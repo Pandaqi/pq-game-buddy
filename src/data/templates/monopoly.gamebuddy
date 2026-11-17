@@ -1,0 +1,35 @@
+# monopoly.gamebuddy — cash on the ledger, pieces in the bank
+
+[game]
+name: Monopoly
+players: 2-6
+time: 120m
+tags: board, family
+source: https://www.hasbro.com/en-us/product/monopoly
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player 1500 in cash
+- Shuffle the chance and community chest decks
+- Put the houses and hotels in the bank
+- Each player picks a token and starts on go
+
+[rules]
+Buy, trade and charge rent until one player is left solvent.
+- Every player starts at 1500; add salary and rent, subtract purchases and fines
+- The houses and hotels counter tracks what is left in the bank
+- Highest cash is a useful tie-breaker if you stop early
+
+[tool score]
+mode: ledger
+start: 1500
+win: highest
+
+[tool counters]
+counters: houses=32, hotels=12
+bank: 0
+
+[tool turns]
+phases: Roll, Buy, Build, End

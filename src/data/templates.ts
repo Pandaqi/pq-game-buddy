@@ -19,13 +19,16 @@ export function listTemplates(): TemplateSummary[] {
   cache = bundledTemplates.map((item) => {
     const parsed = parseTemplate(item.text).template;
     const range = parsed.game.players;
+    const tools = parsed.tools.map((tool) => tool.toolId);
+    // [rules] and [setup] mount a rules tool, so the gallery should say so.
+    if (!tools.includes('rules') && (parsed.rules.trim() || parsed.setup.length)) tools.push('rules');
     return {
       id: item.id,
       name: parsed.game.name || item.id,
       players: range ? (range.min === range.max ? String(range.min) : `${range.min}-${range.max}`) : undefined,
       time: parsed.game.time,
       tags: parsed.game.tags,
-      tools: parsed.tools.map((tool) => tool.toolId),
+      tools,
       text: item.text,
     };
   });

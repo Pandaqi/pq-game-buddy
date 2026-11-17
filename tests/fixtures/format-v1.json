@@ -1,0 +1,46 @@
+{
+  "game": {
+    "name": "Golden Game",
+    "players": { "min": 2, "max": 4 },
+    "time": "45m",
+    "tags": ["party", "fast"],
+    "source": "https://example.com/golden",
+    "author": "pandaqi",
+    "license": "CC-BY-SA-4.0",
+    "format": 1
+  },
+  "players": ["Ada", "Bo"],
+  "tools": [
+    {
+      "toolId": "timer",
+      "instanceId": "main",
+      "values": {
+        "mode": "flip",
+        "duration": "90s",
+        "phases": "Setup=1m, Play=10m"
+      }
+    },
+    { "toolId": "dice", "instanceId": "extra", "values": { "roll": "2d6" } },
+    {
+      "toolId": "rules",
+      "instanceId": "rules",
+      "values": {
+        "quick": "Lowest wins",
+        "rules": "# Goal\nFinish first.\n- One action per turn"
+      }
+    }
+  ],
+  "setup": ["Shuffle", "Deal"],
+  "rules": "Fast party game. Keep it moving.",
+  "notes": "House rule: no phones.",
+  "scripts": [
+    {
+      "instanceId": "night",
+      "steps": [
+        { "verb": "say", "arg": "Welcome" },
+        { "verb": "wait", "arg": "3s" },
+        { "verb": "timer", "arg": "90s" }
+      ]
+    }
+  ]
+}

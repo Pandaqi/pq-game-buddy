@@ -93,6 +93,12 @@
     </ul>
     <p class="dim small">Drop a .gamebuddy file anywhere to load it.</p>
   </section>
+
+  <nav class="links" aria-label="More">
+    <a href="#/templates">All templates</a>
+    <a href="#/editor">Template editor</a>
+    <a href="#/log">Play log</a>
+  </nav>
 </div>
 
 <style>
@@ -235,6 +241,25 @@
   }
   .template .meta {
     color: var(--text-dim);
+    font-size: var(--text-sm);
+  }
+  .links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    border-top: 1px solid var(--line);
+    padding-top: var(--space-3);
+  }
+  .links a {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 var(--space-3);
+    border-radius: var(--radius);
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--text);
+    text-decoration: none;
     font-size: var(--text-sm);
   }
   .ghost {

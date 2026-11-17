@@ -5,6 +5,10 @@ export type Route =
   | { name: 'session'; tab?: string }
   | { name: 'settings' }
   | { name: 'selftest' }
+  | { name: 'log' }
+  | { name: 'templates' }
+  | { name: 'editor' }
+  | { name: 'import'; payload: string }
   | { name: 'notfound'; path: string };
 
 export function parseRoute(hash: string): Route {
@@ -21,6 +25,14 @@ export function parseRoute(hash: string): Route {
       return { name: 'settings' };
     case 'selftest':
       return { name: 'selftest' };
+    case 'log':
+      return { name: 'log' };
+    case 'templates':
+      return { name: 'templates' };
+    case 'editor':
+      return { name: 'editor' };
+    case 'import':
+      return { name: 'import', payload: rest.join('/') };
     case 'home':
       return { name: 'home' };
     default:
@@ -38,6 +50,14 @@ export function routeTo(route: Route): string {
       return '#/settings';
     case 'selftest':
       return '#/selftest';
+    case 'log':
+      return '#/log';
+    case 'templates':
+      return '#/templates';
+    case 'editor':
+      return '#/editor';
+    case 'import':
+      return `#/import/${route.payload}`;
     default:
       return '#/';
   }

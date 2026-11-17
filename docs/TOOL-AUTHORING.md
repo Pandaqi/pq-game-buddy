@@ -28,7 +28,16 @@ create(ctx: ToolContext, values: PresetValues): ToolInstance<TState> & Actions
 - `load(state)` — tolerant: unknown junk must not throw, missing fields default.
 - `presetFromState()` — settings back into template keys.
 - `summary()` — plain-text export.
+- `results()` — optional final standings for the finish-game flow, best first
+  (`{ name, score? }[]`). Return `[]` when the tool has no score.
 - `commands` — optional named actions for scripts and the overlay.
+
+Route every settings change through an action that pushes undo. A view that
+writes `data.someSetting = x` directly looks fine and silently escapes undo;
+this is checked whenever a tool is reviewed. Svelte only binds drafts; the action
+validates, pushes and assigns. When one sheet saves several actions at once,
+wrap them in `ctx.undo.batch('label', () => { … })` so one undo restores the
+whole sheet.
 
 Persist nothing yourself: the session store saves on its own.
 
@@ -43,7 +52,13 @@ Persist nothing yourself: the session store saves on its own.
 - [ ] Reduced motion respected; every sound has a visual twin.
 - [ ] Empty state, error state, help blurb.
 - [ ] `example.gamebuddy` parses and round-trips.
-- [ ] `bun test` covers the logic and mounts the component.
+- [ ] `bun test` covers the logic, the actions (including undo steps) and mounts
+      the component.
+- [ ] Settings, modes and editor changes go through actions, never direct writes.
+- [ ] Hidden information uses `core/ui/PassThePhone.svelte`; a secret is covered
+      by default and never survives a change of holder. Give the cover an
+      `oncancel` (and `onnext` where useful) so the modal is never a trap.
+- [ ] `results()` returns standings when the tool can decide a winner.
 - [ ] No `setInterval`/`requestAnimationFrame`; use `ctx.clock`.
 - [ ] No `fetch`, no external assets, no new dependency.
 - [ ] Under 12 KB gzipped.

@@ -53,8 +53,15 @@ export interface ToolInstance<TState extends object = Record<string, unknown>> {
   commands?: Record<string, (arg?: string) => void>;
   /** Plain-text export of whatever the tool knows. */
   summary(): string;
+  /** Final standings for the finish-game flow, best first. */
+  results?(): ToolResult[];
   /** Release timers, wake locks and listeners when the session drops this tool. */
   dispose?(): void;
+}
+
+export interface ToolResult {
+  name: string;
+  score?: number;
 }
 
 export interface ToolModule<TState extends object = Record<string, unknown>> extends ToolMeta {

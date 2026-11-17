@@ -37,6 +37,7 @@
       haptics,
       undo: {
         push: () => undefined,
+        batch: (_label, run) => run(),
         undo: () => false,
         canUndo: () => false,
         label: () => null,

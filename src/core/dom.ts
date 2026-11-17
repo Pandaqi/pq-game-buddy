@@ -22,6 +22,13 @@ export function focusElement(element: Element | null | undefined): void {
   element.focus();
 }
 
+/** Commit a change-only input when the user presses Enter. */
+export function commitOnEnter(event: KeyboardEvent): void {
+  if (event.key !== 'Enter') return;
+  event.preventDefault();
+  (event.currentTarget as HTMLElement | null)?.blur();
+}
+
 /** True when a keystroke belongs to a text field, so shortcuts stay quiet. */
 export function isEditingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
