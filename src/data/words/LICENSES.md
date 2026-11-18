@@ -10,6 +10,11 @@ written for Game Buddy. They ship as plain text in the build, so nothing is fetc
 | `de.ts` | about 400 common German words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
 | `fr.ts` | about 500 common French words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
 | `es.ts` | about 700 common Spanish words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
+| `pt.ts` | about 200 common Portuguese words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
+| `it.ts` | about 200 common Italian words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
+| `id.ts` | about 200 common Indonesian words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
+| `tr.ts` | about 200 common Turkish words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
+| `vi.ts` | about 200 common Vietnamese syllables | CC BY-SA 4.0 (this project) | Written for Game Buddy |
 
 ## What these lists are not
 

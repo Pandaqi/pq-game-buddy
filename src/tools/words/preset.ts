@@ -1,7 +1,12 @@
 import type { PresetSchema } from '../../core/template/schema';
 
 const preset: PresetSchema = {
-  profile: { type: 'enum', values: ['en', 'nl', 'de', 'fr', 'es'], default: 'en', label: 'Word pack' },
+  profile: {
+    type: 'enum',
+    values: ['en', 'nl', 'de', 'fr', 'es', 'pt', 'it', 'id', 'tr', 'vi'],
+    default: 'en',
+    label: 'Word pack',
+  },
   mode: {
     type: 'enum',
     values: ['check', 'filters', 'anagram', 'rack', 'letters', 'codenames'],

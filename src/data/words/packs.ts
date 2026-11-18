@@ -8,9 +8,14 @@ import de from './de';
 import en from './en';
 import es from './es';
 import fr from './fr';
+import id from './id';
+import it from './it';
 import nl from './nl';
+import pt from './pt';
+import tr from './tr';
+import vi from './vi';
 
-export type WordLang = 'en' | 'nl' | 'de' | 'fr' | 'es';
+export type WordLang = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'pt' | 'it' | 'id' | 'tr' | 'vi';
 
 export interface WordPack {
   code: WordLang;
@@ -33,11 +38,16 @@ const RAW: Record<WordLang, { name: string; text: string }> = {
   de: { name: 'Deutsch', text: de },
   fr: { name: 'Français', text: fr },
   es: { name: 'Español', text: es },
+  pt: { name: 'Português', text: pt },
+  it: { name: 'Italiano', text: it },
+  id: { name: 'Bahasa Indonesia', text: id },
+  tr: { name: 'Türkçe', text: tr },
+  vi: { name: 'Tiếng Việt', text: vi },
 };
 
 const cache: Partial<Record<WordLang, WordPack>> = {};
 
-export const WORD_LANGS: WordLang[] = ['en', 'nl', 'de', 'fr', 'es'];
+export const WORD_LANGS: WordLang[] = ['en', 'nl', 'de', 'fr', 'es', 'pt', 'it', 'id', 'tr', 'vi'];
 
 export function wordPack(lang: WordLang): WordPack {
   const cached = cache[lang];

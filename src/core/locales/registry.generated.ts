@@ -7,12 +7,22 @@ export const coreLocaleLoaders: Record<string, () => Promise<{ default: Dict }>>
   en: () => import('./en'),
   es: () => import('./es'),
   fr: () => import('./fr'),
+  id: () => import('./id'),
+  it: () => import('./it'),
   nl: () => import('./nl'),
+  pt: () => import('./pt'),
+  tr: () => import('./tr'),
+  vi: () => import('./vi'),
 };
 
 export const toolTextLoaders: Record<string, () => Promise<{ default: Dict }>> = {
   de: () => import('./tool-text-de.generated'),
   es: () => import('./tool-text-es.generated'),
   fr: () => import('./tool-text-fr.generated'),
+  id: () => import('./tool-text-id.generated'),
+  it: () => import('./tool-text-it.generated'),
   nl: () => import('./tool-text-nl.generated'),
+  pt: () => import('./tool-text-pt.generated'),
+  tr: () => import('./tool-text-tr.generated'),
+  vi: () => import('./tool-text-vi.generated'),
 };

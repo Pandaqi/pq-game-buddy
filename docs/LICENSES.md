@@ -91,8 +91,8 @@ code; nothing else imports it.
 
 ## Word lists
 
-`src/data/words/` holds five small packs (`en`, `nl`, `de`, `fr`, `es`) and
-`packs.ts`, which maps a profile to a pack. Details are in
+`src/data/words/` holds ten small packs (`en`, `nl`, `de`, `fr`, `es`, `pt`, `it`, `id`,
+`tr`, `vi`) and `packs.ts`, which maps a profile to a pack. Details are in
 `src/data/words/LICENSES.md`; the short version:
 
 - The lists are **hand-curated original selections** of common words, compiled for

@@ -14,6 +14,11 @@ export const LANGUAGES: LanguageInfo[] = [
   { id: 'de', label: 'Deutsch', english: 'German' },
   { id: 'es', label: 'Español', english: 'Spanish' },
   { id: 'fr', label: 'Français', english: 'French' },
+  { id: 'pt', label: 'Português', english: 'Portuguese' },
+  { id: 'it', label: 'Italiano', english: 'Italian' },
+  { id: 'id', label: 'Bahasa Indonesia', english: 'Indonesian' },
+  { id: 'tr', label: 'Türkçe', english: 'Turkish' },
+  { id: 'vi', label: 'Tiếng Việt', english: 'Vietnamese' },
 ];
 
 /**

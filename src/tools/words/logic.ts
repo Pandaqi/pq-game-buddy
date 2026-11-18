@@ -141,6 +141,11 @@ const ALPHABETS: Record<WordLang, string> = {
   de: 'enisrathdulgchmfkobwzvepüj'.replace(/ü/g, 'u'),
   fr: 'esaitnrulodcpmveqfbghjxzèy'.replace(/è/g, 'e'),
   es: 'eaosrnidlctumpbgvyqófhízj'.replace(/[óí]/g, 'o'),
+  pt: 'aeosrinmdutclpvgbfhçjxzáâãéêóôõú',
+  it: 'eaionlrtscdupmvghfbzqàèéìòù',
+  id: 'aeinrstduklmgpbohjwycfzv',
+  tr: 'aeinrltdkmsuyboşzgçvhpğcfjöüı',
+  vi: 'nhatoiucmgldybvưêôơăâđsxp',
 };
 
 /** Weighted letters, following rough language frequency, without repeats. */

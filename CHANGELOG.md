@@ -7,6 +7,14 @@ All notable changes to Game Buddy. The template format is versioned separately
 
 ### Added
 
+- **Five more languages.** Portuguese (Brazil), Italian, Indonesian, Turkish and
+  Vietnamese join English, Dutch, German, Spanish and French, so the whole app reads in
+  ten languages: home, a game, the gallery, settings, the editor, the play log, every
+  tool's view, toasts, aria labels and undo labels, the copied summaries, the script
+  steps and the template and theme diagnostics. Each language is a folder pair and a
+  `LANGUAGES` entry, still a lazy chunk, so the first visit did not grow; the deferred
+  total did, and both size ceilings moved once with the arithmetic in `ROADMAP.md` §5.2.
+  The Words tool gained a word pack per language.
 - **JavaScript in a `.gamebuddy-tool`, opt-in.** A `[script <id>]` holds JS inline, or
   names a `.js` you pick with the tool file (Settings and the drop now take both). It
   runs at four entry points: `when: start` for a fresh session, `when: reset` after a

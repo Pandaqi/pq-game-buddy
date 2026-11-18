@@ -77,6 +77,13 @@ what makes the app feel warm instead of like a system dialog, and it was measure
 against the first-visit budget. To restyle, change these two variables; nothing else
 names a face. Replacing a face means re-subsetting and re-measuring the first visit.
 
+That subset is Latin-1 plus the app's punctuation, so a language whose letters sit
+outside it — Turkish `ı ş ğ`, Vietnamese `ạ ế ơ ư đ` — draws those few letters with the
+first fallback in the same stack rather than with the bundled face. The words are still
+complete (no image, no missing box), it is the type that mixes, and a future subset should
+cover Latin Extended-A and Latin Extended Additional before those languages are called
+typographically finished.
+
 Scale in `rem`: **13 / 15 / 17 / 22 / 30 / 40 / 52 / 72** (`--text-xs` …
 `--text-4xl`). Headings and every number a player reads use `--font-display` with
 `font-variant-numeric: tabular-nums`. **No number a player must read is under 20 px**;

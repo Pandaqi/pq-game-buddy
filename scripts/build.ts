@@ -30,7 +30,11 @@ const SITE_ORIGIN = (process.env.PQGB_ORIGIN ?? 'https://pandaqi.com/game-buddy'
 // from Dosis (21 KB subset) to Game Buddy (29 KB, Latin-1), 8 KB more. Both are
 // finished surface, not slack; the arithmetic is in ROADMAP.md §5.2.
 const BUDGET_APP_GZ = 180 * 1024;
-const BUDGET_CHUNK_GZ = 24 * 1024;
+// M13 raised the per-chunk ceiling once, from 24 KB to 26 KB: with ten languages the
+// words chunk is 25.2 KB (its view, logic, ten language string sets and ten word packs)
+// against 21.5 KB with five, or 0.74 KB per language. The arithmetic is in
+// ROADMAP.md §5.2.
+const BUDGET_CHUNK_GZ = 26 * 1024;
 // M10 raised this ceiling once, from 250 KB, when German, Spanish and French
 // landed beside English and Dutch: five languages at about 22 KB each are
 // 302.6 KB across 42 chunks, so the ceiling is 320 KB. A sixth language needs its
@@ -38,7 +42,11 @@ const BUDGET_CHUNK_GZ = 24 * 1024;
 // M11 raised it once more, to 336 KB: the tool-file runtime is one 6.8 KB chunk
 // plus about 0.3 KB in each of four tool-text chunks, and the previous ceiling had
 // 0.4 KB of headroom. The arithmetic is in ROADMAP.md §5.2.
-const BUDGET_CHUNKS_TOTAL_GZ = 336 * 1024;
+// M13 raised it once more, to 464 KB: Portuguese, Italian, Indonesian, Turkish and
+// Vietnamese cost 118.3 KB, or 23.7 KB each, which is 335.9 + 118.3 = 454.2 KB across
+// 58 chunks. That leaves 9.8 KB, less than one more language, so the next one needs its
+// own arithmetic in ROADMAP.md §5.2. It is a fixed amount of finished surface, not slack.
+const BUDGET_CHUNKS_TOTAL_GZ = 464 * 1024;
 
 const MODES = ['spa', 'site', 'single'] as const;
 type Mode = (typeof MODES)[number];

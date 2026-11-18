@@ -78,8 +78,9 @@ only seam a theme needs; see `docs/THEME-FORMAT.md`.
 touches), which is what a view, a tool or a component imports. That split is a rule, not
 a convenience: the parser, the theme reader and the CLI scripts print words too, and logic
 never takes a rune. `core/langs.ts` names the languages and `DEFAULT_LANGUAGE` says which
-one boots when nobody has chosen. Five are complete — English, Dutch, German, Spanish and
-French — and each ships every shell key and every tool key, because the gate in
+one boots when nobody has chosen. Ten are complete — English, Dutch, German, Spanish,
+French, Portuguese, Italian, Indonesian, Turkish and Vietnamese — and each ships every
+shell key and every tool key, because the gate in
 `tests/i18n.test.ts` compares a language against the English set and fails on a gap.
 
 No dictionary is compiled into the start-up. Every language, English included, is a chunk

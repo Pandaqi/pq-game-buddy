@@ -1,7 +1,7 @@
 import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import { wordPack, type WordLang } from '../../data/words/packs';
+import { wordPack, WORD_LANGS, type WordLang } from '../../data/words/packs';
 import {
   EMPTY_FILTERS,
   anagramWords,
@@ -106,7 +106,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
     load(state) {
       if (!state || typeof state !== 'object') return;
       const raw = state as Partial<WordsState>;
-      if (raw.lang === 'en' || raw.lang === 'nl' || raw.lang === 'de' || raw.lang === 'fr' || raw.lang === 'es') data.lang = raw.lang;
+      if (WORD_LANGS.includes(raw.lang as WordLang)) data.lang = raw.lang as WordLang;
       if (typeof raw.mode === 'string') data.mode = raw.mode;
       if (typeof raw.query === 'string') data.query = raw.query;
       if (typeof raw.letters === 'string') data.letters = raw.letters;

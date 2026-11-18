@@ -215,7 +215,12 @@ session storage or memory. Nothing is uploaded and there is no sync.
   that happens.
 - Word lists are curated starter lists, not tournament dictionaries. The checker
   says "not in this list", never "not a word".
-- Five languages so far: English, Dutch, German, Spanish and French. The globe in the
+- Ten languages so far: English, Dutch, German, Spanish, French, Portuguese, Italian,
+  Indonesian, Turkish and Vietnamese. All ten are written in the Latin alphabet, so every
+  one of them reads on the same screen; a script outside it is not offered. The bundled
+  display face is subset to Latin-1, so the handful of letters past it (Turkish `ı ş ğ`,
+  Vietnamese `ạ ế ơ ư đ`) are drawn by the system font in the same line — complete and
+  readable, just a different drawing of those few letters. The globe in the
   header lists whatever a build carries, and the choice is saved with your settings on
   this device. Each one covers every screen — home, a game, the gallery, settings, the
   editor, the play log, all twenty-one tools, the copied summaries, and the template and
