@@ -14,7 +14,7 @@ format: 1
 [setup]
 - Deal one secret role per player
 - Read the mission sizes for your player count
-- Mark the five mission slots
+- At eight or more players, give Minions a count in Edit roles (3, or 4 at ten)
 - Evil players open their eyes and learn each other
 
 [rules]
@@ -24,6 +24,7 @@ Good wins three missions; evil wins three, or assassinates Merlin.
 - An approved team goes on the mission in secret; one fail card sinks it, except on the fourth mission
 - Five rejected proposals in a row hands the mission to evil
 - After three successful missions, the assassin may name Merlin
+- Mission sizes: 5 players 2-3-2-3-3, 6 players 2-3-4-3-4, 7 players 2-3-3-4-4, 8-10 players 3-4-4-5-5
 
 [tool reveal roles]
 mode: roles

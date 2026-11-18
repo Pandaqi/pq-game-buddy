@@ -1,0 +1,35 @@
+# cascadia.gamebuddy — habitat, wildlife and twenty turns
+
+[game]
+name: Cascadia
+players: 1-4
+time: 45m
+tags: board, puzzle, strategy
+icon: cascadia
+source: https://www.alderac.com/cascadia/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player a starter habitat tile, three hexes, face up
+- Put the wildlife tokens in the bag and shake it well
+- Lay out four habitat tiles, paired with four wildlife tokens
+- Put the nature tokens nearby; the game runs twenty turns each
+
+[rules]
+Draft a habitat tile and a wildlife token, place both, and score five habitats and five species at the end.
+- A turn is take one pair, then place the tile and the animal
+- An animal cannot share a tile, and once placed it stays
+- The right animal on a keystone tile, marked by a pinecone, earns a nature token
+- Spend a nature token to take any tile with any animal, or to draw fresh animals
+- After twenty turns each, add habitats, wildlife and bonuses
+
+[tool turns]
+phases: Draft, Place, Score
+pass: no
+
+[tool score]
+mode: ledger
+win: highest
+hint: 100 points is a strong game

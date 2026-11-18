@@ -49,6 +49,10 @@ const es = {
   'summary-track-value': '{name}: {value}',
   'summary-conditions': 'Estados: {names}',
   'summary-over': 'Fin de la partida',
+  'over-out': 'Sin vidas',
+  'over-wins': 'Gana {name}',
+  'over-all-out': 'Todos fuera',
+  'table-name': 'Mesa',
 };
 
 export default es;

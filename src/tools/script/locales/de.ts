@@ -57,6 +57,7 @@ const de = {
   'step-wait': 'Halte den Tisch einen Moment',
   'step-reveal': 'Gib das Handy für ein Geheimnis weiter',
   'step-timer': 'Steuert ein anderes Werkzeug',
+  'step-do': 'Drückt eine Taste eines anderen Werkzeugs',
   'step-note': 'Notiz für die Spielleitung, nicht vorgelesen',
   'step-end': 'Ende des Skripts',
   'step-unknown': 'Unbekannter Schritt „{verb}“',

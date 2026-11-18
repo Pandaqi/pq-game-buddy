@@ -2,14 +2,14 @@
   import { onMount } from 'svelte';
   import { t } from '../core/i18n.svelte';
   import { navigate } from '../core/router';
-  import { schemas } from '../core/schemas.generated';
   import { seatNames } from '../core/session';
   import { store } from '../core/session-store.svelte';
   import { copyText, download } from '../core/share';
-  import { allDiagnostics, hasErrors, parseTemplate, resolveTemplate } from '../core/template/parse';
+  import { allDiagnostics, parseTemplate, resolveTemplate } from '../core/template/parse';
   import { toolsForSession } from '../core/template/session-tools';
   import { suggestFilename } from '../core/template/serialize';
-  import { shareTooLong, templateShareUrl } from '../core/template/share-link';
+  import { shareTooLong, templateShareUrl, toolFileShareUrl } from '../core/template/share-link';
+  import { installToolFile, parseToolFile, toolSchema } from '../core/tool-file';
   import { listTemplates, templateText } from '../data/templates';
 
   const starters = listTemplates();
@@ -20,10 +20,15 @@
   let gutter = $state<HTMLElement | null>(null);
   let picked = $state(starters[0]?.id ?? '');
 
+  /** The same box checks either file: a template, or a tool's definition. */
+  let mode = $state<'template' | 'tool'>('template');
   const parsed = $derived(parseTemplate(text));
-  const resolved = $derived(resolveTemplate(parsed.template, (id) => schemas[id]));
-  const diagnostics = $derived(allDiagnostics(parsed.diagnostics, resolved.diagnostics));
-  const fatal = $derived(hasErrors(diagnostics));
+  const toolParsed = $derived(parseToolFile(text));
+  const resolved = $derived(resolveTemplate(parsed.template, (id) => toolSchema(id)));
+  const diagnostics = $derived(
+    mode === 'tool' ? toolParsed.diagnostics : allDiagnostics(parsed.diagnostics, resolved.diagnostics),
+  );
+  const fatal = $derived(diagnostics.some((item) => item.severity === 'error'));
   const lineCount = $derived(text.split('\n').length);
   const range = $derived(parsed.template.game.players);
 
@@ -81,9 +86,28 @@
       store.toast(t('toast.template-too-big'), 'error');
       return;
     }
-    void copyText(templateShareUrl(text)).then((ok) => {
+    const url = mode === 'tool' ? toolFileShareUrl(text) : templateShareUrl(text);
+    void copyText(url).then((ok) => {
       store.toast(ok ? t('toast.share-copied') : t('toast.could-not-copy'), ok ? 'info' : 'error');
     });
+  }
+
+  function downloadFile(): void {
+    const name =
+      mode === 'tool'
+        ? `${toolParsed.definition?.id || 'tool'}.gamebuddy-tool`
+        : suggestFilename(parsed.template.game.name || t('editor.filename'));
+    download(name, text);
+  }
+
+  function installEditorTool(): void {
+    const result = installToolFile(text);
+    if (!result.ok || !result.definition) {
+      store.toast(t('toast.tool-unreadable', { name: t('editor.mode-tool') }), 'error');
+      return;
+    }
+    store.bump();
+    store.toast(t('toast.tool-installed', { name: result.definition.name }));
   }
 </script>
 
@@ -97,6 +121,10 @@
   </header>
 
   <div class="toolbar">
+    <div class="modes" role="group" aria-label={t('editor.mode')}>
+      <button type="button" class:active={mode === 'template'} onclick={() => (mode = 'template')}>{t('editor.mode-template')}</button>
+      <button type="button" class:active={mode === 'tool'} onclick={() => (mode = 'tool')}>{t('editor.mode-tool')}</button>
+    </div>
     <label class="field">
       <span>{t('editor.start-from')}</span>
       <select bind:value={picked} onchange={() => void loadStarter(picked)}>
@@ -105,7 +133,7 @@
         {/each}
       </select>
     </label>
-    <button type="button" onclick={() => download(suggestFilename(parsed.template.game.name || t('editor.filename')), text)}>{t('editor.download')}</button>
+    <button type="button" onclick={downloadFile}>{t('editor.download')}</button>
     <button type="button" onclick={share}>{t('editor.copy-link')}</button>
   </div>
 
@@ -123,11 +151,19 @@
   <div class="status">
     <span class="pill" class:error={fatal}>{fatal ? t('editor.has-errors') : t('editor.valid')}</span>
     <span class="dim small">
-      {t('editor.status', {
-        name: parsed.template.game.name || t('editor.no-name'),
-        tools: resolved.tools.length,
-        lines: lineCount,
-      })}
+      {#if mode === 'tool'}
+        {t('editor.status', {
+          name: toolParsed.definition?.name || t('editor.no-name'),
+          tools: toolParsed.definition?.blocks.length ?? 0,
+          lines: lineCount,
+        })}
+      {:else}
+        {t('editor.status', {
+          name: parsed.template.game.name || t('editor.no-name'),
+          tools: resolved.tools.length,
+          lines: lineCount,
+        })}
+      {/if}
     </span>
   </div>
 
@@ -146,6 +182,7 @@
     <p class="ok">{t('editor.ok')}</p>
   {/if}
 
+  {#if mode === 'template'}
   <div class="preview">
     <h2>{t('editor.what-starts')}</h2>
     {#if resolved.tools.length}
@@ -174,8 +211,13 @@
       </label>
     {/if}
   </div>
+  {/if}
 
-  <button type="button" class="primary" onclick={testDrive}>{fatal ? t('editor.test-drive-anyway') : t('editor.test-drive')}</button>
+  {#if mode === 'tool'}
+    <button type="button" class="primary" onclick={installEditorTool} disabled={fatal}>{t('editor.install')}</button>
+  {:else}
+    <button type="button" class="primary" onclick={testDrive}>{fatal ? t('editor.test-drive-anyway') : t('editor.test-drive')}</button>
+  {/if}
 </div>
 
 <style>
@@ -219,6 +261,23 @@
     color: var(--text);
     text-decoration: none;
     font-weight: 600;
+  }
+  .modes {
+    display: flex;
+    gap: var(--space-1);
+  }
+  .modes button {
+    min-height: 46px;
+    padding: 0 var(--space-4);
+    border-radius: var(--radius-pill);
+    background: var(--surface-2);
+    color: var(--text-dim);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .modes button.active {
+    background: var(--accent);
+    color: var(--accent-text);
   }
   .toolbar {
     display: flex;
@@ -355,6 +414,10 @@
     padding: var(--space-1) var(--space-3);
     border-radius: var(--radius-pill);
     background: var(--surface-2);
+  }
+  .primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
   .primary {
     min-height: 56px;

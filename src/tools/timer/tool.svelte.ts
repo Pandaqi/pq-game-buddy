@@ -125,7 +125,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
   }
 
   function announceTimer(clock: ClockState): void {
-    announce(`${seatName(clock.seat, clock.name)}: ${data.mode === 'up' ? 'stopped' : 'time is up'}`);
+    announce(
+      `${seatName(clock.seat, clock.name)}: ${translate(data.mode === 'up' ? 'timer.stopped' : 'timer.time-up')}`,
+    );
   }
 
   function start(index = 0): void {
@@ -315,7 +317,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
           clock.startWall = wall;
           clock.startMono = mono;
           cue();
-          announce(`${clock.name}: interval ${clock.laps.length}`);
+          announce(
+            `${seatName(clock.seat, clock.name)}: ${translate('timer.interval')} ${clock.laps.length}`,
+          );
           if (data.maxRepeats > 0 && clock.laps.length >= data.maxRepeats) {
             pauseClock(clock, mono, wall);
             clock.alarmed = true;
@@ -328,8 +332,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
       const mark = pendingMark(clock, remaining);
       if (mark) {
         clock.marks[mark] = true;
-        if (remaining <= 30000) announce(`${clock.name}: ${Math.ceil(remaining / 1000)} seconds left`);
-        else announce(`${clock.name}: one minute left`);
+        const name = seatName(clock.seat, clock.name);
+        if (remaining <= 30000) {
+          announce(`${name}: ${translate('timer.seconds-left', { count: Math.ceil(remaining / 1000) })}`);
+        } else {
+          announce(`${name}: ${translate('timer.minute-left')}`);
+        }
       }
 
       if (remaining > 0) continue;

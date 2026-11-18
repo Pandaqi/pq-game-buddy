@@ -1,9 +1,9 @@
 <script lang="ts">
   import { untrack } from 'svelte';
-  import { t } from '../../core/i18n.svelte';
+  import { seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
-  import { BAG_SETS, totalOf, trayTotal, type BagSet } from './logic';
+  import { BAG_SETS, totalOf, trayLabel, trayTotal, type BagSet } from './logic';
   import type { BagInstance } from './tool.svelte';
 
   let { ctx, instance }: { ctx: ToolContext; instance: BagInstance } = $props();
@@ -15,8 +15,9 @@
   let valuesDraft = $state('');
   let newType = $state('');
   // The seat strip and the bag's own row are the same choice, so both read the
-  // session's active player instead of keeping a second, drifting copy.
-  const activeWho = $derived(players.find((player) => player.active)?.name ?? players[0]?.name ?? '');
+  // session's active player instead of keeping a second, drifting copy. Both
+  // follow the player's id: a rename moves the tray with them.
+  const activeId = $derived((players.find((player) => player.active) ?? players[0])?.id ?? '');
   // A one-time read of the tool's current seat, not a tracked dependency.
   let assigned = untrack(() => instance.assignedTo());
   let left = $derived(totalOf(data.remaining));
@@ -32,20 +33,20 @@
     settingsOpen = true;
   }
 
-  function choosePlayer(name: string): void {
-    const player = players.find((item) => item.name === name);
+  function choosePlayer(id: string): void {
+    const player = players.find((item) => item.id === id);
     if (player) ctx.session.setActivePlayer(player.id);
-    assigned = name;
-    instance.assignTo(name);
+    assigned = id;
+    instance.assignTo(id);
   }
 
   // Switch seats anywhere and the next draw follows; otherwise a per-player
   // tray quietly keeps filling the first player's pile.
   $effect(() => {
-    if (data.trayMode !== 'per-player' || !activeWho) return;
-    if (activeWho === assigned) return;
-    assigned = activeWho;
-    instance.assignTo(activeWho);
+    if (data.trayMode !== 'per-player' || !activeId) return;
+    if (activeId === assigned) return;
+    assigned = activeId;
+    instance.assignTo(activeId);
   });
 </script>
 
@@ -59,8 +60,8 @@
   {#if data.trayMode === 'per-player' && players.length}
     <div class="who" role="group" aria-label={t('bag.who-drawing')}>
       {#each players as player (player.id)}
-        <button type="button" class:active={activeWho === player.name} onclick={() => choosePlayer(player.name)}>
-          {player.name}
+        <button type="button" class:active={activeId === player.id} onclick={() => choosePlayer(player.id)}>
+          {seatName(player.seat, player.name)}
         </button>
       {/each}
     </div>
@@ -109,7 +110,7 @@
         {#each data.trays as tray (tray.player)}
           <div class="tray">
             <header>
-              <span class="player">{tray.player}</span>
+              <span class="player">{trayLabel(tray.player, players)}</span>
               <span class="dim small">{t('bag.tray-summary', { count: tray.tokens.length, points: trayTotal(tray.tokens) })}</span>
             </header>
             <ul class="tokens">
@@ -119,7 +120,7 @@
                 </li>
               {/each}
             </ul>
-            <button type="button" class="ghost" onclick={() => instance.returnPlayer(tray.player)}>{t('bag.return-tiles', { player: tray.player })}</button>
+            <button type="button" class="ghost" onclick={() => instance.returnPlayer(tray.player)}>{t('bag.return-tiles', { player: trayLabel(tray.player, players) })}</button>
           </div>
         {/each}
       {:else}

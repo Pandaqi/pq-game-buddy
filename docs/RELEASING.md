@@ -22,10 +22,12 @@ Artifacts:
 | `dist/index.html`, `dist/app.js`, `dist/app.css` | Hosted build, cacheable |
 | `dist/chunks/` | Lazy tool modules (view included), pages and template texts, fetched on demand |
 | `dist/<tool>/index.html` | Only from `bun run build:site`: one page per tool |
+| `dist/template/<id>/index.html` | Only from `bun run build:site`: one page per bundled or community template |
+| `dist/templates.json` | From every build: the catalogue (id, name, players, time, url) that <https://pandaqi.com> checks its `gamebuddy:` links against |
 | `dist/index.html` from `bun run build:single` | Everything embedded, nothing else in `dist/`: the copy-around file |
 | `dist/pq-game-buddy.html` | One self-contained file, works from `file://` |
 | `dist/size.json` | Size report read by `bun run size` |
-| `dist/manifest.webmanifest`, `dist/icon.svg`, `dist/sw.js` | Hosted install: manifest, lantern icon and service worker. The single file ships without them |
+| `dist/manifest.webmanifest`, `dist/icon.webp`, `dist/icon-192.png`, `dist/sw.js` | Hosted install: manifest, badge icon (256 px WebP plus a PNG fallback) and service worker. The single file and the dev shell ship without them: both set the tab icon at runtime from the badge inlined in the bundle |
 
 Never ship source maps, `node_modules`, the `vault/` reference folder, or anything from
 `tests/`.

@@ -117,7 +117,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
       data.waitUntil = ctx.clock.wall() + waitFor(step.arg);
       return;
     }
-    if (run && (step.verb === 'timer' || step.verb === 'reveal')) callExternal(step.arg);
+    if (run && (step.verb === 'timer' || step.verb === 'reveal' || step.verb === 'do')) callExternal(step.arg);
     if (run && step.verb === 'say') speak(step.arg);
   }
 

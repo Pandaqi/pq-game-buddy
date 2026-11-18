@@ -2,9 +2,9 @@
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { schemas } from '../src/core/schemas.generated';
 import { startLanguage } from '../src/core/i18n';
 import { allDiagnostics, hasErrors, parseTemplate, resolveTemplate } from '../src/core/template/parse';
+import { installToolFile, parseToolFile, toolSchema } from '../src/core/tool-file';
 
 const root = join(import.meta.dir, '..');
 
@@ -28,18 +28,40 @@ if (existsSync(communityDir)) {
 }
 
 const toolsDir = join(root, 'src/tools');
+const toolFiles: { label: string; path: string }[] = [];
 for (const dir of readdirSync(toolsDir, { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
   const file = join(toolsDir, dir.name, 'example.gamebuddy');
   if (existsSync(file)) files.push({ label: `${dir.name}/example.gamebuddy`, path: file });
+  const toolFile = join(toolsDir, dir.name, 'example.gamebuddy-tool');
+  if (existsSync(toolFile)) toolFiles.push({ label: `${dir.name}/example.gamebuddy-tool`, path: toolFile });
 }
 
 let errors = 0;
 let warnings = 0;
 
+// Definitions are linted, then installed, so an example template that names one
+// resolves against the very file that ships beside it.
+for (const file of toolFiles) {
+  const text = readFileSync(file.path, 'utf8');
+  const result = parseToolFile(text);
+  const fatal = result.diagnostics.some((item) => item.severity === 'error');
+  if (fatal) errors += 1;
+  if (result.diagnostics.length) {
+    console.log(`${fatal ? 'FAIL' : 'warn'} ${file.label}`);
+    for (const item of result.diagnostics) {
+      if (item.severity === 'warning') warnings += 1;
+      console.log(`  ${item.severity} line ${item.line}: ${item.message}`);
+    }
+  } else {
+    console.log(`ok   ${file.label}`);
+  }
+  if (!fatal) installToolFile(text);
+}
+
 for (const file of files) {
   const text = readFileSync(file.path, 'utf8');
   const parsed = parseTemplate(text);
-  const resolved = resolveTemplate(parsed.template, (id) => schemas[id]);
+  const resolved = resolveTemplate(parsed.template, (id) => toolSchema(id));
   const diagnostics = allDiagnostics(parsed.diagnostics, resolved.diagnostics);
   const fatal = hasErrors(diagnostics);
   if (fatal) errors += 1;
@@ -64,5 +86,7 @@ for (const file of files) {
 }
 
 console.log('');
-console.log(`[lint] ${files.length} templates · ${errors} errors · ${warnings} warnings`);
+console.log(
+  `[lint] ${files.length} templates · ${toolFiles.length} tool files · ${errors} errors · ${warnings} warnings`,
+);
 process.exit(errors > 0 ? 1 : 0);

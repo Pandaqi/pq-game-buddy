@@ -4,7 +4,7 @@
    --font-body to restyle the typography. No view may name a colour of its own. */
 
 :root {
-  --font-display: 'Dosis', ui-rounded, 'Segoe UI Variable Display', 'Trebuchet MS', system-ui, sans-serif;
+  --font-display: 'Game Buddy', ui-rounded, 'Segoe UI Variable Display', 'Trebuchet MS', system-ui, sans-serif;
   --font-body: 'Raleway', ui-sans-serif, system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial,
     sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -100,7 +100,7 @@
   --space-6: 2.5rem;
   --space-7: 4rem;
 
-  /* Dosis and Raleway: 13 / 15 / 17 / 22 / 30 / 40 / 52 / 72 */
+  /* Game Buddy and Raleway: 13 / 15 / 17 / 22 / 30 / 40 / 52 / 72 */
   --text-xs: 0.8125rem;
   --text-sm: 0.9375rem;
   --text-base: 1.0625rem;

@@ -75,6 +75,7 @@ const es = {
   'note-new': 'Baraja {kind} nueva ({count} cartas)',
   'note-shuffled': '{count} cartas barajadas',
   'note-dealt': '{deal} cartas repartidas a {players} jugadores',
+  'note-drew': 'Robadas {cards}',
   'note-table': 'En la mesa: {card}',
   'note-discarded': '{player} descartó',
 };

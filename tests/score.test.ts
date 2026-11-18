@@ -1,5 +1,7 @@
 import './helpers/language';
 import { describe, expect, test } from 'bun:test';
+import { registerToolStrings } from '../src/core/i18n.svelte';
+import en from '../src/tools/score/locales/en';
 import {
   categoryTotal,
   csvSheet,
@@ -56,6 +58,14 @@ describe('score formulas', () => {
     expect(evaluateFormula('sum(cities, roads, 3)', scope).value).toBe(10);
     expect(evaluateFormula('if(roads > cities, 10, 0)', scope).value).toBe(10);
     expect(evaluateFormula('if(roads < cities, 10, 0)', scope).value).toBe(0);
+  });
+
+  test('the error text comes from the score locale', () => {
+    registerToolStrings('score', en);
+    expect(evaluateFormula('4 / 0', {}).message).toBe('Division by zero');
+    expect(evaluateFormula('castles', { cities: 1 }).message).toBe(
+      'Unknown name “castles”. Categories: cities',
+    );
   });
 
   test('reports unknown names, bad syntax and division by zero', () => {

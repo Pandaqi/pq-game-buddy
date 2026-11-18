@@ -60,6 +60,7 @@ const fr = {
   'undo-custom': 'sac perso',
   'summary-bag': 'Sac : {count} jetons restants',
   'summary-tray': 'Plateau : {types}',
+  'tray-name': 'Plateau',
   'summary-player': '{name} : {types}',
 };
 

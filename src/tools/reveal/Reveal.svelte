@@ -9,6 +9,7 @@
     bidLeaders,
     firstUnvoted,
     roleOf,
+    rolePool,
     tally,
     type RevealInstance,
     type RevealRole,
@@ -18,7 +19,7 @@
   const data = $derived(instance.data);
 
   let rolesOpen = $state(false);
-  let roleDraft = $state<RevealRole[]>([]);
+  let roleDraft = $state<(RevealRole & { fill: boolean })[]>([]);
   let ballotOpen = $state(false);
   let questionDraft = $state('');
   let optionsDraft = $state('');
@@ -57,7 +58,7 @@
   ];
 
   function openRoles(): void {
-    roleDraft = data.roles.map((role) => ({ ...role }));
+    roleDraft = data.roles.map((role) => ({ ...role, fill: !!role.fill }));
     rolesOpen = true;
   }
 
@@ -125,13 +126,13 @@
             {#each data.roles as role (role.name)}
               <li>
                 <strong>{role.name}</strong>
-                <span class="count">×{role.count}</span>
+                <span class="count">{role.fill ? t('reveal.fill') : `×${role.count}`}</span>
                 {#if role.description}<small>{role.description}</small>{/if}
               </li>
             {/each}
           </ul>
           <p class="hint">{t('reveal.cards-for', {
-            cards: data.roles.reduce((sum, role) => sum + role.count, 0),
+            cards: rolePool(data.roles, data.players.length).length,
             players: data.players.length,
           })}</p>
         {:else}
@@ -356,16 +357,20 @@
     {#each roleDraft as role, index (index)}
       <div class="role-edit">
         <input type="text" aria-label={t('reveal.role-name', { index: index + 1 })} bind:value={role.name} placeholder={t('reveal.example-role')} />
-        <input type="number" aria-label={t('reveal.role-count', { index: index + 1 })} bind:value={role.count} min="0" max="30" />
+        <input type="number" aria-label={t('reveal.role-count', { index: index + 1 })} bind:value={role.count} min="0" max="30" disabled={role.fill} />
         <button type="button" aria-label={t('reveal.remove-role', { index: index + 1 })} onclick={() => (roleDraft = roleDraft.filter((_, at) => at !== index))}>✕</button>
       </div>
+      <label class="inline">
+        <input type="checkbox" bind:checked={role.fill} />
+        <span>{t('reveal.fill-label')}</span>
+      </label>
       <label class="field">
         <span>{t('reveal.role-does')}</span>
         <input type="text" bind:value={role.description} placeholder={t('reveal.role-placeholder')} />
       </label>
     {/each}
     <div class="row">
-      <button type="button" onclick={() => (roleDraft = [...roleDraft, { name: '', count: 1, description: '' }])}>{t('reveal.add-role')}</button>
+      <button type="button" onclick={() => (roleDraft = [...roleDraft, { name: '', count: 1, description: '', fill: false }])}>{t('reveal.add-role')}</button>
       <button type="button" class="wide" onclick={saveRoles}>{t('reveal.save-roles')}</button>
     </div>
     <p class="hint">{t('reveal.role-hint')}</p>
@@ -574,9 +579,15 @@
     grid-template-columns: 1fr 4.5rem 2.75rem;
     gap: var(--space-2);
   }
+  .inline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 48px;
+  }
   .role-edit input {
     border: 0;
-    min-height: 44px;
+    min-height: 48px;
     border-radius: var(--radius-sm);
     background: var(--surface-2);
     color: var(--text);
@@ -585,7 +596,7 @@
     min-width: 0;
   }
   .role-edit button {
-    min-height: 44px;
+    min-height: 48px;
     border-radius: var(--radius-sm);
     background: transparent;
     color: var(--text-dim);

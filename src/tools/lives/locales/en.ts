@@ -49,6 +49,10 @@ const en = {
   'summary-track-value': '{name}: {value}',
   'summary-conditions': 'Conditions: {names}',
   'summary-over': 'Game over',
+  'over-out': 'Out of lives',
+  'over-wins': '{name} wins',
+  'over-all-out': 'Everyone is out',
+  'table-name': 'Table',
 };
 
 export default en;

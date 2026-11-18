@@ -6,12 +6,16 @@ players: 3-8
 time: 10m
 tags: party, narrator
 
+[tool timer clock]
+duration: 3m
+
 [tool script flow]
 auto-advance: yes
 
 [script flow]
 1. say: Everyone, close your eyes.
 2. wait: 3s
-3. say: Open them again and look at your neighbour.
-4. wait: 5s
-5. note: Hand out the role cards now.
+3. timer: clock start
+4. say: Open them again and look at your neighbour.
+5. wait: 5s
+6. note: Hand out the role cards now.

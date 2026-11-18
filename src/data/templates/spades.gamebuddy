@@ -1,0 +1,42 @@
+# spades.gamebuddy — bid your tricks, then take them
+
+[game]
+name: Spades
+players: 4
+time: 45m
+tags: card, trick-taking, family
+icon: spades
+source: Traditional game — no official source
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Sit opposite your partner and deal thirteen cards each
+- Agree the target score, 500 is usual
+- Agree whether a nil bid is worth 100 or 50
+- The player left of the dealer leads the first trick
+
+[rules]
+Two partnerships bid the tricks they will take, and spades are always trump.
+- Each player bids a number of tricks before the first card
+- Follow suit if you can; spades may be led only once they are broken
+- A made contract scores ten points a trick, plus one for each overtrick
+- A missed contract costs ten points a trick, and bags can cost a penalty later
+- First partnership to the target wins
+
+[tool decks deal]
+deck: standard
+players: 4
+deal: 13
+hidden: yes
+
+[tool score]
+mode: rounds
+target: 500
+win: highest
+hint: 500 takes the game; a missed bid costs ten a trick
+
+[tool turns]
+phases: Bid, Play, Score
+pass: no

@@ -60,6 +60,7 @@ const nl = {
   'undo-custom': 'eigen zak',
   'summary-bag': 'Zak: nog {count} stenen',
   'summary-tray': 'Bakje: {types}',
+  'tray-name': 'Bakje',
   'summary-player': '{name}: {types}',
 };
 

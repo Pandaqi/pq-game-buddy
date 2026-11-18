@@ -8,7 +8,7 @@ export interface ScriptStep {
   arg: string;
 }
 
-export const SCRIPT_VERBS = ['say', 'wait', 'reveal', 'timer', 'note'] as const;
+export const SCRIPT_VERBS = ['say', 'wait', 'reveal', 'timer', 'do', 'note'] as const;
 
 /** One locale key per verb; the words themselves live in the tool's locale files. */
 export const VERB_KEYS: Record<string, string> = {
@@ -16,6 +16,7 @@ export const VERB_KEYS: Record<string, string> = {
   wait: 'script.step-wait',
   reveal: 'script.step-reveal',
   timer: 'script.step-timer',
+  do: 'script.step-do',
   note: 'script.step-note',
 };
 

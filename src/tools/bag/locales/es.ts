@@ -60,6 +60,7 @@ const es = {
   'undo-custom': 'bolsa propia',
   'summary-bag': 'Bolsa: quedan {count} fichas',
   'summary-tray': 'Bandeja: {types}',
+  'tray-name': 'Bandeja',
   'summary-player': '{name}: {types}',
 };
 

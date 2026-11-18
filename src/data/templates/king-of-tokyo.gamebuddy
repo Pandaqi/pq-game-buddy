@@ -1,0 +1,41 @@
+# king-of-tokyo.gamebuddy — six dice, ten lives, twenty points
+
+[game]
+name: King of Tokyo
+players: 2-6
+time: 30m
+tags: board, dice, family
+icon: king-of-tokyo
+source: https://www.ienjoygames.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player a monster board and set its life to ten
+- Shuffle the power cards and lay out three
+- Put the victory point markers in reach
+- The first monster in Tokyo takes the city
+
+[rules]
+Roll three times, keep the dice you like, and be the last monster standing or reach twenty points.
+- Claws hurt the monsters in Tokyo; a monster in Tokyo hurts everyone outside
+- A monster in Tokyo cannot heal while it stays there
+- Hearts heal, energy buys power cards, and numbers score victory points
+- Twenty points wins at once; losing your last life leaves the game
+- Track life per player here, points in the scorepad
+
+[tool lives]
+mode: players
+lives: 10
+max: 10
+step: 1
+elimination: yes
+
+[tool dice]
+pool: 6d6
+
+[tool score]
+mode: simple
+target: 20
+win: highest

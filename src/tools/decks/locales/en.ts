@@ -74,6 +74,7 @@ const en = {
   'note-new': 'New {kind} deck ({count} cards)',
   'note-shuffled': 'Shuffled {count} cards',
   'note-dealt': 'Dealt {deal} cards to {players} players',
+  'note-drew': 'Drew {cards}',
   'note-table': 'On the table: {card}',
   'note-discarded': '{player} discarded',
 };

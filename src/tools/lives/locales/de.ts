@@ -49,6 +49,10 @@ const de = {
   'summary-track-value': '{name}: {value}',
   'summary-conditions': 'Zustände: {names}',
   'summary-over': 'Spiel vorbei',
+  'over-out': 'Keine Leben mehr',
+  'over-wins': '{name} gewinnt',
+  'over-all-out': 'Alle sind raus',
+  'table-name': 'Tisch',
 };
 
 export default de;

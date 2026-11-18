@@ -23,7 +23,7 @@ import { KEYS, readJson, storage, writeJson } from './storage';
 import type { PresetValues } from './template/schema';
 import { withDefaults } from './template/schema';
 import { serializeTemplate } from './template/serialize';
-import { schemas } from './schemas.generated';
+import { toolFileDefinition, toolSchema } from './tool-file';
 import { clock } from './ticker';
 import { createUndo, type UndoApi } from './undo';
 
@@ -66,10 +66,6 @@ function brokenInstance(reason: string): ToolInstance<Record<string, unknown>> {
     presetFromState: () => ({}),
     summary: () => reason,
   };
-}
-
-function labelFor(module: AnyToolModule, instanceId: string): string {
-  return instanceId && instanceId !== module.id ? `${module.title} · ${instanceId}` : module.title;
 }
 
 class SessionStore {
@@ -155,11 +151,17 @@ class SessionStore {
     this.entriesList = [];
   }
 
-  private createEntry(module: AnyToolModule, instanceId: string, values?: PresetValues): ToolEntry {
+  private createEntry(
+    module: AnyToolModule,
+    instanceId: string,
+    values?: PresetValues,
+    toolId = module.id,
+  ): ToolEntry {
+    const title = (toolId !== module.id ? toolFileDefinition(toolId)?.name : undefined) ?? module.title;
     const entry: ToolEntry = {
       id: instanceId,
-      toolId: module.id,
-      label: labelFor(module, instanceId),
+      toolId,
+      label: instanceId && instanceId !== toolId ? `${title} · ${instanceId}` : title,
       module,
       instance: brokenInstance('not created yet'),
       ctx: null as unknown as ToolContext,
@@ -169,6 +171,7 @@ class SessionStore {
 
     const ctx: ToolContext = {
       instanceId,
+      toolId,
       session: this.sessionApi,
       clock,
       rng: createRng(),
@@ -216,7 +219,10 @@ class SessionStore {
   private async moduleFor(toolId: string): Promise<AnyToolModule | null> {
     const ready = this.modules.get(toolId);
     if (ready) return ready;
-    if (!hasTool(toolId)) return null;
+    if (!hasTool(toolId)) {
+      // An installed tool file borrows the one shared runtime chunk.
+      return toolFileDefinition(toolId) ? this.pluginModule() : null;
+    }
     const running = this.moduleLoads.get(toolId);
     if (running) return running;
     const promise = loadTool(toolId)
@@ -230,6 +236,26 @@ class SessionStore {
       })
       .finally(() => this.moduleLoads.delete(toolId));
     this.moduleLoads.set(toolId, promise);
+    return promise;
+  }
+
+  /** One chunk and one import serve every installed tool file. */
+  private pluginModule(): Promise<AnyToolModule | null> {
+    const ready = this.modules.get('plugin');
+    if (ready) return Promise.resolve(ready);
+    const running = this.moduleLoads.get('plugin');
+    if (running) return running;
+    const promise = loadTool('plugin')
+      .then((module) => {
+        this.modules.set('plugin', module);
+        return module;
+      })
+      .catch((error: unknown) => {
+        console.error('[tool:plugin] failed to load', error);
+        return null;
+      })
+      .finally(() => this.moduleLoads.delete('plugin'));
+    this.moduleLoads.set('plugin', promise);
     return promise;
   }
 
@@ -270,7 +296,9 @@ class SessionStore {
         this.toast(t('toast.duplicate-tool', { name: spec.instanceId }), 'error');
         continue;
       }
-      const entry = this.createEntry(module, spec.instanceId, spec.values);
+      const entry = this.createEntry(module, spec.instanceId, spec.values, spec.toolId);
+      // A fresh session runs the tool's own start hook; a resume loads state instead.
+      entry.instance.start?.();
       this.entriesList.push(entry);
       session.instances.push({ id: entry.id, toolId: entry.toolId, state: entry.instance.state() });
     }
@@ -295,7 +323,7 @@ class SessionStore {
         this.unavailable.push({ toolId: saved.toolId, instanceId: saved.id });
         continue;
       }
-      const entry = this.createEntry(module, saved.id);
+      const entry = this.createEntry(module, saved.id, undefined, saved.toolId);
       entry.instance.load(saved.state);
       this.entriesList.push(entry);
     }
@@ -424,11 +452,16 @@ class SessionStore {
     const session = this.session;
     if (!session) return '';
     const players = this.players().map((player) => player.name);
-    const tools = this.entriesList.map((entry) => ({
-      toolId: entry.toolId,
-      instanceId: entry.id,
-      values: entry.instance.presetFromState(),
-    }));
+    const tools = this.entriesList.map((entry) => {
+      const values = entry.instance.presetFromState();
+      const schema = toolSchema(entry.toolId);
+      // A tool file is written with its own settings only: the runtime's fallback
+      // key belongs to the plugin chunk, not to the definition.
+      const kept = toolFileDefinition(entry.toolId) && schema
+        ? Object.fromEntries(Object.entries(values).filter(([key]) => key in schema))
+        : values;
+      return { toolId: entry.toolId, instanceId: entry.id, values: kept };
+    });
     const spec = {
       game: {
         name: session.gameName,
@@ -441,7 +474,7 @@ class SessionStore {
       players,
       tools,
     };
-    return serializeTemplate(spec, (id) => schemas[id]);
+    return serializeTemplate(spec, (id) => toolSchema(id));
   }
 
   /** Full session (players, tools and live state) as a portable JSON file. */

@@ -6,19 +6,20 @@
   import { manifest } from './core/manifest.generated';
   import { rememberImport } from './core/recent-imports';
   import { navigate, parseRoute, routeTo } from './core/router';
-  import { schemas } from './core/schemas.generated';
   import { parseSessionFile, seatNames } from './core/session';
   import { store } from './core/session-store.svelte';
   import { settings } from './core/settings.svelte';
   import { readFileText } from './core/share';
   import { storagePersistent } from './core/storage';
   import { allDiagnostics, parseTemplate, resolveTemplate, type Diagnostic, type ResolvedTool, type TemplateVariant } from './core/template/parse';
-  import { assetName, isImageFile, isSessionFile, isTemplateFile, isThemeFile, rememberAsset } from './core/template/assets';
+  import { assetName, isImageFile, isScriptFile, isSessionFile, isTemplateFile, isThemeFile, isToolFile, rememberAsset } from './core/template/assets';
   import { applyVariant, toolsForSession } from './core/template/session-tools';
   import { decodeTemplateLink } from './core/template/share-link';
+  import { defaultsFor } from './core/template/schema';
+  import { installToolFile, parseToolFile, toolFileDefinition, toolSchema } from './core/tool-file';
   import { parseTheme } from './core/theme';
   import LazyView, { lazyView } from './core/ui/LazyView.svelte';
-  import { doodle } from './core/ui/doodles';
+  import { BRAND_MARK } from './core/ui/brand-mark';
   import { mark } from './core/ui/icons';
   import { rememberTool } from './core/ui/tool-shelf';
   import { templateText } from './data/templates';
@@ -37,7 +38,9 @@
     display: lazyView(() => import('./ui/Display.svelte')),
   };
 
-  let { bootTool = '' }: { bootTool?: string } = $props();
+  // A page in the site build says which tool or template it is; the hash router covers
+  // the rest. Both props are empty in the single file and the plain hosted shell.
+  let { bootTool = '', bootTemplate = '' }: { bootTool?: string; bootTemplate?: string } = $props();
 
   let hash = $state(typeof location === 'undefined' ? '#/' : location.hash || '#/');
   const route = $derived(parseRoute(hash));
@@ -72,6 +75,18 @@
   let pasteText = $state('');
   let seatCount = $state(2);
   let handledImport = $state('');
+  let handledTemplate = $state('');
+  let handledToolFile = $state('');
+  /** A tool link waits for a second tap: it installs something, so it shows what first. */
+  let pendingTool = $state<{
+    text: string;
+    id: string;
+    name: string;
+    blocks: number;
+    diagnostics: Diagnostic[];
+  } | null>(null);
+  /** The id of a template link this build does not carry, so the page can say so. */
+  let missingTemplate = $state('');
   let dragActive = $state(false);
   let cueOpen = $state(false);
   let langOpen = $state(false);
@@ -85,6 +100,7 @@
     variants: TemplateVariant[];
     range?: { min: number; max: number };
     notes: string;
+    templateId: string;
   } | null>(null);
 
   $effect(() => {
@@ -109,6 +125,41 @@
     }
     beginImport(text);
     navigate({ name: 'home' });
+  });
+
+  // A template link carries an id instead of a payload: the text arrives from the shelf
+  // that holds that game, then the same seat-and-variant chooser a share link opens. One
+  // path covers both sources: the hash, and the `data-template` of a page in the site
+  // build (which has an empty hash). The hash wins, so a template page can still navigate,
+  // and the id stays in the URL, so refreshing reopens the same template.
+  $effect(() => {
+    const id = route.name === 'template' && route.id ? route.id : bootTemplate;
+    if (!id || id === handledTemplate) return;
+    handledTemplate = id;
+    startTemplate(id);
+  });
+
+  // A tool link carries the same base64 payload as a template link, but installing it
+  // adds a tool: the confirm sheet names it and shows its diagnostics first.
+  $effect(() => {
+    if (route.name !== 'toolfile') return;
+    const payload = route.payload;
+    if (!payload || payload === handledToolFile) return;
+    handledToolFile = payload;
+    const text = decodeTemplateLink(payload);
+    navigate({ name: 'home' });
+    if (!text) {
+      store.toast(t('toast.link-incomplete'), 'error');
+      return;
+    }
+    const result = parseToolFile(text);
+    pendingTool = {
+      text,
+      id: result.definition?.id ?? '',
+      name: result.definition?.name ?? t('toolfile.untitled'),
+      blocks: result.definition?.blocks.length ?? 0,
+      diagnostics: result.diagnostics,
+    };
   });
 
   onMount(() => {
@@ -157,6 +208,7 @@
    */
   async function importFiles(files: File[]): Promise<void> {
     const images = files.filter((file) => isImageFile(file));
+    const toolFiles = files.filter((file) => isToolFile(file.name));
     const themes = files.filter((file) => isThemeFile(file.name));
     const sessions = files.filter((file) => isSessionFile(file.name));
     const templates = files.filter((file) => isTemplateFile(file.name) && !isThemeFile(file.name));
@@ -164,6 +216,35 @@
     let imagesSaved = 0;
     for (const file of images) {
       if (await rememberAsset(file)) imagesSaved += 1;
+    }
+
+    // A tool file's `[script] file:` reaches a `.js` in the same batch.
+    const scripts: Record<string, string> = {};
+    for (const file of files.filter((entry) => isScriptFile(entry.name))) {
+      try {
+        scripts[file.name] = await readFileText(file);
+      } catch {
+        // A file that will not read is simply not offered to the definition.
+      }
+    }
+
+    // Definitions are installed first: a game and the tool it names can arrive together.
+    const toolsReady: string[] = [];
+    for (const file of toolFiles) {
+      try {
+        const result = installToolFile(await readFileText(file), scripts);
+        if (!result.ok || !result.definition) {
+          const first = result.diagnostics.find((item) => item.severity === 'error');
+          store.toast(
+            first ? `${file.name}: ${first.message}` : t('toast.tool-unreadable', { name: file.name }),
+            'error',
+          );
+          continue;
+        }
+        toolsReady.push(result.definition.name);
+      } catch {
+        store.toast(t('toast.tool-unreadable', { name: file.name }), 'error');
+      }
     }
 
     let themeName = '';
@@ -215,6 +296,7 @@
 
     if (openedSession) {
       const notes: string[] = [];
+      if (toolsReady.length) notes.push(countOf('tools', toolsReady.length));
       if (imagesSaved) notes.push(countOf('images', imagesSaved));
       if (themeName) notes.push(t('count.theme', { name: themeName }));
       if (extra) notes.push(countOf('imported', extra));
@@ -226,6 +308,7 @@
     }
 
     const parts: string[] = [];
+    if (toolsReady.length) parts.push(countOf('tools', toolsReady.length));
     if (templates.length) parts.push(countOf('templates', templates.length));
     if (imagesSaved) parts.push(countOf('images', imagesSaved));
     if (themeName) parts.push(t('count.theme', { name: themeName }));
@@ -241,22 +324,25 @@
   }
 
   /** "1 image" / "4 images": a count that reads right in every language. */
-  function countOf(what: 'images' | 'templates' | 'imported', count: number): string {
+  function countOf(what: 'images' | 'templates' | 'tools' | 'imported', count: number): string {
     if (what === 'images') return count === 1 ? t('count.images-one') : t('count.images-many', { count });
     if (what === 'templates') {
       return count === 1 ? t('count.templates-one') : t('count.templates-many', { count });
     }
+    if (what === 'tools') return count === 1 ? t('count.tools-one') : t('count.tools-many', { count });
     return count === 1 ? t('count.imported-one') : t('count.imported-many', { count });
   }
 
-  function beginImport(text: string, source = ''): void {
+  function beginImport(text: string, source = '', templateId = ''): void {
     const record = parseSessionFile(text.trim());
     if (record) {
       void store.resume(record).then(() => navigate({ name: 'session' }));
       return;
     }
     const parsed = parseTemplate(text);
-    const resolved = resolveTemplate(parsed.template, (id) => schemas[id]);
+    // A template may name a tool this build did not compile in but a file installed:
+    // the compiled map first, the installed definitions second.
+    const resolved = resolveTemplate(parsed.template, (id) => toolSchema(id));
     diagnostics = allDiagnostics(parsed.diagnostics, resolved.diagnostics);
     rememberImport(text, parsed.template.game.name, source, parsed.template.game.icon);
     pending = {
@@ -267,6 +353,7 @@
       variants: parsed.template.variants,
       range: parsed.template.game.players,
       notes: parsed.template.notes,
+      templateId,
     };
     variantId = '';
     const range = parsed.template.game.players;
@@ -275,11 +362,18 @@
     pasteText = '';
   }
 
-  /** A home tile carries only an id: the template text arrives when it is picked. */
+  /** A home tile or a link carries only an id: the template text arrives when it is picked. */
   function startTemplate(id: string): void {
     void templateText(id).then((text) => {
-      if (text) beginImport(text);
-      else store.toast(t('toast.template-missing'), 'error');
+      if (text) {
+        missingTemplate = '';
+        beginImport(text, '', id);
+      } else {
+        // A link to a template this build no longer has: say which one, and keep the
+        // visitor one click from the gallery instead of dropping them on the home screen.
+        missingTemplate = id;
+        store.toast(t('toast.template-missing'), 'error');
+      }
     });
   }
 
@@ -300,6 +394,7 @@
         values: tool.values,
       })),
       templateText: target.text,
+      templateId: target.templateId || undefined,
       notes: target.notes,
     });
     pending = null;
@@ -307,21 +402,47 @@
     navigate({ name: 'session' });
   }
 
+  /** A tool link's second tap: parse, store, and leave the sheet closed. */
+  function installPendingTool(): void {
+    const target = pendingTool;
+    if (!target) return;
+    const result = installToolFile(target.text);
+    if (!result.ok || !result.definition) {
+      pendingTool = { ...target, diagnostics: result.diagnostics };
+      store.toast(t('toast.tool-unreadable', { name: target.name }), 'error');
+      return;
+    }
+    pendingTool = null;
+    store.toast(t('toast.tool-installed', { name: result.definition.name }));
+    // The shelf reads the installed list, so make it redraw now.
+    store.bump();
+    navigate({ name: 'home' });
+  }
+
   async function startTool(toolId: string): Promise<void> {
     const tool = manifest.find((module) => module.id === toolId);
-    if (!tool) return;
+    // An installed tool file is a tool with an id but no compiled metadata.
+    const definition = toolFileDefinition(toolId);
+    if (!tool && !definition) return;
     // A bag, a timer or a coin does not get better with a second player, so only
     // a tool that seats everyone starts with two.
-    const players = seatNames(tool.seats === 'multi' ? 2 : 1);
+    const seats = tool?.seats ?? definition?.seats ?? 'multi';
+    const players = seatNames(seats === 'multi' ? 2 : 1);
     // The tool's own chunk arrives here; the shell only knew its name until now.
     // The session carries the id and the English name, so every screen says the
     // tool's name in whatever language is active when the session is read back.
     rememberTool(toolId);
     await store.start({
-      gameName: tool.title,
+      gameName: tool?.title ?? definition?.name ?? toolId,
       toolId,
       players,
-      tools: [{ toolId, instanceId: toolId, values: {} }],
+      tools: [
+        {
+          toolId,
+          instanceId: toolId,
+          values: definition ? defaultsFor(definition.settings) : {},
+        },
+      ],
     });
     navigate({ name: 'session' });
   }
@@ -355,7 +476,7 @@
 
   <header class="top no-print">
     <a class="brand" href="#/" aria-label={t('app.name')}>
-      <span class="brand-mark" aria-hidden="true">{@html doodle('acorn')}</span>
+      <img class="brand-mark" src={BRAND_MARK} alt="" />
       <span class="brand-text">{t('app.name')}</span>
     </a>
     <div class="top-actions">
@@ -398,13 +519,24 @@
   {/if}
 
   <main id="main" tabindex="-1">
-    {#if route.name === 'home'}
-      <Home
-        onstart={startTool}
-        onimport={showPaste}
-        oncontinue={continueSession}
-        ontemplate={startTemplate}
-      />
+    {#if route.name === 'home' || route.name === 'template'}
+      {#if missingTemplate}
+        <section class="page">
+          <h1>{t('template.missing-title')}</h1>
+          <p class="dim">{t('template.missing-hint', { id: missingTemplate })}</p>
+          <div class="actions">
+            <a class="primary link" href="#/templates" onclick={() => (missingTemplate = '')}>{t('gallery.title')}</a>
+            <a class="link" href="#/" onclick={() => (missingTemplate = '')}>{t('app.home')}</a>
+          </div>
+        </section>
+      {:else}
+        <Home
+          onstart={startTool}
+          onimport={showPaste}
+          oncontinue={continueSession}
+          ontemplate={startTemplate}
+        />
+      {/if}
     {:else if route.name === 'session'}
       {#if store.session}
         <SessionView />
@@ -524,7 +656,7 @@
       <input
         type="file"
         multiple
-        accept=".gamebuddy,.gamebuddy-theme,.txt,.json,image/svg+xml,image/png,image/jpeg,image/webp"
+        accept=".gamebuddy,.gamebuddy-tool,.gamebuddy-theme,.txt,.json,.js,image/svg+xml,image/png,image/jpeg,image/webp"
         onchange={(event) => {
           const input = event.currentTarget as HTMLInputElement;
           const files = Array.from(input.files ?? []);
@@ -605,11 +737,39 @@
   </Sheet>
 {/if}
 
+{#if pendingTool}
+  <Sheet title={t('toolfile.title')} onclose={() => (pendingTool = null)}>
+    <p class="dim">
+      {t('toolfile.hint', {
+        name: pendingTool.name,
+        blocks: pendingTool.blocks === 1
+          ? t('toolfile.blocks-one')
+          : t('toolfile.blocks-many', { count: pendingTool.blocks }),
+      })}
+    </p>
+    {#if pendingTool.diagnostics.length}
+      <ul class="diags">
+        {#each pendingTool.diagnostics as item, index (index)}
+          <li class:error={item.severity === 'error'}>
+            <span class="line">{t('settings.line', { line: item.line })}</span>
+            <span>{item.message}</span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    <button type="button" class="primary" onclick={installPendingTool}>{t('toolfile.add')}</button>
+    <button type="button" onclick={() => (pendingTool = null)}>{t('toolfile.cancel')}</button>
+  </Sheet>
+{/if}
+
 <style>
   .skip {
     position: absolute;
     left: -999px;
     top: 0;
+    display: inline-flex;
+    align-items: center;
+    min-height: 48px;
     background: var(--surface);
     padding: var(--space-2) var(--space-4);
     border-radius: var(--radius-pill);
@@ -639,6 +799,7 @@
   .brand {
     display: inline-flex;
     align-items: center;
+    min-height: 48px;
     gap: var(--space-2);
     font-family: var(--font-display);
     font-weight: 800;
@@ -648,28 +809,20 @@
     font-size: clamp(1.4rem, 4vw, 1.75rem);
   }
   .brand-mark {
-    display: inline-grid;
-    place-items: center;
     width: 42px;
     height: 42px;
-    border-radius: var(--radius-round);
-    background: var(--accent-soft);
-    box-shadow: var(--shadow-card);
+    object-fit: contain;
     transform: rotate(-6deg);
     transition: transform var(--motion-bounce) var(--ease-bounce);
   }
   .brand:hover .brand-mark {
     transform: rotate(6deg) scale(1.06);
   }
-  .brand-mark :global(svg) {
-    width: 26px;
-    height: 26px;
-  }
   .brand-text {
     white-space: nowrap;
   }
   /* Four chrome buttons plus the mark are wider than a 320 px phone, so the
-     wordmark folds away and the acorn keeps the way home. */
+     wordmark folds away and the badge keeps the way home. */
   @media (max-width: 26rem) {
     .brand-text {
       display: none;

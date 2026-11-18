@@ -28,7 +28,7 @@ Win every task as a crew, in order, with no talking about hands.
 
 [tool decks]
 deck: custom
-# 13 each empties the forty-card deck at three, four or five.
+# The Crew deals 13 cards at three players, 10 at four and 8 at five.
 players: 3
 deal: 13
 hidden: yes

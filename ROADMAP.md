@@ -18,11 +18,11 @@
 > templates now cover 47 of the 100 catalogue entries, and a later sweep added nineteen
 > widely played board, card and party games. `bun run check` passes end to end:
 > stale-manifest check, `tsc`, `svelte-check` with 0 warnings, the full test suite
-> (544 tests), template lint (100 files · 0 errors · 0 warnings) and a build inside
-> budget (134.8 KB gzipped first visit, 424 KB single file with all five languages).
-> 21 tools are live, and 79 game templates plus 21 tool examples ship, with 79 marks. M6 replaced the
+> (607 tests), template lint (108 files · 0 errors · 0 warnings) and a build inside
+> budget (166.7 KB gzipped first visit, 469.0 KB single file with all five languages).
+> 21 tools are live, and 86 game templates plus 21 tool examples ship, with 86 marks. M6 replaced the
 > visual language twice: the second pass is the woodland lantern table in
-> `docs/STYLE.md`, with self-hosted Dosis and Raleway, borderless fills, folds and
+> `docs/STYLE.md`, with self-hosted Game Buddy and Raleway, borderless fills, folds and
 > bouncy one-shot motion. The release gates that need a human — hosting, the device
 > matrix, screen-reader passes, the five-person first-use test, low-end profiling,
 > the Pandaqi play tests, the daylight visual audit and the screenshot set — are
@@ -60,7 +60,7 @@ The trick to supporting "every tool anyone might want" is not to build a hundred
 | M3 | Depth and the launch library | Shipped | lives, counters, turns, reveal, rules, log; 27 templates |
 | M4 | Breadth: the long tail | Shipped | decks, bag, bracket, draft, buzzer, script, words, prompts, custom, splits, display mode |
 | M5 | Polish, accessibility and release | Code shipped, human gates open | Docs, print, i18n statement, a11y/device/profiling checklist |
-| M6 | Style: the lantern table | Shipped | Woodland tokens, Dosis/Raleway, borderless hierarchy, folds, motion |
+| M6 | Style: the lantern table | Shipped | Woodland tokens, Game Buddy/Raleway, borderless hierarchy, folds, motion |
 | M7 | After v1.0 | Shipped | Theme files, dice lab, initiative, log stats, pick views, variants, icons, conformance test, PWA, QR, community templates, switch access, voice pass |
 | M8 | Pandaqi's own games | Shipped | Twenty first-party templates for the pandaqi.com catalogue (nine at M8, eleven added by the catalogue audit) |
 | M9 | Marks for the rest of the catalogue | Shipped | A drawn mark beside every template, on the same grid, none a letter in a box |
@@ -179,7 +179,8 @@ The completeness test. Every row is covered today.
 
 1. **Custom tool builder** (`custom`): fields, counters, checklists, a table and safe formulas. Covers one-off score sheets and house rules.
 2. **Script runner** (`script`): ordered steps that say, wait, reveal and control timers. Covers narrators, event decks, escape-room flows.
-3. **Plugin tool**: a folder in `src/tools/` with metadata, a preset schema and a state entry. See `docs/TOOL-AUTHORING.md`.
+3. **Tool folder**: a folder in `src/tools/` with metadata, a preset schema and a state entry. See `docs/TOOL-AUTHORING.md`.
+4. **Tool file** (shipped, 2026-11-18): a `.gamebuddy-tool` that declares one tool — identity, settings, a view made of the app's own blocks and, opt-in, `[script]` sections of JS at named entry points — so a game and the tool it needs can be shared as two files. See `docs/PLUGIN-FORMAT.md`.
 
 Because templates compose tools, an "unsupported" game is almost always expressible as `timer + score + reveal + rules` with the right settings.
 
@@ -199,7 +200,7 @@ Every tool already meets the per-tool requirements: instant default, one obvious
 | Lives | `lives` | HP, lives, tracks, conditions, elimination | `lives`, `max`, `step`, `mode`, `elimination`, `extras`, `conditions`, `hidden` |
 | Counters | `counters` | Tokens, money, bank, denominations, or a straight count | `mode`, `counters`, `bank`, `denominations`, `step`, `down`, `hidden` |
 | Turns | `turns` | Order, rounds, phases, turn clock, pass cover | `order`, `phases`, `timer`, `pass`, `auto-start` |
-| Reveal | `reveal` | Roles, inspect, ballots, blind bids | `mode`, `roles`, `descriptions`, `auto-hide`, `ballot`, `options`, `min-bid`, `max-bid` |
+| Reveal | `reveal` | Roles, ballots, blind bids | `mode`, `roles`, `descriptions`, `auto-hide`, `ballot`, `options`, `min-bid`, `max-bid` |
 | Rules | `rules` | Cheat sheet, setup checklist, glossary, scoring | `quick`, `glossary`, `scoring`, `links` |
 | Decks | `decks` | Shuffle, cut, deal, draw, hidden hands | `deck`, `decks`, `players`, `deal`, `hidden`, `jokers` |
 | Bag | `bag` | Blind draws from tiles with values | `set`, `counts`, `values`, `draw`, `tray` |
@@ -232,15 +233,15 @@ Three properties matter for planning:
 
 ### 4.1 The library
 
-79 game templates ship: 59 for published games and twenty first-party templates for Tiamo's own catalogue, plus one `example.gamebuddy` per tool. The gallery groups them by context (party, strategy, card, word, RPG, video, tournament, Pandaqi) and filters by players, length and tag, with a Pandaqi chip of its own.
+86 game templates ship: 66 for published games and twenty first-party templates for Tiamo's own catalogue, plus one `example.gamebuddy` per tool. The gallery groups them by context (party, strategy, card, word, RPG, video, tournament, Pandaqi) and filters by players, length and tag, with a Pandaqi chip of its own.
 
 | Family | Games |
 |--------|-------|
-| Board and strategy | Catan, Ticket to Ride, 7 Wonders, Wingspan, Sushi Go, Azul, Splendor, Dominion, Monopoly, Risk, Pandemic, Gloomhaven, Carcassonne, Backgammon, Terraforming Mars, Spirit Island, Warhammer 40,000, Dominoes |
-| Card and deduction | Uno, Exploding Kittens, Love Letter, Coup, The Mind, Hanabi, Skull, Decrypto, Dixit, poker, Perudo, chess, Cluedo, Cribbage, Hearts, The Crew |
+| Board and strategy | Catan, Ticket to Ride, 7 Wonders, Wingspan, Sushi Go, Azul, Splendor, Dominion, Monopoly, Risk, Pandemic, Gloomhaven, Carcassonne, Backgammon, Terraforming Mars, Spirit Island, Warhammer 40,000, Dominoes, Cascadia, King of Tokyo |
+| Card and deduction | Uno, Exploding Kittens, Love Letter, Coup, The Mind, Hanabi, Skull, Decrypto, Dixit, poker, Perudo, chess, Cluedo, Cribbage, Hearts, The Crew, Rummy, Spades |
 | Dice and push-your-luck | Yahtzee, Phase 10, Perudo, Farkle, Darts |
-| Word | Scrabble, Boggle, Bananagrams, Codenames, Just One |
-| Party and social deduction | Werewolf, Trivia Night, Escape Room, Secret Hitler, Avalon, Wavelength, Charades, Monikers |
+| Word | Scrabble, Boggle, Bananagrams, Codenames, Just One, Scattergories |
+| Party and social deduction | Werewolf, Trivia Night, Escape Room, Secret Hitler, Avalon, Wavelength, Charades, Monikers, Spyfall, Taboo |
 | Video game and tournament | Mario Kart night, Smash night, Speedrun practice, Jackbox Night |
 | RPG and cooperative | D&D 5e, Gloomhaven, Kitchen Rush, Betrayal at House on the Hill |
 | Utility | Kitchen Rush timers, D&D session, house-rule sheets |
@@ -261,12 +262,15 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 | Budget | Limit | Current |
 |--------|-------|---------|
 | One chunk, gzipped | 24 KB | 21.5 KB (words: view, logic and five language packs) |
-| All deferred chunks, gzipped | 320 KB | 302.6 KB (five languages) |
+| All deferred chunks, gzipped | 336 KB | 335.9 KB (five languages, 70 bytes left) |
 | Core JS and CSS, gzipped | 45 KB | inside |
-| First visit (entry + shared chunk + CSS), gzipped | 150 KB | 133.6 KB |
-| Single file, gzipped | no ceiling: the whole app in one file | 406 KB |
+| First visit (entry + shared chunk + CSS), gzipped | 180 KB | 166.7 KB |
+| Single file, gzipped | no ceiling: the whole app in one file | 469.0 KB |
 
-**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (60 KB gzipped, 56 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 22 KB (its view, logic and five language packs), so a tool that passes it is one to split rather than a budget to raise, and the rulebooks are split the same way: a stable hash of the template id files each one of the 79 texts into one of four shelves, so a preview pulls 2–3 KB instead of the library and no single text chunk grows past the ceiling as templates are added. A total ceiling on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat: it was 250 KB from M5 until M10 finished three more languages and moved it to 320 KB, with the arithmetic a few sentences on. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 47 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 15.2 KB of headroom left. M7 has added about 3 KB to the first visit (theme parsing and template icons in the core) and about 10 KB to the single file, with no new dependency. M8 and M9 add nine templates and nine marks, which land in the deferred chunks: the first visit stayed at 132 KB and the single file grew to 294 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. M10 adds the language layer without moving a ceiling, and it gives one back: no dictionary is compiled into the start-up any more. English is a chunk like every other language, loaded at boot only because it is the stored default, so the first visit *fell* from 139.0 KB to 133.4 KB even after paying for the language sheet and the lookup. A language is two chunks: `core/locales/<lang>.ts` and the generated `tool-text-<lang>.generated.ts`, which gathers each tool's `locales/<lang>.ts`. The en+nl build was 236.2 KB across 36 deferred chunks, `--langs=en` is 215.9 KB across 34, so a complete extra language costs about 21.7 KB and two chunks: the measurable difference the DoD asks for. German, Spanish and French landed in one pass and took that total to 302.6 KB across 42 chunks (largest 21.5 KB), an addition of 66.4 KB or 22.1 KB per language. That is a fixed amount of finished surface added by the milestone itself, so the deferred ceiling moved once, from 250 KB to 320 KB. The later template sweep added nineteen rulebooks and three text shelves: 312.6 KB across 45 chunks (largest 21.5 KB), which is 7.4 KB inside the deferred ceiling and 15.2 KB inside the first-visit one. A sixth language needs its own arithmetic written here before it moves again, and at roughly 22 KB apiece it will be the moment to ask whether the shell chunk should split per area instead. A tool that registers its own English strings adds nothing extra to its chunk: the words simply moved from the view into `locales/en.ts`. These are ceilings, not targets.
+**Why the first-visit budget is where it is.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (78 KB gzipped, 64 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 22 KB (its view, logic and five language packs), so a tool that passes it is one to split rather than a budget to raise, and the rulebooks are split the same way: a stable hash of the template id files each one of the 86 texts into one of four shelves, so a preview pulls 2–3 KB instead of the library and no single text chunk grows past the ceiling as templates are added. A total ceiling on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat: it was 250 KB from M5 until M10 finished three more languages and moved it to 320 KB, with the arithmetic a few sentences on. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 47 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 15.2 KB of headroom left. M7 has added about 3 KB to the first visit (theme parsing and template icons in the core) and about 10 KB to the single file, with no new dependency. M8 and M9 add nine templates and nine marks, which land in the deferred chunks: the first visit stayed at 132 KB and the single file grew to 294 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. M10 adds the language layer without moving a ceiling, and it gives one back: no dictionary is compiled into the start-up any more. English is a chunk like every other language, loaded at boot only because it is the stored default, so the first visit *fell* from 139.0 KB to 133.4 KB even after paying for the language sheet and the lookup. A language is two chunks: `core/locales/<lang>.ts` and the generated `tool-text-<lang>.generated.ts`, which gathers each tool's `locales/<lang>.ts`. The en+nl build was 236.2 KB across 36 deferred chunks, `--langs=en` is 215.9 KB across 34, so a complete extra language costs about 21.7 KB and two chunks: the measurable difference the DoD asks for. German, Spanish and French landed in one pass and took that total to 302.6 KB across 42 chunks (largest 21.5 KB), an addition of 66.4 KB or 22.1 KB per language. That is a fixed amount of finished surface added by the milestone itself, so the deferred ceiling moved once, from 250 KB to 320 KB. The later template sweep added nineteen rulebooks and three text shelves: 312.6 KB across 45 chunks (largest 21.5 KB), which is 7.4 KB inside the deferred ceiling and 15.2 KB inside the first-visit one. A sixth language needs its own arithmetic written here before it moves again, and at roughly 22 KB apiece it will be the moment to ask whether the shell chunk should split per area instead. A tool that registers its own English strings adds nothing extra to its chunk: the words simply moved from the view into `locales/en.ts`. M11 added the tool-file runtime: one 6.8 KB chunk and about 0.3 KB in each of the four non-English tool-text chunks, against a ceiling that had 0.4 KB of headroom. The deferred total is 327.9 KB across 48 chunks, so the ceiling moved 16 KB to 336 KB and keeps 8.1 KB of headroom; the first visit was 140.6 KB and the per-chunk ceiling did not move. The first visit then moved once more, for finished surface rather than slack: the owner's art landed behind the home hero (a 900 px wash, 9.3 KB gzipped, blurred inside the file so its baked wordmark becomes a ghost), the badge sits inline in the header (about 6.2 KB), and the display face changed from Dosis to Game Buddy, whose Latin-1 subset is 29 KB against Dosis's 21 KB and takes the inlined faces from 56 KB to 64 KB gzipped. That is 140.6 + 9 + 6 + 8 = 165 KB measured, so the ceiling moved once, to 180 KB, leaving 15 KB for the next change. The 2026-11-18 audit added seven rulebooks to the shelves and seven marks, all deferred: the total is 335.9 KB across 48 chunks, 70 bytes inside the ceiling, so tool-file
+scripts and the twenty-nine diagnostic strings that had never been translated used the last
+of the headroom; the next addition needs a shelf split with its arithmetic written down
+here, not a silent raise, and the first visit is 165.3 KB, 14.7 KB inside its own. These are ceilings, not targets.
 
 ### 5.3 Gates
 
@@ -433,6 +437,80 @@ removed screen cannot leave five strings behind. A rematch saves the finished pl
 before it starts a fresh session, and the shared mode pills, tabs, search fields and
 gallery chips are 48 px, since the accessibility floor is a real gate rather than a
 style preference.
+
+Tool files (shipped, 2026-11-18): a `.gamebuddy` cannot add a tool on its own —
+`resolveTemplate` reads `schemas.generated.ts` and `moduleFor` reads
+`tools.generated.ts`, both written from the tool folders at build time, so an id with
+no folder is a warning plus an unavailable card. `docs/PLUGIN-FORMAT.md` specifies a
+separate `.gamebuddy-tool` that declares one tool as data:
+`[tool]` identity, `[setting]` lines written in the schema types that already exist, and
+one `[block <id>]` per piece of the screen drawn from the app's own components, with
+the template format untouched and `format:` still 1. Three things decided that shape.
+There is no runtime Svelte compiler in the build, so a component inside a file would
+mean shipping `svelte/compiler` and `new Function` — megabytes that break the 150 KB
+first visit and the single-file build at once. A shared file that executes code would
+be the first exception to a record this app has kept everywhere (an uploaded SVG is
+drawn through `<img>` so its script cannot run, a theme is a list of validated tokens
+so it cannot inject a rule, `#/selftest` stubs `fetch` so even a mistake is visible),
+and a Web Worker is not a boundary while the downloaded `file://` copy has no response
+headers for a CSP. Declarative blocks also inherit the 48 px and contrast gates instead
+of dumping accessibility debt on the table. Every installed tool shares one compiled
+`plugin` chunk, so ten tool files add nothing to start-up; the lookup gains a second
+source ahead of the unavailable card rather than the frozen format gaining a section.
+That is now built: `core/tool-file.ts` parses, validates, stores and serialises the
+file, `src/tools/plugin/` draws its blocks, a drop installs a definition before the
+template that needs it, Settings lists and exports installed files, `#/toolfile/`
+shares one, and `[script]` gained `do: <instance> <command>`. Uploaded `.tool.js` stays
+out; if it ever ships it is an explicit trusted-author switch and not a default.
+
+Brand art and the display face: the badge, the room behind the home hero and the tab
+icon are Tiamo's paintings, so the app ships four bitmaps under a rule that used to say
+no raster art at all. The two the screens use are base64 in the bundle rather than files
+beside it, because the single file has to keep working from `file://` and nothing may be
+fetched; only the favicon keeps a URL, because a browser asks for it by one. The hero is
+blurred into the 900 px file instead of by a CSS filter, so a phone never blurs a
+full-screen layer on every paint, and a `--paper` cloud between art and copy is what
+holds the title's measured contrast — which is also why dark mode dims the room instead
+of lighting it. The display face became Game Buddy, one Bold drawing derived from
+DejaVu: its `@font-face` declares `100 900` so heavier headings use that drawing
+unchanged instead of a synthesised bolder one, and the subset keeps Latin-1 because a
+game name a player types appears in that face. The first visit moved once, from 150 KB
+to 180 KB, for 165 KB measured: finished surface the owner asked for, not a gate bent to
+pass.
+
+Tools and templates audit (2026-11-18): a reveal role may be written `fill`, because
+the Avalon and Werewolf templates already asked for one and were silently dealt a
+pool with no villagers in it. A fill role takes the players the fixed cards leave
+over and two fills split that remainder evenly (earlier role first), so a deck always
+matches the table and one template covers a player range without a block per count;
+where a game needs an uneven split, the player sets one fill role's count in Edit
+roles. The audit also fixed the dice breakdown showing a dropped die as kept when two
+dice showed the same face, gave a rounds scorepad its first column instead of an empty
+screen, and moved the timer's screen-reader announcements, the turn log and the
+lives/bag result names out of English into the locale files. Template corrections went
+the other way: Coup's reveal block dealt one card per player where the game deals two,
+so it is gone; Codenames scored nothing meaningful and now counts the cards each team
+has left; Boggle asked the word filter for exactly three letters; Trivia Night opened a
+prompt pack about hypotheticals; Werewolf named an One Night role and a One Night
+source for a classic night. The seven new templates are Scattergories, Rummy, Spades,
+King of Tokyo, Cascadia, Spyfall and Taboo: each needed no schema key. `reveal` still
+has no private "inspect another player" view — the docs claimed one, so the docs lost
+the claim rather than the werewolf script pretending it exists; adding that view is a
+feature for a later milestone, not a fix.
+
+Tool-file scripts (2026-11-18, second pass): a `.gamebuddy-tool` may now carry
+JavaScript in `[script <id>]` sections, inline or from a `.js` picked with the file,
+run at four entry points — a fresh session's `start`, a `reset`, a button's `run:`, and
+every script as a command. It receives `gb`, a small API that calls the very actions a
+button calls, so a change is undoable and a counter limit still holds. What was ruled
+out in `PLUGIN-FORMAT` §7 was a worker that draws its own view; this is smaller and
+says so: no markup, no CSS, no worker, code with the page's own powers, trusted by
+installing. The parser compiles every body so a syntax error is a line-numbered
+diagnostic before install. The same pass found that twenty-eight `diag.tool-*` keys had
+never been translated (tool-file errors showed raw keys), added them in five languages,
+and tightened the i18n gate to scan `translate(`/`translateIn(` as well as `t(`. The
+bag's per-player trays also moved from a player's name to their id, so a rename or a
+language switch no longer orphans a tray or leaves a generated seat blank.
 
 ## 10. Global definition of done
 

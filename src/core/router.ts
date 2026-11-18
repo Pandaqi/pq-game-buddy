@@ -1,5 +1,17 @@
 /** Hash router: works over file://, deep links restore the session. */
 
+/**
+ * A hash is user input: `#/template/%` makes `decodeURIComponent` throw, and a typo in a
+ * link should land the router on the same route with the text as written, not on a crash.
+ */
+function decodeSegment(text: string): string {
+  try {
+    return decodeURIComponent(text);
+  } catch {
+    return text;
+  }
+}
+
 export type Route =
   | { name: 'home' }
   | { name: 'session'; tab?: string }
@@ -8,8 +20,10 @@ export type Route =
   | { name: 'log' }
   | { name: 'templates' }
   | { name: 'editor' }
+  | { name: 'template'; id: string }
   | { name: 'display'; instanceId: string }
   | { name: 'import'; payload: string }
+  | { name: 'toolfile'; payload: string }
   | { name: 'notfound'; path: string };
 
 export function parseRoute(hash: string): Route {
@@ -22,6 +36,9 @@ export function parseRoute(hash: string): Route {
       return { name: 'session', tab: rest[0] || undefined };
     case 'tool':
       return { name: 'session', tab: rest[0] || undefined };
+    // `#/toolfile/<payload>` is a shared tool file: decoded, shown, then installed.
+    case 'toolfile':
+      return { name: 'toolfile', payload: rest.join('/') };
     case 'settings':
       return { name: 'settings' };
     case 'selftest':
@@ -32,8 +49,12 @@ export function parseRoute(hash: string): Route {
       return { name: 'templates' };
     case 'editor':
       return { name: 'editor' };
+    // A bundled template by id, so a website can link to one game: the text comes from
+    // the shelf that holds it, not from the URL.
+    case 'template':
+      return { name: 'template', id: decodeSegment(rest[0] || '') };
     case 'display':
-      return { name: 'display', instanceId: decodeURIComponent(rest.join('/')) };
+      return { name: 'display', instanceId: decodeSegment(rest.join('/')) };
     case 'import':
       return { name: 'import', payload: rest.join('/') };
     case 'home':
@@ -59,10 +80,14 @@ export function routeTo(route: Route): string {
       return '#/templates';
     case 'editor':
       return '#/editor';
+    case 'template':
+      return `#/template/${encodeURIComponent(route.id)}`;
     case 'display':
       return `#/display/${encodeURIComponent(route.instanceId)}`;
     case 'import':
       return `#/import/${route.payload}`;
+    case 'toolfile':
+      return `#/toolfile/${route.payload}`;
     default:
       return '#/';
   }

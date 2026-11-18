@@ -74,6 +74,7 @@ const nl = {
   'note-new': 'Nieuw {kind}-deck ({count} kaarten)',
   'note-shuffled': '{count} kaarten geschud',
   'note-dealt': '{deal} kaarten gedeeld aan {players} spelers',
+  'note-drew': 'Trok {cards}',
   'note-table': 'Op tafel: {card}',
   'note-discarded': '{player} legde af',
 };

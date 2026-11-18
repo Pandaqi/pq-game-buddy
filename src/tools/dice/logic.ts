@@ -188,8 +188,16 @@ export function rollDice(expression: DiceExpression, rng: Rng): DiceResult {
 export function describeResult(result: DiceResult): string {
   return result.terms
     .map((term) => {
-      const keptSet = new Set(term.kept);
-      const marks = term.rolls.map((value) => (keptSet.has(value) ? String(value) : `(${value})`));
+      // Count the kept dice rather than remembering their values: two 5s with
+      // keep-highest-1 must show one 5 kept and one dropped.
+      const keptLeft = new Map<number, number>();
+      for (const value of term.kept) keptLeft.set(value, (keptLeft.get(value) ?? 0) + 1);
+      const marks = term.rolls.map((value) => {
+        const left = keptLeft.get(value) ?? 0;
+        if (left <= 0) return `(${value})`;
+        keptLeft.set(value, left - 1);
+        return String(value);
+      });
       return `${term.sign < 0 ? '−' : ''}${term.source}: ${marks.join(' ')}`;
     })
     .join(' · ');

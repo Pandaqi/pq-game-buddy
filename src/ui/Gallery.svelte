@@ -2,11 +2,13 @@
   import { t } from '../core/i18n.svelte';
   import { listRecentImports, type RecentImport } from '../core/recent-imports';
   import { navigate } from '../core/router';
-  import { schemas } from '../core/schemas.generated';
   import { seatNames } from '../core/session';
   import { store } from '../core/session-store.svelte';
+  import { copyText } from '../core/share';
   import { KEYS, readJson, writeJson } from '../core/storage';
   import { parseTemplate, resolveTemplate, type TemplateVariant } from '../core/template/parse';
+  import { toolSchema } from '../core/tool-file';
+  import { templateIdUrl } from '../core/template/share-link';
   import { applyVariant, toolsForSession } from '../core/template/session-tools';
   import { ensureTemplateMarks, templateMarkLazy, templateMarksVersion } from '../core/ui/marks.svelte';
   import Sheet from '../core/ui/Sheet.svelte';
@@ -145,12 +147,20 @@
     choose(shown[Math.floor(Math.random() * shown.length)]);
   }
 
+  /** A bundled template has a short link of its own; an imported one only has its text. */
+  function copyTemplateLink(id: string): void {
+    void copyText(templateIdUrl(id)).then((ok) => {
+      store.toast(ok ? t('toast.template-link-copied') : t('toast.could-not-copy'), ok ? 'info' : 'error');
+    });
+  }
+
   async function startChosen(): Promise<void> {
     const template = chosen;
     const text = chosenText;
     if (!template || !text) return;
     const parsed = parseTemplate(text);
-    const resolved = resolveTemplate(parsed.template, (id) => schemas[id]);
+    // An installed tool file resolves here too, so a saved template previews its tools.
+    const resolved = resolveTemplate(parsed.template, (id) => toolSchema(id));
     const range = parsed.template.game.players;
     const count = parsed.template.players.length ? parsed.template.players.length : Math.max(1, Math.min(20, seats));
     const names = parsed.template.players.length ? parsed.template.players : seatNames(count);
@@ -329,6 +339,9 @@
     <button type="button" class="wide" onclick={startChosen} disabled={!chosenText}>
       {chosenText ? t('seats.start') : t('gallery.loading')}
     </button>
+    {#if templates.some((item) => item.id === current.id)}
+      <button type="button" class="wide ghost" onclick={() => copyTemplateLink(current.id)}>{t('gallery.copy-link')}</button>
+    {/if}
     <button type="button" class="wide ghost" onclick={() => toggleFavourite(current.id)}>
       {favourites.includes(current.id) ? t('gallery.remove-favourite') : t('gallery.add-favourite')}
     </button>

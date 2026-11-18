@@ -1,0 +1,41 @@
+# spyfall.gamebuddy — everyone knows the place except one
+
+[game]
+name: Spyfall
+players: 3-8
+time: 20m
+tags: party, deduction, bluffing
+icon: spyfall
+source: https://boardgamegeek.com/boardgame/166384/spyfall
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Deal one role card each; one player is the spy
+- Put the location cards where the table can see them
+- Agree the round length, eight minutes is usual
+- Pick the first player to ask a question
+
+[rules]
+Everyone knows the location except the spy, who has to work it out.
+- Ask one player a question about the place, and they answer as if they know it
+- Do not name the location in a question or an answer
+- Anyone may call a vote at any time; the table points at one player
+- A caught spy gets one guess at the location
+- The spy wins by guessing the location or by not being caught
+
+[tool reveal roles]
+mode: roles
+roles: spy=1, agent=fill
+auto-hide: 6
+
+[tool timer round]
+mode: countdown
+duration: 8m
+warn-at: 1m
+sound: bell
+
+[tool reveal vote]
+mode: ballot
+ballot: Who is the spy?

@@ -47,6 +47,7 @@ const en = {
   'note-custom': 'Custom bag with {count} tokens',
   'summary-bag': 'Bag: {count} tokens left',
   'summary-tray': 'Tray: {types}',
+  'tray-name': 'Tray',
   'summary-player': '{name}: {types}',
   'toast-empty': 'The bag is empty. Refill it to draw again.',
   'toast-ran-out': 'The bag ran out before the draw finished',

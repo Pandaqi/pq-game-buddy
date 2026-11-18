@@ -65,7 +65,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     ledger[player.id] = [];
   }
 
-  const requestedRounds = Math.max(0, Number(values.rounds ?? 0));
+  const requestedRounds = Math.max(0, Math.round(Number(values.rounds) || 0));
+  // A rounds pad with no rounds is an empty screen, so it starts with one.
+  const initialRounds = mode === 'rounds' ? Math.max(1, requestedRounds) : requestedRounds;
 
   const data = $state<ScoreState>({
     mode,
@@ -77,7 +79,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     notes: {},
     categories,
     formula,
-    roundCount: requestedRounds,
+    roundCount: initialRounds,
     step: Math.max(1, Number(values.step ?? 1)),
     target: Math.max(0, Number(values.target ?? 0)),
     hint: String(values.hint ?? '').trim(),
@@ -87,7 +89,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     revealed: !hidden,
   });
 
-  if (data.mode === 'rounds' && data.roundCount > 0) {
+  if (data.mode === 'rounds') {
     for (const player of data.players) {
       const row = data.rounds[player.id] ?? [];
       while (row.length < data.roundCount) row.push(0);

@@ -32,7 +32,6 @@ warn-at: 20s
 [tool words check]
 profile: en
 mode: filters
-length: 3
 
 [tool score]
 mode: rounds

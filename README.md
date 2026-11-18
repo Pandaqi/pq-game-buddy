@@ -22,7 +22,8 @@ Then open the URL Bun prints (usually `http://localhost:3000`).
 ```bash
 bun run build        # dist/index.html, app.js + chunks/, app.css
                      # plus dist/pq-game-buddy.html: one self-contained offline file
-bun run build:site   # also dist/<tool>/index.html: one small page per tool
+bun run build:site   # also dist/<tool>/index.html and dist/template/<id>/index.html:
+                     # one small page per tool and per template
 bun run build:single # just dist/index.html with everything embedded: one file
 bun run size         # check dist/size.json against the budgets
 ```

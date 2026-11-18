@@ -11,6 +11,7 @@ HTML file. Read this page, then follow the links. Everything else lives in `docs
 | Non-negotiable invariants, layers, build pipeline | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
 | `.gamebuddy` template format (frozen v1) | [docs/TEMPLATE-FORMAT.md](docs/TEMPLATE-FORMAT.md) |
 | `.gamebuddy-theme` keys and validation | [docs/THEME-FORMAT.md](docs/THEME-FORMAT.md) |
+| `.gamebuddy-tool` format (a tool as data) | [docs/PLUGIN-FORMAT.md](docs/PLUGIN-FORMAT.md) |
 | Add or change a tool | [docs/TOOL-AUTHORING.md](docs/TOOL-AUTHORING.md) |
 | Using the app, template errors, limitations | [docs/USER-GUIDE.md](docs/USER-GUIDE.md) |
 | Contributing a community template | [docs/COMMUNITY.md](docs/COMMUNITY.md) |
@@ -31,7 +32,7 @@ bun run dev          # dev server, HMR, prints the URL
 bun run gen          # regenerate manifest/schemas/templates after adding a tool or template
 bun run check        # stale manifest + tsc + svelte-check + tests + template lint + build
 bun run build        # dist/ (hosted, code-split) + dist/pq-game-buddy.html (offline copy)
-bun run build:site   # also dist/<tool>/index.html: one small page per tool
+bun run build:site   # also dist/<tool>/index.html and dist/template/<id>/index.html
 bun run build:single # dist/index.html only, JS and CSS embedded: one file to copy around
 bun run build --langs=nl  # one language only: every language is a chunk, English too
 bun run size         # check dist/size.json against the budgets

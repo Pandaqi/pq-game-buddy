@@ -74,6 +74,7 @@ const de = {
   'note-new': 'Neues Deck „{kind}“ ({count} Karten)',
   'note-shuffled': '{count} Karten gemischt',
   'note-dealt': '{deal} Karten an {players} Spieler gegeben',
+  'note-drew': 'Gezogen: {cards}',
   'note-table': 'Auf dem Tisch: {card}',
   'note-discarded': '{player} hat abgelegt',
 };

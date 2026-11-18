@@ -1,0 +1,41 @@
+# taboo.gamebuddy — say the word without the words on the card
+
+[game]
+name: Taboo
+players: 4-12
+time: 30m
+tags: party, guessing, realtime
+icon: taboo
+source: https://www.hasbro.com/en-us/product/taboo
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Split into two teams and shuffle the card deck
+- Agree the round length, one minute is usual
+- Agree the number of rounds, six is a full game
+- Pick the first clue-giver
+
+[rules]
+Get your team to say the word without saying the word or any word on its card.
+- The clue-giver may not say the answer or the forbidden words
+- No gestures, spelling, rhymes or "sounds like"
+- A correct guess scores a point, and a pass costs one
+- Teams alternate clue-givers until the rounds are done
+- Highest total wins
+
+[tool timer round]
+mode: countdown
+duration: 1m
+warn-at: 15s
+sound: buzzer
+
+[tool turns]
+phases: Clue, Guess, Score
+pass: no
+
+[tool score]
+mode: rounds
+rounds: 6
+win: highest

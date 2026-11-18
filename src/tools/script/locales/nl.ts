@@ -55,6 +55,7 @@ const nl = {
   'step-wait': 'Houd de tafel even vast',
   'step-reveal': 'Geef de telefoon door voor een geheim',
   'step-timer': 'Bestuurt een andere tool',
+  'step-do': 'Drukt een knop van een ander gereedschap',
   'step-note': 'Notitie voor de verteller, niet voorgelezen',
   'step-end': 'Einde van het script',
   'step-unknown': 'Onbekende stap "{verb}"',

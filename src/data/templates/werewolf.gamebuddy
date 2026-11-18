@@ -6,7 +6,7 @@ players: 5-10
 time: 30m
 tags: deduction, party
 icon: werewolf
-source: https://boardgamegeek.com/boardgame/147949/one-night-ultimate-werewolf
+source: https://en.wikipedia.org/wiki/Mafia_(party_game)
 author: pandaqi
 license: CC-BY-SA-4.0
 format: 1
@@ -25,7 +25,7 @@ Villagers must find the werewolves before the village empties.
 
 [tool reveal roles]
 mode: roles
-roles: werewolf=2, seer=1, troublemaker=1, villager=fill
+roles: werewolf=2, seer=1, villager=fill
 auto-hide: 8
 
 [tool timer discuss]
@@ -42,8 +42,8 @@ sound: bell
 5. say: Werewolves, open your eyes and look at each other.
 6. wait: 5s
 7. say: Werewolves, close your eyes.
-8. say: Seer, take the phone and inspect one player's role.
-9. say: Seer, open the Reveal tool and inspect one player, then cover it again.
+8. say: Seer, open your eyes. Point at one player and the narrator shows you that role card.
+9. wait: 5s
 10. say: Seer, close your eyes. Everyone, open your eyes.
 11. wait: 5s
 12. say: Discuss and vote for a werewolf.

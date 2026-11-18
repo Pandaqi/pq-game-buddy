@@ -30,7 +30,7 @@ Your game is saved automatically. Closing the tab and coming back offers to resu
 | Lives | HP, lives, stocks; tap a score to type a whole throw; extra tracks; conditions; elimination |
 | Counters | Wood, coins, tokens, a shared bank, or a straight points counter |
 | Turns | Whose turn, round number, phases, optional turn clock, initiative order |
-| Reveal | Secret roles, inspecting one player, anonymous ballots, blind bids |
+| Reveal | Secret roles, anonymous ballots, blind bids |
 | Rules | The quick explanation, setup checklist, glossary, scoring reference |
 | Decks | Shuffle, cut, deal, draw, hidden hands |
 | Bag | Blind draws from tiles or tokens, with letter values |

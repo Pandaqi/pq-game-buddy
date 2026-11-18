@@ -49,6 +49,10 @@ const nl = {
   'summary-track-value': '{name}: {value}',
   'summary-conditions': 'Toestanden: {names}',
   'summary-over': 'Spel voorbij',
+  'over-out': 'Geen levens meer',
+  'over-wins': '{name} wint',
+  'over-all-out': 'Iedereen ligt eruit',
+  'table-name': 'Tafel',
 };
 
 export default nl;

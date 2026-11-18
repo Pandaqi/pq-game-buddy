@@ -64,7 +64,7 @@ There is one place with a colour, a radius or a shadow: `core/styles/tokens.css`
 type scale, the borderless key and field, focus and print rules, and the one-shot
 entrance keyframes. `core/styles/components.css` holds the primitives every screen
 repeats (panels, stages, rows, fields, mode switches, tables, folds), and
-`core/styles/fonts.css` holds the base64 Dosis and Raleway faces. `core/ui/icons.ts`
+`core/styles/fonts.css` holds the base64 Game Buddy and Raleway faces. `core/ui/icons.ts`
 holds every mark on one grid and `core/ui/doodles.ts` the decorative woodland SVG. A tool inherits all of it; it sets `data-family` through its
 `meta.family` and gets that family's accent, and it must not name a colour itself.
 `docs/STYLE.md` is the contract and the restyle checklist. `core/theme.ts` parses a
@@ -149,8 +149,8 @@ probed at boot; a banner tells the user when saving is not durable.
 
 | Mode | Emits |
 |------|-------|
-| `spa` (default) | `dist/index.html`, `dist/app.js`, the shared chunk it imports, `dist/app.css`, `dist/chunks/`, plus `dist/pq-game-buddy.html` |
-| `site` | the same, plus `dist/<tool>/index.html` for every non-`dev` tool |
+| `spa` (default) | `dist/index.html`, `dist/app.js`, the shared chunk it imports, `dist/app.css`, `dist/chunks/`, plus `dist/pq-game-buddy.html` and `dist/templates.json` |
+| `site` | the same, plus `dist/<tool>/index.html` for every non-`dev` tool, and `dist/template/<id>/index.html` for every bundled and community template |
 | `single` | one `dist/index.html` with JS and CSS embedded, and nothing else |
 
 `scripts/svelte-compile.ts` is the single Svelte compile for the build, for
@@ -163,9 +163,18 @@ production alike, and why a test mounts what ships.
 
 Both the spa and site builds end with a second pass with splitting off, which
 inlines every dynamic import into the offline copy, so it never fetches a chunk.
-A site page is the same shell with `data-tool="<id>"` on `<body>`, `../app.js`,
-and that tool's title and description; `src/main.ts` passes the id to `App`,
-which starts the tool directly.
+A site page is the same shell with `data-tool="<id>"` and `data-root="../"` on
+`<body>`, `../app.js`, and that tool's title and description; `src/main.ts` passes the id to `App`,
+which starts the tool directly. A template page is the same shell at
+`dist/template/<id>/index.html` with `data-template="<id>"` and `../../app.js`, built
+from the generated catalogue so the list can never drift from what ships; `App` loads
+that template's text and opens the seat-and-variant chooser. The ids are the ones the
+gallery uses, and `#/template/<id>` stays a permanent alias for links written before
+these pages existed. Each generated page declares its own `<link rel="canonical">` and
+Open Graph tags under `https://pandaqi.com/game-buddy/` (set `PQGB_ORIGIN` to build the
+same site elsewhere), and `dist/templates.json` publishes that catalogue as a contract:
+the website checks its `gamebuddy:` links against it (SC-9, `bun run gamebuddy` in the
+studio's audit folder) instead of trusting a hand-written id.
 
 `Bun.build` reports every output, so the build script measures the first visit by
 following static `import`/`from` references from `app.js` (the chunk manifest's

@@ -8,7 +8,10 @@
   import { navigate } from '../core/router';
   import { store } from '../core/session-store.svelte';
   import { copyText, download } from '../core/share';
+  import { parseTemplate } from '../core/template/parse';
   import { suggestFilename } from '../core/template/serialize';
+  import { assetMark } from '../core/template/assets';
+  import { exportToolFile, isInstalledToolFile, toolFileDefinition } from '../core/tool-file';
   import { shareTooLong, templateShareUrl } from '../core/template/share-link';
   import Confetti from '../core/ui/Confetti.svelte';
   import PlayerChip from '../core/ui/PlayerChip.svelte';
@@ -44,6 +47,17 @@
 
   const session = $derived(store.session);
 
+  /**
+   * The game's own page, from the `source:` line its template carries. The template text is
+   * stored in the session, so this needs no extra field and covers imports as well.
+   */
+  const sourceUrl = $derived.by(() => {
+    const text = session?.templateText;
+    if (!text) return '';
+    const url = parseTemplate(text).template.game.source ?? '';
+    return /^https?:\/\//.test(url) ? url : '';
+  });
+
   /** Seat names as this language says them: a generated seat is translated here. */
   const players = $derived(store.players());
 
@@ -67,6 +81,8 @@
     void store.version;
     return entry?.undo.label() ?? null;
   });
+  /** Installed tool files this game uses: each one can travel as its own file. */
+  const toolFileEntries = $derived(entries.filter((item) => isInstalledToolFile(item.toolId)));
 
   // A tool tab swap is not a route change, so it asks for the same reset itself.
   let shownTool = '';
@@ -79,7 +95,17 @@
 
   // The seat strip is chrome, not content: open where a tool seats everyone,
   // folded away everywhere else. The choice sticks per tool instance.
-  const seats = $derived(entry?.module.seats ?? 'multi');
+  // An installed definition's own seats and accent win over the shared runtime's.
+  function familyOf(item: { toolId: string; module: { family: string } }): string {
+    return toolFileDefinition(item.toolId)?.family ?? item.module.family;
+  }
+  function iconOf(item: { toolId: string; module: { icon: string } }): string {
+    const definition = toolFileDefinition(item.toolId);
+    return definition ? assetMark(definition.icon) || item.module.icon : item.module.icon;
+  }
+  const seats = $derived(
+    (entry ? toolFileDefinition(entry.toolId)?.seats : undefined) ?? entry?.module.seats ?? 'multi',
+  );
   let seatPrefs = $state<Record<string, boolean>>({});
   let toolsOpen = $state(false);
   const seatsOpen = $derived(seatPrefs[entry?.id ?? ''] ?? seats === 'multi');
@@ -117,6 +143,14 @@
     if (!session) return;
     const text = store.exportTemplate();
     download(suggestFilename(session.gameName), text);
+    store.toast(t('toast.template-saved'));
+    menuOpen = false;
+  }
+
+  function saveToolFile(id: string): void {
+    const text = exportToolFile(id);
+    if (!text) return;
+    download(`${id}.gamebuddy-tool`, text);
     store.toast(t('toast.template-saved'));
     menuOpen = false;
   }
@@ -301,7 +335,7 @@
   }
 </script>
 
-<div class="session" data-family={entry?.module.family ?? 'track'}>
+<div class="session" data-family={entry ? familyOf(entry) : 'track'}>
   <header class="head">
     <div class="title">
       <h1>{sessionName}</h1>
@@ -360,7 +394,7 @@
       >
         <span class="tab-marks" aria-hidden="true">
           {#each entries.slice(0, 3) as item (item.id)}
-            <span class="tab-mark">{@html item.module.icon}</span>
+            <span class="tab-mark">{@html iconOf(item)}</span>
           {/each}
         </span>
         <span>
@@ -382,9 +416,9 @@
               aria-selected={store.activeId === item.id}
               class:active={store.activeId === item.id}
               onclick={() => store.setTab(item.id)}
-              data-family={item.module.family}
+              data-family={familyOf(item)}
             >
-              <span class="tab-mark" aria-hidden="true">{@html item.module.icon}</span>
+              <span class="tab-mark" aria-hidden="true">{@html iconOf(item)}</span>
               {item.label}
             </button>
           {/each}
@@ -544,9 +578,15 @@
       <a class="wide link" href={displayUrl(entry.id)} target="_blank" rel="noopener noreferrer">{t('menu.display')}</a>
     {/if}
     <button type="button" class="wide" onclick={saveTemplate}>{t('menu.save-template')}</button>
+    {#each toolFileEntries as item (item.id)}
+      <button type="button" class="wide" onclick={() => saveToolFile(item.toolId)}>{t('menu.save-tool', { name: item.toolId })}</button>
+    {/each}
     <button type="button" class="wide" onclick={shareLink}>{t('menu.share')}</button>
     <button type="button" class="wide" onclick={showQr}>{t('menu.qr')}</button>
     <button type="button" class="wide" onclick={exportSession}>{t('menu.export-session')}</button>
+    {#if sourceUrl}
+      <a class="wide link" href={sourceUrl} target="_blank" rel="noopener noreferrer">{t('menu.game-page')}</a>
+    {/if}
     <a class="wide link" href="#/log">{t('menu.log')}</a>
     <a class="wide link" href="#/settings">{t('menu.settings')}</a>
     <button type="button" class="wide" onclick={() => { store.saveNow(); store.toast(t('toast.saved')); }}>{t('menu.save-now')}</button>

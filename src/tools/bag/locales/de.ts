@@ -60,6 +60,7 @@ const de = {
   'undo-custom': 'eigener Beutel',
   'summary-bag': 'Beutel: noch {count} Steine',
   'summary-tray': 'Fach: {types}',
+  'tray-name': 'Fach',
   'summary-player': '{name}: {types}',
 };
 

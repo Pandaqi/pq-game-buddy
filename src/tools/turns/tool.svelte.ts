@@ -88,7 +88,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     data.timer.remaining = left;
     if (left > 0) return;
     stopTimer();
-    log(`${currentName(data, language())} ran out of time`);
+    log(translate('turns.toast-time-up', { name: currentName(data, language()) }));
     ctx.audio.play('bell');
     ctx.haptics.buzz('long');
     ctx.toast(translate('turns.toast-time-up', { name: currentName(data, language()) }));
@@ -219,7 +219,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       else advance(data);
       stopTimer();
       data.timer.remaining = data.timer.duration;
-      log(`Round ${data.round} · ${currentName(data, language())}`);
+      log(`${translate('turns.round', { count: data.round })} · ${currentName(data, language())}`);
       ctx.haptics.buzz('short');
       // With a pass cover up, the clock waits until the next player taps in.
       if (data.autoStart && data.timer.duration > 0 && !data.pass) beginTimer(false);
@@ -247,7 +247,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       jumpTo(data, next);
       stopTimer();
       data.timer.remaining = data.timer.duration;
-      log(`Round ${data.round} · ${currentName(data, language())}`);
+      log(`${translate('turns.round', { count: data.round })} · ${currentName(data, language())}`);
       ctx.haptics.buzz('short');
     },
     setPhase(index) {
@@ -255,7 +255,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       if (next === data.phase) return;
       ctx.undo.push(translate('turns.undo-phase'));
       data.phase = next;
-      log(`Phase: ${currentPhase(data)}`);
+      log(`${translate('turns.phase')}: ${currentPhase(data)}`);
     },
     setOrder(seats) {
       // A text edit keeps a generated seat when its shown label was left alone,
@@ -296,7 +296,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       newInitiativeRound(data);
       stopTimer();
       data.timer.remaining = data.timer.duration;
-      log(`Round ${data.round} · initiative reset`);
+      log(
+        `${translate('turns.round', { count: data.round })} · ${translate('turns.new-round')}`,
+      );
     },
     syncPlayers() {
       const players = ctx.session.players();

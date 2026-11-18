@@ -22,6 +22,7 @@ Two spymasters know which words belong to which team; everyone else guesses.
 - Guess up to that many words; stop whenever you like
 - An innocent bystander ends your turn and the assassin loses the game
 - Clear all your team's words to win
+- Mark each word as it is guessed, and count the cards each team has left here
 
 [tool words board]
 profile: en
@@ -33,6 +34,7 @@ duration: 2m
 warn-at: 20s
 sound: bell
 
-[tool score]
-mode: simple
-win: highest
+[tool counters]
+mode: count
+counters: red-left=9, blue-left=8
+step: 1

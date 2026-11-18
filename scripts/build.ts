@@ -10,25 +10,35 @@ import type { BunPlugin } from 'bun';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import type { TemplateSummary } from '../src/data/template-summary';
 import { svelteCompile } from './svelte-compile';
 
 const root = join(import.meta.dir, '..');
 const dist = join(root, 'dist');
 const sizeFile = join(dist, 'size.json');
 const shellFile = join(root, 'index.html');
+/** Where the site build lives: the canonical URL every generated page declares. */
+const SITE_ORIGIN = (process.env.PQGB_ORIGIN ?? 'https://pandaqi.com/game-buddy').replace(/\/$/, '');
 
 // Ceilings, not targets. The start-up budget came down twice: views and pages
 // became chunks for M4, then whole tool modules did (see ROADMAP.md §5.2). Now
 // that a tool's code arrives with its chunk, the per-chunk ceiling is what one
 // screen can cost, and the total keeps the deferred catalogue from sprawling.
 // The single file has no ceiling: it is the whole app in one file.
-const BUDGET_APP_GZ = 150 * 1024;
+// M12 moved the first visit from 150 KB to 180 KB once: the owner's brand art landed
+// (a 9 KB hero wash and the badge inline at about 6 KB) and the display face changed
+// from Dosis (21 KB subset) to Game Buddy (29 KB, Latin-1), 8 KB more. Both are
+// finished surface, not slack; the arithmetic is in ROADMAP.md §5.2.
+const BUDGET_APP_GZ = 180 * 1024;
 const BUDGET_CHUNK_GZ = 24 * 1024;
 // M10 raised this ceiling once, from 250 KB, when German, Spanish and French
 // landed beside English and Dutch: five languages at about 22 KB each are
 // 302.6 KB across 42 chunks, so the ceiling is 320 KB. A sixth language needs its
 // own arithmetic in ROADMAP.md §5.2 before it moves again.
-const BUDGET_CHUNKS_TOTAL_GZ = 320 * 1024;
+// M11 raised it once more, to 336 KB: the tool-file runtime is one 6.8 KB chunk
+// plus about 0.3 KB in each of four tool-text chunks, and the previous ceiling had
+// 0.4 KB of headroom. The arithmetic is in ROADMAP.md §5.2.
+const BUDGET_CHUNKS_TOTAL_GZ = 336 * 1024;
 
 const MODES = ['spa', 'site', 'single'] as const;
 type Mode = (typeof MODES)[number];
@@ -301,19 +311,58 @@ const chunks = [...files.keys()]
   .filter((file) => file.endsWith('.js') && !startup.includes(file))
   .sort();
 
+// The tab icon is injected here with the manifest, not written in the shell: a favicon
+// needs a URL to live at, and only a hosted build has one (a copied file has no server
+// and the dev shell has no public/ directory). public/ is copied to the dist root.
 const hostedHtml = shell.replace(
   scriptTag,
-  `<link rel="manifest" href="./manifest.webmanifest" />\n    <meta name="pq-pwa" content="1" />\n    <link rel="stylesheet" href="./app.css" />\n    <script type="module" src="./app.js"></script>`,
+  `<link rel="icon" href="./icon.webp" type="image/webp" sizes="256x256" />\n    ` +
+    `<link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192" />\n    ` +
+    `<link rel="apple-touch-icon" href="./icon-192.png" />\n    ` +
+    `<link rel="manifest" href="./manifest.webmanifest" />\n    ` +
+    `<meta name="pq-pwa" content="1" />\n    ` +
+    `<link rel="stylesheet" href="./app.css" />\n    ` +
+    `<script type="module" src="./app.js"></script>`,
 );
 writeFileSync(join(dist, 'index.html'), hostedHtml);
+
+// The catalogue as a public contract: pandaqi.com checks its template links against this
+// file, so a renamed template is caught where the link lives instead of in a visitor's 404.
+const catalogue = await templateCatalogue();
+writeFileSync(join(dist, 'templates.json'), templateManifest(catalogue));
 
 if (mode === 'site') {
   const pages = await toolPages();
   for (const page of pages) {
     mkdirSync(join(dist, page.id), { recursive: true });
-    writeFileSync(join(dist, page.id, 'index.html'), toolPage(hostedHtml, page));
+    writeFileSync(
+      join(dist, page.id, 'index.html'),
+      shellPage(hostedHtml, {
+        title: page.title,
+        description: page.blurb,
+        path: `${page.id}/`,
+        up: '../',
+        marker: `data-tool="${page.id}"`,
+      }),
+    );
   }
   console.log(`[build] ${pages.length} tool pages: dist/<tool>/index.html`);
+
+  const templates = templatePages(catalogue);
+  for (const template of templates) {
+    mkdirSync(join(dist, 'template', template.id), { recursive: true });
+    writeFileSync(
+      join(dist, 'template', template.id, 'index.html'),
+      shellPage(hostedHtml, {
+        title: template.name,
+        description: template.description,
+        path: `template/${template.id}/`,
+        up: '../../',
+        marker: `data-template="${template.id}"`,
+      }),
+    );
+  }
+  console.log(`[build] ${templates.length} template pages: dist/template/<id>/index.html`);
 }
 
 const single = await bundle(scratch, false);
@@ -389,28 +438,104 @@ async function toolPages(): Promise<PageMeta[]> {
   return pages.sort((a, b) => a.id.localeCompare(b.id));
 }
 
+interface TemplateMeta {
+  id: string;
+  name: string;
+  description: string;
+}
+
+/**
+ * What this build carries, read from the generated catalogue: one import for both the pages
+ * and `dist/templates.json`. `bun run gen` already fails on a duplicate id.
+ */
+async function templateCatalogue(): Promise<TemplateSummary[]> {
+  const module = (await import(pathToFileURL(join(root, 'src', 'data', 'templates.generated.ts')).href)) as {
+    bundledTemplates: TemplateSummary[];
+    communityTemplates: TemplateSummary[];
+  };
+  return [...module.bundledTemplates, ...module.communityTemplates].sort((a, b) => a.id.localeCompare(b.id));
+}
+
+/**
+ * One page per bundled and community template, so `/game-buddy/template/catan/` is a real
+ * URL a website can link to.
+ */
+function templatePages(catalogue: TemplateSummary[]): TemplateMeta[] {
+  return catalogue.map((template) => {
+    const facts = [template.players ? `${template.players} players` : '', template.time ?? ''].filter(Boolean);
+    return {
+      id: template.id,
+      name: template.name,
+      description: `${template.name}: a ready-to-play Game Buddy template${facts.length ? ` for ${facts.join(', ')}` : ''}.`,
+    };
+  });
+}
+
+/** The same catalogue in the shape another site can check its links against. */
+function templateManifest(catalogue: TemplateSummary[]): string {
+  const templates = catalogue.map((template) => ({
+    id: template.id,
+    name: template.name,
+    players: template.players,
+    time: template.time,
+    url: `/game-buddy/template/${template.id}/`,
+  }));
+  return `${JSON.stringify({ format: 1, templates }, null, 2)}\n`;
+}
+
+/**
+ * One page from the shell: title, description, asset paths and the attribute that tells
+ * `App` what to boot. `up` is the way back to the app root, written once as `data-root` so
+ * copied links and asset paths can never disagree, and `path` is this page relative to it;
+ * `marker` is the whole attribute, so a page that ends up without either fails the build
+ * instead of shipping.
+ */
+function shellPage(
+  html: string,
+  page: { title: string; description: string; path: string; up: string; marker: string },
+): string {
+  const title = escapeHtml(page.title);
+  const description = escapeHtml(page.description);
+  const url = escapeHtml(`${SITE_ORIGIN}/${page.path}`);
+  const head =
+    `<meta name="description" content="${description}" />\n    ` +
+    `<link rel="canonical" href="${url}" />\n    ` +
+    `<meta property="og:type" content="website" />\n    ` +
+    `<meta property="og:site_name" content="Game Buddy" />\n    ` +
+    `<meta property="og:title" content="${title}" />\n    ` +
+    `<meta property="og:description" content="${description}" />\n    ` +
+    `<meta property="og:url" content="${url}" />`;
+  const built = html
+    .replace(/<title>[^<]*<\/title>/, `<title>${title} — Game Buddy</title>`)
+    .replace(/<meta name="description" content="[^"]*" \/>/, head)
+    .replace('href="./app.css"', `href="${page.up}app.css"`)
+    .replace('src="./app.js"', `src="${page.up}app.js"`)
+    .replace('href="./manifest.webmanifest"', `href="${page.up}manifest.webmanifest"`)
+    .replace('href="./icon.webp"', `href="${page.up}icon.webp"`)
+    .replaceAll('href="./icon-192.png"', `href="${page.up}icon-192.png"`)
+    .replace('<body>', `<body ${page.marker} data-root="${page.up}">`);
+  // A generated page must be able to find its own way back: its bundle, the boot marker,
+  // the root that asset paths and copied links resolve against, and its canonical URL.
+  // A shell change that drops one of them fails here instead of in a visitor's copied link.
+  const required = [
+    `src="${page.up}app.js"`,
+    page.marker,
+    `data-root="${page.up}"`,
+    `href="${url}"`,
+    `href="${page.up}icon.webp"`,
+  ];
+  const missing = required.filter((needle) => !built.includes(needle));
+  if (missing.length) {
+    console.error(`[build] page ${page.marker} is missing ${missing.join(', ')}`);
+    process.exit(1);
+  }
+  return built;
+}
+
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
-}
-
-/** One tool, one folder, one page: the app boots straight into that tool. */
-function toolPage(html: string, meta: PageMeta): string {
-  const page = html
-    .replace(/<title>[^<]*<\/title>/, `<title>${escapeHtml(meta.title)} — Game Buddy</title>`)
-    .replace(/(<meta name="description" content=")[^"]*(")/, `$1${escapeHtml(meta.blurb)}$2`)
-    .replace('href="./app.css"', 'href="../app.css"')
-    .replace('src="./app.js"', 'src="../app.js"')
-    .replace('href="./manifest.webmanifest"', 'href="../manifest.webmanifest"')
-    .replace('<body>', `<body data-tool="${escapeHtml(meta.id)}">`);
-  const built =
-    page.includes('src="../app.js"') && page.includes(`data-tool="${escapeHtml(meta.id)}"`);
-  if (!built) {
-    console.error(`[build] could not build the page for "${meta.id}"`);
-    process.exit(1);
-  }
-  return page;
 }

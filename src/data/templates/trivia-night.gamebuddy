@@ -38,9 +38,5 @@ mode: rounds
 rounds: 6
 win: highest
 
-[tool prompts questions]
-packs: would-you-rather, charades
-draw: 1
-
 [tool rules]
 quick: Most points after six rounds wins.

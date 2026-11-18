@@ -15,6 +15,7 @@ const loaders: Record<string, () => Promise<AnyToolModule>> = {
   draft: () => import('../tools/draft/tool.svelte.ts').then((module) => module.default),
   lives: () => import('../tools/lives/tool.svelte.ts').then((module) => module.default),
   pick: () => import('../tools/pick/tool.svelte.ts').then((module) => module.default),
+  plugin: () => import('../tools/plugin/tool.svelte.ts').then((module) => module.default),
   prompts: () => import('../tools/prompts/tool.svelte.ts').then((module) => module.default),
   reveal: () => import('../tools/reveal/tool.svelte.ts').then((module) => module.default),
   rules: () => import('../tools/rules/tool.svelte.ts').then((module) => module.default),

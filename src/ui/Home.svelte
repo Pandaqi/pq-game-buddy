@@ -3,7 +3,11 @@
   import { gameName } from '../core/game-name';
   import { manifest } from '../core/manifest.generated';
   import { store } from '../core/session-store.svelte';
-  import { doodle, HERO_SCENE } from '../core/ui/doodles';
+  import { assetMark } from '../core/template/assets';
+  import { installedToolDefinitions } from '../core/tool-file';
+  import { mark } from '../core/ui/icons';
+  import { BRAND_MARK } from '../core/ui/brand-mark';
+  import { doodle } from '../core/ui/doodles';
   import { ensureTemplateMarks, templateMarkLazy, templateMarksVersion } from '../core/ui/marks.svelte';
   import { recentTools, shelfIds } from '../core/ui/tool-shelf';
   import { listTemplates } from '../data/templates';
@@ -37,7 +41,36 @@
   }
 
   /** A saved session's name: a one-tool session says its tool's name in this language. */
-  const allTools = $derived(manifest.filter((module) => !module.tags.includes('dev')));
+  const allTools = $derived.by(() => {
+    // Reading the session version redraws the shelf after a tool file is installed.
+    void store.version;
+    // A tool file may name one of the bundled marks; that map is its own chunk.
+    void templateMarksVersion();
+    const built = manifest
+      .filter((module) => !module.tags.includes('dev'))
+      .map((module) => ({
+        id: module.id,
+        title: toolTitle(module.id, module.title),
+        blurb: toolBlurb(module.id, module.blurb),
+        family: module.family as string,
+        icon: module.icon,
+        mine: false,
+        tags: module.tags,
+      }));
+    const mine = installedToolDefinitions().map((definition) => ({
+      id: definition.id,
+      title: definition.name,
+      blurb: definition.blurb,
+      family: definition.family as string,
+      icon:
+        assetMark(definition.icon) ||
+        (definition.icon ? templateMarkLazy(definition.icon, '') : '') ||
+        mark('gear'),
+      mine: true,
+      tags: definition.tags,
+    }));
+    return [...built, ...mine];
+  });
 
   /** Search looks at every tool; the shelf itself is the everyday few. */
   const matches = $derived.by(() => {
@@ -45,8 +78,8 @@
     if (!needle) return allTools;
     return allTools.filter(
       (module) =>
-        toolTitle(module.id, module.title).toLowerCase().includes(needle) ||
-        toolBlurb(module.id, module.blurb).toLowerCase().includes(needle) ||
+        module.title.toLowerCase().includes(needle) ||
+        module.blurb.toLowerCase().includes(needle) ||
         module.tags.some((tag) => tag.includes(needle)),
     );
   });
@@ -58,6 +91,10 @@
       recent,
       showAll,
     );
+    // A tool you installed yourself is never hidden behind "show all".
+    for (const module of allTools) {
+      if (module.mine && !ids.includes(module.id)) ids.push(module.id);
+    }
     return ids.map((id) => allTools.find((module) => module.id === id)).filter((module) => module !== undefined);
   });
 </script>
@@ -66,18 +103,20 @@
      thing you want is the thing your eye lands on. -->
 <div class="home">
   <section class="hero">
-    <div class="hero-art" aria-hidden="true">{@html HERO_SCENE}</div>
-    <p class="kicker">
-      <span class="kicker-leaf" aria-hidden="true">{@html doodle('leaf')}</span>
-      {t('home.kicker')}
-    </p>
-    <h1>{t('home.title-1')}<br />{t('home.title-2')}</h1>
-    <p class="lede">{t('home.lede')}</p>
+    <div class="hero-art home-hero-art" aria-hidden="true"></div>
+    <div class="hero-copy">
+      <p class="kicker">
+        <span class="kicker-leaf" aria-hidden="true">{@html doodle('leaf')}</span>
+        {t('home.kicker')}
+      </p>
+      <h1>{t('home.title-1')}<br />{t('home.title-2')}</h1>
+      <p class="lede">{t('home.lede')}</p>
+    </div>
   </section>
 
   {#if store.lastSession}
     <button type="button" class="continue" onclick={oncontinue}>
-      <span class="continue-art" aria-hidden="true">{@html doodle('acorn')}</span>
+      <span class="continue-art" aria-hidden="true"><img src={BRAND_MARK} alt="" /></span>
       <span class="continue-text">
         <span class="label">{t('home.continue')}</span>
         <span class="game">{gameName(language(), store.lastSession.toolId, store.lastSession.game)}</span>
@@ -106,8 +145,9 @@
               data-family={module.family}
             >
               <span class="mark" aria-hidden="true">{@html module.icon}</span>
-              <span class="title">{toolTitle(module.id, module.title)}</span>
-              <span class="blurb">{toolBlurb(module.id, module.blurb)}</span>
+              <span class="title">{module.title}</span>
+              <span class="blurb">{module.blurb}</span>
+              {#if module.mine}<span class="mine">{t('home.yours')}</span>{/if}
             </button>
           </li>
         {/each}
@@ -165,39 +205,53 @@
 </div>
 
 <style>
+  /* The page has no column of its own: the hero's art is the one thing that runs edge
+     to edge, so each block gets the 60 rem column and the gutter instead. Nothing here
+     measures against 100vw, which counts a classic scrollbar and would push the page
+     sideways. */
   .home {
-    max-width: 60rem;
-    margin: 0 auto;
-    padding: var(--space-5) var(--space-4) var(--space-7);
+    padding: var(--space-5) 0 var(--space-7);
     display: flex;
     flex-direction: column;
     gap: var(--space-6);
   }
+  .home > :not(.hero),
+  .hero-copy {
+    max-width: 60rem;
+    margin-inline: auto;
+    padding-inline: var(--space-4);
+  }
   .hero {
     position: relative;
-    padding: var(--space-5) 0 var(--space-6);
-    overflow: hidden;
+    isolation: isolate;
+    padding: var(--space-6) 0 var(--space-7);
     animation: bloom var(--motion-bounce) var(--ease-bounce) both;
   }
+  /* The game room behind the words: the full width of the page, blurred in the file
+     itself and masked off slowly from the first third to the last pixel, so it melts
+     into the paper instead of ending on a line. Behind everything (z-index -2), and
+     it never takes a tap. */
   .hero-art {
     position: absolute;
-    right: -1rem;
-    bottom: -1.5rem;
-    width: min(32rem, 78%);
-    opacity: 0.95;
+    inset: calc(-1 * var(--space-5)) 0 0;
+    background-position: center 38%;
+    background-size: cover;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: -2;
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 34%, transparent 100%);
+  }
+  /* A paper cloud under the copy: the heading keeps its contrast over the art, and in
+     dark mode the same layer dims the picture instead of lighting up the room. It is
+     a radial on purpose: a straight edge here would show as a seam of its own. */
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: calc(-1 * var(--space-5)) 0 0;
     pointer-events: none;
     z-index: -1;
-    -webkit-mask-image: linear-gradient(to right, transparent, #000 10%, #000 88%, transparent);
-    mask-image: linear-gradient(to right, transparent, #000 10%, #000 88%, transparent);
-  }
-  @media (max-width: 34rem) {
-    .hero-art {
-      display: none;
-    }
-  }
-  .hero-art :global(svg) {
-    width: 100%;
-    height: auto;
+    background: radial-gradient(120% 80% at 28% 38%, var(--paper) 0%, transparent 70%);
   }
   .kicker {
     display: inline-flex;
@@ -268,9 +322,10 @@
     background: var(--surface);
     flex: none;
   }
-  .continue-art :global(svg) {
-    width: 28px;
-    height: 28px;
+  .continue-art :global(img) {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
   }
   .continue-text {
     display: flex;
@@ -296,8 +351,11 @@
     color: var(--text-dim);
     flex: none;
   }
+  /* The heading and the search share a line while there is room, and the search drops
+     to its own line below that: at 320 px a fixed 11 rem field would push the page wide. */
   .section-head {
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
@@ -307,9 +365,16 @@
     font-size: var(--text-2xl);
     color: var(--forest);
   }
+  .search {
+    display: flex;
+    justify-content: flex-end;
+    flex: 1 1 12rem;
+    min-width: 0;
+  }
   .search input {
+    flex: 1 1 auto;
     min-height: 48px;
-    min-width: 11rem;
+    min-width: 0;
     max-width: 16rem;
   }
   .shelf {
@@ -384,6 +449,15 @@
     font-size: var(--text-sm);
     line-height: 1.45;
   }
+  .mine {
+    margin-top: auto;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-pill);
+    background: var(--accent);
+    color: var(--accent-text);
+    font-size: var(--text-xs);
+    font-weight: 700;
+  }
   .templates {
     list-style: none;
     margin: 0;
@@ -393,7 +467,9 @@
   }
   @media (min-width: 34rem) {
     .templates {
-      grid-template-columns: 1fr 1fr;
+      /* minmax(0, …) so a long game name wraps instead of widening the grid at 320 px
+         or at 200 percent zoom. */
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
   .template {

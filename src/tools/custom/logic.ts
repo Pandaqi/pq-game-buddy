@@ -1,6 +1,9 @@
 /** Build-your-own tracker: fields, counters, a checklist, a table and formulas. */
 
+import { evaluateFormula } from '../../core/formula';
 import { translate } from '../../core/i18n';
+
+export { evaluateFormula };
 
 export type FieldType = 'text' | 'number' | 'checkbox' | 'select' | 'note';
 
@@ -81,102 +84,6 @@ export function colTotal(table: TableData, col: number): number {
 
 export function grandTotal(table: TableData): number {
   return table.cells.reduce((sum, value) => sum + (Number(value) || 0), 0);
-}
-
-const ALLOWED = /^[a-z0-9_+\-*/().,%\s]+$/i;
-
-/**
- * Tiny formula evaluator: numbers, variables, + - * / ( ) and min/max/round/abs.
- * Returns null instead of throwing, so a half-typed formula never breaks a sheet.
- */
-export function evaluateFormula(expression: string, vars: Record<string, number>): number | null {
-  const text = String(expression ?? '').trim();
-  if (!text) return null;
-  if (!ALLOWED.test(text.replace(/\b(min|max|round|abs)\b/gi, ''))) return null;
-  const found = text.match(/[a-zA-Z_][a-zA-Z0-9_]*|\d+(?:\.\d+)?|[()+\-*/,]/g);
-  if (!found) return null;
-  const tokens: string[] = found;
-  let position = 0;
-
-  const peek = (): string | undefined => tokens[position];
-
-  function parseExpression(): number | null {
-    let left = parseTerm();
-    if (left === null) return null;
-    while (peek() === '+' || peek() === '-') {
-      const operator = tokens[position];
-      position += 1;
-      const right = parseTerm();
-      if (right === null) return null;
-      left = operator === '+' ? left + right : left - right;
-    }
-    return left;
-  }
-
-  function parseTerm(): number | null {
-    let left = parseFactor();
-    if (left === null) return null;
-    while (peek() === '*' || peek() === '/') {
-      const operator = tokens[position];
-      position += 1;
-      const right = parseFactor();
-      if (right === null) return null;
-      if (operator === '/' && right === 0) return null;
-      left = operator === '*' ? left * right : left / right;
-    }
-    return left;
-  }
-
-  function parseFactor(): number | null {
-    const token = peek();
-    if (token === undefined) return null;
-    if (token === '(') {
-      position += 1;
-      const value = parseExpression();
-      if (peek() !== ')') return null;
-      position += 1;
-      return value;
-    }
-    if (token === '-') {
-      position += 1;
-      const value = parseFactor();
-      return value === null ? null : -value;
-    }
-    if (/^\d/.test(token)) {
-      position += 1;
-      return Number(token);
-    }
-    if (/^[a-zA-Z_]/.test(token)) {
-      position += 1;
-      const name = token.toLowerCase();
-      if (['min', 'max', 'round', 'abs'].includes(name)) {
-        if (peek() !== '(') return null;
-        position += 1;
-        const args: number[] = [];
-        let value = parseExpression();
-        if (value === null) return null;
-        args.push(value);
-        while (peek() === ',') {
-          position += 1;
-          value = parseExpression();
-          if (value === null) return null;
-          args.push(value);
-        }
-        if (peek() !== ')') return null;
-        position += 1;
-        if (name === 'min') return Math.min(...args);
-        if (name === 'max') return Math.max(...args);
-        if (name === 'round') return Math.round(args[0]);
-        return Math.abs(args[0]);
-      }
-      return vars[name] ?? null;
-    }
-    return null;
-  }
-
-  const result = parseExpression();
-  if (result === null || position !== tokens.length) return null;
-  return Number.isFinite(result) ? result : null;
 }
 
 export function formulaVars(state: CustomState, player?: PlayerSheet): Record<string, number> {

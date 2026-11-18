@@ -85,7 +85,7 @@ export interface ParseResult {
   diagnostics: Diagnostic[];
 }
 
-export const SCRIPT_VERBS = ['say', 'wait', 'reveal', 'timer', 'note'];
+export const SCRIPT_VERBS = ['say', 'wait', 'reveal', 'timer', 'do', 'note'];
 
 type SectionKind =
   | 'game'

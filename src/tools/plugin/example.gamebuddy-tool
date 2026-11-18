@@ -1,0 +1,53 @@
+# check-tray.example.gamebuddy-tool — a d20 check tray for any tabletop game
+
+[tool]
+id: check-tray
+name: Check tray
+blurb: Roll a d20, add a modifier, count how many checks beat the target.
+family: randomize
+seats: multi
+tags: d20, checks
+
+[setting]
+sides: number = 20
+start-modifier: number = 0
+target: number = 12
+
+[block roll]
+kind: roll
+label: Roll
+notation: 1d{sides}
+
+[block modifier]
+kind: counter
+label: Modifier
+start: {start-modifier}
+step: 1
+
+[block margin]
+kind: readout
+label: Margin
+formula: roll + modifier - {target}
+
+[block passes]
+kind: counter
+label: Passes
+start: 0
+step: 1
+min: 0
+
+[block tally]
+kind: button
+label: Count this check
+do: counter passes +1
+
+[block clock]
+kind: button
+label: Start the timer
+do: tool clock start
+
+[block note]
+kind: note
+text: |
+  A margin of 0 or more is a pass. Every roll is undoable, so a miscount is one
+  tap away from being fixed.

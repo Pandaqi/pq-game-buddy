@@ -45,6 +45,19 @@ export function isTemplateFile(name: string): boolean {
   return /\.(gamebuddy|txt)$/i.test(name);
 }
 
+/** A tool file is its own kind: installed before a template that needs it. */
+export function isToolFile(name: string): boolean {
+  return /\.gamebuddy-tool$/i.test(name);
+}
+
+/**
+ * JavaScript picked or dropped beside a tool file, which a `[script]` section
+ * names with `file:`. It is stored with the definition, never served.
+ */
+export function isScriptFile(name: string): boolean {
+  return /\.js$/i.test(name);
+}
+
 /** An exported session resumes a game; it is never parsed as a template. */
 export function isSessionFile(name: string): boolean {
   return /\.json$/i.test(name);

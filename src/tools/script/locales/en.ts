@@ -56,6 +56,7 @@ const en = {
   'step-wait': 'Hold the table for a moment',
   'step-reveal': 'Hand the phone over for a secret',
   'step-timer': 'Controls another tool',
+  'step-do': 'Presses a button on another tool',
   'step-note': 'Host note, not read aloud',
   'step-end': 'End of the script',
   'step-unknown': 'Unknown step "{verb}"',

@@ -8,6 +8,7 @@ import {
   summaryOf,
   totalOf,
   trayFor,
+  trayLabel,
   trayTotal,
   valuesFor,
   type BagSet,
@@ -87,9 +88,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
   let target = '';
 
   /** The seat in play, for the cases where a per-player draw needs a default. */
-  function seatName(): string {
+  function seatId(): string {
     const players = ctx.session.players();
-    return players.find((player) => player.active)?.name ?? players[0]?.name ?? '';
+    return (players.find((player) => player.active) ?? players[0])?.id ?? '';
   }
 
   function note(text: string): void {
@@ -108,7 +109,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
     }
     // Never fall back to the shared pile in per-player mode: that is how a
     // second player's draw used to vanish into the first player's tray.
-    target = target || seatName();
+    target = target || seatId();
     if (!target) {
       data.tokens = [...data.tokens, token];
       return;
@@ -147,9 +148,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
           .map((token) => ({ id: String(token.id ?? ''), type: token.type, value: Number(token.value) || 0 }));
       }
       if (Array.isArray(raw.trays)) {
+        // Earlier saves keyed a tray by the name on screen; a matching player
+        // gives it back its stable id, so the tray keeps following a rename.
+        const players = ctx.session.players();
         data.trays = raw.trays
           .filter((tray) => tray && typeof tray.player === 'string' && Array.isArray(tray.tokens))
-          .map((tray) => ({ player: tray.player, tokens: tray.tokens }));
+          .map((tray) => ({
+            player: players.find((player) => player.name === tray.player)?.id ?? tray.player,
+            tokens: tray.tokens,
+          }));
       }
       if (typeof raw.serial === 'number') data.serial = Math.max(0, Math.round(raw.serial));
       if (Array.isArray(raw.history)) data.history = raw.history.map(String).slice(0, 12);
@@ -168,15 +175,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
       refill: () => instance.refill(),
       returnall: () => instance.returnAll(),
     },
-    summary: () => summaryOf(data),
+    summary: () => summaryOf(data, ctx.session.players()),
     results() {
       const rows: ToolResult[] = [];
       for (const tray of data.trays) {
         if (!tray.tokens.length) continue;
-        rows.push({ name: tray.player, score: trayTotal(tray.tokens) });
+        rows.push({ name: trayLabel(tray.player, ctx.session.players()), score: trayTotal(tray.tokens) });
       }
       if (rows.length) return rows.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
-      if (data.tokens.length) return [{ name: 'Tray', score: trayTotal(data.tokens) }];
+      if (data.tokens.length) return [{ name: translate('bag.tray-name'), score: trayTotal(data.tokens) }];
       return [];
     },
     draw(count) {
@@ -206,7 +213,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
     },
     assignTo(player) {
       target = player.trim();
-      note(target ? translate('bag.note-for', { player: target }) : translate('bag.note-shared'));
+      const label = target ? trayLabel(target, ctx.session.players()) : '';
+      note(target ? translate('bag.note-for', { player: label }) : translate('bag.note-shared'));
     },
     assignedTo: () => target,
     returnAt(index) {
@@ -225,7 +233,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
         data.remaining[token.type] = (data.remaining[token.type] ?? 0) + 1;
       }
       data.trays = data.trays.filter((item) => item.player !== player);
-      note(translate('bag.note-player-returned', { player }));
+      note(translate('bag.note-player-returned', { player: trayLabel(player, ctx.session.players()) }));
     },
     returnAll() {
       const every = [...data.tokens, ...data.trays.flatMap((tray) => tray.tokens)];
@@ -261,7 +269,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
         data.trays = [];
       }
       data.trayMode = mode;
-      if (mode === 'per-player' && !target) target = seatName();
+      if (mode === 'per-player' && !target) target = seatId();
     },
     adjustType(type, delta) {
       const current = data.remaining[type] ?? 0;
@@ -306,7 +314,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BagInstance {
     },
   };
 
-  if (trayMode === 'per-player') target = seatName();
+  if (trayMode === 'per-player') target = seatId();
 
   return instance;
 }

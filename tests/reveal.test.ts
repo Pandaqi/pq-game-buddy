@@ -1,5 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { createRng } from '../src/core/rng';
+import revealTool from '../src/tools/reveal/tool.svelte';
+import { testContext } from './helpers/test-context';
 import {
   allBid,
   allVoted,
@@ -45,8 +47,8 @@ function state(overrides: Partial<RevealState> = {}): RevealState {
 
 describe('role dealing', () => {
   test('the pool repeats a role by its count', () => {
-    expect(rolePool(roles)).toEqual(['werewolf', 'villager', 'villager']);
-    expect(rolePool([{ name: 'ghost', count: 0, description: '' }])).toEqual([]);
+    expect(rolePool(roles, 3)).toEqual(['werewolf', 'villager', 'villager']);
+    expect(rolePool([{ name: 'ghost', count: 0, description: '' }], 3)).toEqual([]);
   });
 
   test('every player gets a role and the pool is respected', () => {
@@ -86,6 +88,51 @@ describe('role dealing', () => {
     expect(rolesFrom({ werewolf: 2, ghost: 0, ' ': 3 }, { werewolf: 'hunts' })).toEqual([
       { name: 'werewolf', count: 2, description: 'hunts' },
     ]);
+  });
+
+  test('rolesFrom reads fill as the players the named cards leave over', () => {
+    const roles = rolesFrom({ spy: 1, agent: 'fill' }, {});
+    expect(roles).toEqual([
+      { name: 'spy', count: 1, description: '' },
+      { name: 'agent', count: 0, fill: true, description: '' },
+    ]);
+    expect(rolePool(roles, 4).filter((role) => role === 'agent')).toHaveLength(3);
+  });
+
+  test('two fill roles split the players that are left, earlier first', () => {
+    const roles = [
+      { name: 'merlin', count: 1, description: '' },
+      { name: 'assassin', count: 1, description: '' },
+      { name: 'loyal', count: 0, fill: true, description: '' },
+      { name: 'minion', count: 0, fill: true, description: '' },
+    ];
+    const pool = rolePool(roles, 5);
+    expect(pool.filter((role) => role === 'loyal')).toHaveLength(2);
+    expect(pool.filter((role) => role === 'minion')).toHaveLength(1);
+    expect(pool).toHaveLength(5);
+  });
+
+  test('a saved fill role survives load and still deals villagers', () => {
+    const first = revealTool.create(testContext('SAVE'), { roles: { werewolf: 2, villager: 'fill' } });
+    first.deal();
+    const saved = first.state();
+    expect(saved.roles.some((role) => role.fill)).toBe(true);
+
+    const reopened = revealTool.create(testContext('LOAD'));
+    reopened.load(saved);
+    expect(reopened.state()).toEqual(saved);
+    expect(Object.values(reopened.state().assignment).filter((role) => role === 'villager')).toHaveLength(1);
+  });
+
+  test('a fill deal hands out exactly one role per player', () => {
+    const roles = [
+      { name: 'werewolf', count: 2, description: '' },
+      { name: 'villager', count: 0, fill: true, description: '' },
+    ];
+    const assignment = dealRoles(roles, players, createRng('SEED'));
+    expect(Object.values(assignment)).toHaveLength(3);
+    expect(Object.values(assignment).filter((role) => role === 'werewolf')).toHaveLength(2);
+    expect(Object.values(assignment).filter((role) => role === 'villager')).toHaveLength(1);
   });
 });
 

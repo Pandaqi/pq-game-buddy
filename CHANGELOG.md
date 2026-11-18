@@ -7,7 +7,38 @@ All notable changes to Game Buddy. The template format is versioned separately
 
 ### Added
 
-- **Nineteen more game templates**, with a mark each: Carcassonne, Cluedo, Terraforming
+- **JavaScript in a `.gamebuddy-tool`, opt-in.** A `[script <id>]` holds JS inline, or
+  names a `.js` you pick with the tool file (Settings and the drop now take both). It
+  runs at four entry points: `when: start` for a fresh session, `when: reset` after a
+  reset, a button's `run: <id>`, and every script as a command another tool or a
+  template's `do:` can call. The script gets `gb`: settings, players, counters, fields,
+  one-based table cells, checklist toggle, roll, pick, reset, toast, log, sound and
+  another tool's command, with `gb.helpers` for its own functions. Every call is
+  undoable, a throw becomes a toast and a log line, and a syntax error is a
+  line-numbered diagnostic at install. 8 scripts, 8 KB each, 16 KB together. The
+  export writes file-backed scripts inline, so one file still carries everything.
+- **The room behind the words.** Home now opens on the owner's painting of the game
+  room: full-bleed behind the heading, blurred and faded inside the image file itself,
+  then masked down slowly over most of the hero so it melts into the paper instead of
+  ending on a line, with a paper cloud under the copy so the title keeps its contrast in
+  both themes. The bleed comes
+  from the page's own width, not `100vw`, so a classic scrollbar cannot add a sideways
+  scroll. The badge from the same set replaces the acorn in the header and on the
+  resume card, and is the favicon and the installed-app icon (256 px WebP, plus a PNG
+  for browsers that ignore a WebP favicon); the dev shell and the single file set the
+  same tab icon from the badge already in the bundle.
+- **A link per template.** `#/template/<id>` opens one bundled template straight from a URL,
+  and `bun run build:site` writes `dist/template/<id>/index.html` for every bundled and
+  community template, so another site can link to one game without carrying the file.
+  Share links (`#/import/<payload>`) work exactly as before. Those pages declare their
+  own canonical URL and Open Graph tags, the gallery copies that short link instead of
+  the whole template, a session links back to its game's page, and a link to a template
+  this build does not carry now says which one instead of showing the home screen.
+  `dist/templates.json` publishes the catalogue for the website to check against.
+- **Seven new game templates**, with a mark each: Scattergories, Rummy, Spades, King of
+  Tokyo, Cascadia, Spyfall and Taboo. Each is a scorepad or tracker the tools already
+  support, with no new schema key.
+- **Nineteen game templates**, with a mark each: Carcassonne, Cluedo, Terraforming
   Mars, Backgammon, Dominoes, Darts, Cribbage, Hearts, The Crew, Farkle, Secret Hitler,
   Avalon, Wavelength, Charades, Monikers, Jackbox Night, Warhammer 40,000, Spirit Island
   and Betrayal at House on the Hill. Each uses the trackers its rules already support,
@@ -22,6 +53,10 @@ All notable changes to Game Buddy. The template format is versioned separately
 
 ### Changed
 
+- **A new display face.** Dosis is gone; headings, keys and numbers use Game Buddy, one
+  Bold face derived from DejaVu and subset to Latin-1, still self-hosted and inlined
+  with no request. The first visit moves once, from 150 KB to 180 KB, with the
+  arithmetic in `ROADMAP.md` §5.2.
 - **One tag vocabulary.** `cards`/`card`, `word`/`words`, `deckbuilder`/`deck-building`,
   `social-deduction`/`hidden-roles`/`deduction`, `timed`/`realtime`, `numbers`/`puzzle`
   and a bare `score` collapsed to one spelling each, so the gallery filter no longer
@@ -39,6 +74,45 @@ All notable changes to Game Buddy. The template format is versioned separately
 
 ### Fixed
 
+- **Every bag tray label.** A per-player tray was keyed by the player's name, so a
+  rename left the tray behind under the old words and a seat the app named itself was
+  drawn blank. Trays now follow the player's id, the strip says a generated seat in the
+  active language, and an old save keyed by name gets its id back on load.
+- **Tool-file errors that were never translated.** Twenty-eight `diag.tool-*` keys the
+  parser asks for — block and script ids, a missing kind, too many blocks, a bad
+  setting value, an unknown `do:` verb — had no entry in any locale, so installing a
+  broken tool file showed `diag.tool-block-kind` instead of a sentence. The English,
+  Dutch, German, Spanish and French texts are in place, the decks log's `note-drew`
+  joined them, and the i18n gate now scans `translate(` and `translateIn(` calls, not
+  just `t(`, so this cannot come back.
+- **A `fill` role in a reveal deck.** The Avalon and Werewolf templates already wrote
+  `loyal=fill` and `villager=fill`, but the reader dropped any role that was not a
+  number, so the deck held only the named cards and the deal repeated them: in Werewolf
+  nobody was a villager at all. A fill role now takes every player the fixed cards leave
+  over, two fills split that remainder evenly, the roles editor has a "rest of the
+  table" switch for it, and a saved session keeps the flag so a reload still deals
+  villagers.
+- **A dropped die that looked kept.** `2d20kh1` showing 5 and 5 printed both fives as
+  kept; the breakdown now counts the kept dice instead of remembering their faces.
+- **A rounds scorepad with no rounds.** A template that asked for rounds mode without a
+  round count opened on an empty table with nothing to type into; it now starts with one
+  round.
+- **English in the middle of a game.** The timer's screen-reader announcements (time up,
+  one minute, seconds left, intervals), the turn log, the lives game-over line and the
+  lives, bag and shared-pile result names now come from the locale files in all five
+  languages instead of being written into the code, and so do the score formula's
+  error messages.
+- **Template corrections.** Coup no longer deals one secret card per player where the
+  game deals two influences; Codenames counts the cards each team has left instead of
+  keeping a score that meant nothing; Boggle's word filter searched for exactly
+  three-letter words; Trivia Night opened a party-prompt pack for a quiz; Werewolf named
+  an One Night role and source for a classic night, and its script told the seer to use a
+  private inspect view the app does not have.
+- **The home screen at 320 px and at 200 percent zoom.** The tools heading and the
+  search field now share a line only while there is room, so the field drops below the
+  heading instead of pushing the page 63 px wide; the home templates grid takes the same
+  `minmax(0, 1fr)` tracks as the gallery, so a long game name wraps instead of widening
+  the column; and the brand and skip links are 48 px targets like every other control.
 - **A custom deck** no longer builds a standard 52-card deck behind the player's own
   cards; drawing is one undo step instead of two.
 - **Undo** now covers every coin setting, not just the flips.

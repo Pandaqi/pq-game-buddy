@@ -1,0 +1,15 @@
+# plugin.example.gamebuddy — the tool file beside this folder, used by a game
+
+[game]
+name: Skill Check Night
+players: 2-5
+time: 60m
+tags: rpg
+
+[tool timer clock]
+duration: 2m
+
+[tool check-tray]
+sides: 20
+target: 15
+start-modifier: 3

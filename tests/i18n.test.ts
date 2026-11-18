@@ -40,6 +40,7 @@ const LOCALES = [
   'draft',
   'lives',
   'pick',
+  'plugin',
   'reveal',
   'prompts',
   'rules',
@@ -83,12 +84,12 @@ function sourceFiles(dir: string, found: string[] = []): string[] {
   return found;
 }
 
-/** Keys written literally at a `t(` call; a dynamic key is built from known parts. */
+/** Keys written literally at a `t(`, `translate(` or `translateIn(` call. */
 function usedKeys(): Set<string> {
   const keys = new Set<string>();
   for (const file of sourceFiles(join(root, 'src'))) {
     const text = readFileSync(file, 'utf8');
-    for (const match of text.matchAll(/\bt\(\s*['"]([a-z0-9][a-z0-9.-]*)['"]/g)) {
+    for (const match of text.matchAll(/\b(?:t|translate|translateIn)\(\s*['"]([a-z0-9][a-z0-9.-]*)['"]/g)) {
       keys.add(match[1]);
     }
   }

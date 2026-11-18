@@ -1,0 +1,39 @@
+# rummy.gamebuddy — meld sets and runs, and count the cards left in hand
+
+[game]
+name: Rummy
+players: 2-6
+time: 40m
+tags: card, family
+icon: rummy
+source: Traditional game — no official source
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle a standard deck and deal to the table
+- Turn one card face up for the discard pile
+- Put the rest face down as the stock
+- Agree the target score, 500 is usual
+
+[rules]
+Meld your cards into sets and runs, then go out before anyone else.
+- A turn is draw one, then discard one
+- A set is three or four of a kind; a run is three or more in one suit
+- Lay melds down when you can, and add to the table's melds
+- Go out by melding or discarding your last card, and score the cards still in other hands
+- Face cards count ten, aces one or fifteen, and the first to the target wins
+
+[tool decks cards]
+deck: standard
+# Seven each; some tables deal ten at two players, which Edit tools can change.
+players: 2
+deal: 7
+hidden: yes
+
+[tool score]
+mode: rounds
+target: 500
+win: highest
+hint: 500 points takes the game

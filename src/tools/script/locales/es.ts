@@ -57,6 +57,7 @@ const es = {
   'step-wait': 'Frena la mesa un momento',
   'step-reveal': 'Pasa el móvil para un secreto',
   'step-timer': 'Controla otra herramienta',
+  'step-do': 'Pulsa un botón de otra herramienta',
   'step-note': 'Nota para quien narra, no se lee',
   'step-end': 'Fin del guion',
   'step-unknown': 'Paso desconocido «{verb}»',

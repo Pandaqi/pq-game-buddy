@@ -46,7 +46,7 @@ House rule: no phones at the table.
 [script night]
 1. say: Welcome to the kitchen
 2. wait: 3s
-3. timer: start
+3. timer: kitchen start
 ```
 
 ## Grammar
@@ -117,9 +117,23 @@ range only filters the gallery.
 
 ### Script verbs
 
-`say`, `wait`, `reveal`, `timer`, `note`. A step is `verb: argument`, optionally
+`say`, `wait`, `reveal`, `timer`, `do`, `note`. A step is `verb: argument`, optionally
 prefixed with `1.`, `2.`, … Unknown verbs warn and are skipped. The script tool
 ships in M4; the parser keeps the data now so templates do not need rewriting.
+
+`say`, `wait` and `note` take text or a duration. `timer` and `reveal` take
+`<instance> <command>`, because one template can hold two timers: `3. timer: kitchen start`
+names the instance `kitchen` and the timer's `start` command (`pause`, `reset`, `flip`,
+`next` and `add` work too), and `2. reveal: roles` names the reveal instance `roles`
+with no command, which deals the roles (`reveal` reveals them all, `cover` hides them).
+The instance is the part before the first space, so a bare `timer: start` would look for
+a timer called "start" and find none. A missing instance or a command that instance does
+not have never stops the run: the step is skipped and the script names the tool to open.
+
+`do` is the generic form of that same dispatch: `4. do: roles reveal` presses the reveal
+tool's `reveal` command, and any tool's documented `commands` can be named. An installed
+`.gamebuddy-tool` exposes one command per `button` block, named by its block id, so
+`5. do: check-tray tally` counts a check from a scripted night.
 
 A script tool also accepts `voice: yes` to read `say` steps aloud with the device's
 built-in voice. The text stays on screen either way, and a device without a voice
@@ -165,6 +179,9 @@ Two tools have a little extra shape. `turns` takes `mode: initiative` with
 `initiative: Ada=18, Bo=12`; the highest value acts first and a new round clears the
 values. `dice` takes `faces: Hit, Miss, Crit` for a custom die and saved sets as
 `sets: combat=Hit|Miss|Crit`; `lab-count` sets how many custom dice roll at once.
+`reveal` takes `roles: loyal=fill, minion=fill`: a `fill` role takes every player the
+fixed cards leave over, split evenly when the deck has two of them, so a template that
+covers a player range needs no role block per player count.
 
 `decks` seats always follow the session: hands are dealt to whoever is actually
 sitting at the table, and `players` is only a fallback for a session with no names,
@@ -199,7 +216,11 @@ Every problem carries a line number and a severity.
 ## Sharing and size
 
 - A template downloads as `<slug>.gamebuddy`.
-- A share link is `#/import/<base64url>` on the same page. Nothing is uploaded.
+- A bundled template has a stable link by id: `#/template/<id>` on the app page, and
+  `/template/<id>/` in the site build (`bun run build:site`). A website can link to one
+  game without carrying the file, and the link survives edits to the template.
+- A share link for anything the user wrote is `#/import/<base64url>` on the same page:
+  the text travels in the fragment. Nothing is uploaded.
 - Links are convenient but long: the editor refuses beyond ~12 KB of payload and
   tells you to share the file instead. Files are always the primary path.
 - A session exports as JSON (`{ version: 1, session }`) and imports through the

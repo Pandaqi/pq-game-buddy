@@ -1,7 +1,8 @@
 /** Blind draws from a bag of tiles or tokens. No Svelte here. */
 
-import { translate } from '../../core/i18n';
+import { language, seatNameIn, translate } from '../../core/i18n';
 import type { Rng } from '../../core/rng';
+import type { Player } from '../../core/session';
 
 export interface Token {
   id: string;
@@ -60,6 +61,7 @@ export function drawType(counts: Record<string, number>, rng: Rng): string | nul
 }
 
 export interface BagTray {
+  /** The player's stable id, never the words on screen: a rename keeps the tray. */
   player: string;
   tokens: Token[];
 }
@@ -86,7 +88,13 @@ export function trayTotal(tokens: Token[]): number {
   return tokens.reduce((sum, token) => sum + (Number(token.value) || 0), 0);
 }
 
-export function summaryOf(state: BagState): string {
+/** A tray key said in the active language; a key from another table stands as it is. */
+export function trayLabel(key: string, players: Player[]): string {
+  const player = players.find((entry) => entry.id === key);
+  return player ? seatNameIn(language(), player.seat, player.name) : key;
+}
+
+export function summaryOf(state: BagState, players: Player[] = []): string {
   const lines = [translate('bag.summary-bag', { count: totalOf(state.remaining) })];
   const groups = new Map<string, string[]>();
   for (const token of state.tokens) {
@@ -99,7 +107,7 @@ export function summaryOf(state: BagState): string {
     if (tray.tokens.length)
       lines.push(
         translate('bag.summary-player', {
-          name: tray.player,
+          name: trayLabel(tray.player, players),
           types: tray.tokens.map((token) => token.type).join(' '),
         }),
       );

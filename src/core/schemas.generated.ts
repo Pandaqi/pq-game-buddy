@@ -13,6 +13,7 @@ import tool_dicePreset from '../tools/dice/preset.ts';
 import tool_draftPreset from '../tools/draft/preset.ts';
 import tool_livesPreset from '../tools/lives/preset.ts';
 import tool_pickPreset from '../tools/pick/preset.ts';
+import tool_pluginPreset from '../tools/plugin/preset.ts';
 import tool_promptsPreset from '../tools/prompts/preset.ts';
 import tool_revealPreset from '../tools/reveal/preset.ts';
 import tool_rulesPreset from '../tools/rules/preset.ts';
@@ -36,6 +37,7 @@ export const schemas: Record<string, PresetSchema> = {
   draft: tool_draftPreset,
   lives: tool_livesPreset,
   pick: tool_pickPreset,
+  plugin: tool_pluginPreset,
   prompts: tool_promptsPreset,
   reveal: tool_revealPreset,
   rules: tool_rulesPreset,

@@ -44,6 +44,8 @@ export interface SessionApi {
 
 export interface ToolContext {
   instanceId: string;
+  /** The tool a template asked for: a tool file's runtime needs its own id. */
+  toolId?: string;
   session: SessionApi;
   clock: Clock;
   rng: Rng;
@@ -61,6 +63,11 @@ export interface ToolInstance<TState extends object = Record<string, unknown>> {
   state(): TState;
   /** Tolerant restore: missing fields fall back to defaults, never throws. */
   load(state: unknown): void;
+  /**
+   * Fresh session only: the shell calls it after `create`, before the first save.
+   * A resumed session loads instead, so a start hook cannot run twice.
+   */
+  start?(): void;
   /** Settings back out to a template. */
   presetFromState(): PresetValues;
   /** Named actions for scripts, overlay and keys. */

@@ -21,6 +21,7 @@ export const KEYS = {
   favorites: 'pqgb:v1:favorites',
   imports: 'pqgb:v1:imports',
   templateAssets: 'pqgb:v1:template-assets',
+  toolFiles: 'pqgb:v1:tool-files',
   recentTools: 'pqgb:v1:recent-tools',
 };
 

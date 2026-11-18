@@ -96,11 +96,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
       if (Array.isArray(raw.roles)) {
         data.roles = raw.roles
           .filter((role) => role && typeof role.name === 'string')
-          .map((role) => ({
-            name: role.name,
-            count: Math.max(0, Math.round(Number(role.count) || 0)),
-            description: typeof role.description === 'string' ? role.description : '',
-          }));
+          .map((role) => {
+            const fill = role.fill === true;
+            return {
+              name: role.name,
+              count: fill ? 0 : Math.max(0, Math.round(Number(role.count) || 0)),
+              ...(fill ? { fill: true } : {}),
+              description: typeof role.description === 'string' ? role.description : '',
+            };
+          });
       }
       if (raw.assignment && typeof raw.assignment === 'object') {
         const next: Record<string, string> = {};
@@ -151,10 +155,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
       if (typeof raw.allRevealed === 'boolean') data.allRevealed = raw.allRevealed;
     },
     presetFromState() {
-      const rolePairs: Record<string, number> = {};
+      const rolePairs: Record<string, number | string> = {};
       const descriptions: Record<string, string> = {};
       for (const role of data.roles) {
-        rolePairs[role.name] = role.count;
+        rolePairs[role.name] = role.fill ? 'fill' : role.count;
         if (role.description) descriptions[role.name] = role.description;
       }
       return {
@@ -178,8 +182,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
         if (!data.dealt) {
           return translate('reveal.summary-roles', {
             roles:
-              data.roles.map((role) => `${role.name} x${role.count}`).join(', ') ||
-              translate('reveal.summary-none'),
+              data.roles
+                .map((role) =>
+                  role.fill
+                    ? translate('reveal.fill-role', { name: role.name })
+                    : `${role.name} x${role.count}`,
+                )
+                .join(', ') || translate('reveal.summary-none'),
           });
         }
         const lines = [translate('reveal.summary-dealt', { players: data.players.length })];
@@ -259,9 +268,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
       const seen = new Set<string>();
       for (const role of next) {
         const name = role.name.trim();
-        if (!name || seen.has(name) || role.count <= 0) continue;
+        const fill = !!role.fill;
+        if (!name || seen.has(name) || (!fill && role.count <= 0)) continue;
         seen.add(name);
-        clean.push({ name, count: Math.round(role.count), description: role.description.trim() });
+        clean.push({
+          name,
+          count: fill ? 0 : Math.round(role.count),
+          ...(fill ? { fill: true } : {}),
+          description: role.description.trim(),
+        });
       }
       if (JSON.stringify(clean) === JSON.stringify(data.roles)) return;
       ctx.undo.push(translate('reveal.undo-roles'));

@@ -27,7 +27,7 @@ Take as few hearts as you can; the queen of spades is thirteen points.
 
 [tool decks]
 deck: standard
-# 17 each empties the pack at three, four, five or six.
+# 17 each at three, 13 at four, 10 at five and 8 at six.
 players: 3
 deal: 17
 hidden: yes

@@ -1,0 +1,42 @@
+# scattergories.gamebuddy — one letter, a list of categories, three minutes
+
+[game]
+name: Scattergories
+players: 2-6
+time: 30m
+tags: party, words, realtime
+icon: scattergories
+source: https://www.hasbro.com/en-us/product/scattergories
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give every player an answer sheet and a pen
+- Agree the number of rounds, three is usual
+- Put the category cards where everyone can read them
+- Draw the first letter before the clock starts
+
+[rules]
+Everyone writes one answer per category, all starting with the round's letter.
+- Draw the letter, then start three minutes
+- One answer for every category, and it must start with that letter
+- Read the lists out loud; an answer two players share is crossed out
+- A unique answer scores a point, and two when every word in it starts with the letter
+- Highest total after the last round wins
+
+[tool words letter]
+profile: en
+mode: letters
+count: 1
+
+[tool timer round]
+mode: countdown
+duration: 3m
+warn-at: 30s
+sound: buzzer
+
+[tool score]
+mode: rounds
+rounds: 3
+win: highest

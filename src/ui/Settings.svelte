@@ -1,8 +1,18 @@
 <script lang="ts">
   import { t } from '../core/i18n.svelte';
   import { settings } from '../core/settings.svelte';
-  import { readFileText } from '../core/share';
+  import { store } from '../core/session-store.svelte';
+  import { copyText, download, readFileText } from '../core/share';
   import { storage, storagePersistent } from '../core/storage';
+  import type { Diagnostic } from '../core/template/parse';
+  import { toolFileShareUrl, shareTooLong } from '../core/template/share-link';
+  import {
+    exportToolFile,
+    installToolFile,
+    installedToolDefinitions,
+    removeToolFile as removeInstalledTool,
+  } from '../core/tool-file';
+  import { isScriptFile, isToolFile } from '../core/template/assets';
   import { parseTheme } from '../core/theme';
   import { AUTHOR, REPO_URL, SITE_URL } from '../core/about';
   import { VERSION } from '../core/version.generated';
@@ -12,6 +22,8 @@
   let confirmText = $state('');
   let themeDraft = $state(settings.values.themeText);
   let themeName = $state('');
+  let toolFiles = $state(installedToolDefinitions());
+  let toolDiags = $state<Diagnostic[]>([]);
 
   const activeTheme = $derived(parseTheme(settings.values.themeText));
   const draft = $derived(parseTheme(themeDraft));
@@ -47,6 +59,61 @@
         ? t('settings.storage.session')
         : t('settings.storage.memory'),
   );
+
+  async function loadToolFile(event: Event): Promise<void> {
+    const picked = (event.currentTarget as HTMLInputElement).files;
+    if (!picked?.length) return;
+    const files = Array.from(picked);
+    const tool = files.find((file) => isToolFile(file.name));
+    if (!tool) {
+      store.toast(t('toast.tool-unreadable', { name: files[0]?.name ?? '' }), 'error');
+      return;
+    }
+    try {
+      // A `[script] file:` reaches a `.js` picked in the same go.
+      const scripts: Record<string, string> = {};
+      for (const file of files) {
+        if (isScriptFile(file.name)) scripts[file.name] = await readFileText(file);
+      }
+      const result = installToolFile(await readFileText(tool), scripts);
+      toolDiags = result.diagnostics;
+      if (!result.ok || !result.definition) {
+        store.toast(t('toast.tool-unreadable', { name: tool.name }), 'error');
+        return;
+      }
+      toolFiles = installedToolDefinitions();
+      toolDiags = [];
+      store.bump();
+      store.toast(t('toast.tool-installed', { name: result.definition.name }));
+    } catch {
+      store.toast(t('toast.tool-unreadable', { name: tool.name }), 'error');
+    }
+  }
+
+  function saveToolFile(id: string): void {
+    const text = exportToolFile(id);
+    if (!text) return;
+    download(`${id}.gamebuddy-tool`, text);
+  }
+
+  function copyToolLink(id: string): void {
+    const text = exportToolFile(id);
+    if (!text) return;
+    if (shareTooLong(text)) {
+      store.toast(t('toast.share-too-long'), 'error');
+      return;
+    }
+    void copyText(toolFileShareUrl(text)).then((ok) => {
+      store.toast(ok ? t('toast.share-copied') : t('toast.could-not-copy'), ok ? 'info' : 'error');
+    });
+  }
+
+  function removeTool(id: string, name: string): void {
+    removeInstalledTool(id);
+    toolFiles = installedToolDefinitions();
+    store.bump();
+    store.toast(t('toast.tool-removed', { name }));
+  }
 
   function doReset(): void {
     if (confirmText.trim().toUpperCase() !== t('settings.confirm-word')) return;
@@ -111,6 +178,49 @@
         <button type="button" class="wide" onclick={removeTheme}>{t('settings.theme-remove')}</button>
       {/if}
     </div>
+  </section>
+
+  <section>
+    <h2>{t('settings.tools-title')}</h2>
+    <p class="dim small">{t('settings.tools-hint')}</p>
+    <label class="field">
+      <span>{t('settings.tools-choose')}</span>
+      <input type="file" accept=".gamebuddy-tool,.js,text/plain" multiple onchange={loadToolFile} />
+    </label>
+    {#if toolDiags.length}
+      <ul class="diags">
+        {#each toolDiags as item, index (index)}
+          <li class:error={item.severity === 'error'}>
+            <span class="line">{t('settings.line', { line: item.line })}</span>
+            <span>{item.message}</span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
+    {#if toolFiles.length === 0}
+      <p class="dim small">{t('settings.tools-empty')}</p>
+    {:else}
+      <ul class="tools">
+        {#each toolFiles as item (item.id)}
+          <li>
+            <span class="tool-name">
+              <strong>{item.name}</strong>
+              <span class="dim small">
+                {item.id} ·
+                {item.blocks.length === 1
+                  ? t('toolfile.blocks-one')
+                  : t('toolfile.blocks-many', { count: item.blocks.length })}
+              </span>
+            </span>
+            <span class="row">
+              <button type="button" class="wide" onclick={() => saveToolFile(item.id)}>{t('settings.tools-export')}</button>
+              <button type="button" class="wide" onclick={() => copyToolLink(item.id)}>{t('settings.tools-link')}</button>
+              <button type="button" class="wide" onclick={() => removeTool(item.id, item.name)}>{t('settings.tools-remove')}</button>
+            </span>
+          </li>
+        {/each}
+      </ul>
+    {/if}
   </section>
 
   <section>
@@ -365,6 +475,31 @@
   .line {
     font-family: var(--font-mono);
     flex: none;
+  }
+  .tools {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+  .tools li {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-3);
+    border-radius: var(--radius-lg);
+    background: var(--surface-2);
+  }
+  .tool-name {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .tools .row .wide {
+    min-height: 44px;
+    font-size: var(--text-sm);
   }
   .made-by {
     display: flex;

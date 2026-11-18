@@ -13,6 +13,7 @@ import meta_dice from '../tools/dice/meta.ts';
 import meta_draft from '../tools/draft/meta.ts';
 import meta_lives from '../tools/lives/meta.ts';
 import meta_pick from '../tools/pick/meta.ts';
+import meta_plugin from '../tools/plugin/meta.ts';
 import meta_prompts from '../tools/prompts/meta.ts';
 import meta_reveal from '../tools/reveal/meta.ts';
 import meta_rules from '../tools/rules/meta.ts';
@@ -23,5 +24,5 @@ import meta_timer from '../tools/timer/meta.ts';
 import meta_turns from '../tools/turns/meta.ts';
 import meta_words from '../tools/words/meta.ts';
 
-export const manifest: ToolMeta[] = [meta_bag, meta_bracket, meta_buzzer, meta_coin, meta_counters, meta_custom, meta_decks, meta_demo, meta_dice, meta_draft, meta_lives, meta_pick, meta_prompts, meta_reveal, meta_rules, meta_score, meta_script, meta_splits, meta_timer, meta_turns, meta_words];
+export const manifest: ToolMeta[] = [meta_bag, meta_bracket, meta_buzzer, meta_coin, meta_counters, meta_custom, meta_decks, meta_demo, meta_dice, meta_draft, meta_lives, meta_pick, meta_plugin, meta_prompts, meta_reveal, meta_rules, meta_score, meta_script, meta_splits, meta_timer, meta_turns, meta_words];
 

@@ -1,13 +1,38 @@
 import './helpers/language';
 import { describe, expect, test } from 'bun:test';
 import { createRng } from '../src/core/rng';
-import { cleanFaces, namedFaces, normaliseFaces, normaliseSets, parseDice, rollDice, rollFaces } from '../src/tools/dice/logic';
+import {
+  cleanFaces,
+  describeResult,
+  namedFaces,
+  normaliseFaces,
+  normaliseSets,
+  parseDice,
+  rollDice,
+  rollFaces,
+  type DiceResult,
+} from '../src/tools/dice/logic';
 
 function roll(notation: string, seed = 'TEST') {
   const parsed = parseDice(notation);
   if (!parsed.ok) throw new Error(parsed.message);
   return rollDice(parsed.expression, createRng(seed));
 }
+
+describe('dice breakdown', () => {
+  test('two equal faces keep one and drop the other', () => {
+    const result: DiceResult = {
+      terms: [
+        { count: 2, sides: 20, sign: 1, source: '2d20kh1', rolls: [5, 5], kept: [5], successes: 0 },
+      ],
+      total: 5,
+      successes: 0,
+      best: 5,
+      worst: 5,
+    };
+    expect(describeResult(result)).toBe('2d20kh1: 5 (5)');
+  });
+});
 
 describe('dice notation', () => {
   test('parses plain dice and modifiers', () => {

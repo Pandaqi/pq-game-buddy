@@ -10,7 +10,7 @@ screen is always that first thing. A screen that is merely pretty but hides the 
 is a failure.
 
 The mood: a game found in a woodland cabin — warm cream paper, deep forest ink, a
-lantern above the table, six bright family accents, Dosis for anything loud and
+lantern above the table, six bright family accents, Game Buddy for anything loud and
 Raleway for anything read. Round, borderless, a little bouncy; generous air between
 things, and the quiet details folded away behind a tap.
 
@@ -64,16 +64,18 @@ Two self-hosted faces, subset and inlined as base64 `@font-face` in
 at runtime and no CDN:
 
 ```css
---font-display: 'Dosis', ui-rounded, system-ui, sans-serif;  /* headings, keys, numbers */
+--font-display: 'Game Buddy', ui-rounded, system-ui, sans-serif;  /* headings, keys, numbers */
 --font-body:    'Raleway', ui-sans-serif, system-ui, sans-serif;  /* reading text */
 --font-num:     var(--font-display);
 ```
 
-Dosis is 21 KB woff2 and Raleway 34 KB before subsetting; the inlined CSS is 74 KB raw
-(56 KB gzipped) and rides in `app.css`. That spend is deliberate: it is what makes the
-app feel warm instead of like a system dialog, and it was measured against the
-first-visit budget. To restyle, change these two variables; nothing else names a face.
-Replacing a face means re-subsetting and re-measuring the first visit.
+Game Buddy is one Bold face, subset to Latin-1 plus the punctuation the app uses
+(29 KB woff2); its `@font-face` declares `font-weight: 100 900` so every heading weight
+uses that drawing unchanged instead of being faux-bolded. Raleway is 34 KB. The two
+inline to 84 KB of CSS (64 KB gzipped) in `app.css`. That spend is deliberate: it is
+what makes the app feel warm instead of like a system dialog, and it was measured
+against the first-visit budget. To restyle, change these two variables; nothing else
+names a face. Replacing a face means re-subsetting and re-measuring the first visit.
 
 Scale in `rem`: **13 / 15 / 17 / 22 / 30 / 40 / 52 / 72** (`--text-xs` …
 `--text-4xl`). Headings and every number a player reads use `--font-display` with
@@ -106,7 +108,7 @@ section labels are uppercase Raleway at `--text-xs` with 0.12em tracking.
   the WebKit alias), so a view never styles its own and every picker in the app
   matches.
 - **A fold is a details element:** secondary settings, history and options live behind
-  `core/ui/Fold.svelte`. Summary is Dosis at `--text-lg`, the chevron is the accent,
+  `core/ui/Fold.svelte`. Summary is Game Buddy at `--text-lg`, the chevron is the accent,
   and the open state animates the chevron with `--ease-bounce`.
 - **A list of modes is a row of separate pills**, not one rounded slab: each is a
   `--surface-2` pill, the active one takes the family accent. Six options wrap onto a
@@ -140,12 +142,20 @@ centred on each other (`align-items: center`), so the title sits *beside* the ma
 never wraps underneath it. A tool screen is the other case: the mark is large, above
 the title, because it is the screen's identity.
 
-`src/core/ui/doodles.ts` holds the decorative woodland set — a home scene of moss
-hills, pines, a honey moon and fireflies, plus leaf, mushroom, acorn, star and firefly
-marks. They are placeholders for Tiamo's illustrations and are inline SVG, drawn from
-tokens, so no request and no bytes in `public/`. Decorative SVG is `aria-hidden`.
+`src/core/ui/doodles.ts` holds the decorative woodland set — leaf, mushroom, star and
+firefly — as inline SVG drawn from tokens, so no request and no bytes in `public/`.
+Decorative SVG is `aria-hidden`.
 
-Rules: no emoji as UI; no raster images in the built-in set. A new tool adds `icon.ts`
+**The app's own art** is four bitmaps and nothing else. `src/core/ui/brand-mark.ts`
+carries the badge at 128 px as a data URL (header and resume card),
+`src/ui/home-art.css` the room behind the home hero at 900 px as a data URL, and
+`public/icon.webp` with `public/icon-192.png` the 256 px tab and installed-app icon —
+the only pictures with a real URL, because a browser asks for a favicon by URL. The two
+in the bundle are base64 so the single file still works from `file://`, and they are the
+reason the first visit carries bytes of picture at all: see `ROADMAP.md` §5.2.
+
+Rules: no emoji as UI; no new raster images — the brand art above is the one exception
+and it ships once. A new tool adds `icon.ts`
 next to its `meta.ts`; a new bundled template adds its `.icon.svg` next to the file. Both
 use the same 24 px grid, 1.8 px stroke and `currentColor` only, so they work on every
 surface and in both themes. A player's uploaded image is the one exception, and it is
@@ -172,12 +182,23 @@ does not render under reduced motion. Dice and the coin change instantly.
 
 ## 6. Layout and hierarchy
 
-- Home opens with a **hero**: the scene behind, a pill that says "No account. No
-  internet. No install.", then "Game night, sorted." at `clamp(3rem, 12vw, 5.5rem)`
-  in `--forest`. A resume card follows when there is a saved game.
+- Home opens with a **hero**: Tiamo's painting of the room, full-bleed behind the
+  words at 55 percent opacity, blurred in the file itself and faded out over most of
+  its height — the mask holds to about a third and then walks to nothing at the last
+  pixel, so it melts into the paper instead of stopping on a line; a
+  paper cloud (a `--paper` radial, never a straight-edged gradient) sits between the
+  art and the copy, so the title keeps its contrast in both themes and dark mode dims
+  the room instead of lighting it. Then a pill that says "No account. No internet. No
+  install." and "Game night, sorted." at `clamp(3rem, 12vw, 5.5rem)` in `--forest`. A
+  resume card follows when there is a saved game.
+- **Full-bleed means the page's own box.** The page has no column of its own: each
+  block carries the 60 rem column and the gutter, and the hero's art simply spans
+  `left: 0; right: 0`. Nothing measures against `100vw` — that counts a classic
+  scrollbar, so the hero would overflow by its width and the page would scroll
+  sideways with a strip of page missing on one side.
 - The **shelf**: two tools per row on a phone, three on a tablet, four on a wide
-  screen. Each tile is a wash-to-surface gradient, a 54 px mark, the Dosis name and one
-  line of Raleway blurb. Tiles are the loudest repeated element on the page.
+  screen. Each tile is a wash-to-surface gradient, a 54 px mark, the Game Buddy name and
+  one line of Raleway blurb. Tiles are the loudest repeated element on the page.
 - A session is a **strip** (quiet game name, a one-line seat bar, tool tabs as pills)
   and then the tool owns the screen. The seat bar's dots and its player count fold the
   chips away, and tools that do not use players (`meta.seats`) do not show it at all;
@@ -245,7 +266,7 @@ change a token, re-measure it and update this table in the same change.
 
 | Do | Don't |
 |----|-------|
-| One loud readout, huge Dosis, family accent | Three equal-weight cards |
+| One loud readout, huge Game Buddy, family accent | Three equal-weight cards |
 | Fills, space and warm shadows | Borders, outlines, boxes inside boxes |
 | Air between sections | Divider lines between everything |
 | Fold what is not needed for the next tap | Show every setting at once |
@@ -262,8 +283,8 @@ custom properties on `:root`, is validated against a fixed key list, and can set
 `dark-` values for dark mode. Nothing in a view knows it exists: keep using tokens,
 never a raw colour, and a theme keeps working.
 
-The illustrations in `doodles.ts` are placeholders for Tiamo's own art and are
-expected to be replaced.
+The doodles in `doodles.ts` are still placeholders for Tiamo's own drawings; the
+badge, the hero room and the tab icon are his, and land as bitmaps rather than SVG.
 
 ## 12. Copy
 

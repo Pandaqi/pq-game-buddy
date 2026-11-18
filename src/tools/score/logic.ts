@@ -1,4 +1,4 @@
-import { language, seatNameIn } from '../../core/i18n';
+import { language, seatNameIn, translate } from '../../core/i18n';
 import type { ToolInstance } from '../../core/registry';
 
 export type ScoreMode = 'simple' | 'rounds' | 'categories' | 'ledger';
@@ -119,14 +119,14 @@ function tokenize(expression: string): Token[] | string {
     }
     if (/[0-9.]/.test(char)) {
       const match = expression.slice(index).match(/^\d+(?:\.\d+)?/);
-      if (!match) return `Unexpected character "${char}"`;
+      if (!match) return translate('score.error-unexpected', { text: char });
       tokens.push({ type: 'number', text: match[0], at: index });
       index += match[0].length;
       continue;
     }
     if (/[A-Za-z_]/.test(char)) {
       const match = expression.slice(index).match(/^[A-Za-z_][A-Za-z0-9_-]*/);
-      if (!match) return 'Could not read a name';
+      if (!match) return translate('score.error-read-name');
       tokens.push({ type: 'name', text: match[0], at: index });
       index += match[0].length;
       continue;
@@ -142,7 +142,7 @@ function tokenize(expression: string): Token[] | string {
       index += 1;
       continue;
     }
-    return `Unexpected character "${char}"`;
+    return translate('score.error-unexpected', { text: char });
   }
   return tokens;
 }
@@ -181,7 +181,7 @@ export function evaluateFormula(expression: string, scope: Record<string, number
         take();
         return args;
       }
-      return 'Expected a comma or a closing bracket';
+      return translate('score.error-comma');
     }
   };
 
@@ -231,7 +231,7 @@ export function evaluateFormula(expression: string, scope: Record<string, number
       const right = parseUnary();
       if (typeof right === 'string') return right;
       if (op === '/') {
-        if (right === 0) return 'Division by zero';
+        if (right === 0) return translate('score.error-division');
         left = left / right;
       } else {
         left = left * right;
@@ -252,7 +252,7 @@ export function evaluateFormula(expression: string, scope: Record<string, number
 
   function parsePrimary(): number | string {
     const token = peek();
-    if (!token) return 'The formula stops too early';
+    if (!token) return translate('score.error-early');
     if (token.type === 'number') {
       take();
       return Number(token.text);
@@ -262,7 +262,7 @@ export function evaluateFormula(expression: string, scope: Record<string, number
       const name = token.text;
       if (isOp('(')) {
         take();
-        if (!FUNCTIONS.includes(name)) return `Unknown function "${name}"`;
+        if (!FUNCTIONS.includes(name)) return translate('score.error-function', { name });
         const args = parseArgs();
         if (typeof args === 'string') return args;
         switch (name) {
@@ -283,12 +283,15 @@ export function evaluateFormula(expression: string, scope: Record<string, number
           case 'if':
             return (args[0] ?? 0) !== 0 ? (args[1] ?? 0) : (args[2] ?? 0);
           default:
-            return `Unknown function "${name}"`;
+            return translate('score.error-function', { name });
         }
       }
       const key = normaliseName(name);
       if (!(key in scope)) {
-        return `Unknown name "${name}". Categories: ${Object.keys(scope).join(', ') || 'none yet'}`;
+        return translate('score.error-name', {
+          name,
+          names: Object.keys(scope).join(', ') || translate('score.error-no-categories'),
+        });
       }
       return scope[key];
     }
@@ -296,17 +299,19 @@ export function evaluateFormula(expression: string, scope: Record<string, number
       take();
       const value = parseComparison();
       if (typeof value === 'string') return value;
-      if (!isOp(')')) return 'Missing a closing bracket';
+      if (!isOp(')')) return translate('score.error-bracket');
       take();
       return value;
     }
-    return `Unexpected "${token.text}"`;
+    return translate('score.error-unexpected', { text: token.text });
   }
 
   const value = parseComparison();
   if (typeof value === 'string') return fail(value);
-  if (position < tokens.length) return fail(`Unexpected "${tokens[position].text}"`);
-  if (!Number.isFinite(value)) return fail('That formula does not produce a number');
+  if (position < tokens.length) {
+    return fail(translate('score.error-unexpected', { text: tokens[position].text }));
+  }
+  if (!Number.isFinite(value)) return fail(translate('score.error-number'));
   return { ok: true, value: Math.round(value * 100) / 100, message: '' };
 }
 
@@ -397,9 +402,13 @@ function ledgerDetail(state: ScoreState, playerId: string): string {
 
 export function scoreSheet(state: ScoreState): string {
   const rows = standingsFor(state);
-  const lines = [`${state.win === 'lowest' ? 'Lowest' : 'Highest'} score wins`];
-  if (state.target) lines.push(`Target: ${state.target}`);
-  if (state.mode === 'categories' && state.formula.trim()) lines.push(`Formula: ${state.formula}`);
+  const lines = [
+    translate(state.win === 'lowest' ? 'score.sheet-lowest' : 'score.sheet-highest'),
+  ];
+  if (state.target) lines.push(translate('score.sheet-target', { target: state.target }));
+  if (state.mode === 'categories' && state.formula.trim()) {
+    lines.push(translate('score.sheet-formula', { formula: state.formula }));
+  }
   lines.push('');
   for (const row of rows) {
     const detail =
@@ -414,7 +423,7 @@ export function scoreSheet(state: ScoreState): string {
     const notes = Object.entries(state.notes)
       .filter(([key, value]) => value.trim() && key.startsWith(`${row.id}|`))
       .map(([key, value]) => `${key.split('|')[1]}: ${value}`);
-    if (notes.length) lines.push(`   notes — ${notes.join('; ')}`);
+    if (notes.length) lines.push(`   ${translate('score.sheet-notes', { notes: notes.join('; ') })}`);
   }
   return lines.join('\n');
 }

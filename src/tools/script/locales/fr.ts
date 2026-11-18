@@ -57,6 +57,7 @@ const fr = {
   'step-wait': 'Retiens la table un instant',
   'step-reveal': 'Passe le téléphone pour un secret',
   'step-timer': 'Pilote un autre outil',
+  'step-do': 'Appuie sur un bouton d’un autre outil',
   'step-note': 'Note pour l’animateur, pas lue',
   'step-end': 'Fin du script',
   'step-unknown': 'Étape inconnue « {verb} »',

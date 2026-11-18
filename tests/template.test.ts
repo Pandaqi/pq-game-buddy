@@ -1,8 +1,8 @@
 import './helpers/language';
 import { describe, expect, test } from 'bun:test';
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { schemas } from '../src/core/schemas.generated';
+import { installToolFile, toolSchema } from '../src/core/tool-file';
 import { listTemplates } from '../src/data/templates';
 import { summariseTemplate } from '../src/data/template-summary';
 import { templateIcons } from '../src/data/template-icons.generated';
@@ -28,8 +28,16 @@ import { formatDurationText, parseDuration, splitList } from '../src/core/templa
 
 const root = join(import.meta.dir, '..');
 
+// Every bundled example tool file ships beside its template, so a template may
+// name one and the round trip resolves it exactly as the app does.
+const toolsRoot = join(root, 'src', 'tools');
+for (const dir of readdirSync(toolsRoot, { withFileTypes: true }).filter((entry) => entry.isDirectory())) {
+  const file = join(toolsRoot, dir.name, 'example.gamebuddy-tool');
+  if (existsSync(file)) installToolFile(readFileSync(file, 'utf8'));
+}
+
 function resolveOf(template: Template) {
-  return resolveTemplate(template, (id) => schemas[id]);
+  return resolveTemplate(template, (id) => toolSchema(id));
 }
 
 describe('duration parsing', () => {
@@ -240,7 +248,7 @@ describe('round trip', () => {
         text: variant.text,
       })),
     };
-    const written = serializeTemplate(spec, (id) => schemas[id]);
+    const written = serializeTemplate(spec, (id) => toolSchema(id));
     const second = parseTemplate(written);
     expect(hasErrors(second.diagnostics)).toBe(false);
     expect(second.template.game.name).toBe(first.template.game.name);

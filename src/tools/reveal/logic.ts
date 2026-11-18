@@ -7,6 +7,8 @@ export type RevealMode = 'roles' | 'ballot' | 'bid';
 export interface RevealRole {
   name: string;
   count: number;
+  /** Takes every player the other cards leave over; `count` is then 0. */
+  fill?: boolean;
   description: string;
 }
 
@@ -73,12 +75,31 @@ export interface RevealActions {
 
 export type RevealInstance = ToolInstance<RevealState> & RevealActions;
 
-/** One entry per card in the deck: a role with count 3 appears three times. */
-export function rolePool(roles: RevealRole[]): string[] {
+/**
+ * One entry per card in the deck: a role with count 3 appears three times.
+ * A `fill` role takes the players the fixed cards leave over, split evenly when
+ * a deck has more than one, so the pool always matches the table.
+ */
+export function rolePool(roles: RevealRole[], players: number): string[] {
   const pool: string[] = [];
+  const fills: RevealRole[] = [];
   for (const role of roles) {
+    if (role.fill) {
+      fills.push(role);
+      continue;
+    }
     const count = Math.max(0, Math.round(role.count));
     for (let index = 0; index < count; index += 1) pool.push(role.name);
+  }
+  if (fills.length) {
+    const remaining = Math.max(0, players - pool.length);
+    const base = Math.floor(remaining / fills.length);
+    let extra = remaining % fills.length;
+    for (const role of fills) {
+      const share = base + (extra > 0 ? 1 : 0);
+      if (extra > 0) extra -= 1;
+      for (let index = 0; index < share; index += 1) pool.push(role.name);
+    }
   }
   return pool;
 }
@@ -88,7 +109,7 @@ export function rolePool(roles: RevealRole[]): string[] {
  * roles repeat from the top so everyone still gets a card.
  */
 export function dealRoles(roles: RevealRole[], players: RevealPlayer[], rng: Rng): Record<string, string> {
-  const pool = rolePool(roles);
+  const pool = rolePool(roles, players.length);
   if (!pool.length || !players.length) return {};
   const shuffled = rng.shuffle(pool);
   const assignment: Record<string, string> = {};
@@ -169,10 +190,15 @@ export function bidLeaders(state: RevealState, languageId: string): string[] {
 
 export function rolesFrom(pairs: Record<string, string | number>, descriptions: Record<string, string | number>): RevealRole[] {
   return Object.entries(pairs)
-    .map(([name, count]) => ({
-      name: name.trim(),
-      count: Math.max(0, Math.round(Number(count) || 0)),
-      description: String(descriptions[name] ?? '').trim(),
-    }))
-    .filter((role) => role.name && role.count > 0);
+    .map(([name, count]) => {
+      // `loyal=fill`: a card for each player the named cards do not cover.
+      const fill = String(count).trim().toLowerCase() === 'fill';
+      return {
+        name: name.trim(),
+        count: fill ? 0 : Math.max(0, Math.round(Number(count) || 0)),
+        ...(fill ? { fill: true } : {}),
+        description: String(descriptions[name] ?? '').trim(),
+      };
+    })
+    .filter((role) => role.name && (role.fill || role.count > 0));
 }
