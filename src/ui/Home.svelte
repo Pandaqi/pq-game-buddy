@@ -443,6 +443,10 @@
     font-weight: 800;
     font-size: var(--text-xl);
     line-height: 1.1;
+    /* A long word (Dutch "Dobbelstenen") must break inside the tile: a flex item
+       keeps its min-content width, which would widen the column and the page. */
+    max-width: 100%;
+    overflow-wrap: break-word;
   }
   .blurb {
     color: var(--text-dim);

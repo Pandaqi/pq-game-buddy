@@ -31,6 +31,8 @@ const it: Dict = {
   'app.storage': 'Questo browser non può salvare qui. Esporta la partita o ospita il file.',
   'app.loading': 'Sto leggendo il link…',
   'app.loading-hint': 'Se non succede nulla, il link era tagliato. Importa il testo del modello.',
+  'app.page-loading': 'Caricamento…',
+  'app.page-failed': 'Questa schermata non si è caricata. La partita salvata è intatta.',
   'app.home': 'Vai alla home',
   'app.broke': 'Qualcosa si è rotto',
   'app.broke-hint': 'Lo schermo non è riuscito a caricarsi. La partita salvata è ancora su questo dispositivo.',

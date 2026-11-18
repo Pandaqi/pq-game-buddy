@@ -31,6 +31,8 @@ const vi: Dict = {
   'app.storage': 'Trình duyệt này không lưu được ở đây. Hãy xuất ván chơi, hoặc tự lưu tệp ở nơi khác.',
   'app.loading': 'Đang đọc liên kết…',
   'app.loading-hint': 'Nếu không có gì xảy ra, liên kết đã bị cắt. Hãy nhập nội dung mẫu thay thế.',
+  'app.page-loading': 'Đang tải…',
+  'app.page-failed': 'Màn hình này không tải được. Ván đã lưu của bạn vẫn nguyên.',
   'app.home': 'Về trang chính',
   'app.broke': 'Có lỗi xảy ra',
   'app.broke-hint': 'Màn hình không hiển thị được. Ván đã lưu vẫn còn trên thiết bị này.',

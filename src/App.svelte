@@ -551,21 +551,20 @@
         </section>
       {/if}
     {:else if route.name === 'settings'}
-      <LazyView load={pageLoaders.settings} label="settings" />
+      <LazyView load={pageLoaders.settings} />
     {:else if route.name === 'display'}
-      <LazyView load={pageLoaders.display} props={{ instanceId: route.instanceId }} label="the display view" />
+      <LazyView load={pageLoaders.display} props={{ instanceId: route.instanceId }} />
     {:else if route.name === 'selftest'}
-      <LazyView load={pageLoaders.selftest} label="the self-test" />
+      <LazyView load={pageLoaders.selftest} />
     {:else if route.name === 'log'}
-      <LazyView load={pageLoaders.log} label="the play log" />
+      <LazyView load={pageLoaders.log} />
     {:else if route.name === 'templates'}
       <LazyView
         load={pageLoaders.templates}
-        label="templates"
         props={{ onupload: (files: File[]) => void importFiles(files) }}
       />
     {:else if route.name === 'editor'}
-      <LazyView load={pageLoaders.editor} label="the editor" />
+      <LazyView load={pageLoaders.editor} />
     {:else if route.name === 'notfound'}
       <section class="page">
         <h1>{t('notfound.title')}</h1>

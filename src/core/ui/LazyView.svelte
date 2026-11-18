@@ -21,16 +21,10 @@
    * appears when a chunk is genuinely slow to arrive.
    */
   import type { Component } from 'svelte';
+  import { t } from '../i18n.svelte';
 
-  let {
-    load,
-    props = {},
-    label,
-  }: {
-    load: () => Promise<Component<any>>;
-    props?: Record<string, unknown>;
-    label: string;
-  } = $props();
+  let { load, props = {} }: { load: () => Promise<Component<any>>; props?: Record<string, unknown> } =
+    $props();
 
   // Derived, not captured: switching tabs changes `load` without remounting.
   const view = $derived(load());
@@ -50,13 +44,13 @@
 
 {#await view}
   {#if showPending}
-    <p class="loading" role="status">Loading {label}…</p>
+    <p class="loading" role="status">{t('app.page-loading')}</p>
   {/if}
 {:then View}
   <View {...props} />
 {:catch error}
   <div class="failed" role="alert">
-    <p>{label} did not load. Your saved game is unchanged.</p>
+    <p>{t('app.page-failed')}</p>
     <pre>{String(error)}</pre>
   </div>
 {/await}

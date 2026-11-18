@@ -33,6 +33,8 @@ const de: Dict = {
   'app.loading': 'Der Link wird gelesen…',
   'app.loading-hint':
     'Passiert nichts, war der Link abgeschnitten. Importiere stattdessen den Vorlagentext.',
+  'app.page-loading': 'Wird geladen…',
+  'app.page-failed': 'Diese Ansicht wurde nicht geladen. Dein gespeichertes Spiel ist unverändert.',
   'app.home': 'Zur Startseite',
   'app.broke': 'Da ist etwas schiefgelaufen',
   'app.broke-hint':

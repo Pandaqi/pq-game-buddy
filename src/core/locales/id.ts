@@ -31,6 +31,8 @@ const id: Dict = {
   'app.storage': 'Peramban ini tidak bisa menyimpan di sini. Ekspor permainan atau hoskan berkasnya.',
   'app.loading': 'Membaca tautan…',
   'app.loading-hint': 'Jika tidak terjadi apa-apa, tautannya terpotong. Impor teks templat.',
+  'app.page-loading': 'Memuat…',
+  'app.page-failed': 'Layar ini gagal dimuat. Permainan tersimpanmu tidak berubah.',
   'app.home': 'Ke beranda',
   'app.broke': 'Ada yang rusak',
   'app.broke-hint': 'Layar gagal dimuat. Permainan tersimpanmu masih ada di perangkat ini.',

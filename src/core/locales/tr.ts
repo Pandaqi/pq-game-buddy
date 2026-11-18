@@ -31,6 +31,8 @@ const tr: Dict = {
   'app.storage': 'Bu tarayıcı burada kaydedemiyor. Oyunu dışa aktar veya dosyayı barındır.',
   'app.loading': 'Bağlantı okunuyor…',
   'app.loading-hint': 'Bir şey olmazsa bağlantı kesilmiştir. Şablon metnini içe aktar.',
+  'app.page-loading': 'Yükleniyor…',
+  'app.page-failed': 'Bu ekran yüklenemedi. Kayıtlı oyunun değişmedi.',
   'app.home': 'Ana sayfaya git',
   'app.broke': 'Bir şey bozuldu',
   'app.broke-hint': 'Ekran yüklenemedi. Kayıtlı oyunun hâlâ bu cihazda.',

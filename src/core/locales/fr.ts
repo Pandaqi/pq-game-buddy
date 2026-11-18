@@ -32,6 +32,8 @@ const fr: Dict = {
     'Ce navigateur ne peut pas enregistrer ici. Exporte ta partie ou héberge le fichier.',
   'app.loading': 'Lecture du lien…',
   'app.loading-hint': 'Si rien ne se passe, le lien était coupé. Importe plutôt le texte du modèle.',
+  'app.page-loading': 'Chargement…',
+  'app.page-failed': 'Cet écran ne s’est pas chargé. Ta partie enregistrée est intacte.',
   'app.home': "Retour à l'accueil",
   'app.broke': "Quelque chose a cassé",
   'app.broke-hint':

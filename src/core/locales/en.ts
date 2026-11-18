@@ -34,6 +34,8 @@ const en: Dict = {
   'app.storage': 'This browser cannot save here. Export your game, or host the file.',
   'app.loading': 'Reading that link…',
   'app.loading-hint': 'If nothing happens, the link was cut short. Import the template text instead.',
+  'app.page-loading': 'Loading…',
+  'app.page-failed': 'This screen did not load. Your saved game is unchanged.',
   'app.home': 'Go home',
   'app.broke': 'Something broke',
   'app.broke-hint': 'The screen failed to render. Your saved game is still on this device.',

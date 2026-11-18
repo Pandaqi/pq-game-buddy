@@ -32,6 +32,8 @@ const es: Dict = {
     'Este navegador no puede guardar aquí. Exporta tu partida o aloja el archivo.',
   'app.loading': 'Leyendo el enlace…',
   'app.loading-hint': 'Si no pasa nada, el enlace venía cortado. Importa el texto de la plantilla.',
+  'app.page-loading': 'Cargando…',
+  'app.page-failed': 'Esta pantalla no se cargó. Tu partida guardada sigue igual.',
   'app.home': 'Ir al inicio',
   'app.broke': 'Algo se rompió',
   'app.broke-hint':

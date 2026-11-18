@@ -31,6 +31,8 @@ const nl: Dict = {
   'app.storage': 'Deze browser kan hier niet opslaan. Exporteer je spel of host het bestand.',
   'app.loading': 'De link wordt gelezen…',
   'app.loading-hint': 'Gebeurt er niets? Dan was de link afgekapt. Importeer de template-tekst.',
+  'app.page-loading': 'Laden…',
+  'app.page-failed': 'Dit scherm is niet geladen. Je opgeslagen spel is ongewijzigd.',
   'app.home': 'Naar huis',
   'app.broke': 'Er ging iets mis',
   'app.broke-hint': 'Het scherm kon niet worden getoond. Je opgeslagen spel staat nog op dit apparaat.',

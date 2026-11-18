@@ -31,6 +31,8 @@ const pt: Dict = {
   'app.storage': 'Este navegador não pode salvar aqui. Exporte o jogo ou hospede o arquivo.',
   'app.loading': 'Lendo o link…',
   'app.loading-hint': 'Se nada acontecer, o link foi cortado. Importe o texto do modelo.',
+  'app.page-loading': 'Carregando…',
+  'app.page-failed': 'Esta tela não carregou. Seu jogo salvo está intacto.',
   'app.home': 'Ir para o início',
   'app.broke': 'Algo deu errado',
   'app.broke-hint': 'A tela não conseguiu carregar. Seu jogo salvo continua neste aparelho.',

@@ -82,6 +82,15 @@ All notable changes to Game Buddy. The template format is versioned separately
 
 ### Fixed
 
+- **A shelf tile that pushed the page sideways.** Dutch “Dobbelstenen” is wider than a
+  360 px home tile, and a flex item keeps its min-content width, so the word widened the
+  column and the page scrolled 36 px horizontally. A tool title now stays inside its own
+  tile and wraps there; the template tiles already did the same.
+- **Two English lines on a slow chunk.** A secondary page that took a moment to arrive
+  said “Loading …” and “… did not load. Your saved game is unchanged.” in English
+  whatever the language. Both texts now come from `app.page-loading` and
+  `app.page-failed` in all ten languages, and the shell no longer passes an English
+  label into the lazy screen.
 - **Every bag tray label.** A per-player tray was keyed by the player's name, so a
   rename left the tray behind under the old words and a seat the app named itself was
   drawn blank. Trays now follow the player's id, the strip says a generated seat in the
