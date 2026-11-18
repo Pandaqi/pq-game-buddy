@@ -3,6 +3,7 @@
   import { listRecentImports, type RecentImport } from '../core/recent-imports';
   import { navigate } from '../core/router';
   import { schemas } from '../core/schemas.generated';
+  import { seatNames } from '../core/session';
   import { store } from '../core/session-store.svelte';
   import { KEYS, readJson, writeJson } from '../core/storage';
   import { parseTemplate, resolveTemplate, type TemplateVariant } from '../core/template/parse';
@@ -119,7 +120,7 @@
   function chooseImport(entry: RecentImport): void {
     const parsed = parseTemplate(entry.text).template;
     const range = parsed.game.players;
-    const tools = parsed.tools.map((tool) => tool.toolId);
+    const tools = [...new Set(parsed.tools.map((tool) => tool.toolId))];
     if (!tools.includes('rules') && (parsed.rules.trim() || parsed.setup.length)) tools.push('rules');
     chosen = {
       id: `import-${entry.at}`,
@@ -152,9 +153,7 @@
     const resolved = resolveTemplate(parsed.template, (id) => schemas[id]);
     const range = parsed.template.game.players;
     const count = parsed.template.players.length ? parsed.template.players.length : Math.max(1, Math.min(20, seats));
-    const names = parsed.template.players.length
-      ? parsed.template.players
-      : Array.from({ length: count }, (_, index) => t('players.default', { count: index + 1 }));
+    const names = parsed.template.players.length ? parsed.template.players : seatNames(count);
     const baseTools = toolsForSession(parsed.template, resolved.tools);
     const variant = parsed.template.variants.find((item) => item.id === variantId);
     const tools = variant ? applyVariant(baseTools, variant) : baseTools;
@@ -364,7 +363,7 @@
     font-size: var(--text-sm);
   }
   .back {
-    min-height: 46px;
+    min-height: 48px;
     display: inline-flex;
     align-items: center;
     padding: 0 var(--space-4);
@@ -389,7 +388,7 @@
     gap: var(--space-2);
   }
   .chips button {
-    min-height: 46px;
+    min-height: 48px;
     padding: 0 var(--space-4);
     border-radius: var(--radius-pill);
     background: var(--surface-2);
@@ -418,12 +417,12 @@
   }
   .field select,
   .field input {
-    min-height: 46px;
+    min-height: 48px;
     min-width: 8.5rem;
     padding: 0 var(--space-3) 0 var(--space-4);
   }
   .surprise {
-    min-height: 46px;
+    min-height: 48px;
     padding: 0 var(--space-5);
     border-radius: var(--radius-pill);
     background: var(--accent-soft);
@@ -444,7 +443,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    min-height: 46px;
+    min-height: 48px;
     padding: 0 var(--space-4);
     border-radius: var(--radius-pill);
     background: var(--surface-2);
@@ -558,8 +557,8 @@
     position: absolute;
     top: var(--space-2);
     right: var(--space-2);
-    min-width: 44px;
-    min-height: 44px;
+    min-width: 48px;
+    min-height: 48px;
     border-radius: var(--radius-round);
     background: transparent;
     box-shadow: none;

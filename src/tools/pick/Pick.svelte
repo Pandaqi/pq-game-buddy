@@ -2,13 +2,17 @@
   import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import EmptyState from '../../core/ui/EmptyState.svelte';
+  import { toolSeats } from '../../core/session';
   import {
+    itemKey,
+    itemLabel,
     slotOffset,
     slicePath,
     viewPool,
     winnerAngle,
     winnerIndex,
     type PickInstance,
+    type PickItem,
     type PickSource,
   } from './logic';
 
@@ -17,9 +21,10 @@
 
   let draft = $state('');
 
-  const playerNames = $derived(ctx.session.players().map((player) => player.name));
-  const pool = $derived(viewPool(data, playerNames, data.view === 'slot' ? 40 : 12));
-  const winner = $derived(data.result[0] ?? '');
+  const playerItems = $derived<PickItem[]>(toolSeats(ctx.session.players(), 2));
+  const pool = $derived(viewPool(data, playerItems, data.view === 'slot' ? 40 : 12));
+  const first = $derived(data.result[0]);
+  const winner = $derived(first ? itemLabel(first) : '');
   const winnerAt = $derived(winnerIndex(pool, winner));
   const angle = $derived(winnerAngle(winnerAt, pool.length));
   const offset = $derived(slotOffset(winnerAt));
@@ -94,10 +99,10 @@
     </form>
     {#if data.values.length}
       <ul class="values">
-        {#each data.values as value (value)}
+        {#each data.values as item (itemKey(item))}
           <li>
-            <span>{value}</span>
-            <button type="button" aria-label={t('pick.remove', { value })} onclick={() => instance.removeValue(value)}>✕</button>
+            <span>{itemLabel(item)}</span>
+            <button type="button" aria-label={t('pick.remove', { value: itemLabel(item) })} onclick={() => instance.removeValue(item)}>✕</button>
           </li>
         {/each}
       </ul>
@@ -149,7 +154,7 @@
         {#each data.teamResult as team, index (index)}
           <div class="team">
             <h3>{t('pick.team-number', { count: index + 1 })}</h3>
-            <p>{team.join(', ') || '—'}</p>
+            <p>{team.map(itemLabel).join(', ') || '—'}</p>
           </div>
         {/each}
       </div>
@@ -182,7 +187,7 @@
         <div class="results">
           {#each data.result as item, index (index)}
             {#if data.revealed[index]}
-              <span class="result card">{item}</span>
+              <span class="result card">{itemLabel(item)}</span>
             {:else}
               <button
                 type="button"
@@ -196,7 +201,7 @@
       {:else}
         <div class="results">
           {#each data.result as item, index (index)}
-            <span class="result">{item}</span>
+            <span class="result">{itemLabel(item)}</span>
           {/each}
         </div>
       {/if}
@@ -238,7 +243,7 @@
   {#if data.history.length > 1}
     <ol class="history">
       {#each data.history as item, index (index)}
-        <li>{item.items.join(', ')}</li>
+        <li>{item.items.map(itemLabel).join(', ')}</li>
       {/each}
     </ol>
   {/if}

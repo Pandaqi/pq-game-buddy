@@ -78,6 +78,13 @@ const nl = {
   'summary-sold': 'Verkocht:',
   'summary-sale': '- {item} aan {buyer} voor {price}',
   'summary-none': 'Nog niets gekozen.',
+
+  // The activity log, in the active language.
+  'note-picked': '{picker} koos {item}',
+  'note-order': 'Volgorde: {names}',
+  'note-returned': '{item} terug in de pool',
+  'note-nominated': '{item} genomineerd',
+  'note-sold': '{item} verkocht aan {buyer} voor {price}',
 };
 
 export default nl;

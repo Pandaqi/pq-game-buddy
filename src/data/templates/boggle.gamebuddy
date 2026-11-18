@@ -4,7 +4,7 @@
 name: Boggle
 players: 2-8
 time: 15m
-tags: words, party
+tags: party, words
 icon: boggle
 source: https://en.wikipedia.org/wiki/Boggle
 author: pandaqi

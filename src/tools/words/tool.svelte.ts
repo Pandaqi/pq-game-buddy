@@ -186,7 +186,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
       data.check = null;
       data.picked = [];
       data.board = codenamesBoard(ctx.rng, allWords());
-      note(`Switched to ${wordPack(next).name}`);
+      note(translate('words.note-pack', { pack: wordPack(next).name }));
     },
     setMode(mode) {
       if (mode === data.mode) return;
@@ -237,25 +237,30 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
           const set = new Set(words);
           const valid = set.has(word);
           data.check = { word, valid, close: valid ? [] : closeMatches(words, word) };
-          note(`${word}: ${valid ? 'in the list' : 'not in the list'}`);
+          note(
+            translate(valid ? 'words.summary-in' : 'words.summary-not-in', {
+              word,
+              pack: wordPack(data.lang).name,
+            }),
+          );
           ctx.audio.play(valid ? 'success' : 'buzzer');
           break;
         }
         case 'filters':
           data.results = filterWords(words, data.filters);
-          note(`${data.results.length} words match`);
+          note(translate('words.note-matches', { count: data.results.length }));
           break;
         case 'anagram':
           data.results = anagramWords(words, data.letters || data.query);
-          note(`${data.results.length} anagrams`);
+          note(translate('words.note-anagrams', { count: data.results.length }));
           break;
         case 'rack':
           data.scored = rackWords(words, data.letters || data.query, data.blanks, data.lang);
-          note(`${data.scored.length} rack words`);
+          note(translate('words.note-rack', { count: data.scored.length }));
           break;
         case 'letters':
           data.picked = pickLetters(ctx.rng, data.lang, data.count);
-          note(`Picked ${data.picked.join(' ')}`);
+          note(translate('words.summary-letters', { letters: data.picked.join(' ') }));
           break;
         case 'codenames':
           instance.newBoard();

@@ -65,7 +65,7 @@
   <section>
     <h2>{t('settings.appearance')}</h2>
     <p class="dim small">{t('settings.appearance-hint')}</p>
-    <div class="segment">
+    <div class="modes">
       {#each [['system', t('settings.theme.system')], ['light', t('settings.theme.light')], ['dark', t('settings.theme.dark')]] as item (item[0])}
         <button
           type="button"
@@ -139,7 +139,7 @@
 
   <section>
     <h2>{t('settings.motion')}</h2>
-    <div class="segment">
+    <div class="modes">
       {#each [['system', t('settings.motion.system')], ['reduce', t('settings.motion.reduce')], ['allow', t('settings.motion.allow')]] as item (item[0])}
         <button
           type="button"
@@ -242,7 +242,7 @@
     color: var(--forest);
   }
   .back {
-    min-height: 46px;
+    min-height: 48px;
     display: inline-flex;
     align-items: center;
     padding: 0 var(--space-4);
@@ -264,27 +264,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-2);
-  }
-  .segment {
-    display: flex;
-    gap: var(--space-1);
-    padding: var(--space-1);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
-  }
-  .segment button {
-    flex: 1;
-    min-height: 48px;
-    border-radius: var(--radius-pill);
-    background: transparent;
-    color: var(--text-dim);
-    text-transform: capitalize;
-    cursor: pointer;
-  }
-  .segment button.active {
-    background: var(--surface);
-    font-weight: 700;
-    box-shadow: var(--shadow-soft);
   }
   .check {
     display: flex;

@@ -1,5 +1,7 @@
 /** Finished plays: the only history that outlives a session. Plain, local, exportable. */
 
+import { gameName } from './game-name';
+import { language, translate } from './i18n';
 import { KEYS, readJson, writeJson } from './storage';
 
 export interface PlayResult {
@@ -11,6 +13,8 @@ export interface PlayRecord {
   id: string;
   at: number;
   game: string;
+  /** A tool play carries its id, so the log says the name in the current language. */
+  toolId?: string;
   players: string[];
   results: PlayResult[];
   winner: string;
@@ -55,6 +59,7 @@ function cleanRecord(value: unknown): PlayRecord | null {
     id: raw.id,
     at: Number(raw.at) || 0,
     game: raw.game,
+    toolId: typeof raw.toolId === 'string' ? raw.toolId : undefined,
     players: Array.isArray(raw.players) ? raw.players.filter((name) => typeof name === 'string') : [],
     results,
     winner: typeof raw.winner === 'string' ? raw.winner : '',
@@ -76,6 +81,7 @@ export function listPlays(): PlayRecord[] {
 
 export function recordPlay(input: {
   game: string;
+  toolId?: string;
   players?: string[];
   results?: PlayResult[];
   winner: string;
@@ -90,7 +96,8 @@ export function recordPlay(input: {
   const record: PlayRecord = {
     id: `play${Date.now().toString(36)}${Math.floor(Math.random() * 1000)}`,
     at: input.at ?? Date.now(),
-    game: input.game.trim() || 'Untitled game',
+    game: input.game.trim() || translate('game.fallback'),
+    toolId: input.toolId,
     players: input.players ?? [],
     results: input.results ?? [],
     winner: input.winner.trim(),
@@ -158,7 +165,7 @@ export function statsFor(records: PlayRecord[]): PlayStats {
   return {
     plays: records.length,
     minutes: records.reduce((sum, record) => sum + (record.minutes ?? 0), 0),
-    games: new Set(records.map((record) => record.game)).size,
+    games: new Set(records.map((record) => record.toolId ?? record.game)).size,
     wins: [...wins.entries()]
       .map(([name, count]) => ({ name, wins: count }))
       .sort((a, b) => b.wins - a.wins || a.name.localeCompare(b.name)),
@@ -189,7 +196,7 @@ export function playsToCsv(records: PlayRecord[]): string {
       .join('; ');
     rows.push(
       [
-        quote(record.game),
+        quote(gameName(language(), record.toolId, record.game)),
         quote(new Date(record.at).toISOString()),
         quote(record.winner),
         quote(record.players.join(', ')),
@@ -201,6 +208,11 @@ export function playsToCsv(records: PlayRecord[]): string {
   return rows.join('\n');
 }
 
+/** An exported play carries the name in the language it is read in, not the one it was saved in. */
 export function playsToJson(records: PlayRecord[]): string {
-  return JSON.stringify({ version: 1, plays: records }, null, 2);
+  const plays = records.map((record) => ({
+    ...record,
+    game: gameName(language(), record.toolId, record.game),
+  }));
+  return JSON.stringify({ version: 1, plays }, null, 2);
 }

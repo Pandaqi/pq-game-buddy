@@ -1,6 +1,8 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { createDisplayChannel, displayUrl } from '../core/display';
   import { language, t } from '../core/i18n.svelte';
+  import { gameName } from '../core/game-name';
   import { scrollToStart } from '../core/dom';
   import { recordPlay, updatePlay, type PlayResult } from '../core/play-log';
   import { navigate } from '../core/router';
@@ -41,6 +43,14 @@
   );
 
   const session = $derived(store.session);
+
+  /** Seat names as this language says them: a generated seat is translated here. */
+  const players = $derived(store.players());
+
+  /** The name to say now: a one-tool session is translated again from its id. */
+  const sessionName = $derived(
+    gameName(language(), session?.toolId, session?.gameName ?? t('game.fallback')),
+  );
   const entries = $derived.by(() => {
     void store.version;
     return store.entries;
@@ -91,7 +101,7 @@
 
   function copySummary(): void {
     if (!session) return;
-    const lines = [`${session.gameName} — ${new Date().toLocaleString(language())}`, ''];
+    const lines = [`${sessionName} — ${new Date().toLocaleString(language())}`, ''];
     for (const item of entries) {
       lines.push(`# ${item.label}`);
       lines.push(item.instance.summary());
@@ -162,7 +172,7 @@
   }
 
   function fallbackResults(): PlayResult[] {
-    return (session?.players ?? []).map((player) => ({ name: player.name }));
+    return players.map((player) => ({ name: player.name }));
   }
 
   function defaultWinner(rows: PlayResult[]): string {
@@ -199,11 +209,11 @@
 
   function savePlay(): void {
     if (!session) return;
-    const players = session.players.map((player) => player.name);
+    const names = players.map((player) => player.name);
     // Rounded up: a 4½ minute game still counts as 5 minutes of table time.
     const minutes = Math.max(1, Math.ceil((Date.now() - session.createdAt) / 60000));
     if (session.playId) {
-      const updated = updatePlay(session.playId, { results: finishResults, winner: finishWinner, players, minutes });
+      const updated = updatePlay(session.playId, { results: finishResults, winner: finishWinner, players: names, minutes });
       if (updated) {
         finishSaved = true;
         store.toast(t('toast.play-updated'));
@@ -212,7 +222,8 @@
     }
     const saved = recordPlay({
       game: session.gameName,
-      players,
+      toolId: session.toolId,
+      players: names,
       results: finishResults,
       winner: finishWinner,
       templateId: session.templateId,
@@ -239,6 +250,34 @@
     menuOpen = false;
   }
 
+  /**
+   * A rematch is a new session with the same table and settings. It is offered
+   * once the result is in the log, so restarting can never lose a play.
+   */
+  async function playAgain(): Promise<void> {
+    // Always write the latest result first, even when the play was saved earlier.
+    savePlay();
+    finishOpen = false;
+    menuOpen = false;
+    if (await store.restart()) navigate({ name: 'session' });
+  }
+
+  // Ctrl/Cmd+Z undoes the active tool, except while typing in a field.
+  onMount(() => {
+    const onKey = (event: KeyboardEvent): void => {
+      if (!(event.ctrlKey || event.metaKey) || event.shiftKey) return;
+      if (event.key.toLowerCase() !== 'z') return;
+      const target = event.target as HTMLElement | null;
+      const tag = target?.tagName ?? '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || target?.isContentEditable) return;
+      if (!store.activeEntry?.undo.canUndo()) return;
+      event.preventDefault();
+      store.undoActive();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
+
   function finishAndClose(): void {
     const id = session?.id;
     if (id && forgetOnClose) store.forgetSession(id);
@@ -249,7 +288,7 @@
   }
 
   function copyResult(): void {
-    const lines = [`${session?.gameName ?? t('game.fallback')} — ${new Date().toLocaleString(language())}`];
+    const lines = [`${sessionName} — ${new Date().toLocaleString(language())}`];
     lines.push(
       finishWinner ? t('finish.winner', { name: finishWinner }) : t('finish.no-single-winner'),
     );
@@ -265,7 +304,7 @@
 <div class="session" data-family={entry?.module.family ?? 'track'}>
   <header class="head">
     <div class="title">
-      <h1>{session?.gameName ?? t('game.fallback')}</h1>
+      <h1>{sessionName}</h1>
       <p class="dim">
         {entries.length === 1
           ? t('session.tool-count-one', { count: 1 })
@@ -285,7 +324,7 @@
         onclick={toggleSeats}
       >
         <span class="seats-dots" aria-hidden="true">
-          {#each (session?.players ?? []).slice(0, 4) as player (player.id)}
+          {#each players.slice(0, 4) as player (player.id)}
             <span class="mini" style="--player: {player.color}">{player.initial}</span>
           {/each}
         </span>
@@ -295,7 +334,7 @@
 
       {#if seatsOpen}
         <div class="players">
-          {#each session?.players ?? [] as player (player.id)}
+          {#each players as player (player.id)}
             <PlayerChip name={player.name} initial={player.initial} color={player.color} active={player.active} onclick={() => store.setActivePlayer(player.id)} />
           {/each}
           <button type="button" class="add-player" onclick={() => (playersOpen = true)} aria-label={t('session.edit-players')}>+</button>
@@ -338,6 +377,8 @@
             <button
               type="button"
               role="tab"
+              id={`tab-${item.id}`}
+              aria-controls="session-panel"
               aria-selected={store.activeId === item.id}
               class:active={store.activeId === item.id}
               onclick={() => store.setTab(item.id)}
@@ -355,7 +396,7 @@
   {#if entry}
     {@const Tool = entry.module.component}
     {#key store.activeId}
-    <div class="panel">
+    <div class="panel" id="session-panel" role="tabpanel" aria-labelledby={`tab-${store.activeId}`}>
       <svelte:boundary>
         <Tool ctx={entry.ctx} instance={entry.instance} />
         {#snippet failed(error, reset)}
@@ -382,7 +423,7 @@
 {#if playersOpen}
   <Sheet title={t('players.title')} onclose={() => (playersOpen = false)}>
     <ul class="player-list">
-      {#each store.players() as player (player.id)}
+      {#each players as player (player.id)}
         <li>
           <span class="dot" style="--player: {player.color}">{player.initial}</span>
           <input
@@ -395,7 +436,7 @@
             type="button"
             onclick={() => store.removePlayer(player.id)}
             aria-label={t('players.remove', { name: player.name })}
-            disabled={store.players().length <= 1}
+            disabled={players.length <= 1}
           >
             ✕
           </button>
@@ -463,7 +504,8 @@
     {#if finishSaved}
       <p class="saved" role="status">{t('finish.in-log')}</p>
       <button type="button" class="wide" onclick={savePlay}>{t('finish.update')}</button>
-      <button type="button" class="wide primary-wide" onclick={finishAndClose}>
+      <button type="button" class="wide primary-wide" onclick={playAgain}>{t('finish.play-again')}</button>
+      <button type="button" class="wide" onclick={finishAndClose}>
         {forgetOnClose ? t('finish.forget-close') : t('finish.close-home')}
       </button>
     {:else}
@@ -578,7 +620,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
-    min-height: 44px;
+    min-height: 48px;
     padding: 0 var(--space-3) 0 var(--space-2);
     background: transparent;
     color: var(--text-dim);
@@ -674,7 +716,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
-    min-height: 46px;
+    min-height: 48px;
     padding: var(--space-1) var(--space-4);
     background: var(--surface-2);
     color: var(--text-dim);
@@ -853,7 +895,7 @@
     gap: var(--space-1);
   }
   .sources button {
-    min-height: 44px;
+    min-height: 48px;
     padding: 0 var(--space-4);
     background: var(--surface-2);
     color: var(--text);

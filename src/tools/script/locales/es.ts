@@ -63,6 +63,9 @@ const es = {
   'summary-step': 'Paso {index} de {total}',
   'summary-verb': '{verb}: {arg}',
   'summary-drawn': 'Sacado: {card}',
+
+  // The activity log, in the active language.
+  'note-call': '{tool}: {command} ejecutado',
 };
 
 export default es;

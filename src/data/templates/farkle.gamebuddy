@@ -1,0 +1,35 @@
+# farkle.gamebuddy — roll six, keep the good ones, know when to stop
+
+[game]
+name: Farkle
+players: 2-6
+time: 30m
+tags: dice, party, push-your-luck
+icon: farkle
+source: Traditional game — no official source
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give everyone a pen and a score slot
+- Agree the target, 10,000 is usual
+- Agree the bonus for six of a kind
+- Roll to see who starts
+
+[rules]
+Bank points, but roll again only if you dare.
+- Roll six dice and set aside at least one scoring die
+- Three of a kind, a straight, three pairs and a six-die run all score
+- Roll the rest; a roll with no scoring die is a farkle and loses the turn's points
+- Stop and bank, or push on for more
+- First to 10,000 wins
+
+[tool dice]
+roll: 6d6
+
+[tool score]
+mode: rounds
+target: 10000
+win: highest
+hint: 10,000 ends the game; the highest score wins

@@ -1,0 +1,42 @@
+# dominoes.gamebuddy — the draw pile is the deck
+
+[game]
+name: Dominoes
+players: 2-4
+time: 20m
+tags: family, tile
+icon: dominoes
+source: Traditional game — no official source
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the double-six set face down
+- Deal seven tiles each, hidden
+- Leave the rest as the draw pile, called the boneyard
+- The highest double starts, or draw for it
+
+[rules]
+Match pips and empty your hand.
+- On your turn, play a tile whose end matches an open end of the line
+- If you cannot play, draw from the boneyard until you can, or pass
+- A double is played across the line
+- The first player out wins the round and scores the pips left in every other hand
+- Play to 100 points
+
+[tool decks]
+deck: domino
+players: 2
+deal: 7
+hidden: yes
+
+[tool score]
+mode: rounds
+target: 100
+win: highest
+hint: 100 points takes the match
+
+[tool turns]
+phases: Draw, Play, Pass
+pass: no

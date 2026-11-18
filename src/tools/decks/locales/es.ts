@@ -70,6 +70,13 @@ const es = {
   'undo-hidden': 'manos ocultas',
   'undo-custom': 'cartas propias',
   'undo-reset': 'mazo reiniciado',
+
+  // The activity log, in the active language.
+  'note-new': 'Baraja {kind} nueva ({count} cartas)',
+  'note-shuffled': '{count} cartas barajadas',
+  'note-dealt': '{deal} cartas repartidas a {players} jugadores',
+  'note-table': 'En la mesa: {card}',
+  'note-discarded': '{player} descartó',
 };
 
 export default es;

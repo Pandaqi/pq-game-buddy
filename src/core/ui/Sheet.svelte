@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
   import { onMount } from 'svelte';
+  import { t } from '../i18n.svelte';
   import { trapFocus } from '../dom';
 
   let {
@@ -43,7 +44,7 @@
   <div class="handle" aria-hidden="true"></div>
   <header>
     <h2>{title}</h2>
-    <button class="close" type="button" onclick={onclose} aria-label="Close">✕</button>
+    <button class="close" type="button" onclick={onclose} aria-label={t('app.close')}>✕</button>
   </header>
   <div class="body">
     {@render children()}

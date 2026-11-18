@@ -1,3 +1,4 @@
+import { seatNameIn } from '../../core/i18n';
 import type { Rng } from '../../core/rng';
 import type { ToolInstance } from '../../core/registry';
 
@@ -11,7 +12,10 @@ export interface RevealRole {
 
 export interface RevealPlayer {
   id: string;
+  /** The session player's name, blank for a seat the app generated. */
   name: string;
+  /** Set for a generated seat: said in the active language when it is shown. */
+  seat?: number;
   color: string;
 }
 
@@ -136,17 +140,17 @@ export function ballotResults(state: RevealState): { name: string; score: number
 }
 
 /** Revealed bids as standings, highest first. */
-export function bidResults(state: RevealState): { name: string; score: number }[] {
+export function bidResults(state: RevealState, languageId: string): { name: string; score: number }[] {
   if (!state.bids.revealed) return [];
   return state.players
     .map((player) => ({
-      name: player.name,
+      name: seatNameIn(languageId, player.seat, player.name),
       score: typeof state.bids.values[player.id] === 'number' ? state.bids.values[player.id]! : 0,
     }))
     .sort((a, b) => b.score - a.score);
 }
 
-export function bidLeaders(state: RevealState): string[] {
+export function bidLeaders(state: RevealState, languageId: string): string[] {
   let best = -Infinity;
   const leaders: string[] = [];
   for (const player of state.players) {
@@ -155,9 +159,9 @@ export function bidLeaders(state: RevealState): string[] {
     if (value > best) {
       best = value;
       leaders.length = 0;
-      leaders.push(player.name);
+      leaders.push(seatNameIn(languageId, player.seat, player.name));
     } else if (value === best) {
-      leaders.push(player.name);
+      leaders.push(seatNameIn(languageId, player.seat, player.name));
     }
   }
   return leaders;

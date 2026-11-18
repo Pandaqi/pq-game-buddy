@@ -36,6 +36,13 @@ const en = {
   'summary-main': 'Heads {heads}, tails {tails}. Call-it: {won} won, {lost} lost.',
   'summary-series': 'Series (best of {target}): heads {heads}, tails {tails}.',
   'summary-series-won': 'Series (best of {target}): heads {heads}, tails {tails} — {side} won.',
+
+  // The activity log, in the active language.
+  'undo-coins': 'number of coins',
+  'undo-fairness': 'coin weighting',
+  'undo-call': 'your call',
+  'undo-mode': 'coin format',
+  'undo-target': 'series target',
 };
 
 export default en;

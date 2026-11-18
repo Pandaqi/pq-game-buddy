@@ -1,0 +1,41 @@
+# warhammer-40k.gamebuddy — phases, command points and a lot of dice
+
+[game]
+name: Warhammer 40,000
+players: 2
+time: 180m
+tags: dice, strategy, war
+icon: warhammer-40k
+source: https://www.warhammer.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Agree the points limit and build both armies
+- Set up terrain, then deploy in the agreed pattern
+- Write down command points, wounds and objectives
+- Roll for first turn
+
+[rules]
+Score objectives over five battle rounds while your army survives.
+- Each round has a command phase, movement, shooting, charge and fight
+- Roll a pool of dice to hit, wound and save; the modifiers on your datasheet decide the rest
+- Command points pay for stratagems; keep the total visible
+- Hold objectives at the end of your turn to score primary points
+- The highest total after the last round wins
+
+[tool turns]
+phases: Command, Movement, Shooting, Charge, Fight
+pass: no
+
+[tool dice]
+pool: 10d6
+roll: 1d6
+
+[tool lives]
+mode: players
+lives: 10
+max: 20
+step: 1
+elimination: no

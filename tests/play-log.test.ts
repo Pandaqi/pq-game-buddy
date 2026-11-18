@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, test } from 'bun:test';
+import { translate } from '../src/core/i18n';
+import { setLanguage, startLanguage } from '../src/core/i18n.svelte';
 import {
   clearPlays,
   formatMinutes,
@@ -117,7 +119,7 @@ describe('play records', () => {
 
   test('an empty game name falls back and clearing removes everything', () => {
     const saved = recordPlay({ game: '   ', winner: 'Ada' });
-    expect(saved.game).toBe('Untitled game');
+    expect(saved.game).toBe(translate('game.fallback'));
     clearPlays();
     expect(listPlays()).toEqual([]);
   });
@@ -146,6 +148,22 @@ describe('exports', () => {
     const json = JSON.parse(playsToJson([record()]));
     expect(json.version).toBe(1);
     expect(json.plays[0].winner).toBe('Ada');
+  });
+
+  test('a tool play is exported in the active language, not the one it was saved in', async () => {
+    // Saved while the app was Dutch: the id is what makes the English export possible.
+    const play = record({ game: 'Beurten', toolId: 'turns' });
+    await startLanguage('en');
+    expect(playsToCsv([play]).split('\n')[1].startsWith('Turns,')).toBe(true);
+    expect(JSON.parse(playsToJson([play])).plays[0].game).toBe('Turns');
+
+    expect(await setLanguage('nl')).toBe(true);
+    expect(playsToCsv([play]).split('\n')[1].startsWith('Beurten,')).toBe(true);
+    const dutch = JSON.parse(playsToJson([play])).plays[0];
+    expect(dutch.game).toBe('Beurten');
+    expect(dutch.toolId).toBe('turns');
+
+    await setLanguage('en');
   });
 
   test('minutes format as minutes under an hour and hours above', () => {

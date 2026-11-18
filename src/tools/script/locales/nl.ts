@@ -61,6 +61,9 @@ const nl = {
   'summary-step': 'Stap {index} van {total}',
   'summary-verb': '{verb}: {arg}',
   'summary-drawn': 'Getrokken: {card}',
+
+  // The activity log, in the active language.
+  'note-call': '{tool}: {command} uitgevoerd',
 };
 
 export default nl;

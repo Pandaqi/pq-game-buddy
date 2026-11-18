@@ -6,7 +6,15 @@ import { schemas } from '../src/core/schemas.generated';
 import { listTemplates } from '../src/data/templates';
 import { summariseTemplate } from '../src/data/template-summary';
 import { templateIcons } from '../src/data/template-icons.generated';
-import { templateTexts } from '../src/data/template-text.generated';
+import { templateTexts as part0 } from '../src/data/template-text/part-0.generated';
+import { templateTexts as part1 } from '../src/data/template-text/part-1.generated';
+import { templateTexts as part2 } from '../src/data/template-text/part-2.generated';
+import { templateTexts as part3 } from '../src/data/template-text/part-3.generated';
+
+import { TEMPLATE_GROUPS, templateGroup } from '../src/data/template-group';
+
+const parts = [part0, part1, part2, part3];
+const templateTexts = parts.flat();
 import {
   allDiagnostics,
   hasErrors,
@@ -300,6 +308,16 @@ describe('template icons', () => {
     const text = '[game]\nname: X\nicon: hologram\n';
     expect(parseTemplate(text).template.game.icon).toBe('hologram');
     expect(summariseTemplate('x', text).icon).toBe('hologram');
+  });
+});
+
+describe('template shelves', () => {
+  test('every text sits on the shelf the app will look in', () => {
+    for (const item of templateTexts) {
+      const shelf = templateGroup(item.id);
+      expect(shelf, item.id).toBeLessThan(TEMPLATE_GROUPS);
+      expect(parts[shelf].some((entry) => entry.id === item.id), item.id).toBe(true);
+    }
   });
 });
 

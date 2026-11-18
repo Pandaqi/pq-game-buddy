@@ -36,6 +36,13 @@ const es = {
   'summary-main': 'Cara {heads}, cruz {tails}. Cantadas: {won} ganadas, {lost} perdidas.',
   'summary-series': 'Serie (al mejor de {target}): cara {heads}, cruz {tails}.',
   'summary-series-won': 'Serie (al mejor de {target}): cara {heads}, cruz {tails} — gana {side}.',
+
+  // The activity log, in the active language.
+  'undo-coins': 'número de monedas',
+  'undo-fairness': 'carga de la moneda',
+  'undo-call': 'tu elección',
+  'undo-mode': 'formato de moneda',
+  'undo-target': 'objetivo de la serie',
 };
 
 export default es;

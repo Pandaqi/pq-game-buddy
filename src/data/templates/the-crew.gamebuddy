@@ -1,0 +1,49 @@
+# the-crew.gamebuddy — ten tasks, one shared crew
+
+[game]
+name: The Crew
+players: 3-5
+time: 20m
+tags: card, cooperative, trick-taking
+icon: the-crew
+source: https://www.kosmos.de/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the forty-card deck: 1 to 9 in four colours, plus rockets 1 to 4 as top trumps
+- Reveal the number of task cards the mission asks for
+- Deal the whole deck: 13 each with three players (one card stays over), 10 with four, 8 with five
+- The deck tool deals as many as it can, so it stops when the deck runs out; set its seats to your table
+- Look at your hand and plan who can take what
+
+[rules]
+Win every task as a crew, in order, with no talking about hands.
+- The commander leads the first trick
+- Follow suit if you can; trumps beat the led suit
+- Communication is one card and one token per player, once per mission
+- A task is complete when its card is won by the right player
+- Lose a trick you needed and the mission fails; try it again
+
+[tool decks]
+deck: custom
+# 13 each empties the forty-card deck at three, four or five.
+players: 3
+deal: 13
+hidden: yes
+# The Crew's own deck: 1 to 9 in four colours, then four rockets as trumps.
+cards: 1♠, 2♠, 3♠, 4♠, 5♠, 6♠, 7♠, 8♠, 9♠,
+  1♥, 2♥, 3♥, 4♥, 5♥, 6♥, 7♥, 8♥, 9♥,
+  1♦, 2♦, 3♦, 4♦, 5♦, 6♦, 7♦, 8♦, 9♦,
+  1♣, 2♣, 3♣, 4♣, 5♣, 6♣, 7♣, 8♣, 9♣,
+  Rocket 1, Rocket 2, Rocket 3, Rocket 4
+
+[tool counters]
+mode: count
+counters: Tasks=0
+step: 1
+
+[tool turns]
+phases: Lead, Follow, Check tasks
+pass: no

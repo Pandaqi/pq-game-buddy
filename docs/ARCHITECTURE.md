@@ -175,8 +175,11 @@ other budgets. Sizes are reported raw and gzipped; `dist/size.json` is read by
 `bun run size`.
 
 Template data is split the same way: `src/data/templates.generated.ts` holds only
-the summaries the lists render, and all 49 texts live in
-`template-text.generated.ts` behind `templateText(id)` (`src/data/templates.ts`).
+the summaries the lists render, and all 79 texts live in four
+`src/data/template-text/part-<n>.generated.ts` shelves behind `templateText(id)`
+(`src/data/templates.ts`). A template lands on a shelf by a stable hash of its id
+(`src/data/template-group.ts`, shared with the generator), so the chunk that ships a
+rulebook is a quarter of the library rather than all of it.
 Bundled, first-party Pandaqi and community files are compiled into the same two
 modules; only the summaries are read before a game is chosen.
 Parsing happens at generation time in `bun run gen`, never at start-up.

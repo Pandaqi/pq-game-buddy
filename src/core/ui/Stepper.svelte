@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t } from '../i18n.svelte';
+
   let {
     label,
     value,
@@ -23,8 +25,8 @@
 <div class="stepper">
   <span class="value" aria-live="polite">{value}</span>
   <div class="buttons">
-    <button type="button" onclick={() => onchange(clamp(value - step))} aria-label="Decrease {label}">−</button>
-    <button type="button" onclick={() => onchange(clamp(value + step))} aria-label="Increase {label}">+</button>
+    <button type="button" onclick={() => onchange(clamp(value - step))} aria-label={`${t('ui.decrease')} ${label}`}>−</button>
+    <button type="button" onclick={() => onchange(clamp(value + step))} aria-label={`${t('ui.increase')} ${label}`}>+</button>
   </div>
 </div>
 

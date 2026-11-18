@@ -1,0 +1,36 @@
+# terraforming-mars.gamebuddy — every point on the final card
+
+[game]
+name: Terraforming Mars
+players: 1-5
+time: 120m
+tags: board, engine, strategy
+icon: terraforming-mars
+source: https://fryxgames.se/product/terraforming-mars/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Give everyone a corporation and a starting hand of project cards
+- Set the three global parameters to their starting values
+- Place the ocean, temperature and oxygen markers
+- Agree the generation count
+
+[rules]
+Raise oxygen, temperature and oceans until Mars is habitable, and score the most points.
+- Each generation you buy cards, play projects and run production
+- Terraforming raises the global parameters and pays the player who did it
+- Claim milestones and fund awards when you can afford them
+- Add up terraform rating, cards, tiles, milestones and awards at the end
+- Highest total wins
+
+[tool score]
+mode: categories
+categories: terraform-rating=1, milestones=5, awards=5, cards=1, tiles=1, resources=1
+win: highest
+hint: 80 points usually wins
+
+[tool turns]
+phases: Research, Actions, Production
+pass: no

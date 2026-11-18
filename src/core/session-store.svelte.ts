@@ -5,12 +5,20 @@
 
 import { audio } from './audio';
 import { haptics } from './haptics';
-import { t } from './i18n.svelte';
+import { language, t } from './i18n.svelte';
 import type { AnyToolModule, SessionApi, ToolContext, ToolInstance } from './registry';
 import { hasTool, loadTool } from './tools.generated';
 import { createRng } from './rng';
 import type { InstanceRecord, Player, Session } from './session';
-import { makePlayers, newSessionId, nextPlayerId, PLAYER_COLORS, initialOf } from './session';
+import {
+  initialOf,
+  makePlayers,
+  newSessionId,
+  nextPlayerId,
+  playerName,
+  PLAYER_COLORS,
+  seatNames,
+} from './session';
 import { KEYS, readJson, storage, writeJson } from './storage';
 import type { PresetValues } from './template/schema';
 import { withDefaults } from './template/schema';
@@ -32,6 +40,8 @@ export interface ToolEntry {
 
 export interface StartInput {
   gameName: string;
+  /** Set when the session is one tool from the shelf: the name is stored in English, the id in front of it. */
+  toolId?: string;
   players: string[];
   tools: { toolId: string; instanceId: string; values?: PresetValues }[];
   templateText?: string;
@@ -42,6 +52,8 @@ export interface StartInput {
 export interface SessionIndexEntry {
   id: string;
   game: string;
+  /** A tool session carries its id, so the name is said in the current language. */
+  toolId?: string;
   updatedAt: number;
 }
 
@@ -85,8 +97,15 @@ class SessionStore {
     return this.entriesList;
   }
 
+  /** Players with the name this language says: a generated seat is translated here. */
   players(): Player[] {
-    return this.session?.players ?? [];
+    if (!this.session) return [];
+    const languageId = language();
+    return this.session.players.map((player) => {
+      if (!player.seat) return player;
+      const name = playerName(player, languageId);
+      return { ...player, name, initial: initialOf(name) };
+    });
   }
 
   get activeEntry(): ToolEntry | null {
@@ -98,9 +117,11 @@ class SessionStore {
     this.noticeId += 1;
     this.notice = { message, kind, id: this.noticeId };
     if (this.noticeTimer) clearTimeout(this.noticeTimer);
+    // A long message, or a failure the player must act on, stays long enough to read.
+    const linger = kind === 'error' || message.length > 90 ? 6000 : 3200;
     this.noticeTimer = setTimeout(() => {
       this.notice = null;
-    }, 3200);
+    }, linger);
   }
 
   dismissNotice(): void {
@@ -227,9 +248,10 @@ class SessionStore {
     const session: Session = {
       id: newSessionId(),
       gameName: input.gameName,
+      toolId: input.toolId,
       templateId: input.templateId,
       templateText: input.templateText,
-      players: makePlayers(input.players.length ? input.players : ['Player 1', 'Player 2']),
+      players: makePlayers(input.players.length ? input.players : seatNames(2)),
       instances: [],
       notes: input.notes ?? '',
       createdAt: now,
@@ -281,6 +303,31 @@ class SessionStore {
     this.version += 1;
   }
 
+  /**
+   * Play again on the same table: the same players, tools and current settings
+   * become a fresh session with a fresh id, and the old play stays in the log.
+   */
+  async restart(): Promise<boolean> {
+    const session = this.session;
+    if (!session) return false;
+    const input: StartInput = {
+      gameName: session.gameName,
+      toolId: session.toolId,
+      players: session.players.map((player) => player.name),
+      tools: this.entriesList.map((entry) => ({
+        toolId: entry.toolId,
+        instanceId: entry.id,
+        values: entry.instance.presetFromState(),
+      })),
+      templateText: session.templateText,
+      templateId: session.templateId,
+      notes: session.notes,
+    };
+    this.saveNow();
+    await this.start(input);
+    return true;
+  }
+
   /** Resume the most recent saved session. False when there is none. */
   async loadLatest(): Promise<boolean> {
     const index = readJson<SessionIndexEntry[]>(KEYS.sessions, []);
@@ -305,7 +352,12 @@ class SessionStore {
   close(): void {
     this.saveNow();
     if (this.session) {
-      this.lastSession = { id: this.session.id, game: this.session.gameName, updatedAt: this.session.updatedAt };
+      this.lastSession = {
+        id: this.session.id,
+        game: this.session.gameName,
+        toolId: this.session.toolId,
+        updatedAt: this.session.updatedAt,
+      };
     }
     this.disposeEntries();
     this.session = null;
@@ -343,8 +395,12 @@ class SessionStore {
   renamePlayer(id: string, name: string): void {
     const player = this.session?.players.find((item) => item.id === id);
     if (!player) return;
-    player.name = name.trim() || player.name;
-    player.initial = initialOf(player.name);
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    player.name = trimmed;
+    // A typed name replaces the generated one, so the seat stops being translated.
+    delete player.seat;
+    player.initial = initialOf(trimmed);
     this.bump();
   }
 
@@ -367,7 +423,7 @@ class SessionStore {
   exportTemplate(): string {
     const session = this.session;
     if (!session) return '';
-    const players = session.players.map((player) => player.name);
+    const players = this.players().map((player) => player.name);
     const tools = this.entriesList.map((entry) => ({
       toolId: entry.toolId,
       instanceId: entry.id,
@@ -391,7 +447,10 @@ class SessionStore {
   /** Full session (players, tools and live state) as a portable JSON file. */
   exportSessionJson(): string {
     this.saveNow();
-    return JSON.stringify({ version: 1, session: this.session }, null, 2);
+    const session = this.session;
+    // The file carries the names this language says, not the blank seats behind them.
+    const players = this.players().map((player) => ({ ...player, seat: undefined }));
+    return JSON.stringify({ version: 1, session: session && { ...session, players } }, null, 2);
   }
 
   /** Remember that this game already produced a play-log entry. */
@@ -450,7 +509,12 @@ class SessionStore {
     }
     const index = readJson<SessionIndexEntry[]>(KEYS.sessions, []);
     const next = index.filter((item) => item.id !== session.id);
-    next.unshift({ id: session.id, game: session.gameName, updatedAt: session.updatedAt });
+    next.unshift({
+      id: session.id,
+      game: session.gameName,
+      toolId: session.toolId,
+      updatedAt: session.updatedAt,
+    });
     writeJson(KEYS.sessions, next.slice(0, 20));
     this.lastSession = next[0];
   }

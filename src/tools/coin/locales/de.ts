@@ -36,6 +36,13 @@ const de = {
   'summary-main': 'Kopf {heads}, Zahl {tails}. Ansage: {won} gewonnen, {lost} verloren.',
   'summary-series': 'Serie (best of {target}): Kopf {heads}, Zahl {tails}.',
   'summary-series-won': 'Serie (best of {target}): Kopf {heads}, Zahl {tails} — {side} gewinnt.',
+
+  // The activity log, in the active language.
+  'undo-coins': 'Anzahl Münzen',
+  'undo-fairness': 'Münzgewichtung',
+  'undo-call': 'dein Tipp',
+  'undo-mode': 'Münzformat',
+  'undo-target': 'Serienziel',
 };
 
 export default de;

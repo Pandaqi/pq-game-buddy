@@ -62,6 +62,9 @@ const en = {
   'summary-step': 'Step {index} of {total}',
   'summary-verb': '{verb}: {arg}',
   'summary-drawn': 'Drawn: {card}',
+
+  // The activity log, in the active language.
+  'note-call': 'Ran {tool}: {command}',
 };
 
 export default en;

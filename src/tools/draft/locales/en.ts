@@ -78,6 +78,13 @@ const en = {
   'summary-sold': 'Sold:',
   'summary-sale': '- {item} to {buyer} for {price}',
   'summary-none': 'Nothing drafted yet.',
+
+  // The activity log, in the active language.
+  'note-picked': '{picker} picked {item}',
+  'note-order': 'Order: {names}',
+  'note-returned': 'Returned {item} to the pool',
+  'note-nominated': 'Nominated {item}',
+  'note-sold': '{item} sold to {buyer} for {price}',
 };
 
 export default en;

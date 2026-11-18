@@ -1,0 +1,37 @@
+# darts.gamebuddy — count down from 501 without busting
+
+[game]
+name: Darts
+players: 2-8
+time: 30m
+tags: betting, party
+icon: darts
+source: Traditional game — no official source
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Agree the starting score, normally 501
+- Agree whether you need a double to finish
+- Agree the number of legs
+- Throw one dart each to decide who starts
+- Tap a score to type the whole throw at once
+
+[rules]
+Throw three darts, subtract the score and reach exactly zero.
+- Each turn is three darts; write the total and take it off your score
+- Going below zero, or hitting zero without the agreed double, is a bust: the turn scores nothing
+- The first player to finish the leg wins it
+- Play the agreed number of legs, best of three is usual
+
+[tool lives]
+mode: players
+lives: 501
+max: 501
+step: 1
+elimination: yes
+
+[tool turns]
+phases: Dart 1, Dart 2, Dart 3
+pass: no

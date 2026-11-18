@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from '../../core/i18n.svelte';
+  import { seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { BRACKET_FORMATS, STAGE_LABELS, type BracketFormat, type Match, type Stage } from './logic';
@@ -12,8 +12,12 @@
   let editorOpen = $state(false);
   let newName = $state('');
 
-  const nameOf = (id: string | null): string =>
-    id ? data.entrants.find((item) => item.id === id)?.name ?? id : t('bracket.winner');
+  /** An entrant's name in the active language; an id nobody knows prints as itself. */
+  const nameOf = (id: string | null): string => {
+    if (!id) return t('bracket.winner');
+    const entrant = data.entrants.find((item) => item.id === id);
+    return entrant ? seatName(entrant.seat, entrant.name) : id;
+  };
   const championName = $derived(view.champion ? nameOf(view.champion) : '');
 
   const groups = $derived.by(() => {
@@ -135,7 +139,7 @@
         {#each view.standings as row, index (row.id)}
           <tr>
             <th scope="row" class="rank">{index + 1}</th>
-            <td class="name">{row.name}</td>
+            <td class="name">{seatName(row.seat, row.name)}</td>
             <td>{row.wins}</td>
             <td>{row.losses}</td>
             <td>{row.diff >= 0 ? '+' : ''}{row.diff}</td>
@@ -174,11 +178,11 @@
           <span class="seed">{entrant.seed}</span>
           <input
             type="text"
-            value={entrant.name}
+            value={nameOf(entrant.id)}
             aria-label={t('bracket.entrant-name', { seed: entrant.seed })}
             onchange={(event) => instance.renameEntrant(entrant.id, (event.currentTarget as HTMLInputElement).value)}
           />
-          <button type="button" onclick={() => instance.removeEntrant(entrant.id)} aria-label={t('bracket.remove-entrant', { name: entrant.name })} disabled={data.entrants.length <= 2}>✕</button>
+          <button type="button" onclick={() => instance.removeEntrant(entrant.id)} aria-label={t('bracket.remove-entrant', { name: nameOf(entrant.id) })} disabled={data.entrants.length <= 2}>✕</button>
         </li>
       {/each}
     </ul>

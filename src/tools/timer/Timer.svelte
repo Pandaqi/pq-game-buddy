@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from '../../core/i18n.svelte';
+  import { seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import { formatDurationText, parseDuration } from '../../core/template/schema';
   import { clock } from '../../core/ticker';
@@ -14,6 +14,8 @@
 
   let { ctx, instance }: { ctx: ToolContext; instance: TimerInstance } = $props();
   const data = $derived(instance.data);
+  /** A clock's name in the active language; a player seat never freezes. */
+  const label = (clock: { name: string; seat?: number }): string => seatName(clock.seat, clock.name);
 
   let nowMono = $state(clock.now());
   let nowWall = $state(clock.wall());
@@ -143,7 +145,7 @@
           type="button"
           class="digits"
           aria-label={t('timer.clock-aria', {
-            name: clock.name,
+            name: label(clock),
             time: instance.clockLabel(index, nowMono, nowWall),
             action: clock.running ? t('timer.tap-pause') : t('timer.tap-start'),
           })}
@@ -163,7 +165,7 @@
           onpointerleave={scrubEnd}
           onclick={() => tap(index)}
         >
-          <span class="name">{clock.name}</span>
+          <span class="name">{label(clock)}</span>
           <span class="time">{instance.clockLabel(index, nowMono, nowWall)}</span>
           <span class="bar" aria-hidden="true">
             <i style="width: {Math.round(progressOf(clock, nowMono, nowWall) * 100)}%"></i>
@@ -178,8 +180,8 @@
         <div class="row">
           <button type="button" onclick={() => instance.shift(index, -30000)} aria-label={t('timer.minus-30')}>−30s</button>
           <button type="button" onclick={() => instance.shift(index, 30000)} aria-label={t('timer.plus-30')}>+30s</button>
-          <button type="button" onclick={() => instance.reset(index)} aria-label={t('timer.reset-name', { name: clock.name })}>{t('timer.reset')}</button>
-          <button type="button" onclick={() => (menuIndex = index)} aria-label={t('timer.more', { name: clock.name })}>⋯</button>
+          <button type="button" onclick={() => instance.reset(index)} aria-label={t('timer.reset-name', { name: label(clock) })}>{t('timer.reset')}</button>
+          <button type="button" onclick={() => (menuIndex = index)} aria-label={t('timer.more', { name: label(clock) })}>⋯</button>
         </div>
       </div>
     {/each}
@@ -194,7 +196,7 @@
           class:current={data.active === index}
           onclick={() => instance.goToPhase(index, true)}
         >
-          <span>{index + 1}. {phase.name}</span>
+          <span>{index + 1}. {label(phase)}</span>
           <small>{formatDurationText(phase.duration)}</small>
         </button>
       {/each}
@@ -338,12 +340,12 @@
 {/if}
 
 {#if menuIndex !== null && data.timers[menuIndex]}
-  <Sheet title={data.timers[menuIndex].name} onclose={() => (menuIndex = null)}>
+  <Sheet title={label(data.timers[menuIndex])} onclose={() => (menuIndex = null)}>
     <label class="field">
       <span>{t('timer.name')}</span>
       <input
         type="text"
-        value={data.timers[menuIndex].name}
+        value={label(data.timers[menuIndex])}
         onchange={(event) => {
           if (menuIndex === null) return;
           instance.renameTimer(menuIndex, (event.currentTarget as HTMLInputElement).value);

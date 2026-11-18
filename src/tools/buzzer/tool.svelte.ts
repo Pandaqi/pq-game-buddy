@@ -1,7 +1,8 @@
-import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
+import { language, registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance, ToolResult } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import { BUZZER_KEYS, delayFor, summaryOf, type BuzzerState } from './logic';
+import { toolSeats } from '../../core/session';
+import { BUZZER_KEYS, buzzName, delayFor, summaryOf, type BuzzerState } from './logic';
 import Buzzer from './Buzzer.svelte';
 import en from './locales/en';
 import meta from './meta';
@@ -20,19 +21,20 @@ export type BuzzerInstance = ToolInstance<BuzzerState> & BuzzerActions;
 
 function create(ctx: ToolContext, values: PresetValues = {}): BuzzerInstance {
   const seats = Math.max(1, Math.min(8, Number(values.players ?? 4)));
-  const sessionPlayers = ctx.session.players();
-  const names = sessionPlayers.length
-    ? sessionPlayers.map((player) => player.name).slice(0, seats)
-    : Array.from({ length: seats }, (_, index) => translate('players.default', { count: index + 1 }));
+  const sessionPlayers = ctx.session.players().slice(0, seats);
+  // The pads keep the session's pair, not its words, so they follow a language
+  // switch the way the shell does; a named player keeps what it was called.
+  const slots = toolSeats(sessionPlayers, seats);
   const colors = sessionPlayers.length
-    ? sessionPlayers.map((player) => player.color).slice(0, seats)
+    ? sessionPlayers.map((player) => player.color)
     : Array.from({ length: seats }, () => '#c0392b');
   const delay = Math.max(0, Number(values.delay ?? 3000));
 
   const data = $state<BuzzerState>({
-    players: names.map((name, index) => ({
+    players: slots.map((slot, index) => ({
       id: `b${index + 1}`,
-      name,
+      name: slot.name,
+      ...(slot.seat ? { seat: slot.seat } : {}),
       color: colors[index] ?? '#c0392b',
       key: BUZZER_KEYS[index] ?? String(index + 1),
     })),
@@ -50,7 +52,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BuzzerInstance {
   });
 
   function nameOf(id: string | null): string {
-    return data.players.find((player) => player.id === id)?.name ?? '';
+    return buzzName(language(), data, id);
   }
 
   const instance: BuzzerInstance = {
@@ -63,12 +65,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): BuzzerInstance {
         data.players = raw.players
           .filter((player) => player && typeof player.name === 'string')
           .slice(0, 8)
-          .map((player, index) => ({
-            id: String(player.id ?? `b${index + 1}`),
-            name: player.name,
-            color: typeof player.color === 'string' ? player.color : '#c0392b',
-            key: typeof player.key === 'string' ? player.key : BUZZER_KEYS[index] ?? String(index + 1),
-          }));
+          .map((player, index) => {
+            const seat = Number(player.seat);
+            return {
+              id: String(player.id ?? `b${index + 1}`),
+              name: player.name,
+              ...(Number.isInteger(seat) && seat > 0 ? { seat } : {}),
+              color: typeof player.color === 'string' ? player.color : '#c0392b',
+              key: typeof player.key === 'string' ? player.key : BUZZER_KEYS[index] ?? String(index + 1),
+            };
+          });
       }
       if (typeof raw.delayMin === 'number') data.delayMin = Math.max(0, raw.delayMin);
       if (typeof raw.delayMax === 'number') data.delayMax = Math.max(data.delayMin, raw.delayMax);
@@ -110,7 +116,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BuzzerInstance {
       for (const round of data.rounds) wins.set(round.winner, (wins.get(round.winner) ?? 0) + 1);
       if (!wins.size) return [];
       return [...wins.entries()]
-        .map(([id, count]): ToolResult => ({ name: nameOf(id) || id, score: count }))
+        .map(([id, count]): ToolResult => ({ name: nameOf(id), score: count }))
         .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
     },
     arm() {
@@ -132,12 +138,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): BuzzerInstance {
       const now = ctx.clock.now();
       if (data.liveAt !== null && now < data.liveAt) {
         if (data.allowFalseStart && !data.falseStart) {
-          data.falseStart = player.name;
+          data.falseStart = player.id;
           data.armed = false;
           data.liveAt = null;
-          data.rounds = [{ winner: player.id, ms: 0, falseStart: player.name }, ...data.rounds].slice(0, 50);
+          data.rounds = [{ winner: player.id, ms: 0, falseStart: player.id }, ...data.rounds].slice(0, 50);
           ctx.audio.play('buzzer');
-          ctx.toast(translate('buzzer.toast-jump', { name: player.name }), 'error');
+          ctx.toast(translate('buzzer.toast-jump', { name: nameOf(player.id) }), 'error');
         }
         return;
       }

@@ -1,5 +1,6 @@
-import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
+import { registerToolStrings, seatName, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance, ToolResult } from '../../core/registry';
+import { seatPair, toolSeats } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
 import {
   buildBracket,
@@ -44,21 +45,25 @@ export interface BracketActions {
 
 export type BracketInstance = ToolInstance<BracketState> & BracketActions;
 
-function makeEntrants(names: string[]): Entrant[] {
-  return names.map((name, index) => ({ id: `e${index + 1}`, name, seed: index + 1 }));
+function makeEntrants(slots: { name: string; seat?: number }[]): Entrant[] {
+  return slots.map((slot, index) => ({
+    id: `e${index + 1}`,
+    name: slot.name,
+    ...(slot.seat ? { seat: slot.seat } : {}),
+    seed: index + 1,
+  }));
 }
 
 function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
   const fromTemplate = Array.isArray(values.entrants) ? (values.entrants as string[]) : [];
-  const names = fromTemplate.length ? fromTemplate : ctx.session.players().map((player) => player.name);
   const seeding = (values.seeding as BracketState['seeding']) ?? 'order';
 
   const data = $state<BracketState>({
     format: (values.format as BracketFormat) ?? 'single',
     entrants: makeEntrants(
-      names.length
-        ? names
-        : [translate('bracket.player-name', { count: 1 }), translate('bracket.player-name', { count: 2 })],
+      fromTemplate.length
+        ? fromTemplate.map((name, index) => seatPair(name, index))
+        : toolSeats(ctx.session.players(), 2),
     ),
     results: {},
     scores: {},
@@ -66,6 +71,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
     tiebreak: (values.tiebreak as BracketState['tiebreak']) ?? 'diff',
     seeding,
   });
+
+  /** An entrant's name in the active language; an id nobody knows prints as itself. */
+  function nameOf(id: string | null): string {
+    if (!id) return '?';
+    const entrant = data.entrants.find((item) => item.id === id);
+    return entrant ? seatName(entrant.seat, entrant.name) : id;
+  }
 
   function input(): BracketInput {
     return {
@@ -93,7 +105,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
       if (Array.isArray(raw.entrants)) {
         const list = raw.entrants
           .filter((item) => item && typeof item.name === 'string')
-          .map((item, index) => ({ id: String(item.id ?? `e${index + 1}`), name: item.name, seed: Number(item.seed) || index + 1 }));
+          .map((item, index) => {
+            const seat = Number(item.seat);
+            return {
+              id: String(item.id ?? `e${index + 1}`),
+              name: item.name,
+              ...(Number.isInteger(seat) && seat > 0 ? { seat } : {}),
+              seed: Number(item.seed) || index + 1,
+            };
+          });
         if (list.length) data.entrants = list;
       }
       if (raw.results && typeof raw.results === 'object') {
@@ -135,7 +155,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
         if (champion) {
           ctx.toast(
             translate('bracket.toast-champion', {
-              name: data.entrants.find((item) => item.id === champion)?.name ?? champion,
+              name: nameOf(champion),
             }),
           );
         }
@@ -143,8 +163,6 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
     },
     summary() {
       const view = buildBracket(input());
-      const nameOf = (id: string | null): string =>
-        data.entrants.find((item) => item.id === id)?.name ?? '?';
       const lines: string[] = [];
       if (view.champion) {
         lines.push(translate('bracket.summary-champion', { name: nameOf(view.champion) }));
@@ -161,7 +179,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
       for (const row of view.standings) {
         lines.push(
           translate('bracket.summary-row', {
-            name: row.name,
+            name: seatName(row.seat, row.name),
             wins: row.wins,
             losses: row.losses,
             diff: `${row.diff >= 0 ? '+' : ''}${row.diff}`,
@@ -177,7 +195,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
         .sort((a, b) => (b.wins - a.wins) || (b.diff - a.diff))
         .map((row): ToolResult => {
           const entrant = data.entrants.find((item) => item.id === row.id);
-          return { name: entrant?.name ?? row.name, score: row.wins };
+          return { name: entrant ? seatName(entrant.seat, entrant.name) : row.name, score: row.wins };
         });
     },
     view: () => buildBracket(input()),
@@ -236,9 +254,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
       ctx.undo.push(translate('bracket.undo-regenerate'));
       const chosen = seeding ?? data.seeding;
       data.seeding = chosen;
-      const base = data.entrants.map((entrant) => entrant.name);
-      const ordered = chosen === 'random' ? ctx.rng.shuffle(base) : base;
-      data.entrants = makeEntrants(ordered);
+      // Shuffle the entrants themselves, so a generated seat keeps its seat.
+      const ordered = chosen === 'random' ? ctx.rng.shuffle(data.entrants) : data.entrants;
+      data.entrants = ordered.map((entrant, index) => ({ ...entrant, seed: index + 1 }));
       data.results = {};
       data.scores = {};
       ctx.toast(translate('bracket.toast-reset'));
@@ -253,8 +271,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
     renameEntrant(id, name) {
       const entrant = data.entrants.find((item) => item.id === id);
       if (!entrant) return;
+      const trimmed = name.trim();
+      // The field shows a generated seat as its label, so leaving it untouched
+      // must not turn that label into a typed name.
+      if (!trimmed || trimmed === entrant.name || trimmed === nameOf(entrant.id)) return;
       ctx.undo.push(translate('bracket.undo-rename'));
-      entrant.name = name.trim() || entrant.name;
+      entrant.name = trimmed;
+      delete entrant.seat;
     },
     removeEntrant(id) {
       if (data.entrants.length <= 2) {
@@ -274,8 +297,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): BracketInstance {
   };
 
   if (seeding === 'random') {
-    const ordered = ctx.rng.shuffle(data.entrants.map((entrant) => entrant.name));
-    data.entrants = makeEntrants(ordered);
+    data.entrants = ctx.rng.shuffle(data.entrants).map((entrant, index) => ({ ...entrant, seed: index + 1 }));
   }
 
   return instance;

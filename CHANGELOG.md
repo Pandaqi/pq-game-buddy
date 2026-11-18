@@ -3,6 +3,112 @@
 All notable changes to Game Buddy. The template format is versioned separately
 (`format: 1`) and only changes with a compatibility note.
 
+## Unreleased — full sweep
+
+### Added
+
+- **Nineteen more game templates**, with a mark each: Carcassonne, Cluedo, Terraforming
+  Mars, Backgammon, Dominoes, Darts, Cribbage, Hearts, The Crew, Farkle, Secret Hitler,
+  Avalon, Wavelength, Charades, Monikers, Jackbox Night, Warhammer 40,000, Spirit Island
+  and Betrayal at House on the Hill. Each uses the trackers its rules already support,
+  so the library grew without a new schema key.
+- **A rematch button** on the finish sheet. It saves the finished play first, then starts
+  the same players and tools again, so restarting can never strand the old result.
+- **Ctrl/Cmd+Z** undoes the last action on a session screen, ignoring inputs and
+  contenteditable areas so typing keeps its own undo.
+- **Typed totals in the lives tool.** The score is now a button: it opens the number
+  pad, so a 501 checkout is one tap and three digits instead of 441 presses of −1. It
+  is drawn as a key with a one-line hint, so the way in is visible.
+
+### Changed
+
+- **One tag vocabulary.** `cards`/`card`, `word`/`words`, `deckbuilder`/`deck-building`,
+  `social-deduction`/`hidden-roles`/`deduction`, `timed`/`realtime`, `numbers`/`puzzle`
+  and a bare `score` collapsed to one spelling each, so the gallery filter no longer
+  splits a category in two.
+- **The rulebook chunk is now four shelves**, assigned by a stable hash of the template
+  id (`src/data/template-group.ts`). A preview pulls 2–3 KB instead of 25 KB, and the
+  chunk ceiling stays at 24 KB as templates are added.
+- **48 px targets** for the shared mode pills, tabs, search fields, gallery chips and
+  chrome buttons; settings now uses the shared separate-pill mode list instead of one
+  rounded slab, matching `docs/STYLE.md`.
+- **Shorter, more active copy** across the five core locales, with twenty-one dead keys
+  removed and the activity logs of decks, draft, words, script and coin now translated.
+- **`gallery.time-medium`** now reads 21–60 minutes, so a 21–60 filter no longer
+  overlaps "20 min or less".
+
+### Fixed
+
+- **A custom deck** no longer builds a standard 52-card deck behind the player's own
+  cards; drawing is one undo step instead of two.
+- **Undo** now covers every coin setting, not just the flips.
+- **Diagnostics** keep literal syntax: `key: value` stays `key: value`, and the colour
+  example says `red` instead of translating the word inside a code sample.
+- **The last English strings in shared UI** are translated: the pass-the-phone screen
+  (lead line, hint, next, back, hide and both accessible labels), the number pad's
+  backspace, value, cancel and set labels, the stepper's increase and decrease labels,
+  the sheet close button, the storage banner and the play-record fallback. Toasts are announced
+  assertively for errors and re-announce a repeated message.
+- **Two broken bundled templates.** Darts counted down from 501 at one point per press
+  with no way to enter a throw; the lives score now types a total, and the setup says
+  so. The Crew dealt zero cards per seat (`deal: 0`), its deck was a full standard 52 and
+  it padded a fourth seat onto a three-player table. It now ships the real forty-card
+  deck (1–9 in four colours plus four rockets), seats follow the table, and 13 each
+  empties that deck at three, four or five players. The setup no longer sends the
+  rockets to the commander.
+- **The deck tool no longer invents seats.** Its `players` value padded extra hands
+  whenever the table was smaller, which is why every card template had to be pinned to
+  its game minimum. Hands now follow the session players and `players` is only a fallback
+  for a session with no names. Uno, Hearts, Exploding Kittens and Dominoes were set to
+  their minimum for the old rule and deal right either way, with Hearts at 17 a hand so
+  the pack empties at three, four, five or six.
+- **Switching language redraws the screen you are on.** The words changed, but the lookup
+  tracked its revision through a bare `void revision;` statement, which the compiler drops,
+  so the current screen kept the old language until you opened another one. The active
+  language is now real state that the lookup is handed, and `tests/i18n.test.ts` mounts a
+  view and switches language to prove the screen follows.
+- **Saved names are stored as ids, not as words.** A one-tool session, the "continue" tile
+  and a play-log entry kept the tool's localized title, so an entry written in Dutch stayed
+  Dutch after switching to English. They now carry the tool id beside a plain English
+  name, and the id is translated again wherever it is read.
+- **The language sheet's names** sit centred in their pill and inset from its left edge,
+  instead of flush against the top of the button.
+- **Exported play logs** say a tool play's name in the active language, in both the CSV
+  and the JSON, instead of the one the play was saved in. The one lookup behind that —
+  Home's continue tile, the session header and the log — now lives in
+  `src/core/game-name.ts`.
+- **Generated player names** are stored as a blank name plus the seat number and said in
+  the active language, so a Dutch session's seats read "Player 1" after switching to
+  English. Naming a player replaces the generated name, and a seat the app generated stays
+  generated when the session is started again.
+- **Tool-owned seats** take the same pair instead of the words: the buzzer's pads, the
+  deck's hands, the score sheet's rows, the reveal table and the lives tracks keep the
+  session's blank name plus seat, so they follow a language switch too. One helper,
+  `toolSeats()`, decides the pair for every tool, and `seatName()`/`seatNameIn()` reads it
+  back; a buzzer false start is stored as a player id and named when it is shown.
+- **Bracket entrants and the turn order** carry the same pair, keyed by entrant id and by
+  seat: a generated seat stays blank, the entrant field shows its label, and a saved
+  template writes a blank entry that becomes a generated seat again instead of freezing
+  one language's words. Typing a name (or saving the order text unchanged) keeps the seat
+  when the label was left alone and clears it otherwise.
+- **The timer, custom, draft and pick tools** keep the same pair. A clock in a multi-clock
+  timer keeps its seat and its phase keys (`seat-2`) survive a language switch; custom
+  player sheets and draft order entries are keyed by id or seat, so two generated seats no
+  longer collide on a blank name, and budgets, picks, bids and sales are stored against
+  that key; a pick of the players draws seats, which it previously drew as blank names.
+- **One home for the rule.** `seatPair()`, `seatValues()`, `toolSeats()` and `seatKey()`
+  live in `core/session.ts`; the copied `TurnSeat` and the brackets' own slot helper are
+  gone, and decks, turns, draft and pick key their records through `seatKey()`.
+- **The turns initiative preset** is keyed by the seat (`seat-2` or the typed name), not by
+  the words on screen, so a template saved in Dutch keeps its values when it is started in
+  English. Values saved under the old label keys still read.
+
+### Gates
+
+- `bun run check` passes: 560 tests, template lint 100 files · 0 errors · 0 warnings,
+  first visit 135.5 KB gzipped (ceiling 150), 46 deferred chunks 316.1 KB (ceiling
+  320, largest 21.5), single file 418.0 KB gzipped.
+
 ## Unreleased — M10 localization (five languages complete)
 
 ### Added

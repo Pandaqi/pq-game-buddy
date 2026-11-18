@@ -1,0 +1,35 @@
+# cluedo.gamebuddy — cross off what you have ruled out
+
+[game]
+name: Cluedo
+players: 2-6
+time: 45m
+tags: board, deduction, family
+icon: cluedo
+source: https://www.hasbro.com/en-us/product/clue
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Take one suspect, one weapon and one room out of their decks, unseen, for the envelope
+- Shuffle each deck and deal the rest to the players
+- Put every token on its starting space
+- Give everyone a sheet to cross off
+
+[rules]
+Find the three cards in the envelope before anyone else.
+- Roll and move; a room is the only place you may suggest
+- Name a suspect, weapon and room, then ask each player in turn for one matching card, privately
+- When you are ready, accuse all three out loud. A wrong accusation knocks you out
+- The first correct accusation wins
+
+[tool dice]
+roll: 1d6
+
+[tool turns]
+phases: Move, Suggest, Accuse
+pass: no
+
+[notes]
+Write what you have ruled out and who showed you which card. Private notes, shared phone.

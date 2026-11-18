@@ -58,6 +58,12 @@ const en = {
   'summary-scored': '{word} ({score})',
   'summary-letters': 'Letters: {letters}',
   'summary-codenames': 'Codenames board: {words}',
+
+  // The activity log, in the active language.
+  'note-pack': 'Switched to {pack}',
+  'note-matches': '{count} words match',
+  'note-anagrams': '{count} anagrams',
+  'note-rack': '{count} rack words',
 };
 
 export default en;

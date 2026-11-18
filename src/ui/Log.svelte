@@ -1,5 +1,6 @@
 <script lang="ts">
   import { language, t } from '../core/i18n.svelte';
+  import { gameName } from '../core/game-name';
   import { clearPlays, formatMinutes, listPlays, playsToCsv, playsToJson, statsFor } from '../core/play-log';
   import { copyText, download } from '../core/share';
   import Sheet from '../core/ui/Sheet.svelte';
@@ -12,7 +13,16 @@
   let winnersOnly = $state(false);
   let confirmOpen = $state(false);
 
-  const games = $derived([...new Set(records.map((record) => record.game))].sort((a, b) => a.localeCompare(b)));
+  const games = $derived.by(() => {
+    const seen = new Map<string, string>();
+    for (const record of records) {
+      const key = record.toolId ?? record.game;
+      if (!seen.has(key)) seen.set(key, gameName(language(), record.toolId, record.game));
+    }
+    return [...seen.entries()]
+      .map(([id, label]) => ({ id, label }))
+      .sort((a, b) => a.label.localeCompare(b.label));
+  });
   const players = $derived(
     [...new Set(records.flatMap((record) => record.players))].sort((a, b) => a.localeCompare(b)),
   );
@@ -20,12 +30,12 @@
   const shown = $derived.by(() => {
     const needle = query.trim().toLowerCase();
     return records.filter((record) => {
-      if (gameFilter !== 'any' && record.game !== gameFilter) return false;
+      if (gameFilter !== 'any' && (record.toolId ?? record.game) !== gameFilter) return false;
       if (playerFilter !== 'any' && !record.players.includes(playerFilter)) return false;
       if (winnersOnly && !record.winner) return false;
       if (!needle) return true;
       return (
-        record.game.toLowerCase().includes(needle) ||
+        gameName(language(), record.toolId, record.game).toLowerCase().includes(needle) ||
         record.winner.toLowerCase().includes(needle) ||
         record.players.some((name) => name.toLowerCase().includes(needle))
       );
@@ -82,8 +92,8 @@
           <span>{t('log.game')}</span>
           <select bind:value={gameFilter}>
             <option value="any">{t('log.any')}</option>
-            {#each games as game (game)}
-              <option value={game}>{game}</option>
+            {#each games as game (game.id)}
+              <option value={game.id}>{game.label}</option>
             {/each}
           </select>
         </label>
@@ -156,7 +166,7 @@
         {#each shown as record (record.id)}
           <li>
             <div class="game">
-              <strong>{record.game}</strong>
+              <strong>{gameName(language(), record.toolId, record.game)}</strong>
               <span class="when">{when(record.at)}</span>
             </div>
             <p class="winner">

@@ -1,7 +1,8 @@
 import type { ToolContext, ToolInstance, ToolResult } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
-import { maxBid, summaryOf, turnAt, type DraftState } from './logic';
+import { registerToolStrings, seatName, t as translate } from '../../core/i18n.svelte';
+import { seatKey, seatPair, seatValues, toolSeats } from '../../core/session';
+import { maxBid, nameOfKey, summaryOf, turnAt, type DraftState } from './logic';
 import Draft from './Draft.svelte';
 import en from './locales/en';
 
@@ -32,13 +33,12 @@ export interface DraftActions {
 export type DraftInstance = ToolInstance<DraftState> & DraftActions;
 
 function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
-  const names = ctx.session.players().map((player) => player.name);
   const templateOrder = Array.isArray(values.order) ? (values.order as string[]).filter(Boolean) : [];
+  // The order keeps seat pairs, so a generated seat is said in the active
+  // language; a template's blank entry becomes the same seat again.
   const order = templateOrder.length
-    ? templateOrder
-    : names.length
-      ? names
-      : [translate('draft.player-name', { count: 1 }), translate('draft.player-name', { count: 2 })];
+    ? templateOrder.map((name, index) => seatPair(name, index))
+    : toolSeats(ctx.session.players(), 2);
   const budget = Math.max(1, Number(values.budget ?? 100));
 
   const data = $state<DraftState>({
@@ -50,7 +50,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
     deadline: null,
     auction: !!values.auction,
     budget,
-    budgets: Object.fromEntries(order.map((name) => [name, budget])),
+    budgets: Object.fromEntries(order.map((seat) => [seatKey(seat), budget])),
     nomination: '',
     bid: 0,
     bidder: '',
@@ -73,7 +73,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       if (!state || typeof state !== 'object') return;
       const raw = state as Partial<DraftState>;
       if (Array.isArray(raw.order)) {
-        const list = raw.order.map(String).filter(Boolean);
+        // Older saves hold plain names; a pair keeps its seat.
+        const list = seatValues(raw.order)
+          .map((value, index) => seatPair(value, index))
+          .filter((seat) => seat.seat || seat.name);
         if (list.length) data.order = list;
       }
       if (typeof raw.snake === 'boolean') data.snake = raw.snake;
@@ -109,7 +112,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
     },
     presetFromState() {
       return {
-        order: data.order,
+        // Only a typed name travels; a generated seat stays blank.
+        order: data.order.map((seat) => seat.name),
         snake: data.snake,
         pool: data.pool,
         seconds: data.seconds,
@@ -130,11 +134,11 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
         for (const pick of data.picks) counts.set(pick.picker, (counts.get(pick.picker) ?? 0) + 1);
         if (!counts.size) return [];
         return [...counts.entries()]
-          .map(([name, count]): ToolResult => ({ name, score: count }))
+          .map(([key, count]): ToolResult => ({ name: nameOfKey(data, key), score: count }))
           .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
       }
       return Object.entries(data.budgets)
-        .map(([name, left]): ToolResult => ({ name, score: left }))
+        .map(([key, left]): ToolResult => ({ name: nameOfKey(data, key), score: left }))
         .sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
     },
     pick(item) {
@@ -153,26 +157,39 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       data.pool = data.pool.filter((entry) => entry !== chosen);
       data.picks = [
         ...data.picks,
-        { round: current.round, picker: current.picker, item: chosen, at: Date.now() },
+        { round: current.round, picker: seatKey(current.picker), item: chosen, at: Date.now() },
       ];
       data.deadline = null;
       ctx.audio.play('click');
       ctx.haptics.buzz('short');
-      note(`${current.picker} picked ${chosen}`);
+      note(
+        translate('draft.note-picked', {
+          picker: seatName(current.picker.seat, current.picker.name),
+          item: chosen,
+        }),
+      );
     },
     setOrder(text) {
-      const list = text
+      // The order editor is text, filled with each seat's label: a line left as it
+      // was saves the same seat, so a generated seat stays generated.
+      const lines = text
         .split('\n')
         .map((line) => line.trim())
         .filter(Boolean);
-      if (!list.length) {
+      if (!lines.length) {
         ctx.toast(translate('draft.toast-order-empty'), 'error');
         return;
       }
       ctx.undo.batch(translate('draft.undo-order-batch'), () => {
+        const list = lines.map((line, index) => {
+          const previous = data.order[index];
+          return previous && seatName(previous.seat, previous.name) === line
+            ? previous
+            : seatPair(line, index);
+        });
         data.order = list;
         data.picks = [];
-        data.budgets = Object.fromEntries(list.map((name) => [name, data.budget]));
+        data.budgets = Object.fromEntries(list.map((seat) => [seatKey(seat), data.budget]));
         data.deadline = null;
       });
     },
@@ -187,7 +204,11 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       ctx.undo.push(translate('draft.undo-random'));
       data.order = ctx.rng.shuffle(data.order);
       data.picks = [];
-      note(`Order: ${data.order.join(' → ')}`);
+      note(
+        translate('draft.note-order', {
+          names: data.order.map((seat) => seatName(seat.seat, seat.name)).join(' → '),
+        }),
+      );
     },
     setPool(text) {
       const list = text
@@ -209,7 +230,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       ctx.undo.push(translate('draft.undo-undo-pick'));
       data.picks = data.picks.filter((_, at) => at !== index);
       data.pool = [...data.pool, pick.item];
-      note(`Returned ${pick.item} to the pool`);
+      note(translate('draft.note-returned', { item: pick.item }));
     },
     setSeconds(ms) {
       data.seconds = Math.max(0, Math.round(ms));
@@ -232,7 +253,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       data.nomination = chosen;
       data.bid = 0;
       data.bidder = '';
-      note(`Nominated ${chosen}`);
+      note(translate('draft.note-nominated', { item: chosen }));
     },
     raise(amount) {
       if (!data.nomination) {
@@ -240,13 +261,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
         return;
       }
       const step = Math.max(1, Math.round(amount));
-      const bidder = data.bidder || data.order[0] || '';
+      const bidder = data.bidder || (data.order[0] ? seatKey(data.order[0]) : '');
       const wallet = data.budgets[bidder] ?? 0;
       const next = data.bid + step;
       if (next > wallet) {
         ctx.toast(
           translate('draft.toast-cannot-afford', {
-            name: bidder || translate('draft.nobody'),
+            name: bidder ? nameOfKey(data, bidder) : translate('draft.nobody'),
             amount: next,
           }),
           'error',
@@ -271,14 +292,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       const price = data.bid;
       const wallet = data.budgets[buyer] ?? 0;
       if (price > wallet) {
-        ctx.toast(translate('draft.toast-cannot-afford', { name: buyer, amount: price }), 'error');
+        ctx.toast(translate('draft.toast-cannot-afford', { name: nameOfKey(data, buyer), amount: price }), 'error');
         return;
       }
       ctx.undo.push(translate('draft.undo-sell'));
       data.budgets = { ...data.budgets, [buyer]: wallet - price };
       data.sales = [...data.sales, { item: data.nomination, price, buyer }];
       data.pool = data.pool.filter((entry) => entry !== data.nomination);
-      note(`${data.nomination} sold to ${buyer} for ${price}`);
+      note(
+        translate('draft.note-sold', { item: data.nomination, buyer: nameOfKey(data, buyer), price }),
+      );
       data.nomination = '';
       data.bid = 0;
       data.bidder = '';
@@ -295,7 +318,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DraftInstance {
       data.pool = [...data.pool, ...data.picks.map((pick) => pick.item), ...data.sales.map((sale) => sale.item)];
       data.picks = [];
       data.sales = [];
-      data.budgets = Object.fromEntries(data.order.map((name) => [name, data.budget]));
+      data.budgets = Object.fromEntries(data.order.map((seat) => [seatKey(seat), data.budget]));
       data.deadline = null;
       data.nomination = '';
       data.bid = 0;

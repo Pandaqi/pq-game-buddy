@@ -1,6 +1,6 @@
 <script lang="ts">
   import { commitOnEnter } from '../../core/dom';
-  import { t } from '../../core/i18n.svelte';
+  import { seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import { copyText } from '../../core/share';
   import NumberPad from '../../core/ui/NumberPad.svelte';
@@ -103,8 +103,12 @@
     noteEdit = null;
   }
 
+  /** A row's name in the active language; a generated seat never freezes. */
+  const label = (player: { name: string; seat?: number }): string => seatName(player.seat, player.name);
+
   function playerName(id: string): string {
-    return data.players.find((player) => player.id === id)?.name ?? t('score.player');
+    const player = data.players.find((item) => item.id === id);
+    return player ? label(player) : t('score.player');
   }
 </script>
 
@@ -152,7 +156,7 @@
             <tr>
               <th scope="col">{t('score.category')}</th>
               {#each data.players as player (player.id)}
-                <th scope="col">{player.name}</th>
+                <th scope="col">{label(player)}</th>
               {/each}
             </tr>
           </thead>
@@ -173,7 +177,7 @@
                       <input
                         type="number"
                         min="0"
-                        aria-label={t('score.count-aria', { player: player.name, category: category.name })}
+                        aria-label={t('score.count-aria', { player: label(player), category: category.name })}
                         value={data.counts[player.id]?.[category.name] ?? 0}
                         onkeydown={commitOnEnter}
                         onchange={(event) =>
@@ -187,8 +191,8 @@
                         type="button"
                         class="note-btn"
                         class:filled={!!note}
-                        aria-label={t('score.note-aria', { player: player.name, category: category.name })}
-                        onclick={() => openNote(player.id, cell, `${player.name} · ${category.name}`)}
+                        aria-label={t('score.note-aria', { player: label(player), category: category.name })}
+                        onclick={() => openNote(player.id, cell, `${label(player)} · ${category.name}`)}
                       >✎</button>
                     </div>
                     {#if note}<small class="cell-note">{note}</small>{/if}
@@ -227,8 +231,8 @@
           {#each data.players as player (player.id)}
             <tr>
               <th scope="row">
-                <span class="dot" style="--player: {player.color}">{player.name.slice(0, 2).toUpperCase()}</span>
-                {player.name}
+                <span class="dot" style="--player: {player.color}">{label(player).slice(0, 2).toUpperCase()}</span>
+                {label(player)}
               </th>
               {#each Array(data.roundCount) as _, round (round)}
                 {@const cell = `r:${round}`}
@@ -237,7 +241,7 @@
                   <div class="cell">
                     <input
                       type="number"
-                      aria-label={t('score.round-aria', { player: player.name, round: round + 1 })}
+                      aria-label={t('score.round-aria', { player: label(player), round: round + 1 })}
                       value={data.rounds[player.id]?.[round] ?? 0}
                       onkeydown={commitOnEnter}
                       onchange={(event) =>
@@ -247,8 +251,8 @@
                       type="button"
                       class="note-btn"
                       class:filled={!!note}
-                      aria-label={t('score.note-round-aria', { player: player.name, round: round + 1 })}
-                      onclick={() => openNote(player.id, cell, t('score.round-label', { player: player.name, round: round + 1 }))}
+                      aria-label={t('score.note-round-aria', { player: label(player), round: round + 1 })}
+                      onclick={() => openNote(player.id, cell, t('score.round-label', { player: label(player), round: round + 1 }))}
                     >✎</button>
                   </div>
                   {#if note}<small class="cell-note">{note}</small>{/if}
@@ -269,8 +273,8 @@
       {#each data.players as player (player.id)}
         <li class:leader={rankOf(player.id) === 1 && data.players.length > 1}>
           <div class="who">
-            <span class="dot" style="--player: {player.color}">{player.name.slice(0, 2).toUpperCase()}</span>
-            <span class="name">{player.name}</span>
+            <span class="dot" style="--player: {player.color}">{label(player).slice(0, 2).toUpperCase()}</span>
+            <span class="name">{label(player)}</span>
             <span class="ledger-total">{shownTotal(player.id)}</span>
           </div>
           {#if !hiddenNow}
@@ -281,7 +285,7 @@
                   <span class="amount">{entry.amount >= 0 ? '+' : ''}{entry.amount}</span>
                   <button
                     type="button"
-                    aria-label={t('score.remove-entry', { label: entry.label, player: player.name })}
+                    aria-label={t('score.remove-entry', { label: entry.label, player: label(player) })}
                     onclick={() => instance.removeLedgerEntry(player.id, entry.id)}
                   >✕</button>
                 </li>
@@ -299,8 +303,8 @@
       {#each data.players as player (player.id)}
         <li class:leader={rankOf(player.id) === 1 && data.players.length > 1}>
           <div class="who">
-            <span class="dot" style="--player: {player.color}">{player.name.slice(0, 2).toUpperCase()}</span>
-            <span class="name">{player.name}</span>
+            <span class="dot" style="--player: {player.color}">{label(player).slice(0, 2).toUpperCase()}</span>
+            <span class="name">{label(player)}</span>
             {#if data.players.length > 1}
               <span class="rank">#{rankOf(player.id)}</span>
             {/if}
@@ -308,17 +312,17 @@
           <button
             type="button"
             class="total-button"
-            aria-label={t('score.set-score', { name: player.name })}
+            aria-label={t('score.set-score', { name: label(player) })}
             disabled={hiddenNow}
             onclick={() => (editing = player.id)}
           >
             {shownTotal(player.id)}
           </button>
           <div class="adjust">
-            <button type="button" onclick={() => instance.adjust(player.id, -data.step)} aria-label={t('score.minus', { step: data.step, name: player.name })}>
+            <button type="button" onclick={() => instance.adjust(player.id, -data.step)} aria-label={t('score.minus', { step: data.step, name: label(player) })}>
               −{data.step}
             </button>
-            <button type="button" onclick={() => instance.adjust(player.id, data.step)} aria-label={t('score.plus', { step: data.step, name: player.name })}>
+            <button type="button" onclick={() => instance.adjust(player.id, data.step)} aria-label={t('score.plus', { step: data.step, name: label(player) })}>
               +{data.step}
             </button>
           </div>

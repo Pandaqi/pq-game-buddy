@@ -93,7 +93,7 @@ describe('lives rules', () => {
     const sheet = state();
     sheet.players[0].lives = 0;
     expect(isGameOver(sheet)).toBe(true);
-    expect(gameOverLabel(sheet)).toBe('Bo wins');
+    expect(gameOverLabel(sheet, 'en')).toBe('Bo wins');
 
     const lone = state({ players: [{ id: 'p1', name: 'Ada', lives: 0, max: 5, color: '#c0392b' }] });
     expect(isGameOver(lone)).toBe(true);
@@ -101,18 +101,18 @@ describe('lives rules', () => {
     const everyone = state();
     for (const player of everyone.players) player.lives = 0;
     expect(isGameOver(everyone)).toBe(true);
-    expect(gameOverLabel(everyone)).toBe('Everyone is out');
+    expect(gameOverLabel(everyone, 'en')).toBe('Everyone is out');
   });
 
   test('results sort by remaining lives', () => {
     const sheet = state();
     sheet.players[0].lives = 1;
     sheet.players[1].lives = 4;
-    expect(resultsFor(sheet)).toEqual([
+    expect(resultsFor(sheet, 'en')).toEqual([
       { name: 'Bo', score: 4 },
       { name: 'Ada', score: 1 },
     ]);
-    expect(resultsFor(state({ mode: 'shared', lives: 2 }))).toEqual([{ name: 'Table', score: 2 }]);
+    expect(resultsFor(state({ mode: 'shared', lives: 2 }), 'en')).toEqual([{ name: 'Table', score: 2 }]);
   });
 });
 
@@ -144,7 +144,7 @@ describe('lives actions', () => {
     instance.adjust('p1', -1);
     instance.adjust('p2', -1);
     expect(isGameOver(instance.data)).toBe(true);
-    expect(gameOverLabel(instance.data)).toBe('Everyone is out');
+    expect(gameOverLabel(instance.data, 'en')).toBe('Everyone is out');
   });
 
   test('reset restores starting lives, tracks and conditions', () => {

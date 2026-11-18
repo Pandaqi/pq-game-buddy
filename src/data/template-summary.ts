@@ -20,7 +20,8 @@ export interface TemplateSummary {
 export function summariseTemplate(id: string, text: string): TemplateSummary {
   const parsed = parseTemplate(text).template;
   const range = parsed.game.players;
-  const tools = parsed.tools.map((tool) => tool.toolId);
+  // Two instances of one tool (roles and a vote pad) are still one chip.
+  const tools = [...new Set(parsed.tools.map((tool) => tool.toolId))];
   if (!tools.includes('rules') && (parsed.rules.trim() || parsed.setup.length)) tools.push('rules');
   const icon = parsed.game.icon || undefined;
   return {

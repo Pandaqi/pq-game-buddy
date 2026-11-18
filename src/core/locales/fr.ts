@@ -4,7 +4,6 @@ import type { Dict } from '../i18n.svelte';
 
 const fr: Dict = {
   'app.name': 'Game Buddy',
-  'app.tagline': 'Des petits outils pour la soirée jeux',
   'app.skip': 'Aller au contenu',
   'app.sound-board': 'Tableau sonore',
   'app.mute': 'Couper le son',
@@ -13,9 +12,24 @@ const fr: Dict = {
   'app.close-settings': 'Fermer les réglages',
   'app.language': 'Langue',
   'app.dismiss': 'Fermer',
+  'app.close': 'Fermer',
+  'ui.decrease': 'Diminuer',
+  'ui.increase': 'Augmenter',
+  'ui.backspace': 'Effacer',
+  'ui.value': 'Valeur',
+  'ui.cancel': 'Annuler',
+  'ui.set': 'Définir',
+  'pass.show': 'Afficher en privé',
+  'pass.lead': 'Passe le téléphone à',
+  'pass.next': 'Joueur suivant',
+  'pass.back': 'Retour à la table',
+  'pass.hide': 'Masquer',
+  'pass.hint': "Rien ne s'affiche avant que tu touches. L'écran est masqué pour les autres.",
+  'pass.aria-cover': 'Passe le téléphone à {name}',
+  'pass.aria-secret': 'Secret de {name}',
   'app.drop': 'Dépose un modèle, une partie sauvegardée, des images ou un thème',
   'app.storage':
-    'Ce navigateur ne peut pas enregistrer sur cet appareil ({kind}). Exporte ta partie ou héberge le fichier.',
+    'Ce navigateur ne peut pas enregistrer ici. Exporte ta partie ou héberge le fichier.',
   'app.loading': 'Lecture du lien…',
   'app.loading-hint': 'Si rien ne se passe, le lien était coupé. Importe plutôt le texte du modèle.',
   'app.home': "Retour à l'accueil",
@@ -26,14 +40,12 @@ const fr: Dict = {
   'app.back-home': "Retour à l'accueil",
 
   'nav.home': 'Accueil',
-  'nav.settings': 'Réglages',
-  'nav.back': 'Retour',
   'nav.more': 'Plus',
 
   'home.title-1': 'Soirée jeux,',
   'home.title-2': 'réglée.',
   'home.kicker': 'Pas de compte. Pas d’internet. Rien à installer.',
-  'home.lede': 'Minuteurs, dés, feuilles de score et modèles pour les jeux de ton étagère.',
+  'home.lede': 'Minuteurs, dés, feuilles de score et modèles pour les jeux que tu possèdes.',
   'home.continue': 'Reprends où tu t’es arrêté',
   'home.tools': 'Outils',
   'home.search': 'Chercher dans tous les outils',
@@ -44,7 +56,7 @@ const fr: Dict = {
   'home.show-all': 'Voir les {count} outils',
   'home.templates-fold': 'Ou commence avec un modèle de jeu',
   'home.templates-hint':
-    '{count} jeux, déjà prêts. Apporte le tien sur la page des modèles : un fichier .gamebuddy, ses images et un thème, d’un coup.',
+    '{count} jeux, déjà prêts. Apporte le tien avec ses images et un thème, d’un coup.',
   'home.players': '{count} joueurs',
   'home.any-players': 'n’importe quel nombre de joueurs',
   'home.import': 'Importer le tien',
@@ -53,10 +65,8 @@ const fr: Dict = {
   'home.log': 'Journal des parties',
   'home.settings': 'Réglages',
 
-  'session.close': 'Fermer la partie',
   'session.undo': 'Annuler',
   'session.players': 'Joueurs',
-  'session.none': 'Rien ne tourne encore.',
   'session.none-title': 'Aucune partie en cours',
   'session.none-hint':
     'Choisis un outil ou un modèle pour commencer, ou reprends une partie sauvegardée.',
@@ -65,28 +75,24 @@ const fr: Dict = {
   'settings.title': 'Réglages',
   'settings.home': 'Accueil',
   'settings.appearance': 'Clair ou sombre',
-  'settings.appearance-hint':
-    'Clair, c’est papier et encre. Sombre, c’est une pièce tamisée : charbon chaud, aucun éblouissement.',
-  'settings.theme': 'Thème',
+  'settings.appearance-hint': 'Clair, c’est papier et encre. Sombre, c’est une pièce tamisée.',
   'settings.theme.system': 'Système',
   'settings.theme.light': 'Clair',
   'settings.theme.dark': 'Sombre',
   'settings.theme-file': 'Fichier de thème',
   'settings.theme-file-hint':
-    'Un .gamebuddy-theme est du texte simple avec quelques couleurs, tailles et polices. Il reste sur cet appareil et n’est jamais téléchargé.',
+    'Du texte simple avec des couleurs, tailles et polices. Il reste sur cet appareil.',
   'settings.theme-active': 'Thème actif : {name}',
   'settings.theme-paste': 'Coller un thème',
   'settings.theme-choose': 'Ou choisis un fichier',
   'settings.theme-use': 'Utiliser ce thème',
   'settings.theme-remove': 'Retirer le thème',
   'settings.table': 'Mode table',
-  'settings.table.hint':
-    'Grosse écriture et cibles plus grandes pour un téléphone posé à plat sur la table.',
   'settings.table-hint':
     'Écriture plus grande, cibles plus épaisses et moins de décor, pour un téléphone posé à plat sur la table.',
   'settings.huge': 'Mode géant',
   'settings.huge-hint':
-    'Plus grand que le mode table, pour un grand écran ou une vue faible. Les écrans défilent plus.',
+    'Plus grand que le mode table, pour un grand écran ou une vue faible.',
   'settings.switch': 'Accès par contacteur',
   'settings.switch-hint':
     'Cibles plus grandes et anneau de focus plus épais, pour un contacteur unique ou un pointeur de tête.',
@@ -106,11 +112,10 @@ const fr: Dict = {
     'Seulement tant que cet onglet reste ouvert. Exporte ta partie pour la garder.',
   'settings.storage.memory':
     'Ce navigateur ne peut pas enregistrer. Exporte ta partie pour la garder.',
-  'settings.storage-memory': 'Ce navigateur ne peut pas enregistrer. Exporte plutôt ta session.',
   'settings.data': 'Données',
   'settings.reset': 'Effacer toutes les données',
   'settings.reset-hint':
-    'Efface les parties et les réglages de cet appareil. Exporte d’abord ce que tu veux garder ; c’est irréversible.',
+    'Efface les parties et les réglages d’ici. Exporte d’abord ce que tu veux garder.',
   'settings.reset-confirm':
     'Cela efface toutes les parties et tous les réglages de cet appareil. Tape {word} pour confirmer.',
   'settings.confirm-label': 'Confirmation',
@@ -127,26 +132,17 @@ const fr: Dict = {
   'settings.version': 'Game Buddy version {version}.',
   'settings.more-at': 'D’autres jeux et outils sur',
   'settings.source-at': 'Le code se trouve sur',
-  'settings.language': 'Langue',
-  'settings.language-hint': 'L’app parle {language}. Changer de langue ne touche jamais au réseau.',
   'settings.line': 'ligne {line}',
 
-  'import.title': 'Importer un modèle',
-  'import.paste': 'Coller le texte du modèle',
-  'import.file': 'Choisir un fichier',
-  'import.run': 'Charger le modèle',
-  'import.cancel': 'Annuler',
-  'import.drop': 'Dépose un fichier .gamebuddy',
   'import.own': 'Importer le tien',
   'import.hint':
     'Choisis un modèle, une partie sauvegardée, ses images et un thème d’un coup. Tout reste sur cet appareil ; rien n’est envoyé.',
   'import.files': 'Fichiers',
   'import.image-hint':
-    'Une image nommée comme la valeur icon: du modèle — ou comme le fichier du modèle — devient sa marque. Une session .json reprend cette partie.',
+    'Nomme une image comme la valeur icon: du modèle, ou comme son fichier. Une session .json reprend cette partie.',
   'import.paste-label': 'Ou colle un modèle',
   'import.check': 'Vérifier le modèle collé',
 
-  'seats.title': 'Combien de joueurs ?',
   'seats.start': 'Commencer la partie',
   'seats.start-anyway': 'Commencer avec les valeurs par défaut',
   'seats.from-template': 'Joueurs du modèle : {names}',
@@ -212,7 +208,7 @@ const fr: Dict = {
   'gallery.players-mid': '3–4',
   'gallery.players-big': '5+',
   'gallery.time-short': '20 minutes ou moins',
-  'gallery.time-medium': '20–60 minutes',
+  'gallery.time-medium': '21–60 minutes',
   'gallery.time-long': 'Plus d’une heure',
   'gallery.surprise': 'On joue à quoi ?',
   'gallery.no-filter-match':
@@ -225,9 +221,9 @@ const fr: Dict = {
   'gallery.write': 'Écris-en un dans l’éditeur',
   'gallery.bring': 'Apporte le tien',
   'gallery.bring-hint':
-    'Envoie un modèle .gamebuddy, le .json d’une partie sauvegardée, ses images et un .gamebuddy-theme d’un coup. Tout reste sur cet appareil.',
+    'Envoie un modèle .gamebuddy, une partie sauvegardée, ses images ou un thème. Tout reste ici.',
   'gallery.file-hint':
-    'Une image nommée comme la valeur icon: du modèle — ou comme le fichier du modèle — devient sa marque. Un thème s’applique aussitôt. Une session .json reprend cette partie.',
+    'Nomme une image comme la valeur icon: du modèle, ou comme son fichier. Un thème s’applique aussitôt. Une session .json reprend cette partie.',
   'gallery.tools': 'Outils : {tools}',
   'gallery.no-tools': 'aucun',
   'gallery.seats': 'Places',
@@ -272,7 +268,7 @@ const fr: Dict = {
   'log.nothing-hint': 'Essaie un autre jeu ou un autre joueur, ou vide la recherche.',
   'log.no-games-title': 'Pas encore de partie terminée.',
   'log.no-games-hint':
-    'Ouvre une partie, passe par son menu et touche « Terminer la partie ». Le résultat arrive ici, avec les gagnants, les séries et le temps de jeu.',
+    'Ouvre une partie, passe par son menu et touche « Terminer la partie ». Le résultat arrive ici.',
   'log.pick-tool': 'Choisir un outil',
   'log.clear-sheet': 'Effacer l’historique',
   'log.clear-confirm':
@@ -332,7 +328,7 @@ const fr: Dict = {
 
   'finish.title': 'Terminer la partie',
   'finish.hint':
-    'Les résultats viennent des outils de cette partie. Choisis la source et le gagnant, puis enregistre-la dans le journal.',
+    'Les résultats viennent des outils de cette partie. Choisis la source et le gagnant, puis enregistre.',
   'finish.source': 'Source du résultat',
   'finish.tied': 'Ce score est à égalité. Choisis qui a gagné, ou « pas de gagnant unique ».',
   'finish.no-winner': 'Pas de gagnant unique (coopératif ou abandonné)',
@@ -349,6 +345,7 @@ const fr: Dict = {
     'Fermer garde la partie reprenable, sauf si tu coches la case. Rien n’est effacé sans ce choix.',
   'finish.winner': 'Gagnant : {name}',
   'finish.no-single-winner': 'Pas de gagnant unique',
+  'finish.play-again': 'Rejouer',
 
   'qr.title': 'Scanne ce modèle',
   'qr.hint':
@@ -405,10 +402,6 @@ const fr: Dict = {
   'selftest.network-bug': '(c’est un bug)',
   'selftest.again': 'Relancer',
 
-  'confirm.yes': 'Oui, vas-y',
-  'confirm.no': 'Annuler',
-  'error.title': 'Quelque chose a cassé',
-  'error.reset': 'Retour à l’accueil',
   'notfound.title': 'Cette page n’existe pas',
   'notfound.home': 'Aller à l’accueil',
   'notfound.hint': 'Le lien « {path} » ne mène nulle part.',
@@ -417,7 +410,7 @@ const fr: Dict = {
   'diag.unknown-section': 'Section inconnue [{name}] ignorée',
   'diag.text-before':
     'Le texte avant la première section a été ignoré (commence par [game])',
-  'diag.key-value': 'Attendu « clé : valeur », reçu « {line} »',
+  'diag.key-value': 'Attendu « key: value », reçu « {line} »',
   'diag.duplicate-key':
     'Clé en double « {key} » (la première à la ligne {line}) ; la dernière valeur gagne',
   'diag.script-step':
@@ -444,7 +437,7 @@ const fr: Dict = {
   'diag.below-min': '{value} est sous le minimum de {min}',
   'diag.above-max': '{value} est au-dessus du maximum de {max}',
   'diag.not-duration': '« {text} » n’est pas une durée. Essaie 3m ou 180s.',
-  'diag.not-colour': '« {text} » n’est pas une couleur. Essaie rouge ou #c0392b.',
+  'diag.not-colour': '« {text} » n’est pas une couleur. Essaie red ou #c0392b.',
   'diag.theme-colour':
     'Utilise une couleur hex comme #fdf6e3, ou rgb(), hsl() ou transparent',
   'diag.theme-length': 'Utilise une taille comme 16px ou 1rem, ou 0',

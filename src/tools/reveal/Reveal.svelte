@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from '../../core/i18n.svelte';
+  import { language, seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import PassThePhone from '../../core/ui/PassThePhone.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
@@ -46,7 +46,9 @@
   const bidIn = $derived(allBid(data));
   const voterIndex = $derived(firstUnvoted(data, 'ballot'));
   const bidderIndex = $derived(firstUnvoted(data, 'bid'));
-  const leaders = $derived(bidLeaders(data));
+  const leaders = $derived(bidLeaders(data, language()));
+  /** A player's name in the active language; a generated seat never freezes. */
+  const label = (player: { name: string; seat?: number }): string => seatName(player.seat, player.name);
 
   const MODES: { id: 'roles' | 'ballot' | 'bid'; key: string }[] = [
     { id: 'roles', key: 'reveal.roles' },
@@ -151,7 +153,7 @@
         <ul class="role-list">
           {#each data.players as player (player.id)}
             <li>
-              <strong>{player.name}</strong>
+              <strong>{label(player)}</strong>
               <span class="role">{roleOf(data, player.id)?.name ?? '—'}</span>
               {#if roleOf(data, player.id)?.description}<small>{roleOf(data, player.id)?.description}</small>{/if}
             </li>
@@ -162,7 +164,7 @@
       </div>
     {:else if passing}
       <PassThePhone
-        name={holder?.name ?? t('reveal.player')}
+        name={holder ? label(holder) : t('reveal.player')}
         hint={t('reveal.card-of', { index: data.holder + 1, total: data.players.length })}
         action={t('reveal.have-phone')}
         autoHide={data.autoHide}
@@ -252,7 +254,7 @@
         <ul class="status">
           {#each data.players as player (player.id)}
             <li>
-              <span>{player.name}</span>
+              <span>{label(player)}</span>
               <span class="state">{data.ballot.votes[player.id] ? t('reveal.voted') : t('reveal.waiting')}</span>
             </li>
           {/each}
@@ -261,7 +263,7 @@
           <button type="button" class="wide" onclick={() => instance.revealBallot()}>{t('reveal.reveal-votes')}</button>
         {:else if voterIndex >= 0 && ballotPassing}
           <PassThePhone
-            name={data.players[voterIndex].name}
+            name={label(data.players[voterIndex])}
             hint={t('reveal.secret-ballot')}
             action={t('reveal.cast-vote')}
             autoHide={0}
@@ -291,7 +293,7 @@
         <ul class="status">
           {#each data.players as player (player.id)}
             <li>
-              <span>{player.name}</span>
+              <span>{label(player)}</span>
               <span class="state strong">{data.bids.values[player.id] ?? '—'}</span>
             </li>
           {/each}
@@ -304,7 +306,7 @@
         <ul class="status">
           {#each data.players as player (player.id)}
             <li>
-              <span>{player.name}</span>
+              <span>{label(player)}</span>
               <span class="state">{typeof data.bids.values[player.id] === 'number' ? t('reveal.in') : t('reveal.waiting')}</span>
             </li>
           {/each}
@@ -313,7 +315,7 @@
           <button type="button" class="wide" onclick={() => instance.revealBids()}>{t('reveal.reveal-bids')}</button>
         {:else if bidderIndex >= 0 && bidPassing}
           <PassThePhone
-            name={data.players[bidderIndex].name}
+            name={label(data.players[bidderIndex])}
             hint={t('reveal.nobody-sees')}
             action={t('reveal.enter-bid')}
             autoHide={0}

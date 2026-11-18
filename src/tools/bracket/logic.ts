@@ -12,7 +12,10 @@ export type Stage = 'winners' | 'losers' | 'grand' | 'group' | 'playoff' | 'swis
 
 export interface Entrant {
   id: string;
+  /** The name as stored: blank for a seat the app generated. */
   name: string;
+  /** Set for a generated seat: said in the active language when it is shown. */
+  seat?: number;
   seed: number;
 }
 
@@ -46,7 +49,9 @@ export interface Match extends MatchDef {
 
 export interface Standing {
   id: string;
+  /** The name as stored; `seat` says whether it is a generated seat. */
   name: string;
+  seat?: number;
   played: number;
   wins: number;
   losses: number;
@@ -271,6 +276,7 @@ function standingsFor(entrants: Entrant[], matches: Match[], input: BracketInput
     rows.set(entrant.id, {
       id: entrant.id,
       name: entrant.name,
+      ...(entrant.seat ? { seat: entrant.seat } : {}),
       played: 0,
       wins: 0,
       losses: 0,

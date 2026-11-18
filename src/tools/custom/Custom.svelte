@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { t } from '../../core/i18n.svelte';
+  import { seatName, t } from '../../core/i18n.svelte';
+  import { seatPair } from '../../core/session';
   import type { ToolContext } from '../../core/registry';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { colTotal, rowTotal, type FieldType } from './logic';
@@ -18,6 +19,8 @@
   let playerDraft = $state('');
 
   const result = $derived(instance.formulaResult());
+  /** A sheet's name in the active language; a generated seat never freezes. */
+  const label = (player: { name: string; seat?: number }): string => seatName(player.seat, player.name);
 
   function openBuilder(): void {
     fieldLabel = '';
@@ -35,16 +38,21 @@
       const match = sizeDraft.match(/^\s*(\d+)\s*[x×]\s*(\d+)\s*$/i);
       if (match) instance.setTableSize(Number(match[1]), Number(match[2]));
       if (data.perPlayer) {
-        const names = playerDraft
-          .split('\n')
-          .map((line) => line.trim())
-          .filter(Boolean);
-        if (names.length) {
+        // One line per sheet; a blank line is a seat the app names, the same
+        // rule every other tool uses, so a generated seat stays generic.
+        const lines = playerDraft.split('\n');
+        // Nothing typed means nothing to save; a blank line is a seat the app names.
+        if (lines.some((line) => line.trim())) {
           ctx.undo.push(t('custom.undo-player-sheets'));
-          data.players = names.map((name) => ({
-            name,
-            values: Object.fromEntries(data.counters.map((counter) => [counter.id, counter.value])),
-          }));
+          data.players = lines.map((line, index) => {
+            const seat = seatPair(line, index);
+            return {
+              id: `p${index + 1}`,
+              name: seat.name,
+              ...(seat.seat ? { seat: seat.seat } : {}),
+              values: Object.fromEntries(data.counters.map((counter) => [counter.id, counter.value])),
+            };
+          });
         }
       }
     });
@@ -115,17 +123,17 @@
             </tr>
           </thead>
           <tbody>
-            {#each data.players as player (player.name)}
+            {#each data.players as player (player.id)}
               <tr>
-                <th scope="row">{player.name}</th>
+                <th scope="row">{label(player)}</th>
                 {#each data.counters as counter (counter.id)}
                   <td class="cell">
-                    <button type="button" onclick={() => instance.adjustPlayerValue(player.name, counter.id, -1)} aria-label={t('custom.decrease-for', { name: counter.label, player: player.name })}>−</button>
+                    <button type="button" onclick={() => instance.adjustPlayerValue(player.id, counter.id, -1)} aria-label={t('custom.decrease-for', { name: counter.label, player: label(player) })}>−</button>
                     <span>{player.values[counter.id] ?? 0}</span>
-                    <button type="button" onclick={() => instance.adjustPlayerValue(player.name, counter.id, 1)} aria-label={t('custom.increase-for', { name: counter.label, player: player.name })}>+</button>
+                    <button type="button" onclick={() => instance.adjustPlayerValue(player.id, counter.id, 1)} aria-label={t('custom.increase-for', { name: counter.label, player: label(player) })}>+</button>
                   </td>
                 {/each}
-                <td class="score">{instance.formulaResult(player.name) ?? '—'}</td>
+                <td class="score">{instance.formulaResult(player.id) ?? '—'}</td>
               </tr>
             {/each}
           </tbody>

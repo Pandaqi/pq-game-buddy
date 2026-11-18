@@ -36,6 +36,13 @@ const nl = {
   'summary-main': 'Kop {heads}, munt {tails}. Geraden: {won} goed, {lost} mis.',
   'summary-series': 'Reeks (best of {target}): kop {heads}, munt {tails}.',
   'summary-series-won': 'Reeks (best of {target}): kop {heads}, munt {tails} — {side} won.',
+
+  // The activity log, in the active language.
+  'undo-coins': 'aantal munten',
+  'undo-fairness': 'weging van de munt',
+  'undo-call': 'jouw keuze',
+  'undo-mode': 'muntvorm',
+  'undo-target': 'seriedrempel',
 };
 
 export default nl;

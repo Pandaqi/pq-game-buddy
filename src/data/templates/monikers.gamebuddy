@@ -1,0 +1,38 @@
+# monikers.gamebuddy — the same clues, three times worse
+
+[game]
+name: Monikers
+players: 4-12
+time: 45m
+tags: guessing, party, realtime
+icon: monikers
+source: https://www.monikersgame.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Split into two teams
+- Put a stack of name cards in the middle
+- Agree the round length, one minute is usual
+- Give the first team a timer and a score slot
+
+[rules]
+Get your team to guess as many names as you can, three rounds in a row.
+- Round one: say anything except the name
+- Round two: one word only
+- Round three: no words at all, just act it out
+- Every correct guess is a point, and the same cards keep coming back
+- Highest total after three rounds wins
+
+[tool timer]
+mode: countdown
+duration: 1m
+warn-at: 15s
+sound: buzzer
+
+[tool score]
+mode: rounds
+rounds: 3
+win: highest
+hint: 20 points a round is a strong pace

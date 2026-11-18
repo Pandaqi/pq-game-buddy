@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import { t } from '../i18n.svelte';
 
   let {
     name,
     hint = '',
-    action = 'Show privately',
+    action = t('pass.show'),
     autoHide = 0,
     children,
     onshow,
@@ -83,27 +84,27 @@
 <dialog
   class="pass"
   bind:this={panel}
-  aria-label={covered ? `Pass the phone to ${name}` : `${name}'s secret`}
+  aria-label={covered ? t('pass.aria-cover', { name }) : t('pass.aria-secret', { name })}
   oncancel={(event) => event.preventDefault()}
 >
   {#if covered}
     <div class="cover">
-      <p class="lead">Pass the phone to</p>
+      <p class="lead">{t('pass.lead')}</p>
       <h2>{name}</h2>
       {#if hint}<p class="hint">{hint}</p>{/if}
       <button type="button" class="primary" onclick={show}>{action}</button>
       {#if onnext}
-        <button type="button" class="secondary" onclick={onnext}>Next player</button>
+        <button type="button" class="secondary" onclick={onnext}>{t('pass.next')}</button>
       {/if}
       {#if oncancel}
-        <button type="button" class="ghost" onclick={oncancel}>Back to the table</button>
+        <button type="button" class="ghost" onclick={oncancel}>{t('pass.back')}</button>
       {/if}
-      <p class="small">Nothing is shown until you tap. The screen is covered for everyone else.</p>
+      <p class="small">{t('pass.hint')}</p>
     </div>
   {:else}
     <div class="secret">
       {@render children?.()}
-      <button type="button" class="hide" onclick={hide}>Hide</button>
+      <button type="button" class="hide" onclick={hide}>{t('pass.hide')}</button>
     </div>
   {/if}
 </dialog>

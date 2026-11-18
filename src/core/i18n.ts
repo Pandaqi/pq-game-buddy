@@ -73,32 +73,34 @@ function resolve(languageId: string, key: string): string | undefined {
  * `fallback` is for text that arrives with data rather than from a dictionary —
  * a tool's own title, for instance, which the manifest already carries.
  */
-export function translate(
+export function translateIn(
+  languageId: string,
   key: string,
   vars?: Record<string, string | number>,
   fallback?: string,
 ): string {
-  const template = resolve(active, key) ?? fallback ?? key;
+  const template = resolve(languageId, key) ?? fallback ?? key;
   if (!vars) return template;
   return template.replace(/\{(\w+)\}/g, (match, name: string) =>
     name in vars ? String(vars[name]) : match,
   );
 }
 
-export function hasKey(key: string): boolean {
-  return resolve(active, key) !== undefined;
+/** The active language's words, for logic that never sees a view. */
+export function translate(
+  key: string,
+  vars?: Record<string, string | number>,
+  fallback?: string,
+): string {
+  return translateIn(active, key, vars, fallback);
 }
 
 /**
- * A tool's own name and blurb, from its locale file, falling back to the
- * English metadata the manifest already carries.
+ * A name that may be a generated seat: a blank name with a seat number is said
+ * in that language, the way a tool's title is; anything else is already a name.
  */
-export function toolTitle(id: string, fallback: string): string {
-  return translate(`${id}.title`, undefined, fallback);
-}
-
-export function toolBlurb(id: string, fallback: string): string {
-  return translate(`${id}.blurb`, undefined, fallback);
+export function seatNameIn(languageId: string, seat: number | undefined, name: string): string {
+  return seat ? translateIn(languageId, 'players.default', { count: seat }) : name;
 }
 
 /** Resolves to false when this build does not carry the language. */

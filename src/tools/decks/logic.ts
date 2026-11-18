@@ -1,6 +1,7 @@
 /** Card decks: build, shuffle, draw, deal and hide. No Svelte here. */
 
-import { translate } from '../../core/i18n';
+import { language, seatNameIn, translate } from '../../core/i18n';
+import { seatKey, type SeatPair } from '../../core/session';
 import type { Rng } from '../../core/rng';
 
 export interface Card {
@@ -32,6 +33,14 @@ export function deckCards(kind: DeckKind, copies = 1, jokers = 0, custom: string
   const copyCount = Math.max(1, Math.min(6, Math.round(copies)));
   for (let copy = 1; copy <= copyCount; copy += 1) {
     const tag = `${kind}-${copy}`;
+    // A custom deck is exactly the cards the player typed: no standard 52 behind it.
+    if (kind === 'custom') {
+      const items = custom.map((item) => item.trim()).filter(Boolean);
+      items.forEach((label, index) => {
+        out.push({ id: `${tag}-${index}-${label.replace(/\s+/g, '_')}`, label, suit: 'custom', rank: label });
+      });
+      continue;
+    }
     if (kind === 'domino') {
       for (let high = 0; high <= 6; high += 1) {
         for (let low = 0; low <= high; low += 1) {
@@ -77,12 +86,6 @@ export function deckCards(kind: DeckKind, copies = 1, jokers = 0, custom: string
       out.push({ id: `${tag}-joker-${index}`, label: 'Joker', suit: 'joker', rank: 'Joker' });
     }
   }
-  if (kind === 'custom') {
-    const items = custom.map((item) => item.trim()).filter(Boolean);
-    items.forEach((label, index) => {
-      out.push({ id: `custom-${index}-${label.replace(/\s+/g, '_')}`, label, suit: 'custom', rank: label });
-    });
-  }
   return out;
 }
 
@@ -97,9 +100,17 @@ export function take(pool: Card[], count: number): { drawn: Card[]; rest: Card[]
 }
 
 export interface Hand {
-  player: string;
+  /** The session player's name, blank for a seat the app generated. */
+  name: string;
+  /** Set for a generated seat: said in the active language when it is shown. */
+  seat?: number;
   cards: Card[];
   open: boolean;
+}
+
+/** A hand's stable identity: its player's name, or its generated seat. */
+export function handKey(hand: SeatPair): string {
+  return seatKey(hand);
 }
 
 export interface DeckState {
@@ -118,8 +129,8 @@ export interface DeckState {
   lastDraw: Card[];
 }
 
-export function handFor(hands: Hand[], player: string): Hand {
-  return hands.find((hand) => hand.player === player) ?? { player, cards: [], open: false };
+export function handFor(hands: Hand[], key: string): Hand | null {
+  return hands.find((hand) => handKey(hand) === key) ?? null;
 }
 
 export function deckSize(state: DeckState): number {
@@ -133,7 +144,7 @@ export function summaryOf(state: DeckState): string {
   for (const hand of state.hands)
     lines.push(
       translate('decks.summary-hand', {
-        name: hand.player,
+        name: seatNameIn(language(), hand.seat, hand.name),
         cards: hand.cards.map((item) => item.label).join(' ') || '—',
       }),
     );

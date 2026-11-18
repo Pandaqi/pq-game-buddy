@@ -1,0 +1,42 @@
+# charades.gamebuddy — sixty seconds, no words
+
+[game]
+name: Charades
+players: 4-16
+time: 30m
+tags: drawing, guessing, party, realtime
+icon: charades
+source: Traditional game — no official source
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Split into two teams
+- Agree whether you act, draw or describe
+- Agree the round length, one minute is usual
+- Write a pile of words both teams can see
+
+[rules]
+Get your team to say the word without saying it yourself.
+- One player guesses at a time; the rest of the team shouts answers
+- No words, no letters and no pointing at the answer
+- Each correct guess scores a point
+- Pass on a word if it is hopeless, usually for a small penalty
+- Highest score when the rounds are done wins
+
+[tool timer]
+mode: countdown
+duration: 1m
+warn-at: 15s
+sound: buzzer
+
+[tool score]
+mode: rounds
+target: 30
+win: highest
+hint: 30 points is a good night
+
+[tool turns]
+phases: Act, Guess, Score
+pass: no

@@ -15,12 +15,12 @@
 > pandaqi.com catalogue, one for each of nine collections, in their own folder with a gallery filter;
 > M9 drew a mark for each of them on the same 24 px grid. A later catalogue audit
 > added ten more templates and a named reason for every remaining entry, and a counters pass added I Bid You Not: twenty
-> templates now cover 47 of the 100 catalogue entries. `bun run check` passes end
-> to end: stale-manifest check, `tsc`, `svelte-check` with 0 warnings, the full test
-> suite (522 tests), template lint (81 files · 0 errors · 0 warnings) and a build
-> inside budget (134 KB gzipped first visit, 406 KB single file with all five
-> languages). 21 tools are live,
-> and 60 game templates plus 21 tool examples ship, with 60 marks. M6 replaced the
+> templates now cover 47 of the 100 catalogue entries, and a later sweep added nineteen
+> widely played board, card and party games. `bun run check` passes end to end:
+> stale-manifest check, `tsc`, `svelte-check` with 0 warnings, the full test suite
+> (544 tests), template lint (100 files · 0 errors · 0 warnings) and a build inside
+> budget (134.8 KB gzipped first visit, 424 KB single file with all five languages).
+> 21 tools are live, and 79 game templates plus 21 tool examples ship, with 79 marks. M6 replaced the
 > visual language twice: the second pass is the woodland lantern table in
 > `docs/STYLE.md`, with self-hosted Dosis and Raleway, borderless fills, folds and
 > bouncy one-shot motion. The release gates that need a human — hosting, the device
@@ -232,17 +232,17 @@ Three properties matter for planning:
 
 ### 4.1 The library
 
-60 game templates ship: 40 for published games and twenty first-party templates for Tiamo's own catalogue, plus one `example.gamebuddy` per tool. The gallery groups them by context (party, strategy, card, word, RPG, video, tournament, Pandaqi) and filters by players, length and tag, with a Pandaqi chip of its own.
+79 game templates ship: 59 for published games and twenty first-party templates for Tiamo's own catalogue, plus one `example.gamebuddy` per tool. The gallery groups them by context (party, strategy, card, word, RPG, video, tournament, Pandaqi) and filters by players, length and tag, with a Pandaqi chip of its own.
 
 | Family | Games |
 |--------|-------|
-| Board and strategy | Catan, Ticket to Ride, 7 Wonders, Wingspan, Sushi Go, Azul, Splendor, Dominion, Monopoly, Risk, Pandemic, Gloomhaven |
-| Card and deduction | Uno, Exploding Kittens, Love Letter, Coup, The Mind, Hanabi, Skull, Decrypto, Dixit, poker, Perudo, chess |
-| Dice and push-your-luck | Yahtzee, Phase 10, Perudo |
+| Board and strategy | Catan, Ticket to Ride, 7 Wonders, Wingspan, Sushi Go, Azul, Splendor, Dominion, Monopoly, Risk, Pandemic, Gloomhaven, Carcassonne, Backgammon, Terraforming Mars, Spirit Island, Warhammer 40,000, Dominoes |
+| Card and deduction | Uno, Exploding Kittens, Love Letter, Coup, The Mind, Hanabi, Skull, Decrypto, Dixit, poker, Perudo, chess, Cluedo, Cribbage, Hearts, The Crew |
+| Dice and push-your-luck | Yahtzee, Phase 10, Perudo, Farkle, Darts |
 | Word | Scrabble, Boggle, Bananagrams, Codenames, Just One |
-| Party and social deduction | Werewolf, Trivia Night, Escape Room |
-| Video game and tournament | Mario Kart night, Smash night, Speedrun practice |
-| RPG and cooperative | D&D 5e, Gloomhaven, Kitchen Rush |
+| Party and social deduction | Werewolf, Trivia Night, Escape Room, Secret Hitler, Avalon, Wavelength, Charades, Monikers |
+| Video game and tournament | Mario Kart night, Smash night, Speedrun practice, Jackbox Night |
+| RPG and cooperative | D&D 5e, Gloomhaven, Kitchen Rush, Betrayal at House on the Hill |
 | Utility | Kitchen Rush timers, D&D session, house-rule sheets |
 | Pandaqi catalogue | Bidding Blocks, Mapped Out, Death by Digits, Fiddlefoo, The Luck Legends, Naivigation, Chiptales, Feed the Beast, Maybe Games, Throneless Games, Keebble Games, Captain Flip, Magnetmen, Waterfall, Firecrackers, Hasty Accusations, The Game of Dilemmas, Slippery Slopes, Mammoth Messages |
 
@@ -266,7 +266,7 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 | First visit (entry + shared chunk + CSS), gzipped | 150 KB | 133.6 KB |
 | Single file, gzipped | no ceiling: the whole app in one file | 406 KB |
 
-**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (60 KB gzipped, 56 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 21 KB (its view, logic and five language packs) and the next largest chunk is the template-text chunk (59 texts), so a tool that passes it is one to split rather than a budget to raise. A total ceiling on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat: it was 250 KB from M5 until M10 finished three more languages and moved it to 320 KB, with the arithmetic a few sentences on. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 47 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 16.6 KB of headroom left. M7 has added about 3 KB to the first visit (theme parsing and template icons in the core) and about 10 KB to the single file, with no new dependency. M8 and M9 add nine templates and nine marks, which land in the deferred chunks: the first visit stayed at 132 KB and the single file grew to 294 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. M10 adds the language layer without moving a ceiling, and it gives one back: no dictionary is compiled into the start-up any more. English is a chunk like every other language, loaded at boot only because it is the stored default, so the first visit *fell* from 139.0 KB to 133.4 KB even after paying for the language sheet and the lookup. A language is two chunks: `core/locales/<lang>.ts` and the generated `tool-text-<lang>.generated.ts`, which gathers each tool's `locales/<lang>.ts`. The en+nl build was 236.2 KB across 36 deferred chunks, `--langs=en` is 215.9 KB across 34, so a complete extra language costs about 21.7 KB and two chunks: the measurable difference the DoD asks for. German, Spanish and French landed in one pass and took that total to 302.6 KB across 42 chunks (largest 21.5 KB), an addition of 66.4 KB or 22.1 KB per language. That is a fixed amount of finished surface added by the milestone itself, so the deferred ceiling moved once, from 250 KB to 320 KB, and has 17.4 KB of headroom left. A sixth language needs its own arithmetic written here before it moves again, and at roughly 22 KB apiece it will be the moment to ask whether the shell chunk should split per area instead. A tool that registers its own English strings adds nothing extra to its chunk: the words simply moved from the view into `locales/en.ts`. These are ceilings, not targets.
+**Why the first-visit budget is 150 KB.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base, the shared screen primitives and both fonts (60 KB gzipped, 56 KB of it the fonts). The per-chunk ceiling is 24 KB because a chunk is now one screen: the words tool is 22 KB (its view, logic and five language packs), so a tool that passes it is one to split rather than a budget to raise, and the rulebooks are split the same way: a stable hash of the template id files each one of the 79 texts into one of four shelves, so a preview pulls 2–3 KB instead of the library and no single text chunk grows past the ceiling as templates are added. A total ceiling on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat: it was 250 KB from M5 until M10 finished three more languages and moved it to 320 KB, with the arithmetic a few sentences on. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 47 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 15.2 KB of headroom left. M7 has added about 3 KB to the first visit (theme parsing and template icons in the core) and about 10 KB to the single file, with no new dependency. M8 and M9 add nine templates and nine marks, which land in the deferred chunks: the first visit stayed at 132 KB and the single file grew to 294 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. M10 adds the language layer without moving a ceiling, and it gives one back: no dictionary is compiled into the start-up any more. English is a chunk like every other language, loaded at boot only because it is the stored default, so the first visit *fell* from 139.0 KB to 133.4 KB even after paying for the language sheet and the lookup. A language is two chunks: `core/locales/<lang>.ts` and the generated `tool-text-<lang>.generated.ts`, which gathers each tool's `locales/<lang>.ts`. The en+nl build was 236.2 KB across 36 deferred chunks, `--langs=en` is 215.9 KB across 34, so a complete extra language costs about 21.7 KB and two chunks: the measurable difference the DoD asks for. German, Spanish and French landed in one pass and took that total to 302.6 KB across 42 chunks (largest 21.5 KB), an addition of 66.4 KB or 22.1 KB per language. That is a fixed amount of finished surface added by the milestone itself, so the deferred ceiling moved once, from 250 KB to 320 KB. The later template sweep added nineteen rulebooks and three text shelves: 312.6 KB across 45 chunks (largest 21.5 KB), which is 7.4 KB inside the deferred ceiling and 15.2 KB inside the first-visit one. A sixth language needs its own arithmetic written here before it moves again, and at roughly 22 KB apiece it will be the moment to ask whether the shell chunk should split per area instead. A tool that registers its own English strings adds nothing extra to its chunk: the words simply moved from the view into `locales/en.ts`. These are ceilings, not targets.
 
 ### 5.3 Gates
 
@@ -411,6 +411,28 @@ were already keyed and did not change. The deferred ceiling moved once, 250 KB t
 320 KB, with the arithmetic in §5.2, because five languages are a fixed amount of
 finished surface rather than a licence to grow. Language names stay in `core/langs.ts`
 with their English gloss, and the switcher still lists only what the build carries.
+
+Sweep choices (2026-11): nineteen templates were chosen for table presence and for
+what the tool set can already run — Carcassonne, Cluedo, Terraforming Mars, Backgammon,
+Dominoes, Darts, Cribbage, Hearts, The Crew, Farkle, Secret Hitler, Avalon, Wavelength,
+Charades, Monikers, Jackbox Night, Warhammer 40,000, Spirit Island and Betrayal — so no
+new tool or schema key was needed to ship them. Tags were one vocabulary rather than
+three: `cards`/`card`, `word`/`words`, `deckbuilder`/`deck-building`,
+`social-deduction`/`hidden-roles`/`deduction`, `timed`/`realtime`, `numbers`/`puzzle`
+and a bare `score` were folded into one spelling each, applying the same rewrite to
+files a person authored as to generated ones. Locale files stay `.ts`: JSON would be
+larger raw (quoted keys, double quotes), would lose the `Dict` type and the comments
+that explain a string, and buys nothing after gzip, so it is a format change with only
+costs. The rulebooks outgrew the one-screen chunk ceiling at 79 templates, so they are
+split by a stable id hash into four shelves instead of raising the ceiling; a preview
+now fetches 2–3 KB instead of 25 KB. The play record's untitled fallback stays a
+translated string written at save time, because a record is read in the language it was
+saved in; the test compares it to `translate` rather than to English. Every core key must
+be named somewhere outside the locale folders, asserted in `tests/i18n.test.ts`, so a
+removed screen cannot leave five strings behind. A rematch saves the finished play
+before it starts a fresh session, and the shared mode pills, tabs, search fields and
+gallery chips are 48 px, since the accessibility floor is a real gate rather than a
+style preference.
 
 ## 10. Global definition of done
 

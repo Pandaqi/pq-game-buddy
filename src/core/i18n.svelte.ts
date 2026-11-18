@@ -1,17 +1,15 @@
 /**
- * The reactive face of `core/i18n.ts`. Reading any of these in a view is what
- * makes the screen redraw when a language chunk lands; the plain module holds
- * the words, and the parser and the CLI import that instead, so logic never
- * needs a rune.
+ * The reactive face of `core/i18n.ts`. The active language lives here as state,
+ * so reading it from a view is what redraws the screen when a chunk lands; the
+ * plain module holds the words, and the parser and the CLI import that instead,
+ * so logic never needs a rune.
  */
 
 import {
-  hasKey as hasKeyRaw,
   language as currentLanguage,
   onChange,
-  toolBlurb as toolBlurbRaw,
-  toolTitle as toolTitleRaw,
-  translate,
+  seatNameIn,
+  translateIn,
   type Dict,
   type Translate,
 } from './i18n';
@@ -25,33 +23,34 @@ export {
   startLanguage,
 } from './i18n';
 
-/** Bumped whenever a chunk lands, so every read below is a tracked dependency. */
-let revision = $state(0);
+/**
+ * The language as reactive state. Every read below passes it into the lookup,
+ * which is the read the compiler keeps: a bare `void revision;` statement is
+ * elided, so it tracked nothing and a switch left the current screen in the old
+ * language until something else redrew it.
+ */
+let active = $state(currentLanguage());
 onChange(() => {
-  revision += 1;
+  active = currentLanguage();
 });
 
-export function t(key: string, vars?: Record<string, string | number>, fallback?: string): string {
-  void revision;
-  return translate(key, vars, fallback);
-}
-
 export function language(): string {
-  void revision;
-  return currentLanguage();
+  return active;
 }
 
-export function hasKey(key: string): boolean {
-  void revision;
-  return hasKeyRaw(key);
+export function t(key: string, vars?: Record<string, string | number>, fallback?: string): string {
+  return translateIn(active, key, vars, fallback);
 }
 
 export function toolTitle(id: string, fallback: string): string {
-  void revision;
-  return toolTitleRaw(id, fallback);
+  return translateIn(active, `${id}.title`, undefined, fallback);
 }
 
 export function toolBlurb(id: string, fallback: string): string {
-  void revision;
-  return toolBlurbRaw(id, fallback);
+  return translateIn(active, `${id}.blurb`, undefined, fallback);
+}
+
+/** A stored name that may be a generated seat: blank plus a seat is said here. */
+export function seatName(seat: number | undefined, name: string): string {
+  return seatNameIn(active, seat, name);
 }

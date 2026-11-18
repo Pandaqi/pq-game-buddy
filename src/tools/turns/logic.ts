@@ -1,4 +1,6 @@
+import { seatNameIn, translateIn } from '../../core/i18n';
 import type { ToolInstance } from '../../core/registry';
+import { seatKey, seatPair, seatValues, type SeatPair } from '../../core/session';
 
 export interface TurnLogEntry {
   at: number;
@@ -18,7 +20,8 @@ export interface TurnTimer {
 export type TurnsMode = 'order' | 'initiative';
 
 export interface TurnsState {
-  order: string[];
+  /** Seats in turn order; `seat` marks one the app named, stored blank. */
+  order: SeatPair[];
   index: number;
   round: number;
   phases: string[];
@@ -39,7 +42,7 @@ export interface TurnsActions {
   previous(): void;
   goTo(index: number): void;
   setPhase(index: number): void;
-  setOrder(names: string[]): void;
+  setOrder(seats: (string | SeatPair)[]): void;
   syncPlayers(): void;
   setPass(value: boolean): void;
   setAutoStart(value: boolean): void;
@@ -57,23 +60,38 @@ export interface TurnsActions {
 
 export type TurnsInstance = ToolInstance<TurnsState> & TurnsActions;
 
-export function currentName(state: TurnsState): string {
-  return state.order[state.index] ?? 'Player 1';
+export function currentName(state: TurnsState, languageId: string): string {
+  const seat = state.order[state.index];
+  if (!seat) return translateIn(languageId, 'players.default', { count: 1 });
+  return seatNameIn(languageId, seat.seat, seat.name);
 }
 
 export function currentPhase(state: TurnsState): string {
   return state.phases[state.phase] ?? 'Turn';
 }
 
-/** Fill in a turn order from session players, keeping names unique. */
-export function normaliseOrder(names: string[]): string[] {
-  const out: string[] = [];
-  for (const name of names) {
-    const clean = String(name).trim();
-    if (!clean || out.includes(clean)) continue;
-    out.push(clean);
+/**
+ * Turn seats from template text, a text draft or a save. `seatPair()` decides
+ * what a blank entry means; the turn order only adds its own two rules: a
+ * repeated name is dropped, and the table always has two seats.
+ */
+export function seatList(values: unknown[]): SeatPair[] {
+  const out: SeatPair[] = [];
+  const seen = new Set<string>();
+  for (const value of seatValues(values)) {
+    const seat = seatPair(value, out.length);
+    if (!seat.seat) {
+      if (seen.has(seat.name)) continue;
+      seen.add(seat.name);
+    }
+    out.push(seat);
   }
-  return out.length ? out : ['Player 1', 'Player 2'];
+  return out.length ? out : [{ name: '', seat: 1 }, { name: '', seat: 2 }];
+}
+
+/** A turn order from names or seats, cleaned the same way. */
+export function normaliseOrder(names: (string | SeatPair)[]): SeatPair[] {
+  return seatList(names);
 }
 
 export function normalisePhases(phases: string[]): string[] {
@@ -168,14 +186,16 @@ export function newInitiativeRound(state: TurnsState): void {
 }
 
 /**
- * A template may write `initiative: Ada=18, Bo=12` (a pairs object) or a plain
- * list; anything missing is zero.
+ * A template may write `initiative: Ada=18, seat-2=12` (a pairs object) or a
+ * plain list; a seat's own key wins, a typed name still reads older templates,
+ * and anything missing is zero.
  */
-export function initiativeFromPreset(raw: unknown, names: string[]): number[] {
-  if (Array.isArray(raw)) return normaliseInitiative(raw, names.length);
+export function initiativeFromPreset(raw: unknown, seats: (string | SeatPair)[]): number[] {
+  const list = seats.map((seat, index) => seatPair(seat, index));
+  if (Array.isArray(raw)) return normaliseInitiative(raw, list.length);
   if (raw && typeof raw === 'object') {
     const map = raw as Record<string, unknown>;
-    return names.map((name) => Math.round(Number(map[name]) || 0));
+    return list.map((seat) => Math.round(Number(map[seatKey(seat)] ?? map[seat.name]) || 0));
   }
-  return names.map(() => 0);
+  return list.map(() => 0);
 }

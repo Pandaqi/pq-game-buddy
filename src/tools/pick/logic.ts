@@ -1,14 +1,42 @@
+import { language, seatNameIn } from '../../core/i18n';
 import type { ToolInstance } from '../../core/registry';
 import type { Rng } from '../../core/rng';
+import { seatKey, type SeatPair } from '../../core/session';
 
 export type PickSource = 'number' | 'list' | 'players' | 'teams' | 'seats';
 
 /** How a result is shown: a list, cards, a wheel or a slot. */
 export type PickView = 'list' | 'cards' | 'wheel' | 'slot';
 
+/**
+ * A pool entry: text the user typed, or a session seat. The seat is stored as
+ * a pair, so a generated seat never freezes in the language it was drawn in.
+ */
+export type PickItem = string | SeatPair;
+
+/** The entry as it reads on screen, in the active language. */
+export function itemLabel(item: PickItem): string {
+  return typeof item === 'string' ? item : seatNameIn(language(), item.seat, item.name);
+}
+
+/** The stored identity of an entry: its text, or the seat's stable key. */
+export function itemKey(item: PickItem): string {
+  return typeof item === 'string' ? item : seatKey(item);
+}
+
+/** A saved or preset entry, which older saves hold as plain text. */
+export function toItem(value: unknown): PickItem | null {
+  if (typeof value === 'string') return value;
+  if (!value || typeof value !== 'object') return null;
+  const seat = value as SeatPair;
+  if (typeof seat.name !== 'string') return null;
+  const number = Number(seat.seat);
+  return Number.isInteger(number) && number > 0 ? { name: seat.name, seat: number } : { name: seat.name };
+}
+
 export interface PickRecord {
   at: number;
-  items: string[];
+  items: PickItem[];
 }
 
 export interface PickState {
@@ -18,10 +46,12 @@ export interface PickState {
   count: number;
   replacement: boolean;
   teams: number;
-  values: string[];
-  drawn: string[];
-  result: string[];
-  teamResult: string[][] | null;
+  /** The list source's options; typed text stays text, seats stay pairs. */
+  values: PickItem[];
+  /** Entries already drawn when repeats are off. */
+  drawn: PickItem[];
+  result: PickItem[];
+  teamResult: PickItem[][] | null;
   history: PickRecord[];
   view: PickView;
   /** Which result cards have been turned face up. */
@@ -33,7 +63,7 @@ export interface PickActions {
   draw(): void;
   setSource(source: PickSource): void;
   addValue(value: string): void;
-  removeValue(value: string): void;
+  removeValue(item: PickItem): void;
   usePlayers(): void;
   clearValues(): void;
   reset(): void;
@@ -63,23 +93,23 @@ export function drawNumbers(min: number, max: number, count: number, unique: boo
   return rng.shuffle(pool).slice(0, total);
 }
 
-export function drawFromPool(pool: string[], count: number, rng: Rng): string[] {
+export function drawFromPool<T>(pool: T[], count: number, rng: Rng): T[] {
   if (!pool.length) return [];
   const total = Math.max(1, Math.min(pool.length, Math.round(count)));
   return rng.shuffle(pool).slice(0, total);
 }
 
-export function splitTeams(players: string[], teams: number, rng: Rng): string[][] {
+export function splitTeams<T>(players: T[], teams: number, rng: Rng): T[][] {
   const shuffled = rng.shuffle(players);
   const count = Math.max(2, Math.min(12, Math.round(teams)));
-  const buckets: string[][] = Array.from({ length: count }, () => []);
+  const buckets: T[][] = Array.from({ length: count }, () => []);
   shuffled.forEach((player, index) => {
     buckets[index % count].push(player);
   });
   return buckets;
 }
 
-export function seatOrder(players: string[], rng: Rng): string[] {
+export function seatOrder<T>(players: T[], rng: Rng): T[] {
   return rng.shuffle(players);
 }
 
@@ -87,8 +117,8 @@ export function seatOrder(players: string[], rng: Rng): string[] {
  * The choices a wheel or slot shows. Numbers only join when the range is small
  * enough to read; otherwise the view falls back to the plain list.
  */
-export function viewPool(state: PickState, playerNames: string[], max = 12): string[] {
-  if (state.source === 'list' && state.values.length) return state.values.slice(0, max);
+export function viewPool(state: PickState, items: PickItem[], max = 12): string[] {
+  if (state.source === 'list' && state.values.length) return state.values.slice(0, max).map(itemLabel);
   if (state.source === 'number') {
     const low = Math.min(state.min, state.max);
     const high = Math.max(state.min, state.max);
@@ -96,7 +126,7 @@ export function viewPool(state: PickState, playerNames: string[], max = 12): str
     if (!Number.isFinite(span) || span < 2 || span > max) return [];
     return Array.from({ length: span }, (_, index) => String(low + index));
   }
-  return playerNames.slice(0, max);
+  return items.slice(0, max).map(itemLabel);
 }
 
 /** Which pool entry the result starts on; 0 when the result is not in the pool. */

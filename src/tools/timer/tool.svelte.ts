@@ -1,7 +1,7 @@
 import { announce } from '../../core/dom';
-import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
+import { registerToolStrings, seatName, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
-import { PLAYER_COLORS } from '../../core/session';
+import { PLAYER_COLORS, toolSeats } from '../../core/session';
 import { wake } from '../../core/wake';
 import type { PresetValues } from '../../core/template/schema';
 import { formatClock, formatDurationText, parseDuration } from '../../core/template/schema';
@@ -15,6 +15,7 @@ registerToolStrings('timer', en);
 import {
   applyIncrement,
   clampDuration,
+  clockKey,
   displayMs,
   flipClock,
   newClock,
@@ -49,13 +50,20 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
   const maxRepeats = Number(values.count ?? 0);
   const autoStart = values.start === 'auto';
 
-  const playerNames = ctx.session.players().map((player) => player.name);
+  const seats = toolSeats(ctx.session.players(), Math.max(2, count));
 
   function buildTimers(): ClockState[] {
     if (mode === 'sequence') {
       if (phases.length) {
         return phases.map((phase, index) =>
-          newClock({ id: `t${index + 1}`, name: phase.name, color: PLAYER_COLORS[index % PLAYER_COLORS.length], duration: phase.duration, delay }),
+          newClock({
+            id: `t${index + 1}`,
+            name: phase.name,
+            ...(phase.seat ? { seat: phase.seat } : {}),
+            color: PLAYER_COLORS[index % PLAYER_COLORS.length],
+            duration: phase.duration,
+            delay,
+          }),
         );
       }
       return [
@@ -66,11 +74,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
     const total = mode === 'chess' ? Math.max(2, count) : perPlayer || layout === 'grid' ? count : 1;
     return Array.from({ length: total }, (_, index) => {
       const limit = mode === 'interval' ? interval || duration : duration;
+      // A clock that stands for a player keeps the seat pair; a lone timer is
+      // just a timer, so it keeps the tool's own word for it.
+      const seat = total > 1 ? seats[index] : null;
       return newClock({
         id: `t${index + 1}`,
-        name:
-          playerNames[index] ??
-          (total > 1 ? translate('timer.timer-name', { count: index + 1 }) : translate('timer.timer-single')),
+        name: seat ? seat.name : translate('timer.timer-single'),
+        ...(seat?.seat ? { seat: seat.seat } : {}),
         color: PLAYER_COLORS[index % PLAYER_COLORS.length],
         duration: limit,
         delay,
@@ -115,7 +125,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
   }
 
   function announceTimer(clock: ClockState): void {
-    announce(`${clock.name}: ${data.mode === 'up' ? 'stopped' : 'time is up'}`);
+    announce(`${seatName(clock.seat, clock.name)}: ${data.mode === 'up' ? 'stopped' : 'time is up'}`);
   }
 
   function start(index = 0): void {
@@ -240,10 +250,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
     }
     ctx.undo.push('add timer');
     const index = data.timers.length;
+    const seat = seats[index];
     data.timers.push(
       newClock({
         id: `t${index + 1}-${Date.now().toString(36)}`,
-        name: playerNames[index] ?? translate('timer.timer-name', { count: index + 1 }),
+        name: seat ? seat.name : translate('timer.timer-name', { count: index + 1 }),
+        ...(seat?.seat ? { seat: seat.seat } : {}),
         color: PLAYER_COLORS[index % PLAYER_COLORS.length],
         duration: data.mode === 'interval' ? data.interval : data.timers[0]?.duration ?? 300000,
         delay: data.delay,
@@ -264,8 +276,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
   function renameTimer(index: number, name: string): void {
     const clock = data.timers[index];
     if (!clock) return;
+    const trimmed = name.trim();
+    // The field shows a generated seat by its label, so leaving it alone keeps
+    // the seat; typing anything else makes it the clock's own name.
+    if (!trimmed || trimmed === clock.name || trimmed === seatName(clock.seat, clock.name)) return;
     ctx.undo.push('rename timer');
-    clock.name = name.trim() || clock.name;
+    clock.name = trimmed;
+    delete clock.seat;
   }
 
   function goToPhase(index: number, autostart = true): void {
@@ -369,11 +386,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
       return;
     }
     ctx.undo.push('use players');
-    data.timers = players.slice(0, 12).map((player, index) =>
+    data.timers = toolSeats(players.slice(0, 12), 2).map((seat, index) =>
       newClock({
         id: `t${index + 1}`,
-        name: player.name,
-        color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
+        name: seat.name,
+        ...(seat.seat ? { seat: seat.seat } : {}),
+        color: players[index]?.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
         duration: data.timers[0]?.duration ?? 300000,
         delay: data.delay,
       }),
@@ -414,7 +432,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
       const first = data.timers[0];
       const phases: Record<string, string> = {};
       if (data.mode === 'sequence') {
-        for (const clock of data.timers) phases[clock.name] = formatDurationText(clock.duration);
+        for (const clock of data.timers) phases[clockKey(clock)] = formatDurationText(clock.duration);
       }
       return {
         mode: data.mode,
@@ -455,7 +473,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TimerInstance {
             ? translate('timer.state-paused')
             : translate('timer.state-ready');
         return translate(clock.laps.length ? 'timer.summary-line-laps' : 'timer.summary-line', {
-          name: clock.name,
+          name: seatName(clock.seat, clock.name),
           time: shown,
           state,
           count: clock.laps.length,

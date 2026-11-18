@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { t } from '../../core/i18n.svelte';
+  import { language, seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import PassThePhone from '../../core/ui/PassThePhone.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
@@ -15,8 +15,11 @@
   let phasesDraft = $state('');
   let secondsDraft = $state(0);
 
-  const who = $derived(currentName(data));
+  const who = $derived(currentName(data, language()));
   const phase = $derived(currentPhase(data));
+  /** A seat in the active language; a generated seat never freezes. */
+  const label = (seat: { name: string; seat?: number } | undefined): string =>
+    seat ? seatName(seat.seat, seat.name) : '';
 
   function nextTurn(): void {
     instance.next();
@@ -35,7 +38,7 @@
   }
 
   function openSettings(): void {
-    orderDraft = data.order.join(', ');
+    orderDraft = data.order.map((seat) => seatName(seat.seat, seat.name)).join(', ');
     phasesDraft = data.phases.join(', ');
     secondsDraft = Math.round(data.timer.duration / 1000);
     settingsOpen = true;
@@ -90,18 +93,18 @@
       {#each initiativeRanking(data) as seat (seat)}
         <div class="init-row" class:active={seat === data.index}>
           <button type="button" class="who" onclick={() => jump(seat)} aria-current={seat === data.index ? 'true' : undefined}>
-            {data.order[seat]}
+            {label(data.order[seat])}
           </button>
-          <div class="stepper" role="group" aria-label={t('turns.initiative-for', { name: data.order[seat] })}>
+          <div class="stepper" role="group" aria-label={t('turns.initiative-for', { name: label(data.order[seat]) })}>
             <button
               type="button"
-              aria-label={t('turns.lower-initiative', { name: data.order[seat] })}
+              aria-label={t('turns.lower-initiative', { name: label(data.order[seat]) })}
               onclick={() => instance.setInitiative(seat, (data.initiative[seat] ?? 0) - 1)}
             >−</button>
             <span class="value">{data.initiative[seat] ?? 0}</span>
             <button
               type="button"
-              aria-label={t('turns.raise-initiative', { name: data.order[seat] })}
+              aria-label={t('turns.raise-initiative', { name: label(data.order[seat]) })}
               onclick={() => instance.setInitiative(seat, (data.initiative[seat] ?? 0) + 1)}
             >+</button>
           </div>
@@ -111,14 +114,14 @@
     </div>
   {:else if data.order.length > 1}
     <div class="order" role="group" aria-label={t('turns.order')}>
-      {#each data.order as item, index (item + index)}
+      {#each data.order as item, index (index)}
         <button
           type="button"
           class:active={index === data.index}
           aria-current={index === data.index ? 'true' : undefined}
           onclick={() => jump(index)}
         >
-          {item}
+          {label(item)}
         </button>
       {/each}
     </div>

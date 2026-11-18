@@ -1,12 +1,17 @@
 import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
+import { toolSeats } from '../../core/session';
 import {
   drawFromPool,
   drawNumbers,
+  itemKey,
+  itemLabel,
   seatOrder,
   splitTeams,
+  toItem,
   type PickInstance,
+  type PickItem,
   type PickSource,
   type PickState,
   type PickView,
@@ -23,7 +28,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
     count: Math.max(1, Number(values.count ?? 1)),
     replacement: values.replacement === undefined ? true : !!values.replacement,
     teams: Math.max(2, Number(values.teams ?? 2)),
-    values: Array.isArray(values.values) ? (values.values as string[]) : [],
+    values: Array.isArray(values.values)
+      ? (values.values as unknown[]).map(toItem).filter((item): item is PickItem => item !== null)
+      : [],
     drawn: [],
     result: [],
     teamResult: null,
@@ -33,11 +40,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
     seed: String(values.seed ?? ''),
   });
 
-  function playerNames(): string[] {
-    return ctx.session.players().map((player) => player.name);
+  /** The session's seats, so a generated seat is never stored as its wording. */
+  function playerItems(): PickItem[] {
+    return toolSeats(ctx.session.players(), 2);
   }
 
-  function remember(items: string[]): void {
+  function remember(items: PickItem[]): void {
     data.result = items;
     data.revealed = items.map(() => false);
     data.history = [{ at: Date.now(), items }, ...data.history].slice(0, 20);
@@ -59,7 +67,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
           ctx.toast(translate('pick.toast-no-options'));
           return;
         }
-        const pool = data.replacement ? data.values : data.values.filter((value) => !data.drawn.includes(value));
+        const taken = data.drawn.map(itemKey);
+        const pool = data.replacement
+          ? data.values
+          : data.values.filter((value) => !taken.includes(itemKey(value)));
         if (!pool.length) {
           data.drawn = [];
           ctx.toast(translate('pick.toast-exhausted'));
@@ -74,31 +85,31 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
       }
       case 'players':
       case 'seats': {
-        const names = playerNames();
-        if (!names.length) {
+        const players = playerItems();
+        if (!players.length) {
           ctx.toast(translate('pick.toast-no-players'));
           return;
         }
         if (data.source === 'seats') {
-          const order = seatOrder(names, ctx.rng);
+          const order = seatOrder(players, ctx.rng);
           data.teamResult = null;
           remember(order);
         } else {
           data.teamResult = null;
-          remember(drawFromPool(names, Math.min(data.count, names.length), ctx.rng));
+          remember(drawFromPool(players, Math.min(data.count, players.length), ctx.rng));
         }
         break;
       }
       case 'teams': {
-        const names = playerNames();
-        if (names.length < 2) {
+        const players = playerItems();
+        if (players.length < 2) {
           ctx.toast(translate('pick.toast-teams-two'));
           return;
         }
-        if (data.teams > names.length) {
+        if (data.teams > players.length) {
           ctx.toast(translate('pick.toast-teams-many'));
         }
-        data.teamResult = splitTeams(names, data.teams, ctx.rng);
+        data.teamResult = splitTeams(players, data.teams, ctx.rng);
         data.result = [];
         ctx.haptics.buzz('short');
         break;
@@ -118,8 +129,18 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
       if (typeof raw.count === 'number') data.count = Math.max(1, raw.count);
       if (typeof raw.replacement === 'boolean') data.replacement = raw.replacement;
       if (typeof raw.teams === 'number') data.teams = Math.max(2, raw.teams);
-      if (Array.isArray(raw.values)) data.values = raw.values.map(String);
-      if (Array.isArray(raw.history)) data.history = raw.history.slice(0, 20);
+      if (Array.isArray(raw.values))
+        data.values = raw.values.map(toItem).filter((item): item is PickItem => item !== null);
+      if (Array.isArray(raw.history)) {
+        // Older saves hold plain text entries; pairs keep their seat.
+        data.history = raw.history
+          .filter((record) => record && Array.isArray(record.items))
+          .map((record) => ({
+            at: Number(record.at) || 0,
+            items: record.items.map(toItem).filter((item): item is PickItem => item !== null),
+          }))
+          .slice(0, 20);
+      }
       if (raw.view === 'cards' || raw.view === 'list' || raw.view === 'wheel' || raw.view === 'slot') {
         data.view = raw.view;
       }
@@ -132,7 +153,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
     presetFromState() {
       return {
         source: data.source,
-        values: data.values,
+        // Only typed text travels; a generated seat stays blank.
+        values: data.values.map((item) => (typeof item === 'string' ? item : item.name)),
         count: data.count,
         replacement: data.replacement,
         teams: data.teams,
@@ -147,12 +169,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
           .map((team, index) =>
             translate('pick.summary-team', {
               team: translate('pick.team-number', { count: index + 1 }),
-              names: team.join(', '),
+              names: team.map(itemLabel).join(', '),
             }),
           )
           .join('\n');
       }
-      return data.result.join(', ') || translate('pick.summary-none');
+      return data.result.map(itemLabel).join(', ') || translate('pick.summary-none');
     },
     draw,
     setSource(source) {
@@ -167,18 +189,18 @@ function create(ctx: ToolContext, values: PresetValues = {}): PickInstance {
       ctx.undo.push(translate('pick.undo-add'));
       data.values.push(trimmed);
     },
-    removeValue(value) {
+    removeValue(target) {
       ctx.undo.push(translate('pick.undo-remove'));
-      data.values = data.values.filter((item) => item !== value);
+      data.values = data.values.filter((item) => itemKey(item) !== itemKey(target));
     },
     usePlayers() {
-      const names = playerNames();
-      if (!names.length) {
+      const players = playerItems();
+      if (!players.length) {
         ctx.toast(translate('pick.toast-no-players'));
         return;
       }
       ctx.undo.push(translate('pick.undo-use-players'));
-      data.values = names;
+      data.values = players;
       data.source = 'list';
     },
     clearValues() {

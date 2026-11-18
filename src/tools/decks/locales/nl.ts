@@ -69,6 +69,13 @@ const nl = {
   'undo-reset': 'deck gereset',
   'summary-table': 'Op tafel: {cards}',
   'summary-drawn': 'Getrokken: {cards}',
+
+  // The activity log, in the active language.
+  'note-new': 'Nieuw {kind}-deck ({count} kaarten)',
+  'note-shuffled': '{count} kaarten geschud',
+  'note-dealt': '{deal} kaarten gedeeld aan {players} spelers',
+  'note-table': 'Op tafel: {card}',
+  'note-discarded': '{player} legde af',
 };
 
 export default nl;

@@ -1,6 +1,6 @@
-import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
+import { language, registerToolStrings, seatName, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
-import { PLAYER_COLORS } from '../../core/session';
+import { PLAYER_COLORS, toolSeats } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
 import {
   allBid,
@@ -28,17 +28,14 @@ import en from './locales/en';
 registerToolStrings('reveal', en);
 
 function playersFrom(ctx: ToolContext): RevealPlayer[] {
-  const players = ctx.session.players();
-  const source = players.length
-    ? players
-    : [
-        { id: 'p1', name: translate('reveal.player-name', { count: 1 }), color: PLAYER_COLORS[0] },
-        { id: 'p2', name: translate('reveal.player-name', { count: 2 }), color: PLAYER_COLORS[1] },
-      ];
-  return source.map((player, index) => ({
-    id: player.id,
-    name: player.name,
-    color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
+  const sessionPlayers = ctx.session.players();
+  // The session's pair, so a generated seat is said in whichever language is
+  // active when the table is shown.
+  return toolSeats(sessionPlayers, 2).map((slot, index) => ({
+    id: sessionPlayers[index]?.id ?? `p${index + 1}`,
+    name: slot.name,
+    ...(slot.seat ? { seat: slot.seat } : {}),
+    color: sessionPlayers[index]?.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
   }));
 }
 
@@ -86,11 +83,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
       if (Array.isArray(raw.players) && raw.players.length) {
         data.players = raw.players
           .filter((player) => player && typeof player.id === 'string')
-          .map((player, index) => ({
-            id: player.id,
-            name: typeof player.name === 'string' ? player.name : `Player ${index + 1}`,
-            color: typeof player.color === 'string' ? player.color : PLAYER_COLORS[index % PLAYER_COLORS.length],
-          }));
+          .map((player, index) => {
+            const seat = Number(player.seat);
+            return {
+              id: player.id,
+              name: typeof player.name === 'string' ? player.name : '',
+              ...(Number.isInteger(seat) && seat > 0 ? { seat } : {}),
+              color: typeof player.color === 'string' ? player.color : PLAYER_COLORS[index % PLAYER_COLORS.length],
+            };
+          });
       }
       if (Array.isArray(raw.roles)) {
         data.roles = raw.roles
@@ -186,7 +187,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
           for (const player of data.players) {
             const role = roleOf(data, player.id);
             lines.push(
-              translate('reveal.summary-player-role', { name: player.name, role: role?.name ?? '?' }),
+              translate('reveal.summary-player-role', {
+                name: seatName(player.seat, player.name),
+                role: role?.name ?? '?',
+              }),
             );
           }
         }
@@ -212,7 +216,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
       if (data.bids.revealed) {
         lines.push(
           translate('reveal.summary-highest', {
-            names: bidLeaders(data).join(', ') || translate('reveal.summary-nobody'),
+            names: bidLeaders(data, language()).join(', ') || translate('reveal.summary-nobody'),
           }),
         );
       } else {
@@ -355,7 +359,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
       ctx.undo.push(translate('reveal.undo-reveal-bids'));
       data.bids.revealed = true;
       ctx.audio.play('success');
-      const leaders = bidLeaders(data);
+      const leaders = bidLeaders(data, language());
       if (leaders.length) ctx.toast(translate('reveal.highest-bid', { names: leaders.join(', ') }));
     },
     coverBids() {
@@ -381,7 +385,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
         next.length === data.players.length &&
         next.every(
           (player, index) =>
-            player.id === data.players[index]?.id && player.name === data.players[index]?.name,
+            player.id === data.players[index]?.id &&
+            player.seat === data.players[index]?.seat &&
+            player.name === data.players[index]?.name,
         )
       ) {
         return;
@@ -395,7 +401,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): RevealInstance {
       data.holder = 0;
       data.allRevealed = false;
     },
-    results: () => (data.mode === 'ballot' ? ballotResults(data) : data.mode === 'bid' ? bidResults(data) : []),
+    results: () =>
+      data.mode === 'ballot'
+        ? ballotResults(data)
+        : data.mode === 'bid'
+          ? bidResults(data, language())
+          : [],
   };
 
   return instance;

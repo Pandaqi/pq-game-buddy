@@ -78,6 +78,19 @@ whole sheet.
 
 Persist nothing yourself: the session store saves on its own.
 
+A tool that keeps its own copy of the table takes it from `toolSeats(ctx.session.players(), count)`
+(`core/session.ts`) and shows it through `seatName(record.seat, record.name)`. The
+pair, never the words: a seat the app named is blank in storage and said in whichever
+language is active when it is drawn, so a language switch does not leave one screen
+in the old language. Typing a name replaces the pair and clears `seat`.
+
+The same file holds the rest of the rule, so a tool never spells it out again.
+`seatPair(value, index)` reads one saved or preset entry (a blank one is a generated
+seat), `seatValues(list)` reads a whole list, and `seatKey(pair)` is the string to key
+a record by — `seat-2` for a generated seat, the typed name otherwise. Key maps,
+`id`s and preset keys by `seatKey()`, never by the words on screen: a key written in
+one language must still find its row after a switch.
+
 ## Checklist before calling it done
 
 - [ ] Opens in a usable state with no configuration.

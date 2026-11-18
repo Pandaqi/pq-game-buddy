@@ -5,7 +5,7 @@ name: Gloomhaven
 icon: gloomhaven
 players: 1-4
 time: 90m
-tags: rpg, campaign
+tags: campaign, rpg
 source: https://cephalofair.com/
 author: pandaqi
 license: CC-BY-SA-4.0

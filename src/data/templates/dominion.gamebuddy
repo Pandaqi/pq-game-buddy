@@ -5,7 +5,7 @@ name: Dominion
 icon: dominion
 players: 2-4
 time: 30m
-tags: card, deckbuilder
+tags: card, deck-building
 source: https://www.riograndegames.com/
 author: pandaqi
 license: CC-BY-SA-4.0

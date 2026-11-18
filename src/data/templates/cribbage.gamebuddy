@@ -1,0 +1,37 @@
+# cribbage.gamebuddy — pegs, hands and a crib to 121
+
+[game]
+name: Cribbage
+players: 2
+time: 30m
+tags: card, family
+icon: cribbage
+source: Traditional game — no official source
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Deal six cards each and two to the crib
+- Cut for the starter card
+- Each player discards two more into the crib
+- Agree a board and pegs
+
+[rules]
+Score points for combinations and be first to 121.
+- Lay cards in turn, counting aloud to 31 for pegging points
+- Then score your hand with the starter: pairs, runs, fifteens and a flush
+- The dealer scores the crib on the same terms
+- First peg to 121 wins; a skunk is a win by 31 or more
+
+[tool decks]
+deck: standard
+players: 2
+deal: 6
+hidden: yes
+
+[tool score]
+mode: rounds
+target: 121
+win: highest
+hint: 121 wins, 91 is a skunk

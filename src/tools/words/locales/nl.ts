@@ -58,6 +58,12 @@ const nl = {
   'summary-scored': '{word} ({score})',
   'summary-letters': 'Letters: {letters}',
   'summary-codenames': 'Codenames-bord: {words}',
+
+  // The activity log, in the active language.
+  'note-pack': 'Overgestapt op {pack}',
+  'note-matches': '{count} woorden gevonden',
+  'note-anagrams': '{count} anagrammen',
+  'note-rack': '{count} woorden op je letters',
 };
 
 export default nl;

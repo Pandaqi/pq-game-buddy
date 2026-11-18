@@ -27,6 +27,15 @@ import { bestSegments, delta, parseSplits, sumOfBest, totalOf, type SplitsState 
 import { drawType, totalOf as bagTotal } from '../src/tools/bag/logic';
 import { countsFor } from '../src/tools/bag/logic';
 import { createRng } from '../src/core/rng';
+import type { ToolContext } from '../src/core/registry';
+import { seatName, setLanguage } from '../src/core/i18n.svelte';
+import bracketTool from '../src/tools/bracket/tool.svelte';
+import buzzerTool from '../src/tools/buzzer/tool.svelte';
+import customTool from '../src/tools/custom/tool.svelte';
+import decksTool from '../src/tools/decks/tool.svelte';
+import draftTool from '../src/tools/draft/tool.svelte';
+import pickTool from '../src/tools/pick/tool.svelte';
+import turnsTool from '../src/tools/turns/tool.svelte';
 
 const FIXED_WORDS = ['cat', 'act', 'tac', 'cot', 'dog', 'god', 'stone', 'notes', 'tones', 'onset'];
 
@@ -41,6 +50,12 @@ describe('decks', () => {
     expect(deckCards('standard', 2, 2)).toHaveLength(108);
   });
 
+  test('a custom deck is only the cards the player listed', () => {
+    const cards = deckCards('custom', 1, 0, ['Dragon', 'Trap', '  ', 'Treasure']);
+    expect(cards.map((card) => card.label)).toEqual(['Dragon', 'Trap', 'Treasure']);
+    expect(deckCards('custom', 2, 0, ['A'])).toHaveLength(2);
+  });
+
   test('cards carry unique ids and a readable label', () => {
     const cards = deckCards('standard', 2, 2);
     expect(new Set(cards.map((card) => card.id)).size).toBe(cards.length);
@@ -53,6 +68,140 @@ describe('decks', () => {
     expect(drawn).toHaveLength(5);
     expect(rest).toHaveLength(47);
     expect(drawn[0].id).toBe(deck[0].id);
+  });
+});
+
+describe('deck seats', () => {
+  function context(names: string[]): ToolContext {
+    const players = names.map((name, index) => ({ id: `p${index + 1}`, name, color: '#c0392b' }));
+    return {
+      instanceId: 'decks-test',
+      session: { players: () => players },
+      rng: createRng('SEATS'),
+      undo: { push: () => undefined },
+      haptics: { buzz: () => undefined },
+      toast: () => undefined,
+    } as unknown as ToolContext;
+  }
+
+  test('hands follow the table, not the template seats', () => {
+    const deck = decksTool.create(context(['Ada', 'Bo']), { deck: 'standard', players: 4, deal: 2 });
+    deck.deal();
+    expect(deck.data.hands.map((hand) => hand.name)).toEqual(['Ada', 'Bo']);
+    expect(deck.data.hands.map((hand) => hand.cards.length)).toEqual([2, 2]);
+  });
+
+  test('the template seats only fill in when the session has no names', () => {
+    const deck = decksTool.create(context([]), { deck: 'standard', players: 3, deal: 1 });
+    deck.deal();
+    expect(deck.data.hands).toHaveLength(3);
+  });
+});
+
+describe('tool-owned seats', () => {
+  /** A session player is a name, or a blank name with the seat the app named. */
+  function seats(values: (string | number)[]): ToolContext {
+    const players = values.map((value, index) =>
+      typeof value === 'number'
+        ? { id: `p${index + 1}`, name: '', seat: value, color: '#c0392b' }
+        : { id: `p${index + 1}`, name: value, color: '#c0392b' },
+    );
+    return {
+      instanceId: 'seats',
+      session: { players: () => players },
+      rng: createRng('SEATS'),
+      audio: { play: () => undefined },
+      undo: { push: () => undefined },
+      haptics: { buzz: () => undefined },
+      toast: () => undefined,
+    } as unknown as ToolContext;
+  }
+
+  test('the deck tool keeps a generated seat blank and says it in the active language', async () => {
+    const deck = decksTool.create(seats([1, 2]), { deck: 'standard', players: 2, deal: 1 });
+    deck.deal();
+    expect(deck.data.hands.map((hand) => hand.seat)).toEqual([1, 2]);
+    expect(deck.data.hands.map((hand) => seatName(hand.seat, hand.name))).toEqual([
+      'Player 1',
+      'Player 2',
+    ]);
+
+    expect(await setLanguage('nl')).toBe(true);
+    expect(deck.data.hands.map((hand) => seatName(hand.seat, hand.name))).toEqual([
+      'Speler 1',
+      'Speler 2',
+    ]);
+    await setLanguage('en');
+  });
+
+  test('the buzzer keeps its generated seats instead of the words it started with', () => {
+    const buzzer = buzzerTool.create(seats([]), { players: 2 });
+    expect(buzzer.data.players.map((player) => player.seat)).toEqual([1, 2]);
+    expect(buzzer.data.players.map((player) => player.name)).toEqual(['', '']);
+  });
+
+  test('a bracket saved with generated seats makes seats again, not blank names', () => {
+    const bracket = bracketTool.create(seats([]), { format: 'single' });
+    expect(bracket.data.entrants.map((entrant) => entrant.seat)).toEqual([1, 2]);
+    const saved = bracket.presetFromState() as { entrants: string[] };
+    expect(saved.entrants).toEqual(['', '']);
+
+    const again = bracketTool.create(seats([]), saved as Parameters<typeof bracketTool.create>[1]);
+    expect(again.data.entrants.map((entrant) => entrant.seat)).toEqual([1, 2]);
+  });
+
+  test('a turn order saved with generated seats makes seats again', () => {
+    const turns = turnsTool.create(seats([]), {});
+    expect(turns.data.order).toEqual([
+      { name: '', seat: 1 },
+      { name: '', seat: 2 },
+    ]);
+    const saved = turns.presetFromState() as { order: string[] };
+    expect(saved.order).toEqual(['', '']);
+
+    const again = turnsTool.create(seats([]), saved as Parameters<typeof turnsTool.create>[1]);
+    expect(again.data.order.map((seat) => seat.seat)).toEqual([1, 2]);
+  });
+
+  test('a draft order saved with generated seats makes seats again', () => {
+    const draft = draftTool.create(seats([]), {});
+    expect(draft.data.order).toEqual([
+      { name: '', seat: 1 },
+      { name: '', seat: 2 },
+    ]);
+    expect(Object.keys(draft.data.budgets)).toEqual(['seat-1', 'seat-2']);
+    const saved = draft.presetFromState() as { order: string[] };
+    expect(saved.order).toEqual(['', '']);
+
+    const again = draftTool.create(seats([]), saved as Parameters<typeof draftTool.create>[1]);
+    expect(again.data.order.map((seat) => seat.seat)).toEqual([1, 2]);
+  });
+
+  test('the pick tool draws session seats, not their wording', async () => {
+    const pick = pickTool.create(seats([1, 2]), { source: 'players', count: 2 });
+    pick.draw();
+    const seatsDrawn = pick.data.result.map((item) => (typeof item === 'string' ? null : item.seat));
+    expect(seatsDrawn.sort()).toEqual([1, 2]);
+    expect(pick.summary()).toContain('Player 1');
+
+    expect(await setLanguage('nl')).toBe(true);
+    expect(pick.summary()).toContain('Speler 1');
+    await setLanguage('en');
+
+    pick.usePlayers();
+    expect((pick.presetFromState() as { values: string[] }).values).toEqual(['', '']);
+  });
+
+  test('custom sheets keep two generated seats apart', () => {
+    const custom = customTool.create(seats([1, 2]), { counters: { Points: 0 } });
+    custom.setPerPlayer(true);
+    expect(custom.data.players.map((player) => player.id)).toEqual(['p1', 'p2']);
+    expect(custom.data.players.map((player) => player.seat)).toEqual([1, 2]);
+
+    custom.adjustPlayerValue('p2', 'c1', 2);
+    expect(custom.data.players[1].values.c1).toBe(2);
+    expect(custom.data.players[0].values.c1).toBe(0);
+    expect((custom.results?.() ?? []).map((row) => row.name)).toEqual(['Player 1', 'Player 2']);
   });
 });
 
@@ -141,13 +290,13 @@ describe('bracket', () => {
 
 describe('draft', () => {
   test('snake order reverses on even rounds', () => {
-    const order = ['a', 'b', 'c'];
-    expect(turnAt(order, true, 0).picker).toBe('a');
-    expect(turnAt(order, true, 2).picker).toBe('c');
-    expect(turnAt(order, true, 3).picker).toBe('c');
-    expect(turnAt(order, true, 4).picker).toBe('b');
-    expect(turnAt(order, false, 3).picker).toBe('a');
-    expect(orderPreview(order, true, 4).map((item) => item.picker)).toEqual(['a', 'b', 'c', 'c']);
+    const order = [{ name: 'a' }, { name: 'b' }, { name: 'c' }];
+    expect(turnAt(order, true, 0).picker?.name).toBe('a');
+    expect(turnAt(order, true, 2).picker?.name).toBe('c');
+    expect(turnAt(order, true, 3).picker?.name).toBe('c');
+    expect(turnAt(order, true, 4).picker?.name).toBe('b');
+    expect(turnAt(order, false, 3).picker?.name).toBe('a');
+    expect(orderPreview(order, true, 4).map((item) => item.picker?.name)).toEqual(['a', 'b', 'c', 'c']);
   });
 });
 

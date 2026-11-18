@@ -79,6 +79,13 @@ const de = {
   'summary-sold': 'Verkauft:',
   'summary-sale': '- {item} an {buyer} für {price}',
   'summary-none': 'Noch nichts gedraftet.',
+
+  // The activity log, in the active language.
+  'note-picked': '{picker} nimmt {item}',
+  'note-order': 'Reihenfolge: {names}',
+  'note-returned': '{item} zurück in den Pool',
+  'note-nominated': '{item} nominiert',
+  'note-sold': '{item} für {price} an {buyer} verkauft',
 };
 
 export default de;

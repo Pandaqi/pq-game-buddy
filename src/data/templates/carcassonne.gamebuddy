@@ -1,0 +1,35 @@
+# carcassonne.gamebuddy — tile by tile, point by point
+
+[game]
+name: Carcassonne
+players: 2-5
+time: 45m
+tags: board, strategy, tile
+icon: carcassonne
+source: https://www.zmangames.com/en/games/carcassonne/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Shuffle the land tiles and split them into a few face-down stacks
+- Give every player their eight meeples
+- Place the starting tile in the middle
+- Agree who draws first
+
+[rules]
+Build a walled city, one tile at a time, and score the features you finish.
+- Draw a tile and match its edges to the tiles already on the table
+- You may place one meeple on the feature you just extended
+- Close a city, road or monastery to score it and take the meeple back
+- Fields score at the end for the farmers who stay on them
+- Highest total when the tiles run out wins
+
+[tool score]
+mode: simple
+win: highest
+hint: 80 points is a strong game
+
+[tool turns]
+phases: Place tile, Place meeple, Score
+pass: no

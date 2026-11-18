@@ -4,7 +4,7 @@
 name: Uno
 players: 2-10
 time: 30m
-tags: cards, family
+tags: card, family
 icon: uno
 source: https://en.wikipedia.org/wiki/Uno_(card_game)
 author: pandaqi
@@ -26,7 +26,7 @@ Match the top card by colour or number, and empty your hand first.
 [tool decks cards]
 deck: uno
 decks: 1
-players: 4
+players: 2
 deal: 7
 hidden: yes
 

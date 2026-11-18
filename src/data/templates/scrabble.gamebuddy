@@ -4,7 +4,7 @@
 name: Scrabble
 players: 2-4
 time: 60m
-tags: words, board
+tags: board, words
 icon: scrabble
 source: https://en.wikipedia.org/wiki/Scrabble
 author: pandaqi

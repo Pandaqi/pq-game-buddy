@@ -4,7 +4,7 @@
 name: Exploding Kittens
 players: 2-5
 time: 15m
-tags: cards, party
+tags: card, party
 icon: kitten
 source: https://boardgamegeek.com/boardgame/172225/exploding-kittens
 author: pandaqi
@@ -26,7 +26,7 @@ Take turns drawing cards. Draw an exploding kitten and you are out, unless you d
 deck: standard
 decks: 1
 jokers: 2
-players: 4
+players: 2
 deal: 5
 hidden: yes
 

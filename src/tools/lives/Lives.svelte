@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { t } from '../../core/i18n.svelte';
+  import { language, seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
+  import NumberPad from '../../core/ui/NumberPad.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { gameOverLabel, isGameOver, isOut, type LivesInstance } from './logic';
 
@@ -9,13 +10,31 @@
 
   let adding = $state(false);
   let newName = $state('');
+  // A 501 checkout cannot be entered one point at a time: the total is typed.
+  let entryFor = $state<string | null>(null);
 
   const hiddenNow = $derived(data.hidden && !data.revealed);
   const over = $derived(isGameOver(data));
-  const overLabel = $derived(gameOverLabel(data));
+  const overLabel = $derived(gameOverLabel(data, language()));
+  /** A track's name in the active language; a generated seat never freezes. */
+  const label = (track: { name: string; seat?: number }): string => seatName(track.seat, track.name);
+  const entryName = $derived(
+    entryFor && entryFor !== 'shared'
+      ? (() => {
+          const track = data.players.find((player) => player.id === entryFor);
+          return track ? label(track) : '';
+        })()
+      : '',
+  );
 
   function shown(value: number): string {
     return hiddenNow ? '•••' : String(value);
+  }
+
+  function takeOff(value: number): void {
+    const id = entryFor;
+    entryFor = null;
+    if (id) instance.adjust(id, -value);
   }
 
   function addPlayerNow(): void {
@@ -37,6 +56,8 @@
     <button type="button" class:active={data.mode === 'players'} onclick={() => instance.setMode('players')}>{t('lives.per-player')}</button>
   </div>
 
+  <p class="tap-hint"><span aria-hidden="true">✎</span> {t('lives.tap-hint')}</p>
+
   {#if over}
     <div class="over" role="status">
       <strong>{overLabel}</strong>
@@ -46,7 +67,13 @@
 
   {#if data.mode === 'shared'}
     <div class="stage">
-      <p class="count" aria-live="polite">{shown(data.lives)}</p>
+      <button
+        type="button"
+        class="count tap"
+        aria-live="polite"
+        aria-label={t('lives.enter')}
+        disabled={hiddenNow}
+        onclick={() => (entryFor = 'shared')}>{shown(data.lives)}</button>
       <p class="of">{t('lives.of', { max: data.max })}</p>
       {#if !hiddenNow && data.max <= 10}
         <p class="heart-row" aria-hidden="true">{hearts(data.lives, data.max)}</p>
@@ -61,17 +88,23 @@
       {#each data.players as player (player.id)}
         <li class:out={isOut(data, player)}>
           <div class="who">
-            <span class="dot" style="--player: {player.color}">{player.name.slice(0, 2).toUpperCase()}</span>
-            <span class="name">{player.name}</span>
+            <span class="dot" style="--player: {player.color}">{label(player).slice(0, 2).toUpperCase()}</span>
+            <span class="name">{label(player)}</span>
             {#if isOut(data, player)}<span class="tag">{t('lives.out')}</span>{/if}
           </div>
-          <p class="count small">{shown(player.lives)}<span class="of">/{player.max}</span></p>
+          <button
+            type="button"
+            class="count small tap"
+            aria-label={t('lives.enter-for', { name: label(player) })}
+            disabled={hiddenNow}
+            onclick={() => (entryFor = player.id)}
+          >{shown(player.lives)}<span class="of">/{player.max}</span></button>
           {#if !hiddenNow && player.max <= 10}
             <p class="heart-row" aria-hidden="true">{hearts(player.lives, player.max)}</p>
           {/if}
           <div class="row-actions">
-            <button type="button" onclick={() => instance.adjust(player.id, -data.step)} aria-label={t('lives.lose-for', { count: data.step, name: player.name })}>−</button>
-            <button type="button" class="plus" onclick={() => instance.adjust(player.id, data.step)} aria-label={t('lives.gain-for', { count: data.step, name: player.name })}>+</button>
+            <button type="button" onclick={() => instance.adjust(player.id, -data.step)} aria-label={t('lives.lose-for', { count: data.step, name: label(player) })}>−</button>
+            <button type="button" class="plus" onclick={() => instance.adjust(player.id, data.step)} aria-label={t('lives.gain-for', { count: data.step, name: label(player) })}>+</button>
           </div>
         </li>
       {/each}
@@ -128,6 +161,22 @@
   </div>
 </div>
 
+{#if entryFor}
+  <Sheet
+    title={entryName ? t('lives.enter-for', { name: entryName }) : t('lives.entry-title')}
+    onclose={() => (entryFor = null)}
+  >
+    <p class="hint">{t('lives.entry-hint')}</p>
+    <NumberPad
+      value={0}
+      label={t('lives.entry-amount')}
+      submitLabel={t('lives.entry-take')}
+      onsubmit={takeOff}
+      oncancel={() => (entryFor = null)}
+    />
+  </Sheet>
+{/if}
+
 {#if adding}
   <Sheet title={t('lives.add-player')} onclose={() => (adding = false)}>
     <label class="field">
@@ -173,6 +222,35 @@
     font-weight: 800;
     line-height: 1;
     font-variant-numeric: tabular-nums;
+  }
+  /* The number itself is the way in to typing a whole throw. */
+  .count.tap {
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--surface);
+    padding: var(--space-2) var(--space-3);
+    color: inherit;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  .count.tap:not(:disabled):active {
+    background: var(--surface-2);
+  }
+  .count.tap:disabled {
+    border-color: var(--line-soft);
+    cursor: default;
+  }
+  .tap-hint {
+    display: flex;
+    gap: var(--space-1);
+    margin: 0;
+    color: var(--text-dim);
+    font-size: var(--text-sm);
+  }
+  .hint {
+    margin: 0;
+    color: var(--text-dim);
   }
   .count.small {
     font-size: var(--text-3xl, 2rem);
@@ -264,6 +342,7 @@
   .tracks .count {
     grid-column: 2;
     grid-row: 1;
+    justify-self: end;
   }
   .tracks .heart-row {
     grid-column: 1;

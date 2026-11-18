@@ -37,6 +37,13 @@ const fr = {
   'summary-series': 'Série (au meilleur des {target}) : pile {heads}, face {tails}.',
   'summary-series-won':
     'Série (au meilleur des {target}) : pile {heads}, face {tails} — {side} gagne.',
+
+  // The activity log, in the active language.
+  'undo-coins': 'nombre de pièces',
+  'undo-fairness': 'poids de la pièce',
+  'undo-call': 'ton pronostic',
+  'undo-mode': 'format de la pièce',
+  'undo-target': 'objectif de la série',
 };
 
 export default fr;

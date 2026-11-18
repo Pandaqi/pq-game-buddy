@@ -69,6 +69,13 @@ const de = {
   'undo-hidden': 'verborgene Hände',
   'undo-custom': 'eigene Karten',
   'undo-reset': 'Stapel zurückgesetzt',
+
+  // The activity log, in the active language.
+  'note-new': 'Neues Deck „{kind}“ ({count} Karten)',
+  'note-shuffled': '{count} Karten gemischt',
+  'note-dealt': '{deal} Karten an {players} Spieler gegeben',
+  'note-table': 'Auf dem Tisch: {card}',
+  'note-discarded': '{player} hat abgelegt',
 };
 
 export default de;

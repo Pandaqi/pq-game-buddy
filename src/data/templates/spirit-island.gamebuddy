@@ -1,0 +1,38 @@
+# spirit-island.gamebuddy — fear, blight and a very patient island
+
+[game]
+name: Spirit Island
+players: 1-4
+time: 120m
+tags: board, cooperative, strategy
+icon: spirit-island
+source: https://greaterthangames.com/product/spirit-island/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Choose a spirit and take its board and presence
+- Set the island up for your adversary and scenario
+- Place the fear pool and the blight card
+- Agree who reads the invader phase
+
+[rules]
+Scare the invaders away before the island is blighted.
+- Spirits grow by placing presence and gaining power cards
+- Fast powers resolve before the invaders act, slow powers after
+- The invaders explore, build and ravage in that order
+- Fear pushes the invaders out; enough fear wins the game
+- If the blight card flips and runs out, the island loses
+
+[tool turns]
+phases: Spirit, Fast powers, Invaders, Slow powers
+pass: no
+
+[tool counters]
+mode: count
+counters: fear=0, blight=0, ravage=0, build=0
+step: 1
+
+[tool rules]
+quick: Win by fear, lose by blight. Fast powers first, slow powers last.

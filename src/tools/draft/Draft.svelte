@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { t } from '../../core/i18n.svelte';
+  import { seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
+  import { seatKey } from '../../core/session';
   import EmptyState from '../../core/ui/EmptyState.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
   import { formatClock } from '../../core/template/schema';
-  import { orderPreview, type DraftState } from './logic';
+  import { nameOfKey, orderPreview, type DraftState } from './logic';
   import type { DraftInstance } from './tool.svelte';
 
   let { ctx, instance }: { ctx: ToolContext; instance: DraftInstance } = $props();
@@ -28,7 +29,7 @@
     void data.picks.length;
     void data.snake;
     const preview = orderPreview(data.order, data.snake, data.picks.length + 1);
-    return preview[preview.length - 1] ?? { pick: 1, picker: data.order[0] ?? '', round: 1 };
+    return preview[preview.length - 1] ?? { pick: 1, picker: data.order[0] ?? null, round: 1 };
   });
   const preview = $derived(orderPreview(data.order, data.snake, Math.min(12, data.order.length * 2)));
   const remaining = $derived(data.deadline ? Math.max(0, data.deadline - now) : 0);
@@ -36,7 +37,7 @@
   const myBudget = $derived(data.budgets[bidderDraft] ?? 0);
 
   function openSettings(): void {
-    orderDraft = data.order.join('\n');
+    orderDraft = data.order.map((seat) => seatName(seat.seat, seat.name)).join('\n');
     poolDraft = data.pool.join('\n');
     settingsOpen = true;
   }
@@ -57,14 +58,14 @@
       {#if data.nomination}
         <p class="nomination">{t('draft.on-block')} <strong>{data.nomination}</strong></p>
         <p class="bid" role="status">{t('draft.bid')} <strong>{data.bid}</strong>{#if data.bidder}
-            {t('draft.by', { name: data.bidder })}{/if}</p>
+            {t('draft.by', { name: nameOfKey(data, data.bidder) })}{/if}</p>
         <div class="auction-controls">
           <label class="field">
             <span>{t('draft.bidder')}</span>
             <select value={data.bidder} onchange={(event) => instance.setBidder((event.currentTarget as HTMLSelectElement).value)}>
               <option value="">{t('draft.pick-player')}</option>
-              {#each data.order as name (name)}
-                <option value={name}>{name} ({data.budgets[name] ?? 0})</option>
+              {#each data.order as seat (seatKey(seat))}
+                <option value={seatKey(seat)}>{seatName(seat.seat, seat.name)} ({data.budgets[seatKey(seat)] ?? 0})</option>
               {/each}
             </select>
           </label>
@@ -87,15 +88,15 @@
           <tr><th scope="col">{t('draft.player')}</th><th scope="col">{t('draft.left')}</th></tr>
         </thead>
         <tbody>
-          {#each data.order as name (name)}
-            <tr><th scope="row">{name}</th><td>{data.budgets[name] ?? 0}</td></tr>
+          {#each data.order as seat (seatKey(seat))}
+            <tr><th scope="row">{seatName(seat.seat, seat.name)}</th><td>{data.budgets[seatKey(seat)] ?? 0}</td></tr>
           {/each}
         </tbody>
       </table>
       {#if data.sales.length}
         <ol class="log">
           {#each data.sales as sale, index (index)}
-            <li>{t('draft.sale-line', { item: sale.item, buyer: sale.buyer, price: sale.price })}</li>
+            <li>{t('draft.sale-line', { item: sale.item, buyer: nameOfKey(data, sale.buyer), price: sale.price })}</li>
           {/each}
         </ol>
       {/if}
@@ -107,7 +108,7 @@
       {/if}
       <p class="who">
         {t('draft.round-label', { round: turn.round })} ·
-        <strong>{turn.picker || t('draft.nobody')}</strong> {t('draft.picks-verb')}
+        <strong>{turn.picker ? seatName(turn.picker.seat, turn.picker.name) : t('draft.nobody')}</strong> {t('draft.picks-verb')}
       </p>
       {#if data.seconds > 0}
         <button type="button" class="clock-toggle" onclick={() => (data.deadline ? instance.stopTimer() : instance.startTimer())}>
@@ -149,7 +150,7 @@
       {#each preview as item (item.pick)}
         <li class:next={item.pick === turn.pick && !data.auction}>
           <span class="pick">{item.pick}</span>
-          <span class="name">{item.picker}</span>
+          <span class="name">{item.picker ? seatName(item.picker.seat, item.picker.name) : '—'}</span>
         </li>
       {/each}
     </ol>
@@ -164,7 +165,7 @@
       <ol class="log">
         {#each data.picks as pick, index (index)}
           <li>
-            <span>{pick.picker}: <strong>{pick.item}</strong></span>
+            <span>{nameOfKey(data, pick.picker)}: <strong>{pick.item}</strong></span>
             <button type="button" onclick={() => instance.removePick(index)} aria-label={t('draft.undo-pick', { item: pick.item })}>↺</button>
           </li>
         {/each}
@@ -225,7 +226,7 @@
           const value = Math.max(1, Number((event.currentTarget as HTMLInputElement).value));
           ctx.undo.push(t('draft.undo-budget'));
           instance.data.budget = value;
-          instance.data.budgets = Object.fromEntries(instance.data.order.map((name) => [name, value]));
+          instance.data.budgets = Object.fromEntries(instance.data.order.map((seat) => [seatKey(seat), value]));
         }}
       />
     </label>

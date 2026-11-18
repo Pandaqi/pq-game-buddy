@@ -166,6 +166,12 @@ Two tools have a little extra shape. `turns` takes `mode: initiative` with
 values. `dice` takes `faces: Hit, Miss, Crit` for a custom die and saved sets as
 `sets: combat=Hit|Miss|Crit`; `lab-count` sets how many custom dice roll at once.
 
+`decks` seats always follow the session: hands are dealt to whoever is actually
+sitting at the table, and `players` is only a fallback for a session with no names,
+so a template can never invent a seat. A `deal` larger than the deck can serve just
+deals until the deck runs out, which is how a whole-pack game like Hearts asks for
+`17` a hand at three to six players.
+
 `counters` has two modes. The default, `mode: bank`, is a shared pool: `+` moves `step`
 from the bank into a counter and `−` moves the same `step` back out, so nothing appears
 or disappears. `mode: count` has no pool at all: `+` adds `step` straight to the counter

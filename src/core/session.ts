@@ -1,8 +1,15 @@
 /** Players and the plain session model. No Svelte here. */
 
+import { seatNameIn } from './i18n';
+
 export interface Player {
   id: string;
   name: string;
+  /**
+   * Set when the app named this seat itself. The stored name is then blank and
+   * the label is said in whichever language is active; a typed name clears it.
+   */
+  seat?: number;
   color: string;
   initial: string;
   active: boolean;
@@ -31,13 +38,76 @@ export function initialOf(name: string): string {
 }
 
 export function makePlayers(names: string[]): Player[] {
-  return names.map((name, index) => ({
-    id: `p${index + 1}`,
-    name: name.trim() || `Player ${index + 1}`,
-    color: PLAYER_COLORS[index % PLAYER_COLORS.length],
-    initial: initialOf(name.trim() || `Player ${index + 1}`),
-    active: index === 0,
-  }));
+  return names.map((name, index) => {
+    const trimmed = name.trim();
+    return {
+      id: `p${index + 1}`,
+      name: trimmed,
+      // A blank entry is a seat the app names: stored bare, said when it is shown.
+      ...(trimmed ? {} : { seat: index + 1 }),
+      color: PLAYER_COLORS[index % PLAYER_COLORS.length],
+      initial: initialOf(trimmed),
+      active: index === 0,
+    };
+  });
+}
+
+/**
+ * Seats the app names itself, one blank entry each. A session keeps saying
+ * "Player 1" in whatever language it is read in.
+ */
+export function seatNames(count: number): string[] {
+  return Array.from({ length: Math.max(0, Math.round(count)) }, () => '');
+}
+
+/** A seat's name in a named language: a generated seat is said, a typed name stands. */
+export function playerName(player: Player, languageId: string): string {
+  return seatNameIn(languageId, player.seat, player.name);
+}
+
+/** What a tool keeps when it copies the session's seats: the pair, never its words. */
+export interface SeatPair {
+  name: string;
+  seat?: number;
+}
+
+/**
+ * One tool seat from a name or a stored pair. A blank name is a seat the app
+ * named, and a stored seat number wins, because that is what it was saved as.
+ * This is the only place that rule lives: templates, saves and the session all
+ * arrive here, so "blank means generated" cannot drift between tools.
+ */
+export function seatPair(value: string | SeatPair, index: number): SeatPair {
+  const stored = typeof value === 'string' ? null : value;
+  const seat = Number(stored?.seat);
+  if (Number.isInteger(seat) && seat > 0) return { name: '', seat };
+  const name = (stored?.name ?? (value as string)).trim();
+  return name ? { name } : { name: '', seat: index + 1 };
+}
+
+/**
+ * A stable key for a seat, safe to store: its number when the app named it and
+ * the typed name otherwise. Never the words on screen, which change language.
+ */
+export function seatKey(seat: SeatPair): string {
+  return seat.seat ? `seat-${seat.seat}` : seat.name;
+}
+
+/** The entries of a save or a template that could be a seat. */
+export function seatValues(values: unknown[]): (string | SeatPair)[] {
+  return values.filter(
+    (value) =>
+      typeof value === 'string' || (!!value && typeof (value as SeatPair).name === 'string'),
+  ) as (string | SeatPair)[];
+}
+
+/**
+ * A tool's own seats: the session's pairs, or `count` generated ones when the
+ * session has no players. A named player arrives with the words it was given.
+ */
+export function toolSeats(players: Player[], count: number): SeatPair[] {
+  if (players.length) return players.map((player, index) => seatPair(player, index));
+  return Array.from({ length: Math.max(1, Math.round(count)) }, (_, index) => ({ name: '', seat: index + 1 }));
 }
 
 export function nextPlayerId(players: Player[]): string {
@@ -56,6 +126,8 @@ export interface InstanceRecord {
 export interface Session {
   id: string;
   gameName: string;
+  /** The tool a single-tool session was started from, so its name can be translated again later. */
+  toolId?: string;
   templateId?: string;
   templateText?: string;
   /** Set once the play has been written to the play log. */
@@ -105,10 +177,16 @@ function normalizeSession(value: unknown): Session | null {
     return {
       id: data.id,
       gameName: data.gameName,
+      toolId: typeof data.toolId === 'string' ? data.toolId : undefined,
       templateId: data.templateId,
       templateText: data.templateText,
       playId: typeof data.playId === 'string' ? data.playId : undefined,
-      players: players.filter((player) => player && typeof player.name === 'string') as Player[],
+      players: players
+        .filter((player) => player && typeof player.name === 'string')
+        .map((player) => {
+          const seat = Number(player.seat);
+          return { ...player, seat: Number.isInteger(seat) && seat > 0 ? seat : undefined };
+        }) as Player[],
       instances: instances.filter(
         (record) => record && typeof record.id === 'string' && typeof record.toolId === 'string',
       ) as InstanceRecord[],

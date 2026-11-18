@@ -1,6 +1,6 @@
-import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
+import { registerToolStrings, seatName, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
-import { PLAYER_COLORS } from '../../core/session';
+import { PLAYER_COLORS, toolSeats } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
 import {
   csvSheet,
@@ -43,16 +43,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
   const sessionPlayers = ctx.session.players();
 
   function buildPlayers(): ScorePlayer[] {
-    const source = sessionPlayers.length
-      ? sessionPlayers
-      : [
-          { id: 'p1', name: translate('score.player-name', { count: 1 }), color: PLAYER_COLORS[0] },
-          { id: 'p2', name: translate('score.player-name', { count: 2 }), color: PLAYER_COLORS[1] },
-        ];
-    return source.map((player, index) => ({
-      id: player.id,
-      name: player.name,
-      color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
+    // Rows keep the session's pair, so a generated seat is said in the active
+    // language rather than the words it was created with.
+    return toolSeats(sessionPlayers, 2).map((slot, index) => ({
+      id: sessionPlayers[index]?.id ?? `p${index + 1}`,
+      name: slot.name,
+      ...(slot.seat ? { seat: slot.seat } : {}),
+      color: sessionPlayers[index]?.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
     }));
   }
 
@@ -104,7 +101,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     ctx.haptics.buzz('short');
     const total = totalFor(data, id);
     if (!data.target) return;
-    const reached = translate('score.toast-target', { name: player.name, total });
+    const reached = translate('score.toast-target', { name: seatName(player.seat, player.name), total });
     if (data.win === 'highest' && total >= data.target) ctx.toast(reached);
     if (data.win === 'lowest' && total <= data.target) ctx.toast(reached);
   }
@@ -123,11 +120,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
       if (Array.isArray(raw.players) && raw.players.length) {
         data.players = raw.players
           .filter((player) => player && typeof player.id === 'string')
-          .map((player, index) => ({
-            id: player.id,
-            name: typeof player.name === 'string' ? player.name : `Player ${index + 1}`,
-            color: typeof player.color === 'string' ? player.color : PLAYER_COLORS[index % PLAYER_COLORS.length],
-          }));
+          .map((player, index) => {
+            const seat = Number(player.seat);
+            return {
+              id: player.id,
+              name: typeof player.name === 'string' ? player.name : '',
+              ...(Number.isInteger(seat) && seat > 0 ? { seat } : {}),
+              color: typeof player.color === 'string' ? player.color : PLAYER_COLORS[index % PLAYER_COLORS.length],
+            };
+          });
       }
       if (Array.isArray(raw.categories)) {
         data.categories = raw.categories
@@ -292,8 +293,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
     renamePlayer(id, name) {
       const player = data.players.find((item) => item.id === id);
       if (!player) return;
+      const trimmed = name.trim();
+      if (!trimmed || trimmed === player.name) return;
       ctx.undo.push(translate('score.undo-rename'));
-      player.name = name.trim() || player.name;
+      player.name = trimmed;
+      // A typed name is the player's own, so the seat stops naming it.
+      delete player.seat;
     },
     syncPlayers() {
       const source = ctx.session.players();
@@ -302,10 +307,11 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScoreInstance {
         return;
       }
       ctx.undo.push(translate('score.undo-sync'));
-      data.players = source.map((player, index) => ({
-        id: player.id,
-        name: player.name,
-        color: player.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
+      data.players = toolSeats(source, 2).map((slot, index) => ({
+        id: source[index].id,
+        name: slot.name,
+        ...(slot.seat ? { seat: slot.seat } : {}),
+        color: source[index].color || PLAYER_COLORS[index % PLAYER_COLORS.length],
       }));
       const totals: Record<string, number> = {};
       const rounds: Record<string, number[]> = {};

@@ -1,8 +1,12 @@
+import { seatNameIn } from '../../core/i18n';
 import type { ToolInstance } from '../../core/registry';
 
 export interface LifeTrack {
   id: string;
+  /** The session player's name, blank for a seat the app generated. */
   name: string;
+  /** Set for a generated seat: said in the active language when it is shown. */
+  seat?: number;
   lives: number;
   max: number;
   color: string;
@@ -71,17 +75,17 @@ export function isGameOver(state: LivesState): boolean {
 }
 
 /** The last player standing, or the shared pool when it is empty. */
-export function gameOverLabel(state: LivesState): string {
+export function gameOverLabel(state: LivesState, languageId: string): string {
   if (!isGameOver(state)) return '';
   if (state.mode === 'shared') return 'Out of lives';
   const alive = alivePlayers(state);
-  return alive.length === 1 ? `${alive[0].name} wins` : 'Everyone is out';
+  return alive.length === 1 ? `${seatNameIn(languageId, alive[0].seat, alive[0].name)} wins` : 'Everyone is out';
 }
 
 /** Final standings for the finish-game flow: players by lives, shared pool last. */
-export function resultsFor(state: LivesState): { name: string; score: number }[] {
+export function resultsFor(state: LivesState, languageId: string): { name: string; score: number }[] {
   if (state.mode === 'shared') return [{ name: 'Table', score: state.lives }];
   return state.players
-    .map((track) => ({ name: track.name, score: track.lives }))
+    .map((track) => ({ name: seatNameIn(languageId, track.seat, track.name), score: track.lives }))
     .sort((a, b) => b.score - a.score);
 }

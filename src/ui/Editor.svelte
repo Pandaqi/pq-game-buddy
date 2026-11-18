@@ -3,6 +3,7 @@
   import { t } from '../core/i18n.svelte';
   import { navigate } from '../core/router';
   import { schemas } from '../core/schemas.generated';
+  import { seatNames } from '../core/session';
   import { store } from '../core/session-store.svelte';
   import { copyText, download } from '../core/share';
   import { allDiagnostics, hasErrors, parseTemplate, resolveTemplate } from '../core/template/parse';
@@ -60,9 +61,7 @@
   async function testDrive(): Promise<void> {
     const names = parsed.template.players.length
       ? parsed.template.players
-      : Array.from({ length: Math.max(1, Math.min(20, seats)) }, (_, index) =>
-          t('players.default', { count: index + 1 }),
-        );
+      : seatNames(Math.max(1, Math.min(20, seats)));
     await store.start({
       gameName: parsed.template.game.name || t('editor.untitled'),
       players: names,

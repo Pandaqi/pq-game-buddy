@@ -1,0 +1,38 @@
+# wavelength.gamebuddy — a clue somewhere on the dial
+
+[game]
+name: Wavelength
+players: 3-12
+time: 30m
+tags: bluffing, guessing, party
+icon: wavelength
+source: https://www.wavelength.zone/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Split into two teams
+- Set the dial and hide the target behind the screen
+- Agree a target score, ten points is usual
+- Pick the first psychic
+
+[rules]
+Give a clue that lands your team on the hidden target.
+- The psychic draws a target and a spectrum, then says one clue
+- The team turns the dial to where they think the target sits
+- The closer the dial, the more points: four for dead centre, down to two at the edge
+- The opposing team may guess left or right of the dial for a bonus point
+- First team to ten wins
+
+[tool score]
+mode: rounds
+target: 10
+win: highest
+hint: ten points takes the game
+
+[tool timer]
+mode: countdown
+duration: 1m
+warn-at: 15s
+sound: bell

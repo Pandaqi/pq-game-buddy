@@ -118,7 +118,9 @@ describe('timer arithmetic', () => {
     const restored = restoreClock({ duration: 90000, running: true, startWall: WALL, startMono: 10, name: 7 }, 0);
     expect(restored.duration).toBe(90000);
     expect(restored.running).toBe(true);
-    expect(restored.name).toBe('Timer 1');
+    // A clock with no usable name becomes a generated seat, said in any language.
+    expect(restored.name).toBe('');
+    expect(restored.seat).toBe(1);
     const junk = restoreClock('nonsense', 3);
     expect(junk.id).toBe('t4');
     expect(junk.duration).toBe(300000);

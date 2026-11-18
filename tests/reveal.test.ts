@@ -124,8 +124,8 @@ describe('ballots and bids', () => {
 
   test('bid leaders keep ties and ignore missing bids', () => {
     const sheet = state({ bids: { min: 0, max: 10, values: { p1: 5, p2: 9, p3: 9 }, revealed: true } });
-    expect(bidLeaders(sheet)).toEqual(['Bo', 'Cy']);
-    expect(bidLeaders(state())).toEqual([]);
+    expect(bidLeaders(sheet, 'en')).toEqual(['Bo', 'Cy']);
+    expect(bidLeaders(state(), 'en')).toEqual([]);
   });
 
   test('revealed ballots and bids become standings, hidden ones do not', () => {
@@ -138,11 +138,11 @@ describe('ballots and bids', () => {
     ]);
 
     const bids = state({ bids: { min: 0, max: 10, values: { p1: 4, p2: 9, p3: 7 }, revealed: true } });
-    expect(bidResults(bids)).toEqual([
+    expect(bidResults(bids, 'en')).toEqual([
       { name: 'Bo', score: 9 },
       { name: 'Cy', score: 7 },
       { name: 'Ada', score: 4 },
     ]);
-    expect(bidResults(state())).toEqual([]);
+    expect(bidResults(state(), 'en')).toEqual([]);
   });
 });

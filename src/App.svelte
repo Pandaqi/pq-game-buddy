@@ -2,16 +2,16 @@
   import { onMount } from 'svelte';
   import { audio } from './core/audio';
   import { scrollToStart } from './core/dom';
-  import { availableLanguages, language, t, toolTitle } from './core/i18n.svelte';
+  import { availableLanguages, language, t } from './core/i18n.svelte';
   import { manifest } from './core/manifest.generated';
   import { rememberImport } from './core/recent-imports';
   import { navigate, parseRoute, routeTo } from './core/router';
   import { schemas } from './core/schemas.generated';
-  import { parseSessionFile } from './core/session';
+  import { parseSessionFile, seatNames } from './core/session';
   import { store } from './core/session-store.svelte';
   import { settings } from './core/settings.svelte';
   import { readFileText } from './core/share';
-  import { storage, storagePersistent } from './core/storage';
+  import { storagePersistent } from './core/storage';
   import { allDiagnostics, parseTemplate, resolveTemplate, type Diagnostic, type ResolvedTool, type TemplateVariant } from './core/template/parse';
   import { assetName, isImageFile, isSessionFile, isTemplateFile, isThemeFile, rememberAsset } from './core/template/assets';
   import { applyVariant, toolsForSession } from './core/template/session-tools';
@@ -288,9 +288,7 @@
     if (!target) return;
     const names = target.players.length
       ? target.players
-      : Array.from({ length: Math.max(1, Math.min(20, seatCount)) }, (_, index) =>
-          t('players.default', { count: index + 1 }),
-        );
+      : seatNames(Math.max(1, Math.min(20, seatCount)));
     const variant = target.variants.find((item) => item.id === variantId);
     const tools = variant ? applyVariant(target.tools, variant) : target.tools;
     await store.start({
@@ -314,14 +312,14 @@
     if (!tool) return;
     // A bag, a timer or a coin does not get better with a second player, so only
     // a tool that seats everyone starts with two.
-    const players =
-      tool.seats === 'multi'
-        ? [t('players.default', { count: 1 }), t('players.default', { count: 2 })]
-        : [t('players.default', { count: 1 })];
+    const players = seatNames(tool.seats === 'multi' ? 2 : 1);
     // The tool's own chunk arrives here; the shell only knew its name until now.
+    // The session carries the id and the English name, so every screen says the
+    // tool's name in whatever language is active when the session is read back.
     rememberTool(toolId);
     await store.start({
-      gameName: toolTitle(tool.id, tool.title) ?? toolId,
+      gameName: tool.title,
+      toolId,
       players,
       tools: [{ toolId, instanceId: toolId, values: {} }],
     });
@@ -395,7 +393,7 @@
 
   {#if !storagePersistent}
     <p class="banner no-print" role="status">
-      {t('app.storage', { kind: storage.kind })}
+      {t('app.storage')}
     </p>
   {/if}
 
@@ -456,10 +454,18 @@
   {/if}
 
   {#if store.notice}
-    <div class="toast" class:error={store.notice.kind === 'error'} role="status">
-      <span>{store.notice.message}</span>
-      <button type="button" onclick={() => store.dismissNotice()} aria-label={t('app.dismiss')}>✕</button>
-    </div>
+    <!-- Keyed by id so a second toast is announced instead of quietly changing text. -->
+    {#key store.notice.id}
+      <div
+        class="toast"
+        class:error={store.notice.kind === 'error'}
+        role={store.notice.kind === 'error' ? 'alert' : 'status'}
+        aria-live={store.notice.kind === 'error' ? 'assertive' : 'polite'}
+      >
+        <span>{store.notice.message}</span>
+        <button type="button" onclick={() => store.dismissNotice()} aria-label={t('app.dismiss')}>✕</button>
+      </div>
+    {/key}
   {/if}
 
   {#snippet failed(error, reset)}
@@ -814,13 +820,15 @@
     flex-direction: column;
     gap: var(--space-2);
   }
+  /* Centred, not baseline: two spans of different sizes share the 56 px row, and
+     a baseline puts the big name flush against the top of the pill. */
   .langs button {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: var(--space-3);
     min-height: 56px;
-    padding: 0 var(--space-4);
+    padding: 0 var(--space-5);
     text-align: left;
     background: var(--surface-2);
     color: var(--text);

@@ -58,6 +58,12 @@ const fr = {
   'summary-scored': '{word} ({score})',
   'summary-letters': 'Lettres : {letters}',
   'summary-codenames': 'Plateau Codenames : {words}',
+
+  // The activity log, in the active language.
+  'note-pack': 'Passé à {pack}',
+  'note-matches': '{count} mots trouvés',
+  'note-anagrams': '{count} anagrammes',
+  'note-rack': '{count} mots avec tes lettres',
 };
 
 export default fr;

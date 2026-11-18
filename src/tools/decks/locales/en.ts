@@ -69,6 +69,13 @@ const en = {
   'undo-hidden': 'hidden hands',
   'undo-custom': 'custom cards',
   'undo-reset': 'reset deck',
+
+  // The activity log, in the active language.
+  'note-new': 'New {kind} deck ({count} cards)',
+  'note-shuffled': 'Shuffled {count} cards',
+  'note-dealt': 'Dealt {deal} cards to {players} players',
+  'note-table': 'On the table: {card}',
+  'note-discarded': '{player} discarded',
 };
 
 export default en;

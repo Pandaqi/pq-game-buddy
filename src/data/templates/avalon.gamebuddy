@@ -1,0 +1,45 @@
+# avalon.gamebuddy — good and evil, five missions
+
+[game]
+name: The Resistance: Avalon
+players: 5-10
+time: 30m
+tags: deduction, party, voting
+icon: avalon
+source: https://www.indieboardsandcards.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Deal one secret role per player
+- Read the mission sizes for your player count
+- Mark the five mission slots
+- Evil players open their eyes and learn each other
+
+[rules]
+Good wins three missions; evil wins three, or assassinates Merlin.
+- The leader proposes a team for the mission
+- Everyone votes approve or reject in the open
+- An approved team goes on the mission in secret; one fail card sinks it, except on the fourth mission
+- Five rejected proposals in a row hands the mission to evil
+- After three successful missions, the assassin may name Merlin
+
+[tool reveal roles]
+mode: roles
+roles: merlin=1, assassin=1, percival=1, morgana=1, loyal=fill, minion=fill
+auto-hide: 8
+
+[tool reveal vote]
+mode: ballot
+ballot: Approve this team?
+options: Approve, Reject
+
+[tool counters]
+mode: count
+counters: good-missions=0, evil-missions=0
+step: 1
+
+[tool turns]
+phases: Propose, Vote, Mission
+pass: no

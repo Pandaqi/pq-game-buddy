@@ -1,5 +1,6 @@
-import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
+import { language, registerToolStrings, seatName, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
+import { seatKey, toolSeats } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
 import { wake } from '../../core/wake';
 import {
@@ -15,6 +16,7 @@ import {
   normaliseOrder,
   normalisePhases,
   remainingMs,
+  seatList,
   rewind,
   rewindInitiative,
   type TurnsInstance,
@@ -31,8 +33,9 @@ registerToolStrings('turns', en);
 
 function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
   const presetOrder = Array.isArray(values.order) ? (values.order as string[]) : [];
-  const sessionNames = ctx.session.players().map((player) => player.name);
-  const order = normaliseOrder(presetOrder.length ? presetOrder : sessionNames);
+  // A template's blank entry and an empty table both become generated seats, so
+  // the order is said in whichever language is active when it is shown.
+  const order = presetOrder.length ? normaliseOrder(presetOrder) : toolSeats(ctx.session.players(), 2);
   const presetPhases = normalisePhases(Array.isArray(values.phases) ? (values.phases as string[]) : []);
   const phases = presetPhases.length ? presetPhases : [translate('turns.default-phase')];
   const duration = Math.max(0, Number(values.timer ?? 0));
@@ -85,10 +88,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     data.timer.remaining = left;
     if (left > 0) return;
     stopTimer();
-    log(`${currentName(data)} ran out of time`);
+    log(`${currentName(data, language())} ran out of time`);
     ctx.audio.play('bell');
     ctx.haptics.buzz('long');
-    ctx.toast(translate('turns.toast-time-up', { name: currentName(data) }));
+    ctx.toast(translate('turns.toast-time-up', { name: currentName(data, language()) }));
   }
 
   function beginTimer(pushUndo: boolean): void {
@@ -114,8 +117,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       dropWake();
       const raw = state as Partial<TurnsState>;
       if (Array.isArray(raw.order)) {
-        const next = normaliseOrder(raw.order.filter((name) => typeof name === 'string'));
-        if (next.length) data.order = next;
+        // Older saves hold plain names; a pair keeps its seat.
+        data.order = seatList(raw.order);
       }
       if (Array.isArray(raw.phases)) {
         const next = normalisePhases(raw.phases.filter((phase) => typeof phase === 'string'));
@@ -158,11 +161,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     },
     presetFromState() {
       const initiative: Record<string, number> = {};
-      data.order.forEach((name, index) => {
-        initiative[name] = data.initiative[index] ?? 0;
+      data.order.forEach((seat, index) => {
+        initiative[seatKey(seat)] = data.initiative[index] ?? 0;
       });
       return {
-        order: data.order.slice(),
+        // Only a typed name travels: a generated seat is blank, so the template
+        // makes the same seat again instead of freezing one language's words.
+        order: data.order.map((seat) => seat.name),
         phases: data.phases.slice(),
         timer: data.timer.duration,
         pass: data.pass,
@@ -182,19 +187,23 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
     summary() {
       const lines = [
         translate('turns.summary-round', { round: data.round, phase: currentPhase(data) }),
-        translate('turns.summary-turn', { name: currentName(data) }),
+        translate('turns.summary-turn', { name: currentName(data, language()) }),
       ];
       if (data.mode === 'initiative') {
         const ranking = initiativeRanking(data);
         lines.push(
           translate('turns.summary-initiative', {
             order: ranking
-              .map((seat) => `${data.order[seat]} ${data.initiative[seat] ?? 0}`)
+              .map((seat) => `${seatName(data.order[seat]?.seat, data.order[seat]?.name ?? '')} ${data.initiative[seat] ?? 0}`)
               .join(' → '),
           }),
         );
       } else {
-        lines.push(translate('turns.summary-order', { order: data.order.join(' → ') }));
+        lines.push(
+          translate('turns.summary-order', {
+            order: data.order.map((seat) => seatName(seat.seat, seat.name)).join(' → '),
+          }),
+        );
       }
       if (data.timer.duration) {
         const seconds = Math.ceil(data.timer.remaining / 1000);
@@ -210,7 +219,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       else advance(data);
       stopTimer();
       data.timer.remaining = data.timer.duration;
-      log(`Round ${data.round} · ${currentName(data)}`);
+      log(`Round ${data.round} · ${currentName(data, language())}`);
       ctx.haptics.buzz('short');
       // With a pass cover up, the clock waits until the next player taps in.
       if (data.autoStart && data.timer.duration > 0 && !data.pass) beginTimer(false);
@@ -238,7 +247,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       jumpTo(data, next);
       stopTimer();
       data.timer.remaining = data.timer.duration;
-      log(`Round ${data.round} · ${currentName(data)}`);
+      log(`Round ${data.round} · ${currentName(data, language())}`);
       ctx.haptics.buzz('short');
     },
     setPhase(index) {
@@ -248,9 +257,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       data.phase = next;
       log(`Phase: ${currentPhase(data)}`);
     },
-    setOrder(names) {
-      const next = normaliseOrder(names);
-      if (next.join('|') === data.order.join('|')) return;
+    setOrder(seats) {
+      // A text edit keeps a generated seat when its shown label was left alone,
+      // so opening the settings and saving does not turn labels into names.
+      const kept = seats.map((raw, index) => {
+        const current = data.order[index];
+        if (current && typeof raw === 'string' && raw.trim() === seatName(current.seat, current.name)) return current;
+        return raw;
+      });
+      const next = normaliseOrder(kept);
+      if (JSON.stringify(next) === JSON.stringify(data.order)) return;
       ctx.undo.push(translate('turns.undo-order'));
       data.order = next;
       data.initiative = normaliseInitiative([], next.length);
@@ -283,12 +299,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): TurnsInstance {
       log(`Round ${data.round} · initiative reset`);
     },
     syncPlayers() {
-      const names = ctx.session.players().map((player) => player.name);
-      if (!names.length) {
+      const players = ctx.session.players();
+      if (!players.length) {
         ctx.toast(translate('turns.toast-no-players'));
         return;
       }
-      instance.setOrder(names);
+      instance.setOrder(toolSeats(players, 2));
     },
     setPass(value) {
       if (data.pass === value) return;

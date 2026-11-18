@@ -1,0 +1,41 @@
+# betrayal.gamebuddy — explore the house, then someone turns
+
+[game]
+name: Betrayal at House on the Hill
+players: 3-6
+time: 60m
+tags: board, rpg
+icon: betrayal
+source: https://www.hasbro.com/en-us/product/betrayal-at-house-on-the-hill
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Pick a character and set the trait trackers
+- Shuffle the omen, event and item decks
+- Put the ground floor tiles in reach
+- Start everyone at the front door
+
+[rules]
+Explore the house until a haunt begins, then survive it.
+- On your turn move, then draw the room's card or use the room
+- Omens trigger a haunt roll; when it fails, one player becomes the traitor
+- The haunt book gives each side its own goal, read privately
+- Trait rolls use six dice, and each die shows 0, 1 or 2
+- The haunt ends when one side completes its goal
+
+[tool dice]
+faces: 0, 1, 2
+lab-count: 6
+
+[tool turns]
+phases: Move, Action, Haunt roll
+pass: no
+
+[tool lives]
+mode: players
+lives: 4
+max: 8
+step: 1
+elimination: yes

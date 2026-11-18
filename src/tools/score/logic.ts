@@ -1,3 +1,4 @@
+import { language, seatNameIn } from '../../core/i18n';
 import type { ToolInstance } from '../../core/registry';
 
 export type ScoreMode = 'simple' | 'rounds' | 'categories' | 'ledger';
@@ -5,7 +6,10 @@ export const SCORE_MODES: ScoreMode[] = ['simple', 'rounds', 'categories', 'ledg
 
 export interface ScorePlayer {
   id: string;
+  /** The session player's name, blank for a seat the app generated. */
   name: string;
+  /** Set for a generated seat: said in the active language when it is shown. */
+  seat?: number;
   color: string;
 }
 
@@ -362,7 +366,7 @@ export function totalFor(state: ScoreState, id: string): number {
 export function standingsFor(state: ScoreState): Standing[] {
   const rows = state.players.map((player) => ({
     id: player.id,
-    name: player.name,
+    name: seatNameIn(language(), player.seat, player.name),
     color: player.color,
     total: totalFor(state, player.id),
   }));
@@ -428,7 +432,7 @@ export function csvSheet(state: ScoreState): string {
   header.push('Notes');
   const rows = [header.join(',')];
   for (const player of state.players) {
-    const cells: string[] = [quote(player.name), String(totalFor(state, player.id))];
+    const cells: string[] = [quote(seatNameIn(language(), player.seat, player.name)), String(totalFor(state, player.id))];
     if (state.mode === 'rounds') {
       for (let index = 0; index < state.roundCount; index += 1) {
         cells.push(String(state.rounds[player.id]?.[index] ?? ''));

@@ -1,0 +1,38 @@
+# backgammon.gamebuddy — two dice, one board, a match to five
+
+[game]
+name: Backgammon
+players: 2
+time: 30m
+tags: board, dice, duel
+icon: backgammon
+source: Traditional game — no official source
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Set up the fifteen checkers on each side
+- Agree a match length, or play a single game
+- Put the doubling cube within reach
+- Roll one die each to start; the higher roll moves first
+
+[rules]
+Race your checkers around and off the board before your opponent.
+- Roll two dice and move one checker per die
+- A point with two or more enemy checkers is blocked
+- A lone checker is hit and goes to the bar, where it must re-enter
+- Once all your checkers are home, bear them off
+- Win the game, or the match at the agreed number of points
+
+[tool dice]
+roll: 2d6
+
+[tool score]
+mode: rounds
+target: 5
+win: highest
+hint: five points takes the match
+
+[tool rules]
+quick: Bear off every checker first, and take five points for the match.

@@ -1,9 +1,11 @@
-import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
+import { registerToolStrings, seatName, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
+import { toolSeats } from '../../core/session';
 import {
   deckCards,
   handFor,
+  handKey,
   shuffled,
   summaryOf,
   take,
@@ -26,10 +28,10 @@ export interface DeckActions {
   draw(count?: number): void;
   deal(): void;
   toTable(): void;
-  discardHand(player: string): void;
+  discardHand(key: string): void;
   returnAll(): void;
-  revealHand(player: string): void;
-  hideHand(player: string): void;
+  revealHand(key: string): void;
+  hideHand(key: string): void;
   setKind(kind: DeckKind): void;
   setCopies(count: number): void;
   setJokers(count: number): void;
@@ -68,12 +70,6 @@ function create(ctx: ToolContext, values: PresetValues = {}): DecksInstance {
     data.log = [text, ...data.log].slice(0, 12);
   }
 
-  function seatNames(): string[] {
-    const names = ctx.session.players().map((player) => player.name);
-    if (names.length >= seats) return names;
-    return [...names, ...Array.from({ length: seats - names.length }, (_, index) => `Player ${names.length + index + 1}`)];
-  }
-
   function rebuild(): void {
     data.pool = shuffled(deckCards(data.kind, data.copies, data.jokers, data.custom), ctx.rng);
     data.discard = [];
@@ -81,13 +77,22 @@ function create(ctx: ToolContext, values: PresetValues = {}): DecksInstance {
     data.hands = [];
     data.seen = [];
     data.lastDraw = [];
-    note(`New ${data.kind} deck (${data.pool.length} cards)`);
+    note(
+      translate('decks.note-new', {
+        kind: translate(`decks.kind-${data.kind}`),
+        count: data.pool.length,
+      }),
+    );
   }
 
+  // Hands follow the table, so `players` only fills in when the session is empty;
+  // a template never invents a seat nobody is sitting in.
   function ensureHands(): void {
-    const names = seatNames();
-    const existing = new Map(data.hands.map((hand) => [hand.player, hand]));
-    data.hands = names.map((name) => existing.get(name) ?? { player: name, cards: [], open: false });
+    const existing = new Map(data.hands.map((hand) => [handKey(hand), hand]));
+    data.hands = toolSeats(ctx.session.players(), seats).map((slot) => {
+      const found = existing.get(handKey(slot));
+      return found ?? { ...slot, cards: [], open: false };
+    });
   }
 
   const instance: DecksInstance = {
@@ -105,8 +110,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): DecksInstance {
       if (Array.isArray(raw.table)) data.table = raw.table.filter((card) => card && typeof card.label === 'string');
       if (Array.isArray(raw.hands)) {
         data.hands = raw.hands
-          .filter((hand) => hand && typeof hand.player === 'string' && Array.isArray(hand.cards))
-          .map((hand) => ({ player: hand.player, cards: hand.cards, open: !!hand.open }));
+          .filter((hand) => hand && typeof hand.name === 'string' && Array.isArray(hand.cards))
+          .map((hand) => {
+            const seat = Number(hand.seat);
+            return {
+              name: hand.name,
+              ...(Number.isInteger(seat) && seat > 0 ? { seat } : {}),
+              cards: hand.cards,
+              open: !!hand.open,
+            };
+          });
       }
       if (typeof raw.hidden === 'boolean') data.hidden = raw.hidden;
       if (typeof raw.deal === 'number') data.deal = Math.max(0, raw.deal);
@@ -136,7 +149,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DecksInstance {
       ctx.undo.push(translate('decks.undo-shuffle'));
       data.pool = shuffled(data.pool, ctx.rng);
       ctx.audio.play('click');
-      note(`Shuffled ${data.pool.length} cards`);
+      note(translate('decks.note-shuffled', { count: data.pool.length }));
     },
     cut() {
       if (data.pool.length < 2) return;
@@ -151,11 +164,11 @@ function create(ctx: ToolContext, values: PresetValues = {}): DecksInstance {
           ctx.toast(translate('decks.toast-empty'), 'error');
           return;
         }
-        ctx.undo.push(translate('decks.undo-draw'));
         data.pool = shuffled([...data.discard], ctx.rng);
         data.discard = [];
         ctx.toast(translate('decks.toast-reshuffled'));
       }
+      // One undo step for the whole draw, including the reshuffle it needed.
       ctx.undo.push(translate('decks.undo-draw'));
       const { drawn, rest } = take(data.pool, count);
       data.pool = rest;
@@ -163,7 +176,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DecksInstance {
       data.lastDraw = drawn;
       data.seen = [...data.seen, ...drawn.map((card) => card.label)].slice(-100);
       ctx.haptics.buzz('short');
-      note(`Drew ${drawn.map((card) => card.label).join(' ')}`);
+      note(translate('decks.note-drew', { cards: drawn.map((card) => card.label).join(' ') }));
     },
     deal() {
       if (!data.pool.length && !data.discard.length) {
@@ -187,7 +200,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): DecksInstance {
       }
       data.lastDraw = [];
       ctx.haptics.buzz('short');
-      note(`Dealt ${data.deal} cards to ${data.hands.length} players`);
+      note(translate('decks.note-dealt', { deal: data.deal, players: data.hands.length }));
       if (!dealt) ctx.toast(translate('decks.toast-ran-out'), 'error');
     },
     toTable() {
@@ -201,17 +214,16 @@ function create(ctx: ToolContext, values: PresetValues = {}): DecksInstance {
         data.table = [...data.table, card];
         data.lastDraw = [card];
         data.seen = [...data.seen, card.label].slice(-100);
-        note(`Table: ${card.label}`);
+        note(translate('decks.note-table', { card: card.label }));
       }
     },
-    discardHand(player) {
-      const hand = handFor(data.hands, player);
-      if (!hand.cards.length) return;
+    discardHand(key) {
+      const hand = handFor(data.hands, key);
+      if (!hand || !hand.cards.length) return;
       ctx.undo.push(translate('decks.undo-discard'));
       data.discard = [...data.discard, ...hand.cards];
-      const target = data.hands.find((item) => item.player === player);
-      if (target) target.cards = [];
-      note(`${player} discarded`);
+      hand.cards = [];
+      note(translate('decks.note-discarded', { player: seatName(hand.seat, hand.name) }));
     },
     returnAll() {
       ctx.undo.push(translate('decks.undo-collect'));
@@ -223,13 +235,13 @@ function create(ctx: ToolContext, values: PresetValues = {}): DecksInstance {
       data.pool = shuffled(data.pool, ctx.rng);
       note(translate('decks.note-collected'));
     },
-    revealHand(player) {
+    revealHand(key) {
       ensureHands();
-      const hand = data.hands.find((item) => item.player === player);
+      const hand = handFor(data.hands, key);
       if (hand) hand.open = true;
     },
-    hideHand(player) {
-      const hand = data.hands.find((item) => item.player === player);
+    hideHand(key) {
+      const hand = handFor(data.hands, key);
       if (hand) hand.open = false;
     },
     setKind(next) {

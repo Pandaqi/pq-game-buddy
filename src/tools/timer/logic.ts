@@ -26,7 +26,10 @@ export interface ClockMarks {
 
 export interface ClockState {
   id: string;
+  /** The name as stored: blank for a seat the app generated. */
   name: string;
+  /** Set when this clock stands for a player seat, said in the active language. */
+  seat?: number;
   color: string;
   /** Limit in milliseconds for countdown, flip, chess, interval and sequence. */
   duration: number;
@@ -43,6 +46,8 @@ export interface ClockState {
 
 export interface Phase {
   name: string;
+  /** Set for a phase that is a player seat rather than a written stage name. */
+  seat?: number;
   duration: number;
 }
 
@@ -89,13 +94,15 @@ export type TimerInstance = ToolInstance<TimerState> & TimerActions;
 export function newClock(init: {
   id: string;
   name?: string;
+  seat?: number;
   color?: string;
   duration: number;
   delay?: number;
 }): ClockState {
   return {
     id: init.id,
-    name: init.name ?? 'Timer',
+    name: init.name ?? '',
+    ...(init.seat ? { seat: init.seat } : {}),
     color: init.color ?? '#c0392b',
     duration: clampDuration(init.duration),
     elapsed: 0,
@@ -197,16 +204,27 @@ export function pendingMark(c: ClockState, remaining: number): 'm60' | 'm30' | n
   return null;
 }
 
-/** Phase list from a `phases` preset of `name=duration` pairs. */
+/**
+ * Phase list from a `phases` preset of `name=duration` pairs. A `seat-2` key is
+ * a player seat rather than a stage name, so it is said in the active language.
+ */
 export function phasesFromPairs(pairs: Record<string, string | number> | undefined): Phase[] {
   const out: Phase[] = [];
   if (!pairs) return out;
-  for (const [name, value] of Object.entries(pairs)) {
+  for (const [key, value] of Object.entries(pairs)) {
     const text = String(value);
     const ms = typeof value === 'number' ? value * 1000 : parseDurationLoose(text);
-    if (ms && ms > 0) out.push({ name, duration: clampDuration(ms) });
+    if (!ms || ms <= 0) continue;
+    const seat = Number(key.match(/^seat-(\d+)$/)?.[1]);
+    const duration = clampDuration(ms);
+    out.push(Number.isInteger(seat) && seat > 0 ? { name: '', seat, duration } : { name: key, duration });
   }
   return out;
+}
+
+/** The key a clock takes in the phases preset: its seat, never its label. */
+export function clockKey(clock: ClockState): string {
+  return clock.seat ? `seat-${clock.seat}` : clock.name;
 }
 
 function parseDurationLoose(text: string): number | null {
@@ -224,9 +242,15 @@ function parseDurationLoose(text: string): number | null {
 export function restoreClock(value: unknown, index: number): ClockState {
   const raw = (value ?? {}) as Partial<ClockState>;
   const duration = clampDuration(Number(raw.duration ?? 300000));
+  const named = typeof raw.name === 'string' ? raw.name.trim() : '';
+  const seat = Number(raw.seat);
+  // A saved seat keeps its number; a clock with no name at all becomes a
+  // generated seat so it still shows something said in the active language.
+  const kept = Number.isInteger(seat) && seat > 0 ? seat : named ? 0 : index + 1;
   return {
     id: typeof raw.id === 'string' && raw.id ? raw.id : `t${index + 1}`,
-    name: typeof raw.name === 'string' ? raw.name : `Timer ${index + 1}`,
+    name: named,
+    ...(kept ? { seat: kept } : {}),
     color: typeof raw.color === 'string' ? raw.color : '#c0392b',
     duration,
     elapsed: Math.max(0, Number(raw.elapsed) || 0),

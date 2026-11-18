@@ -4,7 +4,7 @@
 name: Escape Room
 players: 2-6
 time: 60m
-tags: party, timed
+tags: party, realtime
 icon: escape
 source: Generic escape-room kit
 author: pandaqi

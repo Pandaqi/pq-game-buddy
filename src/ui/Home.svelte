@@ -1,5 +1,6 @@
 <script lang="ts">
   import { language, t, toolBlurb, toolTitle } from '../core/i18n.svelte';
+  import { gameName } from '../core/game-name';
   import { manifest } from '../core/manifest.generated';
   import { store } from '../core/session-store.svelte';
   import { doodle, HERO_SCENE } from '../core/ui/doodles';
@@ -35,6 +36,7 @@
     return templateMarkLazy(template.icon, template.id);
   }
 
+  /** A saved session's name: a one-tool session says its tool's name in this language. */
   const allTools = $derived(manifest.filter((module) => !module.tags.includes('dev')));
 
   /** Search looks at every tool; the shelf itself is the everyday few. */
@@ -78,7 +80,7 @@
       <span class="continue-art" aria-hidden="true">{@html doodle('acorn')}</span>
       <span class="continue-text">
         <span class="label">{t('home.continue')}</span>
-        <span class="game">{store.lastSession.game}</span>
+        <span class="game">{gameName(language(), store.lastSession.toolId, store.lastSession.game)}</span>
       </span>
       <span class="when">{new Date(store.lastSession.updatedAt).toLocaleDateString(language())}</span>
     </button>
@@ -306,7 +308,7 @@
     color: var(--forest);
   }
   .search input {
-    min-height: 46px;
+    min-height: 48px;
     min-width: 11rem;
     max-width: 16rem;
   }
@@ -443,7 +445,7 @@
     gap: var(--space-2);
   }
   .links a {
-    min-height: 46px;
+    min-height: 48px;
     display: inline-flex;
     align-items: center;
     padding: 0 var(--space-4);

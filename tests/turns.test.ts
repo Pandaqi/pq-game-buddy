@@ -19,7 +19,7 @@ import {
 
 function state(overrides: Partial<TurnsState> = {}): TurnsState {
   return {
-    order: ['Ada', 'Bo', 'Cy'],
+    order: [{ name: 'Ada' }, { name: 'Bo' }, { name: 'Cy' }],
     index: 0,
     round: 1,
     phases: ['Turn', 'Buy'],
@@ -38,38 +38,38 @@ describe('turn order', () => {
   test('advance walks the order and rolls into the next round', () => {
     const sheet = state();
     advance(sheet);
-    expect(currentName(sheet)).toBe('Bo');
+    expect(currentName(sheet, 'en')).toBe('Bo');
     expect(sheet.round).toBe(1);
     advance(sheet);
-    expect(currentName(sheet)).toBe('Cy');
+    expect(currentName(sheet, 'en')).toBe('Cy');
     advance(sheet);
-    expect(currentName(sheet)).toBe('Ada');
+    expect(currentName(sheet, 'en')).toBe('Ada');
     expect(sheet.round).toBe(2);
   });
 
   test('jumping to a player keeps the round and restarts the phase', () => {
     const sheet = state({ index: 0, round: 3, phase: 1 });
     jumpTo(sheet, 2);
-    expect(currentName(sheet)).toBe('Cy');
+    expect(currentName(sheet, 'en')).toBe('Cy');
     expect(sheet.round).toBe(3);
     expect(sheet.phase).toBe(0);
     jumpTo(sheet, 99);
-    expect(currentName(sheet)).toBe('Cy');
+    expect(currentName(sheet, 'en')).toBe('Cy');
     jumpTo(sheet, -4);
-    expect(currentName(sheet)).toBe('Ada');
+    expect(currentName(sheet, 'en')).toBe('Ada');
   });
 
   test('rewind goes back and rolls the round back at the start', () => {
     const sheet = state({ index: 0, round: 2 });
     rewind(sheet);
     expect(sheet.round).toBe(1);
-    expect(currentName(sheet)).toBe('Cy');
+    expect(currentName(sheet, 'en')).toBe('Cy');
     rewind(sheet);
-    expect(currentName(sheet)).toBe('Bo');
+    expect(currentName(sheet, 'en')).toBe('Bo');
     rewind(sheet);
-    expect(currentName(sheet)).toBe('Ada');
+    expect(currentName(sheet, 'en')).toBe('Ada');
     rewind(sheet);
-    expect(currentName(sheet)).toBe('Ada');
+    expect(currentName(sheet, 'en')).toBe('Ada');
     expect(sheet.round).toBe(1);
   });
 
@@ -80,10 +80,23 @@ describe('turn order', () => {
     expect(currentPhase(sheet)).toBe('Turn');
   });
 
-  test('orders are cleaned and always have a player', () => {
-    expect(normaliseOrder(['Ada', ' Ada ', '', 'Bo'])).toEqual(['Ada', 'Bo']);
-    expect(normaliseOrder([])).toEqual(['Player 1', 'Player 2']);
+  test('orders are cleaned, de-duplicated and always have two seats', () => {
+    expect(normaliseOrder(['Ada', ' Ada ', 'Bo'])).toEqual([{ name: 'Ada' }, { name: 'Bo' }]);
+    // A blank entry is a seat the app names, said in the active language.
+    expect(normaliseOrder(['Ada', ''])).toEqual([{ name: 'Ada' }, { name: '', seat: 2 }]);
+    expect(normaliseOrder([])).toEqual([
+      { name: '', seat: 1 },
+      { name: '', seat: 2 },
+    ]);
     expect(normalisePhases([' Turn ', '', 'Buy'])).toEqual(['Turn', 'Buy']);
+  });
+
+  test('a generated seat is said in the active language and a typed name stands', () => {
+    const sheet = state({ order: [{ name: '', seat: 1 }, { name: 'Ada' }] });
+    expect(currentName(sheet, 'en')).toBe('Player 1');
+    expect(currentName(sheet, 'nl')).toBe('Speler 1');
+    sheet.index = 1;
+    expect(currentName(sheet, 'nl')).toBe('Ada');
   });
 
   test('current phase falls back when the list is empty', () => {
@@ -119,25 +132,25 @@ describe('initiative', () => {
   test('next walks the ranking and rolls the round at the bottom', () => {
     const sheet = state({ mode: 'initiative', initiative: [12, 18, 12], index: 1 });
     advanceInitiative(sheet);
-    expect(currentName(sheet)).toBe('Ada');
+    expect(currentName(sheet, 'en')).toBe('Ada');
     advanceInitiative(sheet);
-    expect(currentName(sheet)).toBe('Cy');
+    expect(currentName(sheet, 'en')).toBe('Cy');
     expect(sheet.round).toBe(1);
     advanceInitiative(sheet);
-    expect(currentName(sheet)).toBe('Bo');
+    expect(currentName(sheet, 'en')).toBe('Bo');
     expect(sheet.round).toBe(2);
   });
 
   test('previous walks back and rolls back only above the first round', () => {
     const sheet = state({ mode: 'initiative', initiative: [12, 18, 12], index: 1, round: 1 });
     rewindInitiative(sheet);
-    expect(currentName(sheet)).toBe('Bo');
+    expect(currentName(sheet, 'en')).toBe('Bo');
     expect(sheet.round).toBe(1);
     sheet.index = 1;
     sheet.round = 2;
     rewindInitiative(sheet);
     expect(sheet.round).toBe(1);
-    expect(currentName(sheet)).toBe('Cy');
+    expect(currentName(sheet, 'en')).toBe('Cy');
   });
 
   test('a new round clears every value and restarts at the first seat', () => {
@@ -146,6 +159,13 @@ describe('initiative', () => {
     expect(sheet.initiative).toEqual([0, 0, 0]);
     expect(sheet.index).toBe(0);
     expect(sheet.round).toBe(5);
+  });
+
+  test('the initiative preset names the seat, not the words on screen', () => {
+    const seats = [{ name: '', seat: 1 }, { name: 'Ada' }];
+    expect(initiativeFromPreset({ 'seat-1': 18, Ada: 12 }, seats)).toEqual([18, 12]);
+    expect(initiativeFromPreset([4, 2], seats)).toEqual([4, 2]);
+    expect(initiativeFromPreset(null, seats)).toEqual([0, 0]);
   });
 
   test('initiative values are whole numbers and the preset may name players', () => {

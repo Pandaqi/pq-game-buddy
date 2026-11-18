@@ -1,12 +1,15 @@
 /** Reaction buzzers: fair timing, false starts and keyboard lanes. No Svelte here. */
 
-import { translate } from '../../core/i18n';
+import { language, seatNameIn, translate } from '../../core/i18n';
 
 export const BUZZER_KEYS = ['a', 's', 'd', 'f', 'j', 'k', 'l', ';'];
 
 export interface BuzzPlayer {
   id: string;
+  /** The session player's name, blank for a seat the app generated. */
   name: string;
+  /** Set for a generated seat: said in the active language when it is shown. */
+  seat?: number;
   color: string;
   key: string;
 }
@@ -14,7 +17,15 @@ export interface BuzzPlayer {
 export interface BuzzRound {
   winner: string;
   ms: number;
+  /** The player who jumped early, by id; an older save may hold a name here. */
   falseStart: string | null;
+}
+
+/** A player's name in a named language; an id nobody knows prints as itself. */
+export function buzzName(languageId: string, state: BuzzerState, id: string | null): string {
+  if (!id) return '';
+  const player = state.players.find((item) => item.id === id);
+  return player ? seatNameIn(languageId, player.seat, player.name) : id;
 }
 
 export interface BuzzerState {
@@ -46,17 +57,21 @@ export function isLive(state: BuzzerState, now: number): boolean {
 export function summaryOf(state: BuzzerState): string {
   const lines: string[] = [];
   for (const round of state.rounds) {
-    const name = state.players.find((item) => item.id === round.winner)?.name ?? round.winner;
+    const name = buzzName(language(), state, round.winner);
     lines.push(
       round.falseStart
-        ? translate('buzzer.summary-round-false', { name, ms: round.ms, flagged: round.falseStart })
+        ? translate('buzzer.summary-round-false', {
+            name,
+            ms: round.ms,
+            flagged: buzzName(language(), state, round.falseStart),
+          })
         : translate('buzzer.summary-round', { name, ms: round.ms }),
     );
   }
   const wins = new Map<string, number>();
   for (const round of state.rounds) wins.set(round.winner, (wins.get(round.winner) ?? 0) + 1);
   const tally = [...wins.entries()]
-    .map(([id, count]) => `${state.players.find((player) => player.id === id)?.name ?? id}: ${count}`)
+    .map(([id, count]) => `${buzzName(language(), state, id)}: ${count}`)
     .join(', ');
   if (tally) lines.push(translate('buzzer.summary-wins', { tally }));
   return lines.length ? lines.join('\n') : translate('buzzer.summary-none');

@@ -35,7 +35,12 @@ export interface TableData {
 }
 
 export interface PlayerSheet {
+  /** Stable key, so two generated seats never collide on a blank name. */
+  id: string;
+  /** The name as stored: blank for a seat the app generated. */
   name: string;
+  /** Set for a generated seat: said in the active language when it is shown. */
+  seat?: number;
   values: Record<string, number>;
 }
 

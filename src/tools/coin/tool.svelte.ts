@@ -130,21 +130,34 @@ function create(ctx: ToolContext, values: PresetValues = {}): CoinInstance {
     },
     flip,
     setCoins(count) {
-      data.coins = Math.max(1, Math.min(10, Math.round(count)));
+      const next = Math.max(1, Math.min(10, Math.round(count)));
+      if (next === data.coins) return;
+      ctx.undo.push(translate('coin.undo-coins'));
+      data.coins = next;
     },
     setFairness(percent) {
-      data.fairness = Math.max(0, Math.min(100, Math.round(percent)));
+      const next = Math.max(0, Math.min(100, Math.round(percent)));
+      if (next === data.fairness) return;
+      ctx.undo.push(translate('coin.undo-fairness'));
+      data.fairness = next;
     },
     setCall(side) {
+      if (side === data.call) return;
+      ctx.undo.push(translate('coin.undo-call'));
       data.call = side;
     },
     setMode(mode) {
+      if (mode === data.mode) return;
+      ctx.undo.push(translate('coin.undo-mode'));
       data.mode = mode;
       data.series = { heads: 0, tails: 0 };
       data.seriesWinner = null;
     },
     setTarget(value) {
-      data.target = Math.max(1, Math.min(20, Math.round(value)));
+      const next = Math.max(1, Math.min(20, Math.round(value)));
+      if (next === data.target) return;
+      ctx.undo.push(translate('coin.undo-target'));
+      data.target = next;
       data.series = { heads: 0, tails: 0 };
       data.seriesWinner = null;
     },

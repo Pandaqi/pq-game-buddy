@@ -81,6 +81,13 @@ const fr = {
   'summary-sold': 'Vendu :',
   'summary-sale': '- {item} à {buyer} pour {price}',
   'summary-none': 'Rien de drafté pour l’instant.',
+
+  // The activity log, in the active language.
+  'note-picked': '{picker} a choisi {item}',
+  'note-order': 'Ordre : {names}',
+  'note-returned': '{item} remis dans la réserve',
+  'note-nominated': '{item} proposé',
+  'note-sold': '{item} vendu à {buyer} pour {price}',
 };
 
 export default fr;

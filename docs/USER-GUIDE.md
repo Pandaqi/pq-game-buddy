@@ -27,7 +27,7 @@ Your game is saved automatically. Closing the tab and coming back offers to resu
 | Coin | One flip, biased flips for wagering, best-of series |
 | Pick | Random numbers, lists, teams, seats; list, card, wheel and slot views |
 | Score | Running totals, rounds, categories (with formulas), a money ledger |
-| Lives | HP, lives, stocks; extra tracks; conditions; elimination |
+| Lives | HP, lives, stocks; tap a score to type a whole throw; extra tracks; conditions; elimination |
 | Counters | Wood, coins, tokens, a shared bank, or a straight points counter |
 | Turns | Whose turn, round number, phases, optional turn clock, initiative order |
 | Reveal | Secret roles, inspecting one player, anonymous ballots, blind bids |

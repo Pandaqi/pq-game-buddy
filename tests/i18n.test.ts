@@ -11,6 +11,8 @@ import { pathToFileURL } from 'node:url';
 import english from '../src/core/locales/en';
 import { manifest } from '../src/core/manifest.generated';
 import { setLanguage, startLanguage, t } from '../src/core/i18n.svelte';
+import LangView from './fixtures/lang-view.svelte';
+import { svelteClient } from './helpers/svelte-client';
 
 const root = join(import.meta.dir, '..');
 const localesDir = join(root, 'src', 'core', 'locales');
@@ -103,6 +105,17 @@ describe('localization', () => {
     expect(missing).toEqual([]);
   });
 
+  test('every core key is used somewhere in the source', () => {
+    // A translated string nobody reads is shipped five times over. Dynamic keys
+    // do not exist in the core dictionary, so a literal mention is required.
+    const source = sourceFiles(join(root, 'src'))
+      .filter((file) => !file.split(/[\\/]/).includes('locales'))
+      .map((file) => readFileSync(file, 'utf8'))
+      .join('\n');
+    const unused = Object.keys(english).filter((key) => !source.includes(key));
+    expect(unused).toEqual([]);
+  });
+
   test('the localized tool folders and the list in this file agree', () => {
     const onDisk = manifest.map((meta) => meta.id).filter(hasLocales).sort();
     expect(onDisk).toEqual([...LOCALES].sort());
@@ -151,6 +164,28 @@ describe('localization', () => {
       const runtime = readFileSync(join(root, 'src', 'core', file), 'utf8');
       expect({ file, static: runtime.includes("from './locales/en'") }).toEqual({ file, static: false });
     }
+  });
+
+  test('a mounted screen redraws when the language switches', async () => {
+    // The words changing is not enough: the screen has to notice. Reading a
+    // module-level state through a lookup that the compiler keeps is what does it.
+    const { mount, unmount, tick } = await svelteClient();
+    const target = document.createElement('div');
+    document.body.appendChild(target);
+    const app = mount(LangView as never, { target, props: {} });
+    await tick();
+    const before = target.textContent;
+
+    expect(await setLanguage('nl')).toBe(true);
+    await tick();
+    const after = target.textContent;
+
+    expect(await setLanguage('en')).toBe(true);
+    unmount(app);
+    target.remove();
+
+    expect(after).toBe('Gereedschap');
+    expect(after).not.toBe(before);
   });
 
   test('switching language changes the words and falls back cleanly', async () => {

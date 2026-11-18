@@ -5,7 +5,7 @@ name: Bananagrams
 icon: bananagrams
 players: 2-8
 time: 15m
-tags: words, realtime
+tags: realtime, words
 source: https://en.wikipedia.org/wiki/Bananagrams
 author: pandaqi
 license: CC-BY-SA-4.0

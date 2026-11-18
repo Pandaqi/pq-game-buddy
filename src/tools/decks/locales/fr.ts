@@ -71,6 +71,13 @@ const fr = {
   'undo-hidden': 'mains cachées',
   'undo-custom': 'cartes perso',
   'undo-reset': 'paquet réinitialisé',
+
+  // The activity log, in the active language.
+  'note-new': 'Nouveau deck {kind} ({count} cartes)',
+  'note-shuffled': '{count} cartes mélangées',
+  'note-dealt': '{deal} cartes distribuées à {players} joueurs',
+  'note-table': 'Sur la table : {card}',
+  'note-discarded': '{player} a défaussé',
 };
 
 export default fr;

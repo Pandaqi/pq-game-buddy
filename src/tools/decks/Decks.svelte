@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { t } from '../../core/i18n.svelte';
+  import { seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import EmptyState from '../../core/ui/EmptyState.svelte';
   import PassThePhone from '../../core/ui/PassThePhone.svelte';
   import Sheet from '../../core/ui/Sheet.svelte';
-  import { DECK_KINDS, type DeckKind } from './logic';
+  import { DECK_KINDS, handKey, type DeckKind } from './logic';
   import type { DecksInstance } from './tool.svelte';
 
   let { ctx, instance }: { ctx: ToolContext; instance: DecksInstance } = $props();
@@ -20,6 +20,8 @@
   }
 
   const back = '🂠';
+  /** The hand whose cards the pass-the-phone sheet is covering, if any. */
+  const peekHand = $derived(peek ? data.hands.find((hand) => handKey(hand) === peek) ?? null : null);
 </script>
 
 <div class="decks">
@@ -68,17 +70,17 @@
     <section class="block">
       <h2>{t('decks.hands-title')}</h2>
       <ul class="hands">
-        {#each data.hands as hand (hand.player)}
+        {#each data.hands as hand (handKey(hand))}
           <li>
             <div class="hand-head">
-              <span class="player">{hand.player}</span>
+              <span class="player">{seatName(hand.seat, hand.name)}</span>
               <span class="count">{t(hand.cards.length === 1 ? 'decks.card-one' : 'decks.card-many', {
                   count: hand.cards.length,
                 })}</span>
             </div>
             {#if hand.cards.length}
               {#if data.hidden && !hand.open}
-                <button type="button" class="peek" onclick={() => (peek = hand.player)}>
+                <button type="button" class="peek" onclick={() => (peek = handKey(hand))}>
                   {t('decks.show-privately', { count: hand.cards.length, back })}
                 </button>
               {:else}
@@ -92,7 +94,7 @@
               <p class="dim small">{t('decks.no-cards')}</p>
             {/if}
             <div class="hand-actions">
-              <button type="button" onclick={() => instance.discardHand(hand.player)} disabled={!hand.cards.length}>
+              <button type="button" onclick={() => instance.discardHand(handKey(hand))} disabled={!hand.cards.length}>
                 {t('decks.discard')}
               </button>
             </div>
@@ -121,16 +123,16 @@
   </div>
 </div>
 
-{#if peek}
+{#if peekHand}
   <PassThePhone
-    name={peek}
+    name={seatName(peekHand.seat, peekHand.name)}
     hint={t('decks.peek-hint')}
     action={t('decks.show-hand')}
     oncancel={() => (peek = null)}
     onnext={() => (peek = null)}
   >
     <ul class="cards big">
-      {#each data.hands.find((hand) => hand.player === peek)?.cards ?? [] as card (card.id)}
+      {#each peekHand.cards as card (card.id)}
         <li class="card">{card.label}</li>
       {/each}
     </ul>

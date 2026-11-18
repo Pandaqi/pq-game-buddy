@@ -51,7 +51,7 @@ Never invent a seventh family for a new tool: pick the primitive it serves
 `--danger-soft`, `--warning`, `--warning-soft` (used by a timer that is nearly out),
 and `--success`, each with a dark counterpart.
 
-**Seats.** The six player colours stay as stored hex (templates may name one), so seat
+**Seats.** The nine player colours stay as stored hex (templates may name one), so seat
 identity survives export. The dot is filled with the seat colour and the initials are
 dark `--on-seat` ink, which clears 4.8:1 on every seat in both themes. Colour is never
 the only cue: the initials are always there, and the active seat is a solid colour pill
@@ -130,7 +130,7 @@ An imported template may pair an image instead, named like `icon:` or like the t
 file; that image renders through `<img>` and never inlines.
 
 The template marks are their own chunk (`core/ui/marks.svelte.ts`): a list paints the
-name and the reserved slot immediately, and the 49 drawings arrive after the first
+name and the reserved slot immediately, and the 79 drawings arrive after the first
 paint from `template-icons.generated.ts`. Nothing in the start-up payload imports them.
 First-party Pandaqi templates keep their drawings in `src/data/templates/pandaqi/`, one
 for each covered collection, under the same grid and stroke rules.

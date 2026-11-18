@@ -1,0 +1,36 @@
+# jackbox-night.gamebuddy — one screen, everyone's phone
+
+[game]
+name: Jackbox Night
+players: 2-8
+time: 45m
+tags: party, video-game
+icon: jackbox
+source: https://www.jackboxgames.com/
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Put the big screen where everyone can see it
+- Everyone joins the room code on their own phone
+- Pick the pack and the first game
+- Agree a points goal or play a fixed number of games
+
+[rules]
+Play a run of party games and keep one score for the night.
+- Each Jackbox game scores its own way; write each player's total per game
+- The host reads the room code and starts the next game
+- Ban phones only for the games that ask for it
+- Highest running total at the end wins the night
+
+[tool score]
+mode: rounds
+rounds: 5
+win: highest
+hint: five games makes a full night
+
+[tool timer]
+mode: interval
+interval: 20m
+sound: bell

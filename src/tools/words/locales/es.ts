@@ -58,6 +58,12 @@ const es = {
   'summary-scored': '{word} ({score})',
   'summary-letters': 'Letras: {letters}',
   'summary-codenames': 'Tablero de Codenames: {words}',
+
+  // The activity log, in the active language.
+  'note-pack': 'Cambiado a {pack}',
+  'note-matches': '{count} palabras coinciden',
+  'note-anagrams': '{count} anagramas',
+  'note-rack': '{count} palabras con tus letras',
 };
 
 export default es;

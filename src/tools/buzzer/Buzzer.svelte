@@ -1,9 +1,9 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { isEditingTarget } from '../../core/dom';
-  import { t } from '../../core/i18n.svelte';
+  import { language, seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
-  import { isLive } from './logic';
+  import { buzzName, isLive } from './logic';
   import type { BuzzerInstance } from './tool.svelte';
 
   let { ctx, instance }: { ctx: ToolContext; instance: BuzzerInstance } = $props();
@@ -14,7 +14,7 @@
 
   const live = $derived(isLive(data, now));
   const waiting = $derived(data.armed && !live);
-  const winnerName = $derived(data.winner ? data.players.find((player) => player.id === data.winner)?.name ?? '' : '');
+  const winnerName = $derived(buzzName(language(), data, data.winner));
 
   onMount(() => {
     const onKey = (event: KeyboardEvent): void => {
@@ -32,7 +32,7 @@
 <div class="buzzer">
   <div class="status" class:live class:waiting role="status" aria-live="polite">
     {#if data.falseStart}
-      {t('buzzer.false-start', { name: data.falseStart })}
+      {t('buzzer.false-start', { name: buzzName(language(), data, data.falseStart) })}
     {:else if winnerName}
       <strong>{winnerName}</strong> {t('buzzer.wins', { ms: data.reactionMs ?? 0 })}
     {:else if waiting}
@@ -54,7 +54,7 @@
         style="--player: {player.color}"
         onclick={() => instance.buzz(player.id)}
       >
-        <span class="name">{player.name}</span>
+        <span class="name">{seatName(player.seat, player.name)}</span>
         {#if data.keyPlay}<span class="key">{player.key.toUpperCase()}</span>{/if}
       </button>
     {/each}
@@ -76,7 +76,7 @@
       <ol>
         {#each data.rounds as round, index (index)}
           <li>
-            <span>{data.players.find((player) => player.id === round.winner)?.name ?? '—'}</span>
+            <span>{buzzName(language(), data, round.winner) || '—'}</span>
             <span class="ms">{round.falseStart ? t('buzzer.false-start-short') : t('buzzer.ms', { ms: round.ms })}</span>
           </li>
         {/each}

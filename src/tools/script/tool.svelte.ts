@@ -100,7 +100,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): ScriptInstance {
     const chosen = command && commands[command] ? command : !command && commands.deal ? 'deal' : '';
     if (chosen) {
       commands[chosen]?.();
-      note(`${target}: ${chosen}`);
+      note(translate('script.note-call', { tool: target, command: chosen }));
       return;
     }
     ctx.toast(translate('script.toast-open-tool', { tool: target }));

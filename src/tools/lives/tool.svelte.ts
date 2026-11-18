@@ -1,6 +1,6 @@
-import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
+import { language, registerToolStrings, seatName, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext } from '../../core/registry';
-import { PLAYER_COLORS } from '../../core/session';
+import { PLAYER_COLORS, toolSeats } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
 import { clampLives, isGameOver, isOut, resultsFor, type LivesInstance, type LivesState } from './logic';
 import Lives from './Lives.svelte';
@@ -19,18 +19,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
   const elimination = values.elimination !== false;
 
   const sessionPlayers = ctx.session.players();
-  const players = (sessionPlayers.length
-    ? sessionPlayers
-    : [
-        { id: 'p1', name: 'Player 1' },
-        { id: 'p2', name: 'Player 2' },
-      ]
-  ).map((player, index) => ({
-    id: player.id,
-    name: player.name,
+  // Tracks keep the session's pair, so a seat the app named is said in the
+  // active language instead of the words it happened to start with.
+  const players = toolSeats(sessionPlayers, 2).map((slot, index) => ({
+    id: sessionPlayers[index]?.id ?? `p${index + 1}`,
+    name: slot.name,
+    ...(slot.seat ? { seat: slot.seat } : {}),
     lives: Math.min(start, max),
     max,
-    color: (player as { color?: string }).color || PLAYER_COLORS[index % PLAYER_COLORS.length],
+    color: sessionPlayers[index]?.color || PLAYER_COLORS[index % PLAYER_COLORS.length],
   }));
 
   const extras = Object.entries((values.extras as Record<string, unknown>) ?? {}).map(([name, value]) => ({
@@ -80,7 +77,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
     ctx.haptics.buzz('short');
     if (elimination && before > 0 && isOut(data, track)) {
       ctx.audio.play('buzzer');
-      ctx.toast(translate('lives.toast-out', { name: track.name }));
+      ctx.toast(translate('lives.toast-out', { name: seatName(track.seat, track.name) }));
     } else if (elimination && track.lives > 0) {
       ctx.audio.play('click');
     }
@@ -101,16 +98,17 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
       if (Array.isArray(raw.players) && raw.players.length) {
         data.players = raw.players
           .filter((player) => player && typeof player.id === 'string')
-          .map((player, index) => ({
-            id: player.id,
-                name:
-              typeof player.name === 'string'
-                ? player.name
-                : translate('lives.player-name', { count: index + 1 }),
-            lives: Math.max(0, Number(player.lives) || 0),
-            max: Math.max(1, Number(player.max) || data.max),
-            color: typeof player.color === 'string' ? player.color : PLAYER_COLORS[index % PLAYER_COLORS.length],
-          }));
+          .map((player, index) => {
+            const seat = Number(player.seat);
+            return {
+              id: player.id,
+              name: typeof player.name === 'string' ? player.name : '',
+              ...(Number.isInteger(seat) && seat > 0 ? { seat } : {}),
+              lives: Math.max(0, Number(player.lives) || 0),
+              max: Math.max(1, Number(player.max) || data.max),
+              color: typeof player.color === 'string' ? player.color : PLAYER_COLORS[index % PLAYER_COLORS.length],
+            };
+          });
       }
       if (Array.isArray(raw.extras)) {
         data.extras = raw.extras
@@ -156,7 +154,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
         for (const player of data.players) {
           lines.push(
             translate(isOut(data, player) ? 'lives.summary-out' : 'lives.summary-track', {
-              name: player.name,
+              name: seatName(player.seat, player.name),
               lives: player.lives,
               max: player.max,
             }),
@@ -171,7 +169,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
       if (isGameOver(data)) lines.push(translate('lives.summary-over'));
       return lines.join('\n');
     },
-    results: () => resultsFor(data),
+    results: () => resultsFor(data, language()),
     adjust,
     setLives(id, value) {
       if (data.mode === 'shared' || id === 'shared') {
@@ -213,21 +211,24 @@ function create(ctx: ToolContext, values: PresetValues = {}): LivesInstance {
     syncPlayers() {
       const source = ctx.session.players();
       if (!source.length) return;
+      const slots = toolSeats(source, 2);
       if (
         source.length === data.players.length &&
-        source.every(
-          (player, index) =>
-            player.id === data.players[index]?.id && player.name === data.players[index]?.name,
-        )
+        source.every((player, index) => {
+          const track = data.players[index];
+          return player.id === track?.id && track.seat === slots[index].seat && track.name === slots[index].name;
+        })
       ) {
         return;
       }
       ctx.undo.push(translate('lives.undo-sync'));
       data.players = source.map((player, index) => {
         const existing = data.players.find((track) => track.id === player.id);
+        const slot = slots[index];
         return {
           id: player.id,
-          name: player.name,
+          name: slot.name,
+          ...(slot.seat ? { seat: slot.seat } : {}),
           lives: existing ? existing.lives : Math.min(start, max),
           max: existing ? existing.max : max,
           color: (player as { color?: string }).color || PLAYER_COLORS[index % PLAYER_COLORS.length],

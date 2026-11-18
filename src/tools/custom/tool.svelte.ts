@@ -1,5 +1,6 @@
-import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
+import { registerToolStrings, seatName, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance, ToolResult } from '../../core/registry';
+import { seatPair, toolSeats } from '../../core/session';
 import type { PresetValues } from '../../core/template/schema';
 import {
   evaluateFormula,
@@ -38,9 +39,9 @@ export interface CustomActions {
   setCell(row: number, col: number, value: number): void;
   setFormula(value: string): void;
   setPerPlayer(value: boolean): void;
-  setPlayerValue(player: string, key: string, value: number): void;
-  adjustPlayerValue(player: string, key: string, amount: number): void;
-  formulaResult(player?: string): number | null;
+  setPlayerValue(playerId: string, key: string, value: number): void;
+  adjustPlayerValue(playerId: string, key: string, amount: number): void;
+  formulaResult(playerId?: string): number | null;
 }
 
 export type CustomInstance = ToolInstance<CustomState> & CustomActions;
@@ -55,7 +56,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
   const fieldPairs = (values.fields as Record<string, string | number>) ?? {};
   const counterPairs = (values.counters as Record<string, string | number>) ?? {};
   const size = parseSize(String(values.table ?? '3x3'));
-  const names = ctx.session.players().map((player) => player.name);
+  const seats = toolSeats(ctx.session.players(), 2);
 
   const fields: CustomField[] = Object.entries(fieldPairs).map(([label, type], index) => ({
     id: `f${index + 1}`,
@@ -85,8 +86,10 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
     table: makeTable(size.rows, size.cols),
     formula: String(values.formula ?? ''),
     perPlayer: !!values['per-player'],
-    players: names.map<PlayerSheet>((name) => ({
-      name,
+    players: seats.map<PlayerSheet>((seat, index) => ({
+      id: `p${index + 1}`,
+      name: seat.name,
+      ...(seat.seat ? { seat: seat.seat } : {}),
       values: Object.fromEntries(counters.map((counter) => [counter.id, counter.value])),
     })),
     history: [],
@@ -96,8 +99,8 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
     data.history = [text, ...data.history].slice(0, 12);
   }
 
-  function playerByName(name: string): PlayerSheet | undefined {
-    return data.players.find((player) => player.name === name);
+  function playerById(id: string): PlayerSheet | undefined {
+    return data.players.find((player) => player.id === id);
   }
 
   const instance: CustomInstance = {
@@ -146,7 +149,15 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
       if (Array.isArray(raw.players)) {
         data.players = raw.players
           .filter((player) => player && typeof player.name === 'string')
-          .map((player) => ({ name: player.name, values: { ...(player.values ?? {}) } }));
+          .map((player, index) => {
+            const seat = Number(player.seat);
+            return {
+              id: typeof player.id === 'string' && player.id ? player.id : `p${index + 1}`,
+              name: player.name,
+              ...(Number.isInteger(seat) && seat > 0 ? { seat } : {}),
+              values: { ...(player.values ?? {}) },
+            };
+          });
       }
       if (Array.isArray(raw.history)) data.history = raw.history.map(String).slice(0, 12);
     },
@@ -173,7 +184,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
         return data.players.map((player): ToolResult => {
           const vars = formulaVars(data, player);
           const value = evaluateFormula(data.formula, vars) ?? Object.values(player.values).reduce((sum, entry) => sum + entry, 0);
-          return { name: player.name, score: value };
+          return { name: seatName(player.seat, player.name), score: value };
         });
       }
       const result = evaluateFormula(data.formula, formulaVars(data));
@@ -271,27 +282,29 @@ function create(ctx: ToolContext, values: PresetValues = {}): CustomInstance {
       ctx.undo.push(translate('custom.undo-per-player'));
       data.perPlayer = value;
       if (value && !data.players.length) {
-        data.players = ctx.session.players().map((player) => ({
-          name: player.name,
+        data.players = toolSeats(ctx.session.players(), 2).map<PlayerSheet>((seat, index) => ({
+          id: `p${index + 1}`,
+          name: seat.name,
+          ...(seat.seat ? { seat: seat.seat } : {}),
           values: Object.fromEntries(data.counters.map((counter) => [counter.id, counter.value])),
         }));
       }
     },
-    setPlayerValue(player, key, value) {
-      const sheet = playerByName(player);
+    setPlayerValue(playerId, key, value) {
+      const sheet = playerById(playerId);
       if (!sheet) return;
-      ctx.undo.push(translate('custom.undo-player-value'), `player-${player}-${key}`);
+      ctx.undo.push(translate('custom.undo-player-value'), `player-${playerId}-${key}`);
       sheet.values = { ...sheet.values, [key]: Math.round(value) };
     },
-    adjustPlayerValue(player, key, amount) {
-      const sheet = playerByName(player);
+    adjustPlayerValue(playerId, key, amount) {
+      const sheet = playerById(playerId);
       if (!sheet) return;
-      ctx.undo.push(translate('custom.undo-player-value'), `player-${player}-${key}`);
+      ctx.undo.push(translate('custom.undo-player-value'), `player-${playerId}-${key}`);
       sheet.values = { ...sheet.values, [key]: (sheet.values[key] ?? 0) + amount };
       ctx.haptics.buzz('short');
     },
-    formulaResult(player) {
-      const sheet = player ? playerByName(player) : undefined;
+    formulaResult(playerId) {
+      const sheet = playerId ? playerById(playerId) : undefined;
       return evaluateFormula(data.formula, formulaVars(data, sheet));
     },
   };

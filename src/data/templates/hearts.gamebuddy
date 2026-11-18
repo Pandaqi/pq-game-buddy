@@ -1,0 +1,39 @@
+# hearts.gamebuddy — avoid every heart, and the queen
+
+[game]
+name: Hearts
+players: 3-6
+time: 45m
+tags: card, trick-taking
+icon: hearts
+source: Traditional game — no official source
+author: pandaqi
+license: CC-BY-SA-4.0
+format: 1
+
+[setup]
+- Deal the whole deck evenly
+- Agree whether to pass cards before each round
+- The player with the two of clubs leads first
+- Write every player on the scorepad
+
+[rules]
+Take as few hearts as you can; the queen of spades is thirteen points.
+- Follow suit if you can; the highest card of the led suit takes the trick
+- Hearts may not be led until they have been broken
+- Every heart is one point and the queen of spades is thirteen
+- Shooting the moon gives you zero and everyone else 26
+- The lowest score when someone reaches 100 wins
+
+[tool decks]
+deck: standard
+# 17 each empties the pack at three, four, five or six.
+players: 3
+deal: 17
+hidden: yes
+
+[tool score]
+mode: rounds
+target: 100
+win: lowest
+hint: 100 ends the game, and the lowest score wins

@@ -1,12 +1,18 @@
 <script lang="ts">
+  import { t } from '../i18n.svelte';
+
   let {
     value = 0,
-    label = 'Value',
+    label = t('ui.value'),
+    submitLabel = t('ui.set'),
+    cancelLabel = t('ui.cancel'),
     onsubmit,
     oncancel,
   }: {
     value?: number;
     label?: string;
+    submitLabel?: string;
+    cancelLabel?: string;
     onsubmit: (value: number) => void;
     oncancel: () => void;
   } = $props();
@@ -47,14 +53,14 @@
   <output aria-live="polite" aria-label={label}>{draft || '0'}</output>
   <div class="keys">
     {#each KEYS as key (key)}
-      <button type="button" onclick={() => press(key)} aria-label={key === '⌫' ? 'Backspace' : key}>
+      <button type="button" onclick={() => press(key)} aria-label={key === '⌫' ? t('ui.backspace') : key}>
         {key}
       </button>
     {/each}
   </div>
   <div class="actions">
-    <button type="button" class="cancel" onclick={oncancel}>Cancel</button>
-    <button type="button" class="ok" onclick={submit}>Set</button>
+    <button type="button" class="cancel" onclick={oncancel}>{cancelLabel}</button>
+    <button type="button" class="ok" onclick={submit}>{submitLabel}</button>
   </div>
 </div>
 
