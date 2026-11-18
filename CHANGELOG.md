@@ -17,6 +17,12 @@ All notable changes to Game Buddy. The template format is versioned separately
 
 ### Changed
 
+- **One workflow instead of two.** `check.yml` and `release.yml` are now a single
+  `release.yml`: the `gate` job runs the same check on every push and pull request, and
+  the `release` job reuses that build as the hosted build instead of compiling it twice.
+  One file with one trigger, so a push can no longer be gated by one workflow while the
+  other silently does nothing. A release can still be started by hand from the Actions
+  tab.
 - **The version is 0.3.0**, the first release cut this way. Every change that lands bumps
   `version` in `package.json` with `bun run gen`; `AGENTS.md` and `docs/RELEASING.md` say
   which part of the number to move.

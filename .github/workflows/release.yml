@@ -1,25 +1,52 @@
 name: release
 
-# The version number is the release switch. Bump `version` in package.json and this
-# workflow tags the commit and publishes the three build shapes; if that version has
-# already been released it does nothing. Contract: docs/RELEASING.md §2.
+# The whole pipeline in one file, so a push cannot be gated by one workflow and silently
+# skipped by another. Every push and pull request runs the gate; on `main` the second job
+# asks one question about package.json: does a GitHub Release `v<version>` exist already?
+# No - build the three shapes, tag the commit, publish. Yes - stop.
+# Contract: docs/RELEASING.md, section 2.
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 # Tagging the commit and opening the Release both write to the repository.
 permissions:
   contents: write
 
-# One release at a time: a second push waits rather than racing the first tag.
+# One release at a time: a second push on `main` waits rather than racing the first tag,
+# while a pull request supersedes its own earlier run.
 concurrency:
-  group: release
-  cancel-in-progress: false
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  gate:
+    name: gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      # Stale manifest, tsc, svelte-check, tests, template lint, build and its budgets.
+      - run: bun run check
+      # That build is the hosted build, so hand it to the release job instead of
+      # compiling the same thing twice.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: hosted
+          path: dist
+          retention-days: 1
+
   release:
+    name: release
+    needs: gate
+    # Pull requests are gated only; a release is cut from `main`.
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -45,13 +72,13 @@ jobs:
           tag="v$version"
           previous=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
           echo "package.json says $version${previous:+; the last release was $previous}."
-          # A release, not a tag, is what "already shipped" means: a run that pushed the
+          # A Release, not a tag, is what "already shipped" means: a run that pushed the
           # tag but died before the Release finished retries instead of skipping forever.
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "::notice::$tag is already released; nothing to publish."
             echo "release=false" >> "$GITHUB_OUTPUT"
           else
-            echo "::notice::$tag is new; running the gate and building it."
+            echo "::notice::$tag is new; building the three shapes."
             echo "release=true" >> "$GITHUB_OUTPUT"
           fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -61,22 +88,20 @@ jobs:
         if: steps.version.outputs.release == 'true'
         run: bun install --frozen-lockfile
 
-      # The gate, exactly as a pull request gets it: stale manifest, tsc, svelte-check,
-      # tests, template lint and the default build with its budgets. A red gate leaves no
-      # tag, so fixing it and pushing again retries the same version.
-      - name: Gate
+      - name: Hosted build from the gate
         if: steps.version.outputs.release == 'true'
-        run: bun run check
+        uses: actions/download-artifact@v4
+        with:
+          name: hosted
+          path: release/hosted
 
-      - name: Build the three shapes
+      - name: Build the other two shapes and pack them
         if: steps.version.outputs.release == 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-          # Each build wipes dist/, so snapshot the gate's default build before the next.
-          mkdir -p release
-          cp -r dist release/hosted
+          # Both builds wipe dist/, so the hosted copy stays where the gate put it.
           bun run build:site
           cp -r dist release/site
           bun run build:single
@@ -99,12 +124,12 @@ jobs:
         run: |
           set -euo pipefail
           cat > release/notes.md <<EOF
-          Game Buddy $VERSION — three builds from one source. Pick the one that fits.
+          Game Buddy $VERSION - three builds from one source. Pick the one that fits.
 
           | Download | What you get |
           | --- | --- |
           | **pq-game-buddy-$VERSION.html** | The whole app in one file. Double-click it: works from disk, offline, nothing to install. |
-          | **pq-game-buddy-$VERSION-hosted.zip** | The hosted build — the page, its scripts, styles, lazy chunks and fonts. Serve the folder from any static host. |
+          | **pq-game-buddy-$VERSION-hosted.zip** | The hosted build: the page, its scripts, styles, lazy chunks and fonts. Serve the folder from any static host. |
           | **pq-game-buddy-$VERSION-site.zip** | The hosted build plus a real page per tool and per template, a sitemap and the template catalogue, for links and search engines. |
 
           Each zip unpacks into a folder of its own. The app makes no network request at

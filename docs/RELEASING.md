@@ -51,11 +51,13 @@ hosted pages only, so the dev shell and the single file never register a worker.
 3. Bump `version` in `package.json`, in the same commit as the work. It is the only place
    the number is written: `bun run gen` copies it into `src/core/version.generated.ts`
    (commit that too), and `bun run check` rejects a stale copy.
-4. Push to `main`. `.github/workflows/release.yml` is what turns the number into a
-   release, and it asks one question: has the GitHub Release `v<version>` been published
-   already?
-   - **No** — it runs `bun run check`, builds the three shapes, tags the commit
-     `v<version>` and opens a Release with `pq-game-buddy-<version>.html` (the single
+4. Push to `main`. `.github/workflows/release.yml` is the only workflow: the `gate` job
+   runs `bun run check` on every push and pull request, and on `main` the `release` job
+   turns the number into a release by asking one question: has the GitHub Release
+   `v<version>` been published already?
+   - **No** — it takes the gate's build as the hosted build, builds the other two
+     shapes, tags the commit `v<version>` and opens a Release with
+     `pq-game-buddy-<version>.html` (the single
      file, everything embedded), `pq-game-buddy-<version>-hosted.zip` (the default
      build: page, scripts, styles, lazy chunks, fonts) and
      `pq-game-buddy-<version>-site.zip` (the same plus a page per tool and per template,
@@ -64,8 +66,10 @@ hosted pages only, so the dev shell and the single file never register a worker.
      two changes that share a version ship as one release.
 
    The tag is created only after every artifact exists, so a red gate or a failed build
-   leaves no tag: fix it and push again, no version juggling. The workflow publishes a
-   GitHub Release, not a deployment — pandaqi.com is still §4 below.
+   leaves no tag: fix it and push again, no version juggling. A run that was missed or
+   needs retrying can be started by hand from the Actions tab (the workflow has
+   `workflow_dispatch`). The workflow publishes a GitHub Release, not a deployment —
+   pandaqi.com is still §4 below.
 
 ## 3. Verify a downloaded copy
 

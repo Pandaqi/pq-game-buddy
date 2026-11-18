@@ -11,7 +11,7 @@
 [Download the offline file](https://pandaqi.com/game-buddy/pq-game-buddy.html) ·
 [Documentation](#documentation)
 
-[![bun run check](https://github.com/Pandaqi/pq-game-buddy/actions/workflows/check.yml/badge.svg)](https://github.com/Pandaqi/pq-game-buddy/actions/workflows/check.yml)
+[![release](https://github.com/Pandaqi/pq-game-buddy/actions/workflows/release.yml/badge.svg)](https://github.com/Pandaqi/pq-game-buddy/actions/workflows/release.yml)
 [![version](https://img.shields.io/github/package-json/v/Pandaqi/pq-game-buddy?label=version&color=blue)](package.json)
 [![Svelte 5](https://img.shields.io/badge/svelte-5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](tsconfig.json)
@@ -58,12 +58,13 @@ bun run check        # the gate: stale manifest, tsc, svelte-check, tests, templ
 | `bun run gen` | Regenerates the manifest, schemas and template index after adding a tool or template |
 
 `bun run check` must pass before a change lands. It is also what
-[the CI workflow](.github/workflows/check.yml) runs on every push.
+[the release workflow](.github/workflows/release.yml) runs on every push and pull
+request, before it considers cutting a release.
 
 Every change also bumps `version` in `package.json` (semantic versioning) and runs
-`bun run gen`: [the release workflow](.github/workflows/release.yml) tags `v<version>`
-and publishes the single file, the hosted build and the site build when that number is
-new. See [docs/RELEASING.md](docs/RELEASING.md) §2.
+`bun run gen`: on `main`, the same workflow tags `v<version>` and publishes the single
+file, the hosted build and the site build when that number is new. See
+[docs/RELEASING.md](docs/RELEASING.md) §2.
 
 ## Tools
 
