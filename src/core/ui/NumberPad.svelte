@@ -90,8 +90,6 @@
   .keys button {
     min-height: 60px;
     font-size: var(--text-xl);
-    border-radius: var(--radius-lg);
-    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
@@ -107,13 +105,12 @@
     cursor: pointer;
   }
   .cancel {
-    background: var(--surface-2);
     color: var(--text);
   }
   .ok {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
+    --cutout-filter: var(--filter-key);
     color: var(--accent-text);
-    box-shadow: var(--shadow-key);
     font-weight: 800;
   }
 </style>

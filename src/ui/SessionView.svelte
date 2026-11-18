@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { seatVars } from '../core/colour';
   import { createDisplayChannel, displayUrl } from '../core/display';
   import { language, t } from '../core/i18n.svelte';
   import { gameName } from '../core/game-name';
@@ -359,7 +360,7 @@
       >
         <span class="seats-dots" aria-hidden="true">
           {#each players.slice(0, 4) as player (player.id)}
-            <span class="mini" style="--player: {player.color}">{player.initial}</span>
+            <span class="mini" style={seatVars(player.color)}>{player.initial}</span>
           {/each}
         </span>
         <span class="seats-label">{seatSummary}</span>
@@ -459,7 +460,7 @@
     <ul class="player-list">
       {#each players as player (player.id)}
         <li>
-          <span class="dot" style="--player: {player.color}">{player.initial}</span>
+          <span class="dot" style={seatVars(player.color)}>{player.initial}</span>
           <input
             type="text"
             value={player.name}
@@ -538,13 +539,13 @@
     {#if finishSaved}
       <p class="saved" role="status">{t('finish.in-log')}</p>
       <button type="button" class="wide" onclick={savePlay}>{t('finish.update')}</button>
-      <button type="button" class="wide primary-wide" onclick={playAgain}>{t('finish.play-again')}</button>
+      <button type="button" class="wide primary" onclick={playAgain}>{t('finish.play-again')}</button>
       <button type="button" class="wide" onclick={finishAndClose}>
         {forgetOnClose ? t('finish.forget-close') : t('finish.close-home')}
       </button>
     {:else}
       <button type="button" class="wide" onclick={savePlay}>{t('finish.save')}</button>
-      <button type="button" class="wide primary-wide" onclick={saveAndClose}>{t('finish.save-close')}</button>
+      <button type="button" class="wide primary" onclick={saveAndClose}>{t('finish.save-close')}</button>
       <button type="button" class="wide danger" onclick={finishAndClose}>{t('finish.close-unsaved')}</button>
     {/if}
     <button type="button" class="wide" onclick={copyResult}>{t('finish.copy')}</button>
@@ -591,7 +592,7 @@
     <a class="wide link" href="#/settings">{t('menu.settings')}</a>
     <button type="button" class="wide" onclick={() => { store.saveNow(); store.toast(t('toast.saved')); }}>{t('menu.save-now')}</button>
     <button type="button" class="wide" onclick={syncPlayers}>{t('menu.sync')}</button>
-    <button type="button" class="wide primary-wide" onclick={openFinish}>{t('menu.finish')}</button>
+    <button type="button" class="wide primary" onclick={openFinish}>{t('menu.finish')}</button>
     <button type="button" class="wide danger" onclick={closeGame}>{t('menu.close')}</button>
     <p class="dim small">{t('menu.close-hint')}</p>
   </Sheet>
@@ -641,8 +642,6 @@
   .menu {
     min-width: 48px;
     min-height: 48px;
-    border-radius: var(--radius-round);
-    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
     box-shadow: none;
@@ -662,7 +661,6 @@
     gap: var(--space-2);
     min-height: 48px;
     padding: 0 var(--space-3) 0 var(--space-2);
-    background: transparent;
     color: var(--text-dim);
     box-shadow: none;
     border-radius: var(--radius-pill);
@@ -671,7 +669,6 @@
   }
   .seats-toggle:hover,
   .tools-toggle:hover {
-    background: var(--surface-2);
     color: var(--text);
     transform: none;
     box-shadow: none;
@@ -686,7 +683,7 @@
     height: 26px;
     border-radius: var(--radius-round);
     background: var(--player);
-    color: var(--on-seat);
+    color: var(--seat-ink, var(--on-seat));
     font-family: var(--font-display);
     font-size: 0.7rem;
     font-weight: 800;
@@ -711,8 +708,6 @@
     flex: none;
     min-width: 48px;
     min-height: 48px;
-    border-radius: var(--radius-round);
-    background: var(--surface-2);
     color: var(--text-dim);
     box-shadow: none;
     font-size: var(--text-lg);
@@ -752,21 +747,24 @@
     gap: var(--space-2);
     padding: 0 0 var(--space-1);
   }
+  /* Each tab is data-family-scoped, so its wash is the colour of that tool: a row of
+     tabs reads as the template's palette at a glance. */
   .tabs button {
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
     min-height: 48px;
     padding: var(--space-1) var(--space-4);
-    background: var(--surface-2);
-    color: var(--text-dim);
+    --cutout-fill: var(--accent-soft);
+    color: var(--text);
     text-align: left;
     box-shadow: none;
   }
   .tabs button.active {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
+    --cutout-filter: var(--filter-key);
     color: var(--accent-text);
-    box-shadow: var(--shadow-key);
+    box-shadow: none;
   }
   .tab-mark {
     display: inline-grid;
@@ -790,9 +788,8 @@
     align-self: center;
     min-height: 48px;
     padding: 0 var(--space-5);
-    background: var(--ink);
+    --cutout-fill: var(--ink);
     color: var(--paper);
-    box-shadow: var(--shadow-lift);
     animation: bloom var(--motion-settle) var(--ease-bounce);
   }
   .broken {
@@ -811,7 +808,6 @@
   }
   .broken button {
     min-height: 48px;
-    background: var(--surface);
   }
   .pad {
     padding: var(--space-4);
@@ -836,7 +832,7 @@
     height: 38px;
     border-radius: var(--radius-round);
     background: var(--player);
-    color: var(--on-seat);
+    color: var(--seat-ink, var(--on-seat));
     font-family: var(--font-display);
     font-weight: 800;
     font-size: var(--text-sm);
@@ -849,8 +845,6 @@
   .player-list button {
     min-width: 48px;
     min-height: 48px;
-    border-radius: var(--radius-round);
-    background: var(--surface-2);
     color: var(--text-dim);
   }
   .field {
@@ -859,43 +853,28 @@
     gap: var(--space-1);
     color: var(--text-dim);
   }
+  /* Size only: fill, edge and shape are the shared key and cutout rules, so the
+     sheet cannot drift from a tool's primary action. */
   .primary {
     min-height: 54px;
-    background: var(--accent);
-    color: var(--accent-text);
-    box-shadow: var(--shadow-key);
     font-weight: 800;
     font-size: var(--text-lg);
   }
   .wide {
     min-height: 54px;
-    background: var(--surface-2);
-    color: var(--text);
     font: inherit;
     font-family: var(--font-display);
     font-weight: 700;
-  }
-  .wide.danger {
-    background: var(--danger-soft);
-    color: var(--danger);
   }
   .link {
     display: flex;
     align-items: center;
     justify-content: center;
     min-height: 54px;
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     text-decoration: none;
     font-family: var(--font-display);
     font-weight: 700;
-  }
-  .primary-wide {
-    background: var(--accent);
-    color: var(--accent-text);
-    box-shadow: var(--shadow-key);
-    font-weight: 800;
   }
   .finish-list {
     list-style: none;
@@ -937,11 +916,10 @@
   .sources button {
     min-height: 48px;
     padding: 0 var(--space-4);
-    background: var(--surface-2);
     color: var(--text);
   }
   .sources button.active {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     color: var(--accent-deep);
     font-weight: 800;
   }

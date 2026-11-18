@@ -46,7 +46,7 @@ const es: Dict = {
 
   'home.title-1': 'Noche de juegos,',
   'home.title-2': 'resuelta.',
-  'home.kicker': 'Sin cuenta. Sin internet. Sin instalar nada.',
+  'home.kicker': 'Local, gratis y sin complicaciones.',
   'home.lede': 'Temporizadores, dados, hojas de puntos y plantillas para los juegos que tienes.',
   'home.continue': 'Sigue donde lo dejaste',
   'home.tools': 'Herramientas',

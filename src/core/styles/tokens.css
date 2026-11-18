@@ -4,9 +4,15 @@
    --font-body to restyle the typography. No view may name a colour of its own. */
 
 :root {
-  --font-display: 'Game Buddy', ui-rounded, 'Segoe UI Variable Display', 'Trebuchet MS', system-ui, sans-serif;
+  /* Latin face first, then the script's own face: the browser walks the list glyph by
+     glyph, so a heading stays Game Buddy in English and borrows the Japanese drawing for
+     kana. fonts.css replaces --font-cjk per language, naming the bundled Noto face first
+     and the platform's own after it. */
+  --font-cjk: system-ui;
+  --font-display: 'Game Buddy', 'Raleway', ui-rounded, 'Segoe UI Variable Display',
+    'Trebuchet MS', var(--font-cjk), sans-serif;
   --font-body: 'Raleway', ui-sans-serif, system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial,
-    sans-serif;
+    var(--font-cjk), sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-num: var(--font-display);
   /* Older views ask for --font; it is the body face. */
@@ -33,13 +39,18 @@
   --row-tint: rgba(126, 92, 44, 0.045);
   --shade: rgba(92, 60, 20, 0.16);
   --danger: #a83224;
+  --danger-deep: #7d2418;
   --danger-soft: #ffe0d8;
   --warning: #8a5a00;
   --success: #246b45;
   --focus: #1f5c40;
   --on-accent: #fffaf0;
-  /* Dark ink for a mid-tone seat colour, in both themes. */
-  --on-seat: #241a10;
+  /* Cream ink for a dark seat, in both themes: every colour in PLAYER_COLORS clears
+     4.5:1 against it. Dark ink could not reach AA on any seat, even at black. */
+  --on-seat: #fffaf0;
+  /* The other end: a template may name a pale seat, and core/colour.ts picks this ink
+     for it rather than leaving cream on cream. */
+  --on-seat-deep: #17100a;
   --warning-soft: #ffeccc;
 
   /* One loud accent per tool family, with a deep tone for the candy shadow and
@@ -90,6 +101,12 @@
   --shadow-glow: 0 0 0 4px var(--accent-soft);
   --shadow-inset: inset 0 0 0 3px var(--player, var(--line-ink));
   --scrim: rgba(28, 20, 10, 0.6);
+  /* A masked shape (cutouts.css) cannot carry a box-shadow: the shadow would draw the
+     rectangle the mask hides. These are the same depths, expressed as filters. */
+  --filter-key: drop-shadow(0 3px 0 var(--accent-deep));
+  --filter-key-soft: drop-shadow(0 2px 0 var(--shade));
+  --filter-danger: drop-shadow(0 3px 0 var(--danger-deep));
+  --filter-tile: drop-shadow(0 14px 26px rgba(74, 46, 10, 0.34));
 
   /* Four-pixel spacing scale, used generously */
   --space-1: 0.25rem;
@@ -173,7 +190,9 @@
     --grain: rgba(255, 240, 210, 0.025);
     --row-tint: rgba(255, 240, 200, 0.035);
     --shade: rgba(0, 0, 0, 0.5);
+    --filter-tile: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.5));
     --danger: #ff9a86;
+    --danger-deep: #b3503c;
     --danger-soft: #3d221e;
     --warning: #f6c05e;
     --success: #8fd3a8;
@@ -222,7 +241,9 @@
   --grain: rgba(255, 240, 210, 0.025);
   --row-tint: rgba(255, 240, 200, 0.035);
   --shade: rgba(0, 0, 0, 0.5);
+  --filter-tile: drop-shadow(0 14px 26px rgba(0, 0, 0, 0.5));
   --danger: #ff9a86;
+  --danger-deep: #b3503c;
   --danger-soft: #3d221e;
   --warning: #f6c05e;
   --success: #8fd3a8;

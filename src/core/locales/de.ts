@@ -47,7 +47,7 @@ const de: Dict = {
 
   'home.title-1': 'Spieleabend,',
   'home.title-2': 'geregelt.',
-  'home.kicker': 'Kein Konto. Kein Internet. Keine Installation.',
+  'home.kicker': 'Lokal, kostenlos, ohne Schnickschnack.',
   'home.lede': 'Timer, Würfel, Blockblätter und Vorlagen für die Spiele, die du hast.',
   'home.continue': 'Weitermachen, wo du aufgehört hast',
   'home.tools': 'Werkzeuge',

@@ -126,7 +126,7 @@
 <div class="settings">
   <header class="head">
     <h1>{t('settings.title')}</h1>
-    <a class="back" href="#/">{t('settings.home')}</a>
+    <a class="cutout back" href="#/">{t('settings.home')}</a>
   </header>
 
   <section>
@@ -356,8 +356,6 @@
     display: inline-flex;
     align-items: center;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     text-decoration: none;
     font-weight: 600;
@@ -403,12 +401,9 @@
   .small {
     font-size: var(--text-sm);
   }
+  /* Placement only: the shared .danger key owns the fill and the shape. */
   .danger {
     min-height: 52px;
-    border-radius: var(--radius-pill);
-    background: var(--danger-soft);
-    color: var(--danger);
-    font-weight: 700;
     cursor: pointer;
     align-self: flex-start;
     padding: 0 var(--space-5);
@@ -430,8 +425,6 @@
   .wide {
     width: 100%;
     min-height: 52px;
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     font-weight: 700;
     cursor: pointer;

@@ -190,7 +190,7 @@
       <span>{t('bracket.add-entrant-label')}</span>
       <input type="text" bind:value={newName} onkeydown={(event) => { if (event.key === 'Enter') { instance.addEntrant(newName); newName = ''; } }} />
     </label>
-    <button type="button" class="primary-wide" onclick={() => { instance.addEntrant(newName); newName = ''; }}>{t('bracket.add-entrant')}</button>
+    <button type="button" class="wide primary" onclick={() => { instance.addEntrant(newName); newName = ''; }}>{t('bracket.add-entrant')}</button>
     <button type="button" class="wide" onclick={() => (editorOpen = false)}>{t('bracket.done')}</button>
   </Sheet>
 {/if}
@@ -213,17 +213,15 @@
   .formats button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: var(--radius-sm);
     border: 0;
-    background: transparent;
+    --cutout-fill: transparent;
     color: var(--text);
     text-transform: capitalize;
     cursor: pointer;
   }
   .formats button.active {
-    background: var(--surface);
     font-weight: 700;
-    box-shadow: var(--shadow-soft);
+    box-shadow: none;
   }
   .champion,
   .next {
@@ -272,7 +270,6 @@
   .sides button {
     min-height: 44px;
     border-radius: var(--radius-sm);
-    background: var(--surface);
     color: var(--text);
     text-align: left;
     padding: 0 var(--space-2);
@@ -283,7 +280,7 @@
     cursor: default;
   }
   .sides button.won {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     font-weight: 800;
   }
   .vs {
@@ -384,18 +381,9 @@
   }
 
 
-  .wide,
-  .primary-wide {
+  .wide {
     min-height: 52px;
-    border-radius: var(--radius);
-    background: var(--surface-2);
-    color: var(--text);
     cursor: pointer;
-  }
-  .primary-wide {
-    background: var(--accent);
-    color: var(--accent-text);
-    font-weight: 700;
   }
 
 

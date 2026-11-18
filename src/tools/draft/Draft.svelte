@@ -291,7 +291,6 @@
     min-height: 52px;
     padding: 0 var(--space-3);
     border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text);
     font-weight: 600;
     cursor: pointer;
@@ -312,7 +311,6 @@
     min-height: 48px;
     padding: 0 var(--space-4);
     border-radius: var(--radius);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }

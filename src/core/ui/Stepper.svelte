@@ -50,8 +50,6 @@
   button {
     min-width: 56px;
     min-height: 48px;
-    border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
     font-weight: 700;

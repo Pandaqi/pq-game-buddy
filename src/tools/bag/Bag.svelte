@@ -245,13 +245,11 @@
   .who button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: var(--radius-pill);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }
   .who button.active {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     font-weight: 700;
   }
   .controls {
@@ -281,7 +279,6 @@
     flex-wrap: wrap;
     gap: var(--space-1);
   }
-  .tokens button,
   .tile {
     display: inline-flex;
     align-items: baseline;
@@ -350,8 +347,6 @@
   .steppers button {
     min-width: 32px;
     min-height: 40px;
-    border-radius: var(--radius-sm);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }
@@ -369,8 +364,6 @@
   .add button {
     min-height: 48px;
     padding: 0 var(--space-3);
-    border-radius: var(--radius);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }

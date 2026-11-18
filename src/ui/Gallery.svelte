@@ -193,7 +193,7 @@
       <h1>{t('gallery.title')}</h1>
       <p class="dim">{t('gallery.hint', { count: templates.length })}</p>
     </div>
-    <a class="back" href="#/">{t('nav.home')}</a>
+    <a class="cutout back" href="#/">{t('nav.home')}</a>
   </header>
 
   <div class="filters">
@@ -336,13 +336,13 @@
         <input type="number" min={rangeOf(current).min} max={rangeOf(current).max} bind:value={seats} />
       </label>
     {/if}
-    <button type="button" class="wide" onclick={startChosen} disabled={!chosenText}>
+    <button type="button" class="wide primary" onclick={startChosen} disabled={!chosenText}>
       {chosenText ? t('seats.start') : t('gallery.loading')}
     </button>
     {#if templates.some((item) => item.id === current.id)}
-      <button type="button" class="wide ghost" onclick={() => copyTemplateLink(current.id)}>{t('gallery.copy-link')}</button>
+      <button type="button" class="wide" onclick={() => copyTemplateLink(current.id)}>{t('gallery.copy-link')}</button>
     {/if}
-    <button type="button" class="wide ghost" onclick={() => toggleFavourite(current.id)}>
+    <button type="button" class="wide" onclick={() => toggleFavourite(current.id)}>
       {favourites.includes(current.id) ? t('gallery.remove-favourite') : t('gallery.add-favourite')}
     </button>
   </Sheet>
@@ -380,8 +380,6 @@
     display: inline-flex;
     align-items: center;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     text-decoration: none;
     font-weight: 600;
@@ -403,16 +401,15 @@
   .chips button {
     min-height: 48px;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text-dim);
     cursor: pointer;
   }
   .chips button.active {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
+    --cutout-filter: var(--filter-key);
     color: var(--accent-text);
     font-weight: 800;
-    box-shadow: var(--shadow-key);
+    box-shadow: none;
   }
   .selects {
     display: flex;
@@ -437,8 +434,7 @@
   .surprise {
     min-height: 48px;
     padding: 0 var(--space-5);
-    border-radius: var(--radius-pill);
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     color: var(--accent-deep);
     font-weight: 800;
     cursor: pointer;
@@ -585,28 +581,21 @@
   .empty {
     color: var(--text-dim);
   }
+  /* Layout only: the shared .primary key owns the fill, the edge and the shape. */
   .primary {
     min-height: 50px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     padding: 0 var(--space-5);
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    color: var(--accent-text);
     text-decoration: none;
-    font-weight: 800;
+    cursor: pointer;
   }
   .link {
     width: fit-content;
   }
   .wide {
     min-height: 54px;
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    color: var(--accent-text);
-    box-shadow: var(--shadow-key);
-    font-weight: 800;
     cursor: pointer;
   }
   .variants {
@@ -617,18 +606,11 @@
   .variants button {
     min-height: 44px;
     padding: 0 var(--space-4);
-    background: var(--surface-2);
     color: var(--text);
   }
   .variants button.active {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     color: var(--accent-deep);
     font-weight: 800;
-  }
-  .wide.ghost {
-    background: transparent;
-    color: var(--text-dim);
-    box-shadow: none;
-    font-weight: 600;
   }
 </style>

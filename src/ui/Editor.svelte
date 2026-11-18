@@ -117,7 +117,7 @@
       <h1>{t('editor.title')}</h1>
       <p class="dim">{t('editor.hint')}</p>
     </div>
-    <a class="back" href="#/templates">{t('editor.gallery')}</a>
+    <a class="cutout back" href="#/templates">{t('editor.gallery')}</a>
   </header>
 
   <div class="toolbar">
@@ -171,7 +171,7 @@
     <ul class="diagnostics">
       {#each diagnostics as item, index (index)}
         <li class:error={item.severity === 'error'}>
-          <button type="button" onclick={() => jump(item.line)}>
+          <button type="button" class="band" onclick={() => jump(item.line)}>
             <span class="line">{t('editor.line', { line: item.line })}</span>
             <span>{item.message}</span>
           </button>
@@ -269,14 +269,12 @@
   .modes button {
     min-height: 46px;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text-dim);
     font-weight: 700;
     cursor: pointer;
   }
   .modes button.active {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
     color: var(--accent-text);
   }
   .toolbar {
@@ -288,8 +286,6 @@
   .toolbar button {
     min-height: 46px;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
@@ -376,7 +372,6 @@
     min-height: 44px;
     padding: var(--space-1) var(--space-2);
     border-radius: var(--radius-sm);
-    background: var(--surface);
     color: var(--text-dim);
     font: inherit;
     font-size: var(--text-sm);
@@ -419,14 +414,10 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
+  /* Size only: the shared .primary key owns the fill, the edge and the shape. */
   .primary {
     min-height: 56px;
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    color: var(--accent-text);
-    box-shadow: var(--shadow-key);
     font-size: var(--text-lg);
-    font-weight: 800;
     cursor: pointer;
   }
 </style>

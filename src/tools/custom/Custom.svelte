@@ -202,7 +202,7 @@
   </section>
 
   <div class="row">
-    <button type="button" class="primary" onclick={openBuilder}>{t('custom.build')}</button>
+    <button type="button" class="primary band" onclick={openBuilder}>{t('custom.build')}</button>
   </div>
 
   {#if data.history.length}
@@ -344,7 +344,6 @@
     min-width: 48px;
     min-height: 48px;
     border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
     font-weight: 700;
@@ -444,7 +443,6 @@
     min-height: 48px;
     padding: 0 var(--space-3);
     border-radius: var(--radius);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }

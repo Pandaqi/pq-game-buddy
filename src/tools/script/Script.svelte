@@ -202,7 +202,7 @@
 
 
   .row button.primary {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
     color: var(--accent-text);
     font-weight: 800;
   }

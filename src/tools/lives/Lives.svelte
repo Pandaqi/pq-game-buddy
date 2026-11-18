@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { seatVars } from '../../core/colour';
   import { language, seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
   import NumberPad from '../../core/ui/NumberPad.svelte';
@@ -88,7 +89,7 @@
       {#each data.players as player (player.id)}
         <li class:out={isOut(data, player)}>
           <div class="who">
-            <span class="dot" style="--player: {player.color}">{label(player).slice(0, 2).toUpperCase()}</span>
+            <span class="dot" style={seatVars(player.color)}>{label(player).slice(0, 2).toUpperCase()}</span>
             <span class="name">{label(player)}</span>
             {#if isOut(data, player)}<span class="tag">{t('lives.out')}</span>{/if}
           </div>
@@ -277,12 +278,11 @@
     font-size: var(--text-2xl);
     font-weight: 800;
     border-radius: var(--radius-lg);
-    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
   .big-actions button.plus {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
     color: var(--accent-text);
   }
   .tracks {
@@ -319,7 +319,7 @@
     height: 34px;
     border-radius: var(--radius-round);
     background: var(--player);
-    color: var(--on-seat);
+    color: var(--seat-ink, var(--on-seat));
     font-family: var(--font-display);
     font-size: var(--text-xs);
     font-weight: 800;
@@ -360,14 +360,13 @@
     min-width: 56px;
     min-height: 48px;
     border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
     font-weight: 700;
     cursor: pointer;
   }
   .row-actions button.plus {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
   }
   .extras,
   .conditions {
@@ -402,19 +401,17 @@
   .chips button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: var(--radius-pill);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }
   .chips button.active {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     font-weight: 700;
   }
 
 
   .row button.reveal {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     font-weight: 700;
   }
 

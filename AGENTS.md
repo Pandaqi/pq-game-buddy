@@ -13,6 +13,7 @@ HTML file. Read this page, then follow the links. Everything else lives in `docs
 | `.gamebuddy-theme` keys and validation | [docs/THEME-FORMAT.md](docs/THEME-FORMAT.md) |
 | `.gamebuddy-tool` format (a tool as data) | [docs/PLUGIN-FORMAT.md](docs/PLUGIN-FORMAT.md) |
 | Add or change a tool | [docs/TOOL-AUTHORING.md](docs/TOOL-AUTHORING.md) |
+| Add or prepare a language (including CJK) | [docs/LANGUAGES.md](docs/LANGUAGES.md) |
 | Using the app, template errors, limitations | [docs/USER-GUIDE.md](docs/USER-GUIDE.md) |
 | Contributing a community template | [docs/COMMUNITY.md](docs/COMMUNITY.md) |
 | Visual language: tokens, type, marks, motion | [docs/STYLE.md](docs/STYLE.md) |

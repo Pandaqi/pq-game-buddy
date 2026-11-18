@@ -38,7 +38,7 @@
     min-height: 64px;
     border-radius: var(--radius-lg);
     border: 0;
-    background: var(--accent);
+    --cutout-fill: var(--accent);
     color: var(--accent-text);
     font-size: var(--text-lg);
     font-weight: 700;

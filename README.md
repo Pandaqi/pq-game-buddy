@@ -1,129 +1,176 @@
-# pq-game-buddy
+# Game Buddy
 
-Offline tools for game night: timers, dice, a coin, a random picker, a scorepad,
-lives, counters, turns, secret reveals, a rules sheet, a play log, decks, a token
-bag, brackets, drafts, buzzers, a narrator script, word tools, prompt packs, a custom
-tracker, speedrun splits, and a plain-text template format with 49 ready-to-play
-games.
+Timers, dice, scorepads, secret roles, brackets and 86 ready-to-play templates for the
+games already on your table. One page. No install, no account, no internet.
 
-One HTML file. No install, no account, no network, no build step for the player.
+**[Use it now →](https://pandaqi.com/game-buddy/)** ·
+[Download the offline file](https://pandaqi.com/game-buddy/pq-game-buddy.html) ·
+[Documentation](#documentation)
 
-## Run it
+[![bun run check](https://github.com/Pandaqi/pq-game-buddy/actions/workflows/check.yml/badge.svg)](https://github.com/Pandaqi/pq-game-buddy/actions/workflows/check.yml)
+[![version](https://img.shields.io/github/package-json/v/Pandaqi/pq-game-buddy?label=version&color=blue)](package.json)
+[![Svelte 5](https://img.shields.io/badge/svelte-5-FF3E00?logo=svelte&logoColor=white)](https://svelte.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](tsconfig.json)
+[![Bun](https://img.shields.io/badge/bun-%E2%89%A51.3-000000?logo=bun&logoColor=white)](https://bun.sh)
+
+[![tools](https://img.shields.io/badge/tools-20-success)](#tools)
+[![templates](https://img.shields.io/badge/templates-86-success)](#templates)
+[![languages](https://img.shields.io/badge/languages-10-informational)](#languages)
+[![tests](https://img.shields.io/badge/tests-618-brightgreen)](tests)
+[![licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
+[![runtime dependencies](https://img.shields.io/badge/runtime%20dependencies-0-success)](package.json)
+[![network requests](https://img.shields.io/badge/network%20requests-0-blueviolet)](#what-it-does-not-do)
+
+![The Game Buddy home screen: a painted game room behind "Game night, sorted." and the tool shelf](docs/screenshots/home.webp)
+
+## Two ways to use it
+
+| You want to | Do this |
+|-------------|---------|
+| Play tonight | Open [pandaqi.com/game-buddy](https://pandaqi.com/game-buddy/). Nothing to install. |
+| Play without internet | Download [pq-game-buddy.html](https://pandaqi.com/game-buddy/pq-game-buddy.html) and double-click it. The whole app is in that one file, fonts and all. |
+| Keep it on a phone | Open the hosted site once and use "Install" (it is a PWA). Or save the single file. |
+| Add a game of your own | Write a plain-text `.gamebuddy` template: [docs/TEMPLATE-FORMAT.md](docs/TEMPLATE-FORMAT.md). |
+| Add a tool | One folder: [docs/TOOL-AUTHORING.md](docs/TOOL-AUTHORING.md). |
+| Share a tool as a file | A `.gamebuddy-tool`: [docs/PLUGIN-FORMAT.md](docs/PLUGIN-FORMAT.md). |
+| Restyle it | A `.gamebuddy-theme` token file: [docs/THEME-FORMAT.md](docs/THEME-FORMAT.md). |
+| Run and build the code | See [below](#run-and-build). |
+
+## Run and build
 
 ```bash
 bun install
-bun run dev          # dev server with HMR, same Svelte compile as the build
+bun run dev          # dev server with HMR, prints its URL
+bun run check        # the gate: stale manifest, tsc, svelte-check, tests, template lint, build
 ```
 
-Then open the URL Bun prints (usually `http://localhost:3000`).
+| Command | What you get |
+|---------|--------------|
+| `bun run build` | `dist/`: the hosted app (`index.html`, `app.js`, `app.css`, lazy chunks, fonts) plus `dist/pq-game-buddy.html`, one self-contained offline file |
+| `bun run build:site` | The same, plus a real page per tool (`dist/<tool>/`) and per template (`dist/template/<id>/`), for search engines and links |
+| `bun run build:single` | Only `dist/index.html`, with JS, CSS and fonts embedded: one file to copy around |
+| `bun run build --langs=nl` | A build that carries one language instead of all ten |
+| `bun run size` | Checks `dist/size.json` against the byte budgets; `build` already fails over them |
+| `bun run gen` | Regenerates the manifest, schemas and template index after adding a tool or template |
 
-## Build
+`bun run check` must pass before a change lands. It is also what
+[the CI workflow](.github/workflows/check.yml) runs on every push.
 
-```bash
-bun run build        # dist/index.html, app.js + chunks/, app.css
-                     # plus dist/pq-game-buddy.html: one self-contained offline file
-bun run build:site   # also dist/<tool>/index.html and dist/template/<id>/index.html:
-                     # one small page per tool and per template
-bun run build:single # just dist/index.html with everything embedded: one file
-bun run size         # check dist/size.json against the budgets
-```
+## Tools
 
-`dist/pq-game-buddy.html` can be downloaded, double-clicked and used offline.
-Everything else in `dist/` is for hosting.
+Twenty tools, each with sane defaults and one obvious action. A tool is one lazy chunk:
+adding one does not grow the start-up.
 
-## Check
+| Tool | What it is for |
+|------|----------------|
+| **Timer** | Countdown, stopwatch, flip timer, chess clock, intervals, phase sequences, several clocks at once |
+| **Dice** | Any notation (`4d6kh3`, `2d20`, `d%`), pools, exploding and success dice, saved macros, custom word faces |
+| **Coin** | Fair or weighted flips, call it, best-of series |
+| **Pick** | Random numbers, lists, teams or seats, shown as a list, card, wheel or slot |
+| **Score** | Totals, rounds, categories with formulas, or a money ledger; per-cell notes, targets, CSV |
+| **Lives** | HP, lives, stocks; tap a score to type a whole hit; extra tracks; conditions; elimination |
+| **Counters** | Wood, coins, tokens, a shared bank with transfers, or a straight points counter |
+| **Turns** | Whose turn, which round, which phase, optional turn clock, pass-the-phone cover |
+| **Reveal** | Secret roles with hold-to-reveal, anonymous ballots, blind bids |
+| **Rules** | The quick card, setup checklist, glossary, scoring reference and source link |
+| **Decks** | Standard, Euchre, Skat, Rummy, UNO, tarot, domino or your own; shuffle, cut, deal, hidden hands |
+| **Bag** | Blind draws from tiles or tokens, letter values, per-player trays |
+| **Bracket** | Single and double elimination, round robin, groups, Swiss, with tiebreaks |
+| **Draft** | Linear and snake order, pick clock, auction with budgets |
+| **Buzzer** | Who tapped first, false starts, reaction times, keyboard lanes |
+| **Script** | Narrate a round: say, wait, reveal, start a timer, optional spoken voice |
+| **Words** | Is this a word? Filters, anagrams, rack solver with blanks, Codenames board |
+| **Prompts** | Party and designer prompt packs, custom packs |
+| **Custom** | Build a tracker from fields, counters, a checklist, a table and safe formulas |
+| **Splits** | Speedrun splits with targets, personal bests and gold splits |
 
-```bash
-bun run check        # stale manifest, tsc, svelte-check, tests, template lint, build
-bun test             # parser, formatting, every tool's logic and actions, RNG, storage, router, undo
-bun run typecheck    # tsc --noEmit and svelte-check
-bun run lint:templates
-bun run gen          # regenerate manifest/schemas/templates after adding a tool
-```
+The **play log** is a page rather than a tool: search, filters, win rates, time played and
+CSV/JSON export. **Display mode** (`#/display/<tool>`) puts a huge read-only readout on a
+second screen or a projector. **Print** styles cover score sheets, brackets, rules and
+summaries.
 
-## What exists today (M0–M9)
+<img src="docs/screenshots/timer.webp" alt="The timer tool: a 4:45 countdown running, with -30s, +30s, pause and quick durations" width="49%"> <img src="docs/screenshots/dice.webp" alt="The dice tool after rolling 4d6kh3: tracks 11, dice kept and dropped" width="49%">
 
-- App shell, hash router, error boundary, settings, light/dark/system themes,
-  table mode, reduced-motion override, storage adapter chain with honest banners.
-- Session model: players with colours and initials, autosave, resume, save as
-  template, session JSON export/import, undo per tool, finish-game flow.
-- Template format v1 frozen and documented in `docs/TEMPLATE-FORMAT.md`, with a
-  golden-file test, line-numbered diagnostics, drag and drop / picker / paste
-  import, URL-fragment sharing, seat stepper and template gallery.
-- In-app template editor with live validation, jump-to-error, preview and test
-  drive; 60 bundled templates plus one example per tool, grouped by family: board
-  and strategy (Catan, Ticket to Ride, 7 Wonders, Wingspan, Sushi Go, Azul,
-  Splendor, Dominion, Monopoly, Risk, Pandemic, Gloomhaven), card and deduction
-  (Uno, Exploding Kittens, Love Letter, Coup, The Mind, Hanabi, Skull, Decrypto,
-  Dixit, poker, Perudo, chess), dice (Yahtzee, Phase 10), word (Scrabble, Boggle,
-  Bananagrams, Codenames, Just One), party (Werewolf, Trivia Night, Escape Room),
-  video game and tournament (Mario Kart night, Smash night, Speedrun practice),
-  RPG (D&D 5e, Kitchen Rush) and twenty first-party Pandaqi templates for Tiamo's own
-  catalogue, with its own gallery chip and a drawn mark beside each.
-- Tools: **timer** (countdown, stopwatch, flip, chess with increment and delay,
-  interval, sequence, multi-timer grid, wake lock), **dice** (notation, keep/drop,
-  reroll, exploding, success counting, pools, macros, Fate, percentile), **coin**
-  (fair or weighted, call-it, best-of series), **pick** (numbers, lists, teams,
-  seats, list/card/wheel/slot views), **score** (totals, rounds, categories with formulas,
-  ledger, per-cell notes, targets, ties, CSV), **lives** (shared or per-player,
-  extra tracks, conditions, elimination), **counters** (named counters, bank,
-  transfers, denominations, log), **turns** (order or initiative, rounds, phases,
-  turn clock, pass-the-phone), **reveal** (role dealing, hold-to-reveal, ballots, blind bids),
-  **rules** (quick card, setup checklist, text, scoring, glossary, source),
-  **decks** (standard, Euchre, Skat, Rummy, UNO, tarot, domino, custom; deal and
-  hidden hands), **bag** (tiles with values, weighted draws, trays), **bracket**
-  (single, double, round robin, groups, Swiss), **draft** (linear, snake, pick
-  clock, auction), **buzzer** (random arm delay, false starts, reaction ms),
-  **script** (say, wait, reveal, timer; event decks), **words** (validity, filters,
-  anagram and rack solvers, Codenames board, five language packs), **prompts**
-  (eleven packs, designer mode), **custom** (fields, counters, table, formulas),
-  **splits** (targets, PB comparison, golds).
-- Display mode: `#/display/<instance>` shows a huge read-only readout in a second tab
-  or on a projector, fed by `BroadcastChannel` from the controlling tab. Print
-  styles cover score sheets, brackets, rules and summaries.
-- Play log with search, game and player filters, playtime totals, win rates, CSV/JSON
-export (which follows the filters), and a finish flow that never deletes a saved game
-without an explicit choice.
-- Theme files: a `.gamebuddy-theme` text file writes the design tokens from Settings,
-  with `dark-` values and a line-numbered checker. Nothing is fetched.
-- Dice lab: custom word faces and saved face sets. Initiative order in the turns tool.
-  The gallery answers "what should we play?" from the current player and length filters.
-- **Installable hosted build**: a web app manifest and a network-first service worker, so
-  the site opens offline after one visit. The downloaded single file needs neither.
-- Template marks kept beside their templates (`catan.icon.svg` next to
-  `catan.gamebuddy`), an upload panel that takes a template, its images and a theme in
-  one batch, house-rule `[variant]` blocks chosen at load time, a narrator voice for the
-  script tool, and huge and switch-access modes.
-- Core services: one ticker, seeded + crypto RNG, snapshot undo, synthesized cue
-  sheet, haptics, wake lock, clipboard/download, pass-the-phone cover.
-- The cozy-table style system: warm paper tokens, one accent per tool family,
-  hand-drawn inline marks, chunky keys, and light/dark/table/print modes. The contract
-  is `docs/STYLE.md`.
-- `#/selftest` boots every tool headlessly and asserts zero network requests.
+## Templates
 
-`ROADMAP.md` is the source of truth for what comes next (M10 localization) and for
-the release gates that need a human. Finished milestone detail is compressed there
-as it ships. The development contract is `AGENTS.md`; player and
-author docs are in `docs/`.
+Eighty-six bundled games, each with its own settings, a rules card in our own words and a
+drawn mark. Pick one, choose the player count, play.
 
-## Layout
+| Family | Examples |
+|--------|----------|
+| Board and strategy | Catan, Ticket to Ride, 7 Wonders, Wingspan, Azul, Splendor, Dominion, Terraforming Mars, Spirit Island |
+| Card and deduction | Uno, Coup, Love Letter, The Mind, Hanabi, Skull, Decrypto, Dixit, poker, chess |
+| Dice and push your luck | Yahtzee, Phase 10, Perudo, Farkle, Darts |
+| Word | Scrabble, Boggle, Bananagrams, Codenames, Just One, Scattergories |
+| Party and social deduction | Werewolf, Secret Hitler, Avalon, Wavelength, Charades, Monikers, Spyfall, Taboo |
+| Video game and tournament | Mario Kart night, Smash night, Jackbox night, speedrun practice |
+| RPG and co-op | D&D 5e, Gloomhaven, Betrayal at House on the Hill |
+| Pandaqi | Twenty templates for [Pandaqi's own games](https://pandaqi.com/): Bidding Blocks, Naivigation, Chiptales, Maybe Games, … |
 
-```
-src/core/     services and the template engine (no tool knowledge)
-src/core/ui/  shared Svelte primitives
-src/tools/    one folder per tool
-src/data/     bundled templates
-scripts/      manifest codegen, build, linter, test preload
-docs/         architecture, template format, tool authoring
-vault/        the old hosted tools, kept as read-only reference
-```
+The [full gallery](https://pandaqi.com/game-buddy/#/templates) filters by players, length
+and tag. Every template is a real URL (`/game-buddy/template/catan/`), and the catalogue is
+published at [`templates.json`](https://pandaqi.com/game-buddy/templates.json) so another
+site can check its links against it.
 
-## Ground rules
+![The template gallery: 86 games with marks, player counts and length, plus filters](docs/screenshots/gallery.webp)
 
-- Zero runtime dependencies, zero network requests, no tracking.
-- Svelte only in the view layer; parsers, storage and timing are plain TypeScript.
-- Budgets are gates: the build fails over them.
-- Templates and exports are plain text the user owns.
+## Languages
 
-Game names are used descriptively. This project is not affiliated with or endorsed
-by any publisher; bundled rules summaries are original prose with source links.
+Ten complete languages: English, Nederlands, Deutsch, Español, Français, Português, Italiano,
+Bahasa Indonesia, Türkçe and Tiếng Việt. Every shell string and every tool string is
+translated, and a test fails the build when a language misses one.
+
+Each language is a lazy chunk, so the app only downloads the one you pick, and a build can
+carry a single language: `bun run build --langs=nl`. The Words tool ships a curated word
+list per language too.
+
+## What it does not do
+
+- **No network requests.** Ever. No fonts, images, analytics or "check for updates" come
+  from a server, and `#/selftest` stubs `fetch` to prove it.
+- **No account, no cloud, no tracking.** Templates and play history live on the device and
+  leave only when you export them.
+- **No virtual tabletop.** The physical game stays the source of truth; this is the pile of
+  helpers around it.
+
+<img src="docs/screenshots/reveal.webp" alt="Pass-the-phone cover before a secret role is dealt" width="70%">
+
+## Documentation
+
+| Read | For |
+|------|-----|
+| [docs/USER-GUIDE.md](docs/USER-GUIDE.md) | Using the app as a player or host |
+| [docs/TEMPLATE-FORMAT.md](docs/TEMPLATE-FORMAT.md) | The `.gamebuddy` format, version 1 |
+| [docs/PLUGIN-FORMAT.md](docs/PLUGIN-FORMAT.md) | A tool as a file (`.gamebuddy-tool`) |
+| [docs/THEME-FORMAT.md](docs/THEME-FORMAT.md) | Restyling with a `.gamebuddy-theme` |
+| [docs/TOOL-AUTHORING.md](docs/TOOL-AUTHORING.md) | Adding a tool to the repo |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Invariants, layers, storage, build |
+| [docs/STYLE.md](docs/STYLE.md) | Tokens, type, marks, motion |
+| [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md) | What the app promises and how to check it |
+| [LICENSE](LICENSE) | The MIT licence the code ships under |
+| [docs/LICENSES.md](docs/LICENSES.md) | Fonts, marks, word lists, templates, attribution |
+| [docs/COMMUNITY.md](docs/COMMUNITY.md) | Contributing a template |
+| [ROADMAP.md](ROADMAP.md) | What is built, what is next, what needs a human |
+| [CHANGELOG.md](CHANGELOG.md) | What changed, in order |
+| [AGENTS.md](AGENTS.md) | The working rules for this repository |
+
+## Contributing
+
+Templates, bug reports and translations are welcome: open an issue or a pull request.
+Run `bun run check` first; it is the same gate CI runs. A template submission needs its
+own prose and a source link — see [docs/COMMUNITY.md](docs/COMMUNITY.md).
+
+## Licence and attribution
+
+The code is **MIT licensed**: use it, change it, ship it, keep the copyright notice. See
+[LICENSE](LICENSE). [docs/LICENSES.md](docs/LICENSES.md) records the rest:
+
+- Templates are fan-made helpers under **CC BY-SA 4.0**, with original rules summaries and
+  a source link on every file. Game names are used descriptively; this project is not
+  affiliated with or endorsed by any publisher.
+- The two bundled typefaces (Raleway, SIL OFL 1.1, and Game Buddy, derived from DejaVu /
+  Bitstream Vera) ship with their notices.
+- Word lists and prompt packs are hand-curated for this project under CC BY-SA 4.0. They
+  are starter lists, not tournament dictionaries.
+
+Made by [Tiamo](https://pandaqi.com/) · [pandaqi.com/game-buddy](https://pandaqi.com/game-buddy/)

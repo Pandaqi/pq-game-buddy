@@ -1,7 +1,7 @@
 import { registerToolStrings, t as translate } from '../../core/i18n.svelte';
 import type { ToolContext, ToolInstance } from '../../core/registry';
 import type { PresetValues } from '../../core/template/schema';
-import { wordPack, WORD_LANGS, type WordLang } from '../../data/words/packs';
+import { WORD_LANGS, cachedPack, loadWordPack, packName, type WordLang } from '../../data/words/packs';
 import {
   EMPTY_FILTERS,
   anagramWords,
@@ -31,6 +31,8 @@ export interface ScoredWord {
 
 export interface WordsState {
   lang: WordLang;
+  /** False until this language's pack has arrived; every action waits for it. */
+  ready: boolean;
   mode: WordMode;
   query: string;
   letters: string;
@@ -75,6 +77,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
 
   const data = $state<WordsState>({
     lang,
+    ready: false,
     mode: (values.mode as WordMode) ?? 'check',
     query: '',
     letters: String(values.letters ?? ''),
@@ -86,15 +89,43 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
     scored: [],
     check: null,
     picked: [],
-    board: codenamesBoard(ctx.rng, wordPack(lang).words),
+    board: { words: [], key: [], revealed: [] },
     showKey: false,
     extra,
     history: [],
   });
 
   function allWords(): string[] {
-    return [...wordPack(data.lang).words, ...data.extra];
+    return [...(cachedPack(data.lang)?.words ?? []), ...data.extra];
   }
+
+  /** Fetch this language's pack (a chunk); answers false when the language moved on. */
+  async function ensurePack(): Promise<boolean> {
+    const wanted = data.lang;
+    await loadWordPack(wanted);
+    if (data.lang !== wanted) return false;
+    data.ready = true;
+    return true;
+  }
+
+  /**
+   * A board only exists while Codenames is on: it is derived from the pack, so building
+   * one on open would change a state that was just restored from a save.
+   */
+  function ensureBoard(): void {
+    if (data.mode !== 'codenames' || data.board.words.length) return;
+    if (!data.ready) {
+      void ensurePack().then((ok) => {
+        if (ok) ensureBoard();
+      });
+      return;
+    }
+    data.board = codenamesBoard(ctx.rng, allWords());
+  }
+
+  void ensurePack().then((ok) => {
+    if (ok) ensureBoard();
+  });
 
   function note(text: string): void {
     data.history = [text, ...data.history].slice(0, 10);
@@ -102,7 +133,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
 
   const instance: WordsInstance = {
     data,
-    state: () => JSON.parse(JSON.stringify(data)) as WordsState,
+    state() {
+      // `ready` is whether this language's chunk has arrived, not something a save
+      // should carry: it is derived from the cache on load instead.
+      const { ready: _ready, ...rest } = JSON.parse(JSON.stringify(data)) as WordsState;
+      return rest as WordsState;
+    },
     load(state) {
       if (!state || typeof state !== 'object') return;
       const raw = state as Partial<WordsState>;
@@ -124,6 +160,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
         };
       }
       if (Array.isArray(raw.extra)) data.extra = raw.extra.map(String);
+      data.ready = Boolean(cachedPack(data.lang));
       if (raw.board && Array.isArray(raw.board.words) && Array.isArray(raw.board.key)) {
         data.board = {
           words: raw.board.words.map(String).slice(0, 25),
@@ -136,6 +173,11 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
       data.check = null;
       data.picked = [];
       data.showKey = false;
+      if (!data.ready) {
+        void ensurePack().then((ok) => {
+          if (ok) ensureBoard();
+        });
+      }
     },
     presetFromState() {
       return {
@@ -159,7 +201,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
       if (data.mode === 'check' && data.check) {
         const checked = translate(
           data.check.valid ? 'words.summary-in' : 'words.summary-not-in',
-          { word: data.check.word, pack: wordPack(data.lang).name },
+          { word: data.check.word, pack: packName(data.lang) },
         );
         const close =
           !data.check.valid && data.check.close.length
@@ -185,8 +227,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
       data.scored = [];
       data.check = null;
       data.picked = [];
-      data.board = codenamesBoard(ctx.rng, allWords());
-      note(translate('words.note-pack', { pack: wordPack(next).name }));
+      data.ready = Boolean(cachedPack(next));
+      note(translate('words.note-pack', { pack: packName(next) }));
+      data.board = { words: [], key: [], revealed: [] };
+      void ensurePack().then((ok) => {
+        if (ok) ensureBoard();
+      });
     },
     setMode(mode) {
       if (mode === data.mode) return;
@@ -194,6 +240,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
       data.results = [];
       data.scored = [];
       data.check = null;
+      ensureBoard();
     },
     setQuery(value) {
       data.query = value;
@@ -222,6 +269,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
         .filter(Boolean);
     },
     run() {
+      if (!data.ready) {
+        void ensurePack().then((ok) => {
+          if (ok) instance.run();
+        });
+        return;
+      }
       if (data.seed.trim()) ctx.rng.seed(data.seed.trim());
       const words = allWords();
       data.results = [];
@@ -240,7 +293,7 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
           note(
             translate(valid ? 'words.summary-in' : 'words.summary-not-in', {
               word,
-              pack: wordPack(data.lang).name,
+              pack: packName(data.lang),
             }),
           );
           ctx.audio.play(valid ? 'success' : 'buzzer');
@@ -269,6 +322,12 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
       ctx.haptics.buzz('short');
     },
     newBoard() {
+      if (!data.ready) {
+        void ensurePack().then((ok) => {
+          if (ok) instance.newBoard();
+        });
+        return;
+      }
       ctx.undo.push(translate('words.undo-board'));
       data.board = codenamesBoard(ctx.rng, allWords());
       data.showKey = false;

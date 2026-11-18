@@ -5,27 +5,43 @@ page records what is ours, what is derived, and what a template author promises.
 
 ## Code
 
-The application code is part of the pq-game-buddy project. Runtime dependencies: none.
-Svelte 5 is a build-time compiler; its emitted runtime is bundled, and Svelte is MIT
-licensed. Bun and `happy-dom` are development dependencies.
+The application code is **MIT licensed**, see [`LICENSE`](../LICENSE): use, copy, modify,
+merge, publish, distribute, sublicense and sell, as long as the copyright and permission
+notice travel with it. It comes with no warranty. Runtime dependencies: none. Svelte 5 is a
+build-time compiler; its emitted runtime is bundled, and Svelte is MIT licensed. Bun and
+`happy-dom` are development dependencies. The vendored QR encoder keeps Project Nayuki's
+MIT notice in its own header.
+
+The templates, word lists and prompt packs are content rather than code and stay under
+**CC BY-SA 4.0**; the sections below say what that covers.
 
 ## Fonts
 
-Two typefaces ship inside the app, subset to the characters the interface uses and
-inlined as base64 `@font-face` in `src/core/styles/fonts.css`. Nothing is fetched at
-runtime and no font file sits in `public/`.
+Three typefaces ship with the app as `.woff2` files in `src/core/styles/fonts/`, named by
+ordinary `@font-face` rules in `src/core/styles/fonts.css`. Nothing is fetched from a
+network at runtime. A hosted build serves the files beside the app; the single-file build
+is the only one that embeds them (as base64) so it still works from `file://`. The display
+face is one complete file. Raleway ships as three files of one family — Latin, Latin
+extended and Vietnamese — each declaring its `unicode-range`, so no glyph of any offered
+language is missing and no script we do not ship is carried. The three CJK faces are
+subsets, described below.
 
 - **Game Buddy** is the display face for headings, keys and numbers: one Bold drawing,
   derived from **DejaVu Sans Bold** (DejaVu fonts team) and therefore from **Bitstream
   Vera** (Copyright © 2003 Bitstream, Inc.). It carries the Bitstream Vera licence,
   which is permissive — use, copy, merge, publish, distribute, sell and modify are all
   allowed — on one condition: the copyright and permission notice travels with every
-  copy of the fonts. The subset inlined here, and any build that ships it, is a copy,
+  copy of the fonts. The files shipped here, and any build that carries them, are a copy,
   so the notice below is the one a release has to carry. The upstream text, including
   the Arev section for the glyphs DejaVu imported, is at
   <http://dejavu.sourceforge.net/wiki/index.php/License>.
 - **Raleway** by Matt McInerney, Pablo Impallari, Rodrigo Fuenzalida and Igino Marini
   (The League of Moveable Type), SIL Open Font License 1.1. Body face.
+- **Noto Sans JP**, **Noto Sans SC** and **Noto Sans KR** (Google / Adobe, from the
+  Noto CJK project), SIL Open Font License 1.1. The Japanese, Chinese and Korean faces.
+  The full licence text ships beside them at
+  `src/core/styles/fonts/OFL-Noto.txt`, and the hosted build copies it to `dist/fonts/`.
+  Noto reserves no font name, so the subsets keep their family names.
 
 > Fonts are (c) Bitstream (see below). DejaVu changes are in public domain. Glyphs
 > imported from Arev fonts are (c) Tavmjung Bah. Bitstream Vera is a trademark of
@@ -43,10 +59,22 @@ runtime and no font file sits in `public/`.
 > This licence and the font-related rights granted are perpetual and irrevocable. The
 > full text, which governs, is the upstream one linked above.
 
-Both faces are used unmodified apart from subsetting, woff2 compression and (for the
-display face) its own name. The subsetting tooling is development-only and is not part
-of the shipped app; replacing a face means re-subsetting and re-measuring the first
-visit.
+Game Buddy and Raleway are used unmodified apart from woff2 compression and (for the
+display face) its own name: the Raleway files are the upstream Google Fonts build split by
+Unicode range, not by a trimmed glyph list, and dropping a `.woff2` into
+`src/core/styles/fonts/` under a name `fonts.css` uses is the whole of adding or replacing
+one of them.
+
+The Noto CJK files **are** subsets, and that is a permitted modification under the OFL:
+`scripts/fonts-cjk.ts` cuts the upstream variable font to the standard common character
+sets — kana and the 2,136 jōyō kanji, the 3,500 common simplified hanzi, the 11,172 hangul
+syllables — with harfbuzz, through the `subset-font` package that is a development
+dependency only. Nothing of the upstream drawing changes: the outlines and the `wght`
+axis are the originals, only the glyph set is narrower, which is why the subsets stay
+licensed OFL and keep the family names. `bun run fonts:cjk` regenerates them; it is the one
+script in the project that touches the network, and `bun run check` never runs it. The
+character sets themselves come from two public lists (the jōyō kanji and the 通用规范汉字表
+level 1); the Unicode blocks for kana and hangul are ranges in the script, not data.
 
 ## Marks and uploaded images
 

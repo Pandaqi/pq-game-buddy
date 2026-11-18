@@ -48,7 +48,7 @@
     {#each data.players as player (player.id)}
       <button
         type="button"
-        class="pad"
+        class="pad band"
         class:winner={data.winner === player.id}
         disabled={!data.armed}
         style="--player: {player.color}"
@@ -61,7 +61,7 @@
   </div>
 
   <div class="row">
-    <button type="button" class="primary" onclick={() => instance.arm()} disabled={data.armed}>
+    <button type="button" class="primary band" onclick={() => instance.arm()} disabled={data.armed}>
       {data.armed ? t('buzzer.armed') : t('buzzer.arm')}
     </button>
     <button type="button" onclick={() => instance.reset()} disabled={!data.armed}>{t('buzzer.disarm')}</button>
@@ -115,6 +115,8 @@
       grid-template-columns: repeat(var(--count, 2), minmax(0, 1fr));
     }
   }
+  /* The seat colour is a wash behind the pad, not a solid: a ring cannot survive a
+     torn edge, and the pad's label is ink, not seat ink — a wash keeps it readable. */
   .pad {
     display: flex;
     flex-direction: column;
@@ -123,9 +125,8 @@
     gap: var(--space-1);
     min-height: 8rem;
     padding: var(--space-3);
-    border-radius: var(--radius-lg);
-    box-shadow: inset 0 0 0 3px var(--player), var(--shadow-card);
-    background: var(--surface);
+    --cutout-fill: var(--player);
+    --cutout-opacity: 0.14;
     color: var(--text);
     font-size: var(--text-lg);
     font-weight: 800;
@@ -135,12 +136,12 @@
     opacity: 0.55;
     cursor: default;
   }
-  /* The winner is named in the status line and tinted here: never colour alone,
-     and never white text on a mid-tone seat colour. */
+  /* The winner is named in the status line and tinted here: never colour alone, and
+     the accent is what a winner wears, not their seat. */
   .pad.winner {
-    background: var(--accent-soft);
-    border-width: 5px;
-    box-shadow: var(--shadow);
+    --cutout-fill: var(--accent-soft);
+    --cutout-opacity: 1;
+    --cutout-filter: var(--filter-key);
     opacity: 1;
   }
   .name {

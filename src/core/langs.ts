@@ -19,6 +19,13 @@ export const LANGUAGES: LanguageInfo[] = [
   { id: 'id', label: 'Bahasa Indonesia', english: 'Indonesian' },
   { id: 'tr', label: 'Türkçe', english: 'Turkish' },
   { id: 'vi', label: 'Tiếng Việt', english: 'Vietnamese' },
+  // Named, not shipped: a language appears in the picker when its dictionary chunk
+  // exists (`src/core/locales/<id>.ts`), so these three cost nothing until they are
+  // localized. The entry is here so a translation lands with its own name already
+  // spelled right, in the language's own words. docs/LANGUAGES.md has the steps.
+  { id: 'ja', label: '日本語', english: 'Japanese' },
+  { id: 'zh', label: '简体中文', english: 'Chinese (Simplified)' },
+  { id: 'ko', label: '한국어', english: 'Korean' },
 ];
 
 /**

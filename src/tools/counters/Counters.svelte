@@ -138,7 +138,7 @@
     min-height: 44px;
     padding: 0 var(--space-3);
     border-radius: var(--radius-pill);
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     color: var(--text);
     font-weight: 700;
     cursor: pointer;
@@ -152,7 +152,6 @@
     flex: 1;
     min-height: 48px;
     border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-base);
     font-weight: 700;
@@ -198,14 +197,13 @@
     min-width: 56px;
     min-height: 44px;
     border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
     font-weight: 700;
     cursor: pointer;
   }
   .row-actions button.plus {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
   }
   .row-actions button.remove {
     margin-left: auto;
@@ -216,7 +214,7 @@
 
 
   .row button.reveal {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     font-weight: 700;
   }
 

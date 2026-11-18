@@ -3,3 +3,5 @@ dist/
 .bun/
 *.log
 .DS_Store
+.dev-server.pid
+assets_temp/

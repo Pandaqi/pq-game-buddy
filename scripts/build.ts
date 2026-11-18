@@ -8,7 +8,7 @@
 
 import type { BunPlugin } from 'bun';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { extname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import type { TemplateSummary } from '../src/data/template-summary';
 import { svelteCompile } from './svelte-compile';
@@ -19,6 +19,13 @@ const sizeFile = join(dist, 'size.json');
 const shellFile = join(root, 'index.html');
 /** Where the site build lives: the canonical URL every generated page declares. */
 const SITE_ORIGIN = (process.env.PQGB_ORIGIN ?? 'https://pandaqi.com/game-buddy').replace(/\/$/, '');
+/** The one social card, at the site root beside the icon: 1200 × 630, the size cards ask for. */
+const OG_IMAGE = `${SITE_ORIGIN}/og.jpg`;
+/** The front page's own words: what the app is, in the order a stranger asks. */
+const HOME_DESCRIPTION =
+  'Free, offline tools for game night: timers, dice, scorepads, secret roles, brackets,' +
+  ' word helpers and 86 ready-to-play templates. One page, no account, no internet.';
+const version = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version as string;
 
 // Ceilings, not targets. The start-up budget came down twice: views and pages
 // became chunks for M4, then whole tool modules did (see ROADMAP.md §5.2). Now
@@ -46,7 +53,12 @@ const BUDGET_CHUNK_GZ = 26 * 1024;
 // Vietnamese cost 118.3 KB, or 23.7 KB each, which is 335.9 + 118.3 = 454.2 KB across
 // 58 chunks. That leaves 9.8 KB, less than one more language, so the next one needs its
 // own arithmetic in ROADMAP.md §5.2. It is a fixed amount of finished surface, not slack.
-const BUDGET_CHUNKS_TOTAL_GZ = 464 * 1024;
+// The word bank then tripled: every pack became its own chunk and each grew from about
+// 3.7 KB raw to 11.9 KB, so the total went 454.2 → 498.3 KB across 68 chunks while the
+// largest chunk fell from 25.2 KB to 16.0 KB, because ten packs no longer ride in the
+// words tool's chunk. That is 44.1 KB of finished data, so the ceiling moved once to
+// 512 KB; the arithmetic is in ROADMAP.md §5.2.
+const BUDGET_CHUNKS_TOTAL_GZ = 512 * 1024;
 
 const MODES = ['spa', 'site', 'single'] as const;
 type Mode = (typeof MODES)[number];
@@ -174,6 +186,11 @@ async function bundle(outdir: string, splitting: boolean): Promise<Output[]> {
       asset: 'assets/[name]-[hash].[ext]',
     },
     plugins: [...(requestedLangs ? [localeFilter(requestedLangs)] : []), svelteCompile()],
+    // Bun's CSS bundler turns any url() asset under 128 KB into a base64 data URL,
+    // which is a hard-coded threshold (oven-sh/bun#24599). The faces are files on
+    // purpose, so they are external: the CSS keeps the relative path the source
+    // wrote and this script copies the .woff2 beside the app.
+    external: ['*.woff2'],
     minify: true,
     sourcemap: 'none',
     target: 'browser',
@@ -186,7 +203,12 @@ async function bundle(outdir: string, splitting: boolean): Promise<Output[]> {
     process.exit(1);
   }
   const outputs: Output[] = [];
-  for (const output of result.outputs) outputs.push({ path: output.path, text: await output.text() });
+  for (const output of result.outputs) {
+    // Fonts and pictures are written next to the bundle; only JS and CSS are text this
+    // script reads back. An embedded build reads those assets from disk instead.
+    if (!/\.(?:js|css)$/.test(output.path)) continue;
+    outputs.push({ path: output.path, text: await output.text() });
+  }
   return outputs;
 }
 
@@ -230,6 +252,11 @@ function startupClosure(files: Map<string, string>, entry: string): string[] {
   return [...seen];
 }
 
+/** Where the source faces live; a tool's CSS never names them. */
+const fontSourceDir = join(root, 'src', 'core', 'styles', 'fonts');
+/** The stylesheet's own folder: an embedded build resolves `./fonts/…` from here. */
+const styleSourceDir = join(root, 'src', 'core', 'styles');
+
 const shell = readFileSync(shellFile, 'utf8');
 const scriptTag = /<script type="module" src="\/src\/main\.ts"><\/script>/;
 if (!scriptTag.test(shell)) {
@@ -242,6 +269,33 @@ function embedded(js: string, css: string): string {
   return shell
     .replace(scriptTag, `<script type="module">${js.replace(/<\/script/gi, '<\\/script')}</script>`)
     .replace('</head>', `  <style>${css}</style>\n  </head>`);
+}
+
+/** The types an embedded build may have to carry: a face the CSS names lives next to it. */
+const ASSET_TYPES: Record<string, string> = {
+  '.woff2': 'font/woff2',
+  '.woff': 'font/woff',
+  '.png': 'image/png',
+  '.webp': 'image/webp',
+  '.svg': 'image/svg+xml',
+};
+
+/**
+ * A single HTML file has no siblings, so every asset its CSS points at is read from the
+ * bundle output and inlined as a data URL. Only the embedded builds do this: the hosted
+ * build keeps the fonts as files a browser downloads once and caches, and the copy it
+ * also writes as `pq-game-buddy.html` has to stay self-contained to work from file://.
+ */
+function inlineCssAssets(css: string, bases: string[]): string {
+  return css.replace(/url\((["']?)([^"')]+)\1\)/g, (whole, _quote: string, ref: string) => {
+    if (/^(?:[a-z][a-z0-9+.-]*:|\/\/|#)/i.test(ref)) return whole;
+    const relative = ref.replace(/^\.?\//, '');
+    const file = bases.map((base) => join(base, relative)).find((candidate) => existsSync(candidate));
+    if (!file) return whole;
+    const type = ASSET_TYPES[extname(file).toLowerCase()];
+    if (!type) return whole;
+    return `url("data:${type};base64,${readFileSync(file).toString('base64')}")`;
+  });
 }
 
 // What this build can offer, read from the same registry the bundle uses.
@@ -277,6 +331,11 @@ function copyPublic(): void {
   if (existsSync(publicDir)) cpSync(publicDir, dist, { recursive: true });
 }
 
+/** The two faces, beside the app: `app.css` asks for `./fonts/<name>.woff2`. */
+function copyFonts(): void {
+  cpSync(fontSourceDir, join(dist, 'fonts'), { recursive: true });
+}
+
 const scratch = join(dist, '.single');
 
 if (mode === 'single') {
@@ -287,7 +346,7 @@ if (mode === 'single') {
     console.error('[build] no JavaScript output');
     process.exit(1);
   }
-  const file = embedded(js, css);
+  const file = embedded(js, inlineCssAssets(css, [scratch, styleSourceDir]));
   writeFileSync(join(dist, 'index.html'), file);
   rmSync(scratch, { recursive: true, force: true });
 
@@ -301,6 +360,7 @@ if (mode === 'single') {
 
 // Hosted build: the shell, the chunks it shares with lazy screens, and one chunk per screen.
 copyPublic();
+copyFonts();
 const hosted = await bundle(dist, true);
 const files = new Map<string, string>();
 for (const output of hosted) {
@@ -332,7 +392,22 @@ const hostedHtml = shell.replace(
     `<link rel="stylesheet" href="./app.css" />\n    ` +
     `<script type="module" src="./app.js"></script>`,
 );
-writeFileSync(join(dist, 'index.html'), hostedHtml);
+// The front page is a page like any other: it declares its own canonical URL, its social
+// card and its structured data, so a search engine and a chat preview both read what a
+// visitor gets. Without this the app root was the one URL with no head of its own.
+const publicPages: string[] = [];
+writeFileSync(
+  join(dist, 'index.html'),
+  shellPage(hostedHtml, {
+    title: 'Game Buddy — offline tools for game night',
+    description: HOME_DESCRIPTION,
+    path: '',
+    up: './',
+    marker: 'data-home="1"',
+    front: true,
+  }),
+);
+publicPages.push(`${SITE_ORIGIN}/`);
 
 // The catalogue as a public contract: pandaqi.com checks its template links against this
 // file, so a renamed template is caught where the link lives instead of in a visitor's 404.
@@ -353,6 +428,7 @@ if (mode === 'site') {
         marker: `data-tool="${page.id}"`,
       }),
     );
+    publicPages.push(`${SITE_ORIGIN}/${page.id}/`);
   }
   console.log(`[build] ${pages.length} tool pages: dist/<tool>/index.html`);
 
@@ -369,13 +445,22 @@ if (mode === 'site') {
         marker: `data-template="${template.id}"`,
       }),
     );
+    publicPages.push(`${SITE_ORIGIN}/template/${template.id}/`);
   }
   console.log(`[build] ${templates.length} template pages: dist/template/<id>/index.html`);
 }
 
+// A sitemap is how the pages above get found: the app is one URL to a crawler, so the page
+// per tool and per template is the only thing a search for a game can land on. In a plain
+// build the list is the front page alone, because the other pages do not exist then. No
+// robots.txt is written: crawlers only read the one at the domain root, and the site's
+// sitemap is announced there (docs/RELEASING.md).
+writeFileSync(join(dist, 'sitemap.xml'), sitemapXml(publicPages));
+console.log(`[build] sitemap.xml (${publicPages.length} urls)`);
+
 const single = await bundle(scratch, false);
 const singleJs = entryOf(single);
-const singleCss = cssOf(single);
+const singleCss = inlineCssAssets(cssOf(single), [scratch, styleSourceDir]);
 rmSync(scratch, { recursive: true, force: true });
 if (!singleJs) {
   console.error('[build] no JavaScript output for the offline copy');
@@ -500,21 +585,21 @@ function templateManifest(catalogue: TemplateSummary[]): string {
  */
 function shellPage(
   html: string,
-  page: { title: string; description: string; path: string; up: string; marker: string },
+  page: {
+    title: string;
+    description: string;
+    path: string;
+    up: string;
+    marker: string;
+    /** The front page: its title already names the app, and it carries the structured data. */
+    front?: boolean;
+  },
 ): string {
-  const title = escapeHtml(page.title);
-  const description = escapeHtml(page.description);
-  const url = escapeHtml(`${SITE_ORIGIN}/${page.path}`);
-  const head =
-    `<meta name="description" content="${description}" />\n    ` +
-    `<link rel="canonical" href="${url}" />\n    ` +
-    `<meta property="og:type" content="website" />\n    ` +
-    `<meta property="og:site_name" content="Game Buddy" />\n    ` +
-    `<meta property="og:title" content="${title}" />\n    ` +
-    `<meta property="og:description" content="${description}" />\n    ` +
-    `<meta property="og:url" content="${url}" />`;
+  const url = `${SITE_ORIGIN}/${page.path}`;
+  const head = pageHead(page.title, page.description, url, page.front === true);
+  const pageTitle = escapeHtml(page.front ? page.title : `${page.title} — Game Buddy`);
   const built = html
-    .replace(/<title>[^<]*<\/title>/, `<title>${title} — Game Buddy</title>`)
+    .replace(/<title>[^<]*<\/title>/, `<title>${pageTitle}</title>`)
     .replace(/<meta name="description" content="[^"]*" \/>/, head)
     .replace('href="./app.css"', `href="${page.up}app.css"`)
     .replace('src="./app.js"', `src="${page.up}app.js"`)
@@ -538,6 +623,61 @@ function shellPage(
     process.exit(1);
   }
   return built;
+}
+
+/**
+ * The head every hosted page shares: the description, the canonical URL and the card a
+ * chat app shows. Only these earn their keep — a tool or template page is found through
+ * its own title, description and canonical URL, so nothing else is written there.
+ */
+function pageHead(title: string, description: string, url: string, front: boolean): string {
+  const safeTitle = escapeHtml(title);
+  const safeDescription = escapeHtml(description);
+  const safeUrl = escapeHtml(url);
+  const image = escapeHtml(OG_IMAGE);
+  const alt = 'Game Buddy: timers, dice and scorepads for game night.';
+  // One JSON-LD block, on the front page only, because that is the thing it describes.
+  // A skeleton `WebPage` on the other 106 pages would repeat their title, description and
+  // URL and tell a crawler nothing it did not already have.
+  const structured = front
+    ? `\n    <script type="application/ld+json">${JSON.stringify({
+        '@context': 'https://schema.org',
+        '@type': 'WebApplication',
+        name: 'Game Buddy',
+        url: `${SITE_ORIGIN}/`,
+        description: HOME_DESCRIPTION,
+        applicationCategory: 'GameApplication',
+        operatingSystem: 'Any',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'EUR' },
+        softwareVersion: version,
+        inLanguage: buildLangs,
+        license: 'https://github.com/Pandaqi/pq-game-buddy/blob/main/LICENSE',
+      }).replace(/</g, '\\u003c')}</script>`
+    : '';
+  return (
+    `<meta name="description" content="${safeDescription}" />\n    ` +
+    `<link rel="canonical" href="${safeUrl}" />\n    ` +
+    `<meta property="og:type" content="website" />\n    ` +
+    `<meta property="og:site_name" content="Game Buddy" />\n    ` +
+    `<meta property="og:title" content="${safeTitle}" />\n    ` +
+    `<meta property="og:description" content="${safeDescription}" />\n    ` +
+    `<meta property="og:url" content="${safeUrl}" />\n    ` +
+    `<meta property="og:image" content="${image}" />\n    ` +
+    `<meta property="og:image:alt" content="${escapeHtml(alt)}" />\n    ` +
+    // X reads `og:*` for everything but the card type, so the rest was the same tag twice.
+    `<meta name="twitter:card" content="summary_large_image" />` +
+    structured
+  );
+}
+
+/**
+ * Every public page, in the order a crawler should walk them. No `<priority>`: Google
+ * ignores it, and a made-up ranking is worse than none.
+ */
+function sitemapXml(urls: string[]): string {
+  const entries = urls.map((url) => `  <url>\n    <loc>${escapeHtml(url)}</loc>\n  </url>`).join('\n');
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${entries}\n</urlset>\n`;
 }
 
 function escapeHtml(text: string): string {

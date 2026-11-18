@@ -47,9 +47,12 @@ rules below, and the manual matrix at the end is the release gate.
   light, dark and table mode. Disabled controls keep 3:1 and say why they are
   unavailable. The measured table lives in `docs/STYLE.md`; change a token and update
   it in the same commit.
-- **Seats are rings.** Player colour is an outline around the player's initials, never
-  white text on a fill, so the brightest seat still carries readable letters and no
-  identity depends on colour alone.
+- **A seat's ink is chosen per colour, not per theme.** `core/colour.ts` puts cream on a
+  dark seat and deep ink on a pale one, and nudges a colour the shortest way when neither
+  ink would reach 4.5:1 — so a template that names a pale seat, an imported file with an
+  odd hex, or a stored session from an older palette can never end up with cream on
+  cream. A test walks a 18×18×18 lattice of colours and fails if any paint is under AA.
+  Colour is never the only cue: initials are always there.
 - **Type floor.** Labels may be 12–14 px; every number or name a player must read is at
   least 20 px, and the primary readout is 34 px or larger in both themes.
 - **No flashing.** Nothing flashes above 3 Hz. The buzzer uses a hard colour change,

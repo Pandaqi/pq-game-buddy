@@ -1,7 +1,7 @@
 /** Offline word tools: validity, filters, anagram and rack solvers, letters, Codenames. */
 
 import type { Rng } from '../../core/rng';
-import { wordPack, type WordLang } from '../../data/words/packs';
+import type { WordLang } from '../../data/words/packs';
 
 export type WordMode = 'check' | 'filters' | 'anagram' | 'rack' | 'letters' | 'codenames';
 
@@ -210,8 +210,4 @@ export function closeMatches(words: string[], word: string, limit = 5): string[]
     .sort((a, b) => a.distance - b.distance || a.word.localeCompare(b.word))
     .slice(0, limit)
     .map((item) => item.word);
-}
-
-export function packSize(lang: WordLang): number {
-  return wordPack(lang).words.length;
 }

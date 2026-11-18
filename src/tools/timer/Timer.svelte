@@ -143,7 +143,7 @@
       >
         <button
           type="button"
-          class="digits"
+          class="digits plain"
           aria-label={t('timer.clock-aria', {
             name: label(clock),
             time: instance.clockLabel(index, nowMono, nowWall),
@@ -508,15 +508,14 @@
   .controls button {
     flex: 1;
     min-height: 56px;
-    border-radius: var(--radius);
-    background: var(--surface);
     color: var(--text);
     font-size: var(--text-base);
     font-weight: 600;
     cursor: pointer;
   }
   .controls .primary {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
+    --cutout-filter: var(--filter-key);
     color: var(--accent-text);
     flex: 2;
     font-size: var(--text-lg);
@@ -529,8 +528,6 @@
   .quick button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: var(--radius-pill);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }

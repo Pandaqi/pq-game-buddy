@@ -101,7 +101,7 @@
   .close {
     min-width: 48px;
     min-height: 48px;
-    background: transparent;
+    --cutout-fill: transparent;
     color: var(--text-dim);
     font-size: var(--text-lg);
     border-radius: var(--radius-round);
@@ -109,7 +109,6 @@
     cursor: pointer;
   }
   .close:hover {
-    background: var(--surface-2);
     transform: none;
   }
   .body {

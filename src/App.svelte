@@ -888,23 +888,16 @@
     gap: var(--space-2);
     flex-wrap: wrap;
   }
+  /* Size only: the fill, the edge and the broken-rectangle shape come from .primary
+     in components.css and cutouts.css, so this page cannot drift from a tool's key. */
   .primary {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     min-height: 56px;
     padding: 0 var(--space-5);
-    background: var(--accent);
-    color: var(--accent-text);
-    box-shadow: var(--shadow-key);
     font-weight: 800;
     font-size: var(--text-lg);
-  }
-  @media (hover: hover) {
-    .primary:hover:not(:disabled) {
-      transform: translateY(-3px);
-      box-shadow: var(--shadow);
-    }
   }
   .link {
     display: inline-flex;
@@ -915,7 +908,6 @@
   .actions button {
     min-height: 52px;
     padding: 0 var(--space-4);
-    background: var(--surface-2);
   }
   .dropzone {
     position: fixed;
@@ -961,6 +953,8 @@
     box-shadow: none;
     color: inherit;
     cursor: pointer;
+    /* A dismiss cross on a dark toast: no paper behind it. */
+    --cutout-fill: transparent;
   }
   .cues {
     display: grid;
@@ -982,11 +976,10 @@
     min-height: 56px;
     padding: 0 var(--space-5);
     text-align: left;
-    background: var(--surface-2);
     color: var(--text);
   }
   .langs button.active {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     color: var(--accent-deep);
     font-weight: 800;
   }
@@ -1001,7 +994,6 @@
   }
   .cues button {
     min-height: 62px;
-    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
     font-weight: 700;
@@ -1025,11 +1017,10 @@
   .variants button {
     min-height: 44px;
     padding: 0 var(--space-4);
-    background: var(--surface-2);
     color: var(--text);
   }
   .variants button.active {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     color: var(--accent-deep);
     font-weight: 800;
   }

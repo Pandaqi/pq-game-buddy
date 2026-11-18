@@ -44,7 +44,7 @@ const nl: Dict = {
 
   'home.title-1': 'Spelavond,',
   'home.title-2': 'geregeld.',
-  'home.kicker': 'Geen account. Geen internet. Niets installeren.',
+  'home.kicker': 'Lokaal, gratis, zonder poespas.',
   'home.lede': 'Timers, dobbelstenen, scorebriefjes en templates voor de spellen die je hebt.',
   'home.continue': 'Ga verder waar je stopte',
   'home.tools': 'Gereedschap',

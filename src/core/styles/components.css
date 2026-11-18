@@ -113,19 +113,22 @@
 
 /* --- Keys --------------------------------------------------------------- */
 
-.primary {
-  background: var(--accent);
-  color: var(--accent-text);
-  box-shadow: var(--shadow-key);
-  font-weight: 800;
-}
+/* One fill rule per kind of key. A key's colour never lives on the key itself: it is
+   --cutout-fill, which cutouts.css paints behind the torn shape. A background on the
+   element would paint its rectangle at the corners of the shape.
 
-@media (hover: hover) {
-  .primary:hover:not(:disabled) {
-    background: var(--accent);
-    transform: translateY(-3px);
-    box-shadow: var(--shadow);
-  }
+   go        solid family accent          .primary
+   selected  accent wash, deep accent ink  .active / [aria-current]
+   quiet     cream                        every other key, .wide, a .cutout link
+   away      red wash                     .danger
+   player    the seat's own colour        .chip.active
+
+   Shape says which keys commit (cutouts.css), colour says what kind of thing they do,
+   so a screen can be read without reading every label. */
+.primary {
+  --cutout-fill: var(--accent);
+  color: var(--accent-text);
+  font-weight: 800;
 }
 
 .wide {
@@ -136,22 +139,29 @@
   width: 100%;
   min-height: 54px;
   padding: 0 var(--space-4);
-  border-radius: var(--radius-pill);
-  background: var(--surface-2);
   color: var(--text);
   font-family: var(--font-display);
   font-weight: 700;
 }
 
-.wide.danger {
-  background: var(--danger-soft);
-  color: var(--danger);
+.wide.primary {
+  --cutout-fill: var(--accent);
+  color: var(--accent-text);
 }
 
-.wide.primary {
-  background: var(--accent);
-  color: var(--accent-text);
-  box-shadow: var(--shadow-key);
+/* Three kinds of key, and nothing else, everywhere in the app: a solid family
+   accent goes forward, a red wash throws something away, cream just closes or saves
+   quietly. Red is a wash on purpose, not a solid: every family accent is a bright
+   red, olive or blue, and one family (randomize) is berry — a solid red key would be
+   that tool's own accent. A wash key and a solid key are never mistaken for each
+   other, in either theme. The cutout shape (cutouts.css) marks the two that commit;
+   a colour never appears on a key without the meaning in docs/STYLE.md §3. */
+.danger {
+  background: var(--danger-soft);
+  color: var(--danger);
+  font-weight: 800;
+  --cutout-fill: var(--danger-soft);
+  --cutout-filter: var(--filter-danger);
 }
 
 .ghost {
@@ -205,14 +215,14 @@
 .modes button {
   min-height: 48px;
   padding: 0 var(--space-4);
-  background: var(--surface-2);
   color: var(--text-dim);
   box-shadow: none;
   border-radius: var(--radius-pill);
 }
 
 .modes button.active {
-  background: var(--accent);
+  --cutout-fill: var(--accent);
+  --cutout-filter: var(--filter-key);
   color: var(--accent-text);
   font-weight: 700;
   box-shadow: none;
@@ -220,14 +230,13 @@
 
 @media (hover: hover) {
   .modes button:hover:not(:disabled) {
-    background: var(--surface);
     color: var(--text);
     box-shadow: none;
     transform: none;
   }
 
   .modes button.active:hover:not(:disabled) {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
     color: var(--accent-text);
   }
 }

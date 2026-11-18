@@ -142,14 +142,12 @@
   .packs button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: var(--radius-pill);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
     font-size: var(--text-sm);
   }
   .packs button.active {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     font-weight: 700;
   }
 
@@ -192,13 +190,12 @@
     min-height: 40px;
     padding: 0 var(--space-2);
     border-radius: var(--radius);
-    background: var(--surface);
     color: var(--text);
     font-size: var(--text-sm);
     cursor: pointer;
   }
   .actions button.on {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     font-weight: 700;
   }
 

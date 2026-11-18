@@ -31,7 +31,7 @@ a radius or a shadow of its own; it asks for a token.
 | `--line` | `#e7d7ba` | `#3d3222` | Scrollbars, handles, table rules |
 | `--forest` | `#1f5c40` | `#8fd3b2` | Screen titles and the brand |
 | `--on-accent` | `#fffaf0` | `#1c1710` | Text on a family accent |
-| `--on-seat` | `#241a10` | `#241a10` | Initials on a seat dot |
+| `--on-seat` | `#fffaf0` | `#fffaf0` | Initials on a seat dot |
 
 **Tool families.** A tool borrows one accent for its whole screen by putting
 `data-family` on its container; the session view does this from `meta.family`.
@@ -51,17 +51,30 @@ Never invent a seventh family for a new tool: pick the primitive it serves
 `--danger-soft`, `--warning`, `--warning-soft` (used by a timer that is nearly out),
 and `--success`, each with a dark counterpart.
 
-**Seats.** The nine player colours stay as stored hex (templates may name one), so seat
-identity survives export. The dot is filled with the seat colour and the initials are
-dark `--on-seat` ink, which clears 4.8:1 on every seat in both themes. Colour is never
-the only cue: the initials are always there, and the active seat is a solid colour pill
-with a surface-coloured dot. No ring, no outline.
+**Seats.** The nine player colours stay as stored hex, so seat identity survives export,
+and they live in `data/colours.ts` — the same list a template writes as `colour = green`,
+so a seat and a named colour can never drift apart. The dot is filled with the seat colour;
+the initials are cream `--on-seat`, which clears 4.5:1 on all nine in both themes (the
+lowest is teal at 4.52:1; the five darkest tones were lowered to get there). Dark ink was
+tried first and cannot pass: `#241a10` peaks at 4.14:1 on the orange seat and 3.14:1 on the
+red one, and even black stays under AA on all nine, so the ink had to move.
+
+Cream alone is not enough, because a template or an imported file may name *any* hex.
+`core/colour.ts` therefore chooses the ink per seat colour: cream on a dark seat, deep
+`--on-seat-deep` on a pale one, whichever measures better; a colour in the narrow band
+neither can carry is nudged the shortest way (towards black for cream, towards white for
+deep) until AA is met, because losing a shade of a seat matters less than losing its
+initials. Measured on the painted hex, not the ideal one. The rule that follows: **a view
+never paints text on a seat colour without `seatVars()`**, and a new seat surface is one
+more call to it, never a `color: var(--on-seat)` of its own. Colour is still not the only
+cue — the initials are always there, and the active seat is a solid colour pill with a
+surface-coloured dot. No ring, no outline.
 
 ## 2. Type
 
-Two self-hosted faces, subset and inlined as base64 `@font-face` in
-`src/core/styles/fonts.css`; the subset tooling is not shipped. There is no request
-at runtime and no CDN:
+Three self-hosted typefaces in seven `.woff2` files in `src/core/styles/fonts/`, named by
+plain `@font-face` rules with a relative `url()` in `src/core/styles/fonts.css`. Nothing
+comes from a CDN:
 
 ```css
 --font-display: 'Game Buddy', ui-rounded, system-ui, sans-serif;  /* headings, keys, numbers */
@@ -69,20 +82,57 @@ at runtime and no CDN:
 --font-num:     var(--font-display);
 ```
 
-Game Buddy is one Bold face, subset to Latin-1 plus the punctuation the app uses
-(29 KB woff2); its `@font-face` declares `font-weight: 100 900` so every heading weight
-uses that drawing unchanged instead of being faux-bolded. Raleway is 34 KB. The two
-inline to 84 KB of CSS (64 KB gzipped) in `app.css`. That spend is deliberate: it is
-what makes the app feel warm instead of like a system dialog, and it was measured
-against the first-visit budget. To restyle, change these two variables; nothing else
-names a face. Replacing a face means re-subsetting and re-measuring the first visit.
+Game Buddy is one Bold drawing (239 KB); its `@font-face` declares `font-weight: 100 900`
+so every heading weight uses that drawing unchanged instead of being faux-bolded.
+Game Buddy carries its **whole glyph set**, which is what lets Polish `ł ś ż`, Turkish
+`ı ş ğ` and Vietnamese `ạ ế ơ` be drawn by the bundled display face rather than by the
+first fallback in the same line; the one letter it lacks, `đ`, falls through to Raleway.
+Raleway ships as **three files of one family** — Latin (48 KB), Latin extended (31 KB) and
+Vietnamese (11 KB) — each declaring its `unicode-range`. The browser picks the file by
+codepoint and downloads only what a page uses, so `ł ś ż`, `ş ğ` and `ạ ế ơ đ` come from
+the bundled body face in every language we ship, and Cyrillic and Greek, which no shipped
+language needs, are not carried. This was measured, not assumed: before the split the
+extended letters silently fell back to the machine's font.
 
-That subset is Latin-1 plus the app's punctuation, so a language whose letters sit
-outside it — Turkish `ı ş ğ`, Vietnamese `ạ ế ơ ư đ` — draws those few letters with the
-first fallback in the same stack rather than with the bundled face. The words are still
-complete (no image, no missing box), it is the type that mixes, and a future subset should
-cover Latin Extended-A and Latin Extended Additional before those languages are called
-typographically finished.
+**CJK gets one face per script.** Japanese, Chinese and Korean each draw with their own
+bundled Noto face — `Noto Sans JP` (763 KB), `Noto Sans SC` (981 KB), `Noto Sans KR`
+(1,026 KB) — named first in that language's `--font-cjk`, ahead of the platform faces it
+reads best in. They are cut by `bun run fonts:cjk` from the Noto variable font to the
+characters a localized interface actually uses: kana and the 2,136 jōyō kanji, the 3,500
+common simplified hanzi, all 11,172 hangul syllables. Each file keeps the `wght` axis, so
+`font-weight: 100 900` makes a CJK heading truly heavier instead of synthetically
+emboldened. A character outside one of those sets is not a hole: it falls through to the
+platform face named after ours, so an unusual kanji still renders.
+
+One family covering all three scripts would be wrong even at the size, because each script
+wants its own drawing of the same codepoints, and the full pan-CJK font is 9 MB per
+script; cutting it to the common sets is what makes bundling affordable. The slices alone
+were measured first and rejected: Google's slice files are cut by codepoint range, so
+nearly every slice holds a few common characters plus thousands of rare ones, and keeping
+the useful slices was still 9.8 MB and 271 `@font-face` rules in every first visit.
+
+How they travel: the hosted build copies the files to `dist/fonts/` and `app.css`
+asks for `./fonts/<name>.woff2`, relative to the stylesheet, so a deploy in a subfolder
+still finds them; the browser downloads each once and caches it. The **single-file build
+is the only one that embeds them**, as base64, because that file has no siblings and has
+to keep working from `file://`. Bun's bundler would normally inline any `url()` asset
+under 128 KB (a hard-coded threshold), so the build marks `.woff2` external and copies
+the faces itself — see `scripts/build.ts`. With the faces outside it, `app.css` is about
+17 KB gzipped and the JS+CSS first-visit figure no longer counts typography; a page that
+shows text also fetches whichever files its codepoints need, so measure the transfer, not
+only the budget.
+
+`unicode-range` does the same job for CJK that it does for Raleway: an English screen
+downloads none of those three files, and a Japanese screen fetches its one file on first
+paint. That is also why the single-file build, which embeds them as base64 and has no
+coding to share, grows by about 3.7 MB — the one deliberate blob in that file, because a
+copied-around HTML file cannot fetch a sibling font.
+
+To restyle, change `--font-display` and `--font-body`; nothing else names a face. To
+replace a Latin face, drop the `.woff2` into `src/core/styles/fonts/` under the name
+`fonts.css` uses. To change the CJK coverage, edit the character sets in
+`scripts/fonts-cjk.ts` and run `bun run fonts:cjk` — that one command is the only time the
+project touches the network, and its output is committed.
 
 Scale in `rem`: **13 / 15 / 17 / 22 / 30 / 40 / 52 / 72** (`--text-xs` …
 `--text-4xl`). Headings and every number a player reads use `--font-display` with
@@ -97,7 +147,8 @@ section labels are uppercase Raleway at `--text-xs` with 0.12em tracking.
   multiplies it. Use more than feels necessary: screens are stacked with
   `--space-5`/`--space-6`, cards have `--space-4`/`--space-5` inside.
 - **Radius:** `10` (`--radius-sm`), `16` (`--radius`), `26` (`--radius-lg`), `28`
-  (`--radius-card`), `999` (`--radius-pill`) for keys and chips, `50%` for dots.
+  (`--radius-card`), `999` (`--radius-pill`) for chips, fields and dots. Keys are not
+  pills: their edge is a cutout (see below).
 - **Borders are the exception.** A card is a fill, a radius and a soft shadow; a key is
   a fill; a field is a cushion. Only three things keep an edge: a table's row rules
   (`--line-soft`), the focus ring, and a deliberate state ring drawn with `inset
@@ -106,9 +157,56 @@ section labels are uppercase Raleway at `--text-xs` with 0.12em tracking.
 - **Shadows:** `--shadow-card` (soft, coloured, floating), `--shadow-lift` (sheets and
   toasts), `--shadow-soft` (quiet keys), `--shadow-key` (a coloured key's deep edge).
   Shadows replace outlines; they are warm brown, never grey.
-- **A key is a button:** pill-shaped, filled, no outline, and hover lifts it 2–3 px
-  while `filter: brightness(1.04)` keeps its own colour. Press pushes it back down.
-  Never swap a coloured key's background on hover.
+- **A key is a button:** filled, no outline, and hover lifts it 2–3 px while
+  `filter: brightness(1.04)` keeps its own colour. Press pushes it back down. Never swap
+  a coloured key's background on hover.
+- **Almost every key is cut from paper, and its colour says what it does.** The five
+  kinds, and no others:
+  - **go** — solid family accent (`.primary`, `.wide.primary`): moves the game on.
+  - **selected** — the same accent at full strength on an active tab or chip, or an
+    accent wash (`--accent-soft` under `--accent-deep`) where the state is soft: you
+    are here. A tool's tabs carry their own `data-family`, so the row of tabs shows
+    the template's palette.
+  - **away** — a red wash (`--danger-soft` under `--danger`, `.danger`): throws
+    something away. Red is a wash and not a solid on purpose — every family accent is
+    bright and one family (randomize) is berry, so a solid red key would read as that
+    tool's own accent.
+  - **quiet** — cream (`--surface-2`): closes, saves, navigates, adds. This is most
+    keys: footer links, the seats toggle, sheet actions, wide keys.
+  - **player** — the seat's own colour (`.chip.active`): whose turn it is. The one
+    place colour is identity rather than function.
+
+  Learn the five once and a key's job is legible before the label is. Two things stay
+  uncut because they have nothing to cut: a **ghost** (a boundaryless link inside a
+  card) and an **icon button** (a circle in the chrome).
+- **How a key is cut.** A key is never a pill: `core/styles/cutouts.css` gives it a
+  torn edge through one rule (every `button`, or an `<a class="cutout">`), in two
+  volumes of the same family. `--cut-1…6` are loud — deep wedges, chipped corners, a
+  tilt of up to six tenths of a degree — and dress the keys that commit (`.primary`,
+  `.danger`). `--tile-1…6` are the same tears at a third of the depth on a square
+  viewBox, for ordinary keys, sheet rows and the tool cards. `--band-1…6` are drawn for
+  a key that spans its column: a 960×80 ribbon with a dozen small tears along each edge
+  and a torn end, upright. A cut stretched from 320 to 900 px turns its four tears into
+  long slow wobbles and its half-degree tilt into a visibly crooked bar, so `.wide` gets
+  a band instead — and `.band` marks any other full-width key (a tool's one big action:
+  a coin flip, a draw, a buzzer pad, a sheet row). Shapes rotate down a row
+  so neighbours never share a silhouette, and the band slots travel with them.
+- **A key's paint never sits on the key.** The torn shape is a masked `::before` and
+  the element itself is transparent, so the label, a focus ring and a badge are never
+  clipped — and a `background` on the element would show its rectangle at the corners
+  of the shape. A fill is `--cutout-fill`, a shape is `--cutout-shape`, a depth is
+  `--cutout-filter`, and a state changes the variable (`.modes button.active`,
+  `button.chip:hover`) instead of painting.
+- **A mask hides a `box-shadow`,** so depth is a filter: `--filter-key` (a committing
+  key's deep edge), `--filter-danger`, `--filter-key-soft` (a quiet key's shade) and
+  `--filter-tile` (a card's float). A key whose whole point was a ring is now a wash
+  instead: `--cutout-opacity` fades the layer so the seat colour tints a buzzer pad
+  without putting text on a mid-tone. Fields, cushions, panels, tables and cards that
+  only show something keep their clean shapes: a torn field looks broken, and a
+  surface you cannot press has nothing to cut.
+- **Let it look made, not measured.** The tilts and silhouettes are deliberately
+  uneven; do not straighten one because a pixel is off. A shape only gets calmer when
+  real interface text would be clipped by it.
 - **A field is a cushion:** pill (`--radius-pill`) or 16 px for a textarea, `--field`
   fill, 48 px tall, no underline, no box. A **file picker** is the same cushion: the
   native button is restyled once in `base.css` through `::file-selector-button` (and
@@ -195,8 +293,10 @@ does not render under reduced motion. Dice and the coin change instantly.
   pixel, so it melts into the paper instead of stopping on a line; a
   paper cloud (a `--paper` radial, never a straight-edged gradient) sits between the
   art and the copy, so the title keeps its contrast in both themes and dark mode dims
-  the room instead of lighting it. Then a pill that says "No account. No internet. No
-  install." and "Game night, sorted." at `clamp(3rem, 12vw, 5.5rem)` in `--forest`. A
+  the room instead of lighting it. Then a pill that says "Local, free, no-nonsense
+  gaming aid." and "Game night, sorted." at `clamp(3rem, 12vw, 5.5rem)` in `--forest`.
+  The pill names what the app is and who it is for; "no account, no internet, no
+  install" listed what it lacks and is the register every offline app writes in. A
   resume card follows when there is a saved game.
 - **Full-bleed means the page's own box.** The page has no column of its own: each
   block carries the 60 rem column and the gutter, and the hero's art simply spans
@@ -248,7 +348,7 @@ Measured with WCAG relative luminance; text at 4.5:1, large text and UI edges at
 | family accent as text on surface | 4.9 – 6.8 | 7.8 – 10.2 |
 | danger on surface | 6.4 | 7.8 |
 | focus ring on paper | 7.1 | 10.0 |
-| initials (`--on-seat`) on each seat dot | 4.8 – 7.2 | 4.8 – 7.2 |
+| initials on each seat dot (`seatVars()`) | 4.5 – 14.5 | 4.5 – 14.5 |
 
 The tightest values are deliberate: honey (`time`) and the faint captions. If you
 change a token, re-measure it and update this table in the same change.

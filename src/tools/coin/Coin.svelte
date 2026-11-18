@@ -44,7 +44,7 @@
     {/if}
   </div>
 
-  <button type="button" class="flip" onclick={() => instance.flip()}>
+  <button type="button" class="flip band" onclick={() => instance.flip()}>
     {data.seriesWinner ? t('coin.flip-again') : t('coin.flip')}
   </button>
 
@@ -178,8 +178,7 @@
     font-size: var(--text-xl);
     font-weight: 800;
     border: 0;
-    border-radius: var(--radius-lg);
-    background: var(--accent);
+    --cutout-fill: var(--accent);
     color: var(--accent-text);
     cursor: pointer;
   }
@@ -207,7 +206,7 @@
 
 
   .row button.active {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
   }
   .tally {
     margin: 0;

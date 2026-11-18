@@ -3,6 +3,7 @@
  * template validation, persistence and "save as template".
  */
 
+import { COLOURS } from '../../data/colours';
 import { translate } from '../i18n';
 
 export type FieldSpec =
@@ -19,17 +20,8 @@ export type FieldSpec =
 export type PresetSchema = Record<string, FieldSpec>;
 export type PresetValues = Record<string, unknown>;
 
-export const PALETTE_COLORS: Record<string, string> = {
-  red: '#c0392b',
-  orange: '#c2631b',
-  yellow: '#966f04',
-  green: '#3d8b55',
-  teal: '#23807f',
-  blue: '#2f6fc0',
-  purple: '#8464d0',
-  pink: '#bd4d8c',
-  gray: '#6b7280',
-};
+/** The names a template may write for a colour; the same list the seats are drawn from. */
+export const PALETTE_COLORS: Record<string, string> = { ...COLOURS };
 
 export interface CoerceResult {
   ok: boolean;

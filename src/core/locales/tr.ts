@@ -42,7 +42,7 @@ const tr: Dict = {
   'nav.more': 'Daha fazla',
   'home.title-1': 'Oyun gecesi,',
   'home.title-2': 'hazır.',
-  'home.kicker': 'Hesap yok. İnternet yok. Kurulum yok.',
+  'home.kicker': 'Yerel, ücretsiz, lafı uzatmadan.',
   'home.lede': 'Sahip olduğun oyunlar için zamanlayıcılar, zarlar, puan kâğıtları ve şablonlar.',
   'home.continue': 'Kaldığın yerden devam et',
   'home.tools': 'Araçlar',

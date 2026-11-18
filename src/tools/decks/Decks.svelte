@@ -41,7 +41,7 @@
   </div>
 
   <div class="actions">
-    <button type="button" class="primary" onclick={() => instance.deal()}>{t('decks.deal', { count: data.deal })}</button>
+    <button type="button" class="primary band" onclick={() => instance.deal()}>{t('decks.deal', { count: data.deal })}</button>
     <button type="button" onclick={() => instance.draw(1)}>{t('decks.draw-one')}</button>
     <button type="button" onclick={() => instance.toTable()}>{t('decks.flip')}</button>
     <button type="button" onclick={() => instance.shuffle()}>{t('decks.shuffle')}</button>
@@ -218,7 +218,6 @@
   .actions button {
     min-height: 52px;
     border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text);
     font-weight: 600;
     cursor: pointer;

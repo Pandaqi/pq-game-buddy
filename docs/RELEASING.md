@@ -20,6 +20,7 @@ Artifacts:
 | Path | Use |
 |------|-----|
 | `dist/index.html`, `dist/app.js`, `dist/app.css` | Hosted build, cacheable |
+| `dist/fonts/` | The two `.woff2` faces the stylesheet asks for, relative to `app.css`; only the single file embeds them instead |
 | `dist/chunks/` | Lazy tool modules (view included), pages and template texts, fetched on demand |
 | `dist/<tool>/index.html` | Only from `bun run build:site`: one page per tool |
 | `dist/template/<id>/index.html` | Only from `bun run build:site`: one page per bundled or community template |
@@ -28,6 +29,8 @@ Artifacts:
 | `dist/pq-game-buddy.html` | One self-contained file, works from `file://` |
 | `dist/size.json` | Size report read by `bun run size` |
 | `dist/manifest.webmanifest`, `dist/icon.webp`, `dist/icon-192.png`, `dist/sw.js` | Hosted install: manifest, badge icon (256 px WebP plus a PNG fallback) and service worker. The single file and the dev shell ship without them: both set the tab icon at runtime from the badge inlined in the bundle |
+| `dist/og.jpg` | The 1200 × 630 social card every hosted page names in its Open Graph tags. Served from the app root, so the URL is `<app>/og.jpg`; the tags themselves are absolute and use `PQGB_ORIGIN` |
+| `dist/sitemap.xml` | Written by every hosted build: the front page, plus every tool and template page in `site` mode. A crawler only reads a `robots.txt` at the domain root, so announce this file in pandaqi.com's own: add `Sitemap: https://pandaqi.com/game-buddy/sitemap.xml` there when the app goes live |
 
 Never ship source maps, `node_modules`, the `vault/` reference folder, or anything from
 `tests/`.
@@ -76,6 +79,10 @@ These steps are the owner's, not an agent's:
    in Settings changed, proving the worker is network-first.
 5. Check that the About panel credits every data source and shows the right version.
 6. Confirm the download link serves `pq-game-buddy.html` with a sensible filename.
+7. Open `/game-buddy/sitemap.xml` and one template page. Every `<loc>` must be a URL that
+   answers, and the page's `canonical` must be the deployed origin rather than a localhost.
+   Submit the sitemap in Search Console once; after that a new template only needs the file
+   to be rebuilt and deployed, and Google re-reads the sitemap on its own schedule.
 
 ## 5. Human gates
 

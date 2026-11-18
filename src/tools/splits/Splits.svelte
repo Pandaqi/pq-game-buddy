@@ -151,7 +151,6 @@
     min-height: 44px;
     padding: 0 var(--space-3);
     border-radius: var(--radius);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }
@@ -221,7 +220,7 @@
 
 
   .row button.primary {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
     color: var(--accent-text);
     font-weight: 800;
   }

@@ -78,7 +78,7 @@
       <h1>{t('log.title')}</h1>
       <p class="dim">{t('log.hint')}</p>
     </div>
-    <a class="back" href="#/">{t('nav.home')}</a>
+    <a class="cutout back" href="#/">{t('nav.home')}</a>
   </header>
 
   {#if records.length}
@@ -250,8 +250,6 @@
     display: inline-flex;
     align-items: center;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     text-decoration: none;
     font-weight: 600;
@@ -307,8 +305,6 @@
   .found button {
     min-height: 44px;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
@@ -443,16 +439,7 @@
   .actions button {
     flex: 1;
     min-height: 48px;
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
-    cursor: pointer;
-  }
-  .danger {
-    min-height: 48px;
-    border-radius: var(--radius-pill);
-    background: var(--danger-soft);
-    color: var(--danger);
     cursor: pointer;
   }
   .wide {
@@ -473,17 +460,13 @@
     font-weight: 800;
     font-size: var(--text-xl);
   }
+  /* Layout only: the shared .primary key owns the fill, the edge and the shape. */
   .primary {
     min-height: 52px;
     display: inline-flex;
     align-items: center;
     padding: 0 var(--space-5);
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    color: var(--accent-text);
-    box-shadow: var(--shadow-key);
     text-decoration: none;
-    font-weight: 800;
     cursor: pointer;
   }
   .link {

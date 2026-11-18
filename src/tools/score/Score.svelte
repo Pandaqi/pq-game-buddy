@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { seatVars } from '../../core/colour';
   import { commitOnEnter } from '../../core/dom';
   import { seatName, t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
@@ -231,7 +232,7 @@
           {#each data.players as player (player.id)}
             <tr>
               <th scope="row">
-                <span class="dot" style="--player: {player.color}">{label(player).slice(0, 2).toUpperCase()}</span>
+                <span class="dot" style={seatVars(player.color)}>{label(player).slice(0, 2).toUpperCase()}</span>
                 {label(player)}
               </th>
               {#each Array(data.roundCount) as _, round (round)}
@@ -273,7 +274,7 @@
       {#each data.players as player (player.id)}
         <li class:leader={rankOf(player.id) === 1 && data.players.length > 1}>
           <div class="who">
-            <span class="dot" style="--player: {player.color}">{label(player).slice(0, 2).toUpperCase()}</span>
+            <span class="dot" style={seatVars(player.color)}>{label(player).slice(0, 2).toUpperCase()}</span>
             <span class="name">{label(player)}</span>
             <span class="ledger-total">{shownTotal(player.id)}</span>
           </div>
@@ -303,7 +304,7 @@
       {#each data.players as player (player.id)}
         <li class:leader={rankOf(player.id) === 1 && data.players.length > 1}>
           <div class="who">
-            <span class="dot" style="--player: {player.color}">{label(player).slice(0, 2).toUpperCase()}</span>
+            <span class="dot" style={seatVars(player.color)}>{label(player).slice(0, 2).toUpperCase()}</span>
             <span class="name">{label(player)}</span>
             {#if data.players.length > 1}
               <span class="rank">#{rankOf(player.id)}</span>
@@ -336,7 +337,7 @@
     <button type="button" onclick={() => instance.syncPlayers()}>{t('score.use-players')}</button>
   </div>
   <div class="row">
-    <button type="button" onclick={copySheet}>{t('score.copy-sheet')}</button>
+    <button type="button" class="band" onclick={copySheet}>{t('score.copy-sheet')}</button>
   </div>
 
   {#if data.players.length > 1}
@@ -612,7 +613,7 @@
     height: 34px;
     border-radius: var(--radius-round);
     background: var(--player);
-    color: var(--on-seat);
+    color: var(--seat-ink, var(--on-seat));
     font-family: var(--font-display);
     font-size: var(--text-xs);
     font-weight: 800;
@@ -656,7 +657,6 @@
     min-width: 64px;
     min-height: 48px;
     border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-base);
     font-weight: 700;
@@ -818,11 +818,8 @@
     cursor: pointer;
     color: var(--text-dim);
   }
+  /* Placement only: the shared .danger key owns the fill and the shape. */
   .danger {
-    min-height: 48px;
-    border-radius: var(--radius-pill);
-    background: var(--danger-soft);
-    color: var(--danger);
     cursor: pointer;
     padding: 0 var(--space-3);
   }
@@ -870,13 +867,12 @@
     flex: 1;
     min-height: 44px;
     border-radius: var(--radius);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
     font: inherit;
   }
   .cat-actions button.save {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     font-weight: 700;
   }
 

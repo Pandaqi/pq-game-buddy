@@ -22,6 +22,7 @@ import {
   rackWords,
   scoreWord,
 } from '../src/tools/words/logic';
+import { parseWords } from '../src/data/words/packs';
 import { drawFrom, parseCustomPacks } from '../src/tools/prompts/logic';
 import { bestSegments, delta, parseSplits, sumOfBest, totalOf, type SplitsState } from '../src/tools/splits/logic';
 import { drawType, totalOf as bagTotal } from '../src/tools/bag/logic';
@@ -355,6 +356,14 @@ describe('words', () => {
     expect(withBlank.some((row) => row.word === 'cat' && !row.exact)).toBe(true);
     expect(scoreWord('cat', 'en')).toBe(5);
     expect(scoreWord('cat', 'nl')).toBe(3);
+  });
+
+  test('a word pack drops repeats and reads a CJK list without spaces', () => {
+    expect(parseWords('cat  dog Cat')).toEqual(['cat', 'dog']);
+    expect(parseWords('人、大小\n学校 先生')).toEqual(['人', '大小', '学校', '先生']);
+    // A lone Latin letter is a stray separator, not a word; a lone kanji is a word.
+    expect(parseWords('a b')).toEqual([]);
+    expect(parseWords('水')).toEqual(['水']);
   });
 
   test('close matches catch a typo', () => {

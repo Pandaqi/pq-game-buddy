@@ -297,10 +297,9 @@
   .roll {
     min-width: 110px;
     min-height: 56px;
-    border-radius: var(--radius-pill);
-    background: var(--accent);
+    --cutout-fill: var(--accent);
+    --cutout-filter: var(--filter-key);
     color: var(--accent-text);
-    box-shadow: var(--shadow-key);
     font-size: var(--text-xl);
     font-weight: 800;
     cursor: pointer;
@@ -390,7 +389,6 @@
     min-height: 46px;
     padding: 0 var(--space-4);
     border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-base);
     font-weight: 600;
@@ -399,7 +397,7 @@
   .quick button.macro {
     font-family: var(--font);
     font-weight: 700;
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     color: var(--accent-deep);
   }
   .lab {
@@ -429,7 +427,6 @@
     min-width: 44px;
     min-height: 48px;
     border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text-dim);
     cursor: pointer;
   }
@@ -464,7 +461,6 @@
     min-width: 44px;
     min-height: 44px;
     border-radius: var(--radius-pill);
-    background: var(--surface);
     color: var(--text);
     font-size: var(--text-lg);
     cursor: pointer;
@@ -498,7 +494,6 @@
     min-height: 48px;
     padding: 0 var(--space-4);
     border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     font-weight: 700;
     cursor: pointer;
@@ -554,7 +549,6 @@
   }
   header button {
     min-height: 44px;
-    background: var(--surface);
     color: var(--text);
     border-radius: var(--radius);
     padding: 0 var(--space-3);

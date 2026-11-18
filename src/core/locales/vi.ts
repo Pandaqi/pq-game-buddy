@@ -42,7 +42,7 @@ const vi: Dict = {
   'nav.more': 'Thêm',
   'home.title-1': 'Đêm chơi game,',
   'home.title-2': 'gọn gàng.',
-  'home.kicker': 'Không tài khoản. Không internet. Không cần cài.',
+  'home.kicker': 'Cục bộ, miễn phí, gọn gàng.',
   'home.lede': 'Đồng hồ, xúc xắc, bảng điểm và mẫu cho những trò bạn đang có.',
   'home.continue': 'Chơi tiếp chỗ đã dừng',
   'home.tools': 'Công cụ',

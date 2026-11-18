@@ -1,5 +1,6 @@
 /** Players and the plain session model. No Svelte here. */
 
+import { COLOURS, SEAT_ORDER } from '../data/colours';
 import { seatNameIn } from './i18n';
 
 export interface Player {
@@ -15,18 +16,15 @@ export interface Player {
   active: boolean;
 }
 
-/** Colorblind-aware set with initials as the non-colour fallback. */
-export const PLAYER_COLORS = [
-  '#c0392b',
-  '#2f6fc0',
-  '#3d8b55',
-  '#c2631b',
-  '#8464d0',
-  '#23807f',
-  '#bd4d8c',
-  '#966f04',
-  '#6b7280',
-];
+/**
+ * Colorblind-aware set with initials as the non-colour fallback.
+ *
+ * The colours themselves live in `data/colours.ts`, shared with the names a template
+ * writes, so a seat and `colour = green` can never drift apart. Every entry clears
+ * 4.5:1 against cream ink (the lowest is teal at 4.52:1); core/colour.ts still picks
+ * ink per seat, because an imported template may name any hex at all.
+ */
+export const PLAYER_COLORS: string[] = SEAT_ORDER.map((name) => COLOURS[name]);
 
 export function initialOf(name: string): string {
   const trimmed = name.trim();

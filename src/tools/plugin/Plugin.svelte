@@ -291,7 +291,6 @@
     width: 44px;
     height: 44px;
     border-radius: var(--radius-round);
-    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
@@ -357,14 +356,10 @@
     gap: var(--space-2);
     flex-wrap: wrap;
   }
+  /* Size only: the shared .primary key owns the fill, the edge and the shape. */
   .primary {
     min-height: 52px;
     padding: 0 var(--space-5);
-    border-radius: var(--radius-pill);
-    background: var(--accent);
-    color: var(--accent-text);
-    box-shadow: var(--shadow-key);
-    font-weight: 800;
     cursor: pointer;
   }
   .primary.wide {

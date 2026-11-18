@@ -141,7 +141,7 @@
             <button
               type="button"
               onclick={() => onstart(module.id)}
-              class="tool"
+              class="tool cutout"
               data-family={module.family}
             >
               <span class="mark" aria-hidden="true">{@html module.icon}</span>
@@ -161,7 +161,7 @@
         <p class="hint">
           {showAll ? t('home.all-tools', { count: allTools.length }) : t('home.everyday')}
         </p>
-        <button type="button" class="wide ghost" onclick={() => (showAll = !showAll)}>
+        <button type="button" class="wide" onclick={() => (showAll = !showAll)}>
           {showAll ? t('home.fewer') : t('home.show-all', { count: allTools.length })}
         </button>
       </div>
@@ -191,16 +191,16 @@
             </li>
           {/each}
         </ul>
-        <button type="button" class="wide ghost" onclick={onimport}>{t('home.import')}</button>
+        <button type="button" class="wide" onclick={onimport}>{t('home.import')}</button>
       </div>
     </details>
   </section>
 
   <nav class="links" aria-label={t('nav.more')}>
-    <a href="#/templates">{t('home.all-templates')}</a>
-    <a href="#/editor">{t('home.editor')}</a>
-    <a href="#/log">{t('home.log')}</a>
-    <a href="#/settings">{t('home.settings')}</a>
+    <a class="cutout" href="#/templates">{t('home.all-templates')}</a>
+    <a class="cutout" href="#/editor">{t('home.editor')}</a>
+    <a class="cutout" href="#/log">{t('home.log')}</a>
+    <a class="cutout" href="#/settings">{t('home.settings')}</a>
   </nav>
 </div>
 
@@ -307,10 +307,8 @@
     gap: var(--space-3);
     text-align: left;
     padding: var(--space-3) var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     color: var(--text);
-    box-shadow: var(--shadow-card);
     animation: bloom var(--motion-bounce) var(--ease-bounce) 80ms both;
   }
   .continue-art {
@@ -399,6 +397,8 @@
     animation: bloom var(--motion-bounce) var(--ease-bounce) both;
     animation-delay: calc(var(--i) * 18ms + 60ms);
   }
+  /* A tile is a hand-cut card, not a rectangle: the wash, the torn edge and the
+     float all live on the cutout layer (cutouts.css), so the tile is a fill. */
   .tool {
     width: 100%;
     height: 100%;
@@ -408,19 +408,42 @@
     align-items: flex-start;
     gap: var(--space-1);
     text-align: left;
+    /* Fifteen, not more: the torn corners already take a few pixels off each one. */
     padding: var(--space-4);
-    border-radius: var(--radius-card);
-    background:
-      linear-gradient(180deg, var(--accent-soft), var(--surface) 58%);
     color: var(--text);
-    box-shadow: var(--shadow-card);
+    --cutout-fill: linear-gradient(180deg, var(--accent-soft), var(--surface) 58%);
+    --cutout-filter: var(--filter-tile);
+  }
+  /* Six shapes across a row of four: neighbouring tiles never share a silhouette. */
+  .shelf li:nth-child(6n + 1) .tool {
+    --cutout-shape: var(--tile-1);
+    --cutout-tilt: -0.35deg;
+  }
+  .shelf li:nth-child(6n + 2) .tool {
+    --cutout-shape: var(--tile-2);
+    --cutout-tilt: 0.3deg;
+  }
+  .shelf li:nth-child(6n + 3) .tool {
+    --cutout-shape: var(--tile-3);
+    --cutout-tilt: -0.5deg;
+  }
+  .shelf li:nth-child(6n + 4) .tool {
+    --cutout-shape: var(--tile-4);
+    --cutout-tilt: 0.45deg;
+  }
+  .shelf li:nth-child(6n + 5) .tool {
+    --cutout-shape: var(--tile-5);
+    --cutout-tilt: -0.25deg;
+  }
+  .shelf li:nth-child(6n) .tool {
+    --cutout-shape: var(--tile-6);
+    --cutout-tilt: 0.4deg;
   }
   @media (hover: hover) {
     .tool:hover:not(:disabled) {
-      background:
-        linear-gradient(180deg, var(--accent-soft), var(--surface) 42%);
-      transform: translateY(-4px) rotate(-0.4deg);
-      box-shadow: 0 26px 46px -28px rgba(74, 46, 10, 0.55);
+      --cutout-fill: linear-gradient(180deg, var(--accent-soft), var(--surface) 38%);
+      box-shadow: none;
+      transform: translateY(-5px) rotate(var(--cutout-tilt, -0.35deg));
     }
   }
   .mark {
@@ -529,15 +552,9 @@
     display: inline-flex;
     align-items: center;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     text-decoration: none;
     font-weight: 600;
     font-size: var(--text-sm);
-    transition: background-color var(--motion-pop) linear;
-  }
-  .links a:hover {
-    background: var(--surface);
   }
 </style>

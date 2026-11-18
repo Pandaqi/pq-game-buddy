@@ -129,7 +129,7 @@
 
   <div class="turn-actions">
     <button type="button" class="previous" onclick={() => instance.previous()} aria-label={t('turns.previous-turn')}>←</button>
-    <button type="button" class="next" onclick={nextTurn}>{t('turns.next-turn')}</button>
+    <button type="button" class="next band" onclick={nextTurn}>{t('turns.next-turn')}</button>
   </div>
 
   <div class="row">
@@ -234,13 +234,11 @@
   .phase-chips button {
     min-height: 40px;
     padding: 0 var(--space-3);
-    border-radius: var(--radius-pill);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }
   .phase-chips button.active {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     font-weight: 700;
   }
 
@@ -283,13 +281,12 @@
     max-width: 12rem;
     min-height: 48px;
     border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text);
     font-weight: 700;
     cursor: pointer;
   }
   .clock-actions button.primary {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
     color: var(--accent-text);
   }
   .order {
@@ -301,14 +298,13 @@
     flex: 0 0 auto;
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: var(--radius-pill);
-    background: var(--surface);
     color: var(--text);
     white-space: nowrap;
     cursor: pointer;
   }
   .order button.active {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
+    --cutout-filter: var(--filter-key);
     color: var(--accent-text);
     font-weight: 700;
   }
@@ -332,7 +328,6 @@
     min-height: 44px;
     padding: 0 var(--space-4);
     border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     text-transform: none;
     letter-spacing: normal;
@@ -373,7 +368,6 @@
     min-width: 44px;
     min-height: 44px;
     border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     font-size: var(--text-lg);
     cursor: pointer;
@@ -396,16 +390,14 @@
   .segment button {
     flex: 1;
     min-height: 46px;
-    border-radius: var(--radius-pill);
-    background: transparent;
+    --cutout-fill: transparent;
     color: var(--text-dim);
     cursor: pointer;
   }
   .segment button.active {
-    background: var(--surface);
     color: var(--text);
     font-weight: 700;
-    box-shadow: var(--shadow-soft);
+    box-shadow: none;
   }
   .turn-actions {
     display: flex;
@@ -414,9 +406,9 @@
   .turn-actions .next {
     flex: 1;
     min-height: 64px;
-    border-radius: var(--radius-lg);
     border: 0;
-    background: var(--accent);
+    --cutout-fill: var(--accent);
+    --cutout-filter: var(--filter-key);
     color: var(--accent-text);
     font-size: var(--text-xl);
     font-weight: 800;
@@ -462,13 +454,11 @@
   .time-presets button {
     flex: 1;
     min-height: 44px;
-    border-radius: var(--radius);
-    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
   }
   .time-presets button.active {
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     font-weight: 700;
   }
 

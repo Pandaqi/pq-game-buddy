@@ -42,7 +42,7 @@ const pt: Dict = {
   'nav.more': 'Mais',
   'home.title-1': 'Noite de jogos,',
   'home.title-2': 'resolvida.',
-  'home.kicker': 'Sem conta. Sem internet. Sem instalar.',
+  'home.kicker': 'Local, gratuito, sem complicação.',
   'home.lede': 'Cronômetros, dados, folhas de pontos e modelos para os jogos que você tem.',
   'home.continue': 'Continuar de onde parou',
   'home.tools': 'Ferramentas',

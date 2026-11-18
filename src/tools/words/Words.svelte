@@ -1,13 +1,15 @@
 <script lang="ts">
   import { t } from '../../core/i18n.svelte';
   import type { ToolContext } from '../../core/registry';
-  import { wordPack, WORD_LANGS, type WordLang } from '../../data/words/packs';
+  import { WORD_LANGS, cachedPack, packName, type WordLang } from '../../data/words/packs';
   import { WORD_MODES, type WordMode } from './logic';
   import type { WordsInstance } from './tool.svelte';
 
   let { ctx, instance }: { ctx: ToolContext; instance: WordsInstance } = $props();
   const data = $derived(instance.data);
-  const pack = $derived(wordPack(data.lang));
+  // The pack is a chunk of its own: the frame draws now, the count arrives with it.
+  // `ready` is read here so the derived value recomputes when the chunk lands.
+  const pack = $derived(data.ready ? cachedPack(data.lang) : undefined);
 
   const MODE_LABELS = $derived<Record<WordMode, string>>({
     check: t('words.mode-check'),
@@ -32,11 +34,13 @@
       <span>{t('words.word-pack')}</span>
       <select value={data.lang} onchange={(event) => instance.setLang((event.currentTarget as HTMLSelectElement).value as WordLang)}>
         {#each WORD_LANGS as lang (lang)}
-          <option value={lang}>{wordPack(lang).name}</option>
+          <option value={lang}>{packName(lang)}</option>
         {/each}
       </select>
     </label>
-    <p class="dim small">{t('words.pack-line', { count: pack.words.length, license: pack.license })}</p>
+    {#if pack}
+      <p class="dim small">{t('words.pack-line', { count: pack.words.length, license: pack.license })}</p>
+    {/if}
   </div>
 
   <div class="modes" role="group" aria-label={t('words.word-tool')}>
@@ -57,7 +61,7 @@
       <p class="verdict" class:bad={!data.check.valid} role="status">
         <strong>{data.check.word}</strong>
         {data.check.valid
-          ? t('words.in-list', { pack: pack.name })
+          ? t('words.in-list', { pack: packName(data.lang) })
           : t('words.not-in-list')}
       </p>
       {#if !data.check.valid && data.check.close.length}

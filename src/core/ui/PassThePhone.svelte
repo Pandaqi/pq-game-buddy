@@ -169,10 +169,8 @@
     min-height: 62px;
     margin-top: var(--space-3);
     padding: 0 var(--space-6);
-    border-radius: var(--radius-pill);
-    background: var(--accent);
+    --cutout-fill: var(--accent);
     color: var(--accent-text);
-    box-shadow: var(--shadow-key);
     font-size: var(--text-lg);
     font-weight: 800;
     cursor: pointer;
@@ -181,8 +179,6 @@
     min-height: 52px;
     margin-top: var(--space-1);
     padding: 0 var(--space-5);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     font-weight: 700;
     cursor: pointer;
@@ -201,8 +197,6 @@
     min-height: 52px;
     margin-top: var(--space-3);
     padding: 0 var(--space-5);
-    border-radius: var(--radius-pill);
-    background: var(--surface-2);
     color: var(--text);
     font-weight: 700;
     cursor: pointer;

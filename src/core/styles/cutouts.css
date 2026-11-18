@@ -1,0 +1,147 @@
+/* The Pandaqi brand shape: a hand-torn paper key instead of a perfect pill.
+
+   Two families, one language:
+     --cut-1…6    loud. Deep wedges and chipped corners, for the keys that commit
+                  (.primary, .danger).
+     --tile-1…6   quiet. The same tears at a third of the depth, for ordinary keys
+                  and the tool shelf, so a row of them stays a row.
+
+   Every key takes it through one rule: a key is transparent and its colour lives on
+   a masked `::before`. Never paint a key's own background — that rectangle would sit
+   behind the torn shape and show at the corners. A kind of key sets --cutout-fill; a
+   state changes --cutout-fill too (see .modes button.active). Ghosts have no fill to
+   tear, and icon buttons are circles, so both stay round.
+
+   The shape is a pseudo-element and not a mask on the element, so the label and the
+   focus ring are never clipped; a mask hides a box-shadow, so depth comes from
+   --filter-key / --filter-danger / --filter-key-soft. The tilt lives on the layer too,
+   so a hover that moves the key never straightens its paper. */
+
+:root {
+  --cut-1: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20320%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M30,14L88,5L140,12L196,4L268,9L300,17L312,36L306,44L313,55L302,70L250,76L196,71L142,77L74,73L20,68L9,54L14,40L7,30L16,18Z'/%3E%3C/svg%3E");
+  --cut-2: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20320%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M26,7L96,3L168,8L240,4L302,10L313,26L306,40L313,56L298,71L236,77L180,71L118,78L60,72L14,66L6,48L12,34L5,22L17,10Z'/%3E%3C/svg%3E");
+  --cut-3: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20320%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M24,10L120,4L160,16L210,5L290,9L312,22L305,38L314,50L300,66L220,74L170,64L110,76L44,70L10,58L16,42L6,28L14,14Z'/%3E%3C/svg%3E");
+  --cut-4: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20320%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M34,6L130,3L232,7L306,12L314,30L300,40L312,50L306,68L246,74L176,68L96,76L28,71L8,56L14,38L6,24L20,11Z'/%3E%3C/svg%3E");
+  --cut-5: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20320%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M20,16L44,4L82,12L128,3L196,8L272,4L308,14L314,34L308,52L312,66L288,74L214,70L150,77L88,71L32,75L12,64L18,50L6,38L12,24Z'/%3E%3C/svg%3E");
+  --cut-6: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20320%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M28,8L112,4L178,12L252,5L306,16L314,38L304,46L313,58L296,72L224,76L164,70L104,77L40,72L12,62L6,44L14,32L8,20Z'/%3E%3C/svg%3E");
+
+  --tile-1: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20240%20240'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M20,6L78,3L120,6L168,4L222,8Q234,8,234,20L236,74L233,120L236,166L234,218Q234,232,220,233L166,236L118,233L70,236L20,233Q8,233,8,219L6,166L9,120L6,72L8,20Q8,7,20,6Z'/%3E%3C/svg%3E");
+  --tile-2: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20240%20240'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M24,7L86,4L132,7L180,3L216,9Q232,10,231,26L233,80L230,124L234,170L232,214Q231,230,214,231L160,234L112,231L62,235L26,232Q10,231,9,214L7,168L10,122L6,76L8,24Q9,8,24,7Z'/%3E%3C/svg%3E");
+  --tile-3: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20240%20240'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M20,8L74,4L110,13L150,4L200,5L222,10Q234,12,233,28L235,82L231,128L234,172L232,212Q231,230,212,231L158,235L116,230L64,234L22,231Q8,230,8,212L6,170L9,126L6,80L9,22Q10,9,20,8Z'/%3E%3C/svg%3E");
+  --tile-4: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20240%20240'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M26,9L92,5L136,10L176,4L214,7Q233,7,233,24L231,70L235,116L232,164L234,216Q233,232,216,232L168,235L124,231L76,235L24,232Q7,232,8,215L6,164L10,118L7,70L9,23Q10,8,26,9Z'/%3E%3C/svg%3E");
+  --tile-5: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20240%20240'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M18,7L80,5L124,3L166,8L212,4L223,11Q235,11,234,26L236,78L232,122L235,168L233,214Q232,231,215,232L162,235L114,232L68,234L21,232Q9,231,7,214L6,168L10,120L7,74L8,21Q9,8,18,7Z'/%3E%3C/svg%3E");
+  --tile-6: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20240%20240'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M22,8L70,3L118,7L164,4L206,8L224,12Q235,13,234,30L232,76L236,124L233,170L234,212Q233,230,215,231L164,234L120,230L72,234L22,231Q8,230,8,212L6,170L9,124L6,76L9,22Q10,9,22,8Z'/%3E%3C/svg%3E");
+
+  /* Bands: full-width keys. A 320-unit shape stretched across a metre of key turns its
+     four tears into long slow wobbles and its tilt into a visibly crooked bar. These
+     are drawn on a 960×80 ribbon with a dozen small tears along each edge and no tilt,
+     so a wide key reads as cut paper at 320 px and at 1200 px alike. */
+  --band-1: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20960%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M14,10L90,4L170,9L252,3L338,8L420,4L508,9L596,3L684,8L772,4L858,9L946,6L952,22L948,40L953,58L946,74L862,70L776,76L690,71L602,76L514,71L428,76L342,71L256,76L172,72L88,76L16,72L8,56L12,40L7,24Z'/%3E%3C/svg%3E");
+  --band-2: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20960%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M16,8L104,3L188,10L244,4L332,9L400,3L470,11L560,4L650,9L742,3L836,10L944,5L951,20L946,36L952,52L947,68L950,74L860,70L774,76L686,70L596,76L506,71L416,76L330,70L240,76L152,71L64,76L14,70L7,54L12,38L6,22Z'/%3E%3C/svg%3E");
+  --band-3: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20960%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M12,12L120,4L230,8L340,4L448,10L560,5L668,9L780,4L890,8L948,14L953,30L947,46L952,62L940,74L830,70L720,76L610,71L500,76L390,71L280,76L170,71L70,74L10,66L6,48L11,32L5,20Z'/%3E%3C/svg%3E");
+  --band-4: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20960%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M14,6L100,12L186,5L272,11L358,5L444,11L530,5L616,11L702,5L788,11L874,5L946,10L951,26L946,42L952,58L946,72L876,68L790,74L704,69L618,75L532,69L446,75L360,69L274,75L188,69L102,74L18,70L8,56L12,42L6,28Z'/%3E%3C/svg%3E");
+  --band-5: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20960%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M30,14L70,4L160,9L250,4L340,10L430,4L520,9L610,4L700,10L790,4L880,9L944,6L953,24L947,40L953,56L948,70L936,76L846,71L756,77L666,71L576,77L486,71L396,77L306,71L216,77L126,71L44,76L12,66L6,50L12,34L6,20Z'/%3E%3C/svg%3E");
+  --band-6: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20960%2080'%20preserveAspectRatio='none'%3E%3Cpath%20fill='%23000'%20d='M18,10L110,5L206,9L302,4L398,9L494,5L590,10L686,4L782,9L878,5L950,8L952,24L947,40L952,56L945,72L858,68L764,75L670,69L576,75L482,69L388,75L294,69L200,75L106,69L22,74L8,60L13,44L6,28L10,16Z'/%3E%3C/svg%3E");
+}
+
+/* One rule for every key: a link or button that carries a fill gets the torn edge.
+   .cutout is the same thing for an anchor that is really a key (footer, back).
+   Only structural properties live here: a fill, a colour or a shape is a custom
+   property on the key (components.css and each view set those), and the defaults sit
+   in the layer as fallbacks, so a view's kind of key always wins. */
+.cutout,
+button:not(.ghost):not(.icon):not(.plain) {
+  position: relative;
+  isolation: isolate;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cutout::before,
+button:not(.ghost):not(.icon):not(.plain)::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--cutout-fill, var(--surface-2));
+  -webkit-mask: var(--cutout-shape, var(--tile, var(--tile-1))) center / 100% 100% no-repeat;
+  mask: var(--cutout-shape, var(--tile, var(--tile-1))) center / 100% 100% no-repeat;
+  filter: var(--cutout-filter, var(--filter-key-soft));
+  opacity: var(--cutout-opacity, 1);
+  transform: rotate(var(--cutout-tilt, -0.35deg));
+  transition: background-color var(--motion-pop) linear;
+}
+
+/* The two keys that commit are louder: deeper tears and a deep edge. */
+.primary,
+.danger {
+  --cutout-shape: var(--cut, var(--cut-1));
+  --cutout-filter: var(--filter-key);
+}
+.danger {
+  --cutout-filter: var(--filter-danger);
+}
+
+/* A key that spans its container is a band, not a stretched key: a wide ribbon of the
+   same paper. .band is for a full-width key that is not already .wide (a tool's own
+   big action reads better as a ribbon). Deliberately upright: a few tenths of a degree
+   over a long key looks like a mistake, not like paper. */
+.wide,
+.band {
+  --cutout-shape: var(--band, var(--band-1));
+  --cutout-tilt: 0deg;
+}
+
+/* Six shapes in rotation, one slot per family: neighbours never share a silhouette. */
+.cutout:nth-of-type(6n + 2),
+button:not(.ghost):not(.icon):not(.plain):nth-of-type(6n + 2) {
+  --cut: var(--cut-2);
+  --tile: var(--tile-2);
+  --band: var(--band-2);
+  --cutout-tilt: 0.45deg;
+}
+.cutout:nth-of-type(6n + 3),
+button:not(.ghost):not(.icon):not(.plain):nth-of-type(6n + 3) {
+  --cut: var(--cut-3);
+  --tile: var(--tile-3);
+  --band: var(--band-3);
+  --cutout-tilt: -0.5deg;
+}
+.cutout:nth-of-type(6n + 4),
+button:not(.ghost):not(.icon):not(.plain):nth-of-type(6n + 4) {
+  --cut: var(--cut-4);
+  --tile: var(--tile-4);
+  --band: var(--band-4);
+  --cutout-tilt: 0.55deg;
+}
+.cutout:nth-of-type(6n + 5),
+button:not(.ghost):not(.icon):not(.plain):nth-of-type(6n + 5) {
+  --cut: var(--cut-5);
+  --tile: var(--tile-5);
+  --band: var(--band-5);
+  --cutout-tilt: -0.4deg;
+}
+.cutout:nth-of-type(6n),
+button:not(.ghost):not(.icon):not(.plain):nth-of-type(6n) {
+  --cut: var(--cut-6);
+  --tile: var(--tile-6);
+  --band: var(--band-6);
+  --cutout-tilt: 0.3deg;
+}
+
+/* base.css lifts every button on hover; a torn key has no shadow to lift, so only
+   the brightness of the base rule applies. The fill never leaves the layer. */
+@media (hover: hover) {
+  .cutout:hover:not(:disabled),
+  button:not(.ghost):not(.icon):not(.plain):hover:not(:disabled) {
+    background: transparent;
+    box-shadow: none;
+  }
+}
+
+.cutout:active:not(:disabled),
+button:not(.ghost):not(.icon):not(.plain):active:not(:disabled) {
+  background: transparent;
+  box-shadow: none;
+}

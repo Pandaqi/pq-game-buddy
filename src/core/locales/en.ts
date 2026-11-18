@@ -47,7 +47,7 @@ const en: Dict = {
 
   'home.title-1': 'Game night,',
   'home.title-2': 'sorted.',
-  'home.kicker': 'No account. No internet. No install.',
+  'home.kicker': 'Local, free, no-nonsense gaming aid.',
   'home.lede': 'Timers, dice, scorepads and templates for the games you own.',
   'home.continue': 'Pick up where you stopped',
   'home.tools': 'Tools',

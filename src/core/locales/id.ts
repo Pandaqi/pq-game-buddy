@@ -42,7 +42,7 @@ const id: Dict = {
   'nav.more': 'Lainnya',
   'home.title-1': 'Malam permainan,',
   'home.title-2': 'beres.',
-  'home.kicker': 'Tanpa akun. Tanpa internet. Tanpa pemasangan.',
+  'home.kicker': 'Lokal, gratis, tanpa ribet.',
   'home.lede': 'Pengatur waktu, dadu, lembar poin, dan templat untuk permainan yang kamu punya.',
   'home.continue': 'Lanjutkan dari tempat berhenti',
   'home.tools': 'Alat',

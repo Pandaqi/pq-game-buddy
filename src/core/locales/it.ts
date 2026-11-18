@@ -42,7 +42,7 @@ const it: Dict = {
   'nav.more': 'Altro',
   'home.title-1': 'Serata giochi,',
   'home.title-2': 'risolta.',
-  'home.kicker': 'Nessun account. Nessuna rete. Niente da installare.',
+  'home.kicker': 'Locale, gratuito, senza fronzoli.',
   'home.lede': 'Timer, dadi, fogli punti e modelli per i giochi che hai.',
   'home.continue': 'Riprendi da dove eri',
   'home.tools': 'Strumenti',

@@ -180,7 +180,6 @@
   button {
     min-height: 48px;
     border-radius: var(--radius);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
   }

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { seatVars } from '../colour';
+
   let {
     name,
     initial,
@@ -22,7 +24,9 @@
 {/snippet}
 
 <!-- The seat colour is a ring around the initials, so the chip still reads when
-     the colour does not: no white text sitting on a mid-tone fill. -->
+     the colour does not. The active chip fills with the seat, and core/colour.ts picks
+     the ink for that exact colour: cream on every palette seat, deep on anything pale a
+     template may name, with the seat nudged one step if neither ink could be read. -->
 {#if onclick}
   <button
     type="button"
@@ -31,12 +35,12 @@
     class:big={size === 'big'}
     onclick={onclick}
     aria-pressed={active}
-    style="--player: {color}"
+    style={seatVars(color)}
   >
     {@render content()}
   </button>
 {:else}
-  <div class="chip" class:active class:big={size === 'big'} style="--player: {color}">
+  <div class="chip" class:active class:big={size === 'big'} style={seatVars(color)}>
     {@render content()}
   </div>
 {/if}
@@ -61,24 +65,26 @@
     font-size: var(--text-lg);
     min-height: 60px;
   }
+  /* Whose turn it is wears their own seat colour: the one place a key is not one of
+     the four kinds, because the colour is the identity. */
   .chip.active {
-    background: var(--player);
-    color: var(--on-seat);
+    --cutout-fill: var(--player);
+    --cutout-filter: var(--filter-key-soft);
+    color: var(--seat-ink, var(--on-seat));
     font-weight: 700;
-    box-shadow: var(--shadow-soft);
+    box-shadow: none;
   }
   button.chip {
     cursor: pointer;
   }
   button.chip:hover {
-    background: var(--surface-2);
     color: var(--text);
     transform: none;
     box-shadow: none;
   }
   button.chip.active:hover {
-    background: var(--player);
-    color: var(--on-seat);
+    --cutout-fill: var(--player);
+    color: var(--seat-ink, var(--on-seat));
   }
   .dot {
     display: inline-grid;
@@ -87,7 +93,7 @@
     height: 34px;
     border-radius: var(--radius-round);
     background: var(--player);
-    color: var(--on-seat);
+    color: var(--seat-ink, var(--on-seat));
     font-family: var(--font-display);
     font-weight: 800;
     font-size: var(--text-sm);

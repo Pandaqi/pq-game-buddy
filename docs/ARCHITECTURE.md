@@ -62,9 +62,8 @@ adding a tool or a dependency.
 There is one place with a colour, a radius or a shadow: `core/styles/tokens.css`.
 `core/styles/base.css` sits on top of it with the lantern glows and paper grain, the
 type scale, the borderless key and field, focus and print rules, and the one-shot
-entrance keyframes. `core/styles/components.css` holds the primitives every screen
-repeats (panels, stages, rows, fields, mode switches, tables, folds), and
-`core/styles/fonts.css` holds the base64 Game Buddy and Raleway faces. `core/ui/icons.ts`
+entrance keyframes. `core/styles/components.css` holds the primitives every screen repeats (panels, stages, rows, fields, mode switches, tables, folds), `core/styles/cutouts.css` the two families of hand-cut shapes a key and a tool tile wear, and
+`core/styles/fonts.css` names the two complete `.woff2` faces in `core/styles/fonts/` (files in every build; base64 only inside the single file). `core/ui/icons.ts`
 holds every mark on one grid and `core/ui/doodles.ts` the decorative woodland SVG. A tool inherits all of it; it sets `data-family` through its
 `meta.family` and gets that family's accent, and it must not name a colour itself.
 `docs/STYLE.md` is the contract and the restyle checklist. `core/theme.ts` parses a
@@ -83,8 +82,18 @@ French, Portuguese, Italian, Indonesian, Turkish and Vietnamese — and each shi
 shell key and every tool key, because the gate in
 `tests/i18n.test.ts` compares a language against the English set and fails on a gap.
 
-No dictionary is compiled into the start-up. Every language, English included, is a chunk
-loaded when it is picked and never fetched: `core/locales/<lang>.ts` for the shell and
+The type follows the same rule. Three CJK faces ship beside the app — Japanese, Chinese
+and Korean, 763 KB, 981 KB and 1,026 KB — each declaring its `unicode-range`, so an English
+screen downloads none of them and a Japanese one fetches its own file on first paint. They
+are Noto variable fonts cut to the common character sets by `scripts/fonts-cjk.ts`
+(`bun run fonts:cjk`, the one script that uses the network, run by hand and committed);
+`docs/STYLE.md` §2 has the reasoning and `docs/LANGUAGES.md` the steps a translation takes.
+
+No dictionary is compiled into the start-up. The Words tool's ten word packs follow the
+same rule as the languages they belong to: `data/words/packs.ts` holds one `import()` per
+language, so a pack is its own chunk, arrives when a player picks that language, and never
+shares a chunk with nine lists it is not being used for. Every language, English included,
+is a chunk loaded when it is picked and never fetched: `core/locales/<lang>.ts` for the shell and
 `core/locales/tool-text-<lang>.generated.ts` for the tools, which `bun run gen` builds
 from each `src/tools/<id>/locales/<lang>.ts`. A tool registers its own English words at
 module scope (`registerToolStrings`), so its text still ships in its own chunk and there
@@ -150,7 +159,7 @@ probed at boot; a banner tells the user when saving is not durable.
 
 | Mode | Emits |
 |------|-------|
-| `spa` (default) | `dist/index.html`, `dist/app.js`, the shared chunk it imports, `dist/app.css`, `dist/chunks/`, plus `dist/pq-game-buddy.html` and `dist/templates.json` |
+| `spa` (default) | `dist/index.html`, `dist/app.js`, the shared chunk it imports, `dist/app.css`, `dist/fonts/`, `dist/chunks/`, plus `dist/pq-game-buddy.html` and `dist/templates.json` |
 | `site` | the same, plus `dist/<tool>/index.html` for every non-`dev` tool, and `dist/template/<id>/index.html` for every bundled and community template |
 | `single` | one `dist/index.html` with JS and CSS embedded, and nothing else |
 
@@ -171,9 +180,17 @@ which starts the tool directly. A template page is the same shell at
 from the generated catalogue so the list can never drift from what ships; `App` loads
 that template's text and opens the seat-and-variant chooser. The ids are the ones the
 gallery uses, and `#/template/<id>` stays a permanent alias for links written before
-these pages existed. Each generated page declares its own `<link rel="canonical">` and
-Open Graph tags under `https://pandaqi.com/game-buddy/` (set `PQGB_ORIGIN` to build the
-same site elsewhere), and `dist/templates.json` publishes that catalogue as a contract:
+these pages existed. Every hosted page — the front page included — declares its own
+description, `<link rel="canonical">`, Open Graph tags, one shared 1200 × 630 card
+(`public/og.jpg`) and a `twitter:card`, all from `pageHead()` in `scripts/build.ts` under
+`https://pandaqi.com/game-buddy/` (set `PQGB_ORIGIN` to build the same site elsewhere).
+The front page adds one JSON-LD `WebApplication` block; the other pages carry none, because
+a skeleton `WebPage` would only repeat their title, description and URL. Every hosted build
+writes `dist/sitemap.xml` listing the front page plus, in `site` mode, the page of every
+tool and template: a hash route is one URL to a crawler, and a page per game is how a
+search for that game can land anywhere. No `robots.txt` is written, since crawlers read
+only the one at the domain root; `docs/RELEASING.md` says to announce the sitemap there.
+`dist/templates.json` publishes that catalogue as a contract:
 the website checks its `gamebuddy:` links against it (SC-9, `bun run gamebuddy` in the
 studio's audit folder) instead of trusting a hand-written id.
 

@@ -146,7 +146,7 @@
             passing = true;
           }}
         >{t('reveal.deal')}</button>
-        <button type="button" onclick={openRoles}>{t('reveal.edit-roles')}</button>
+        <button type="button" class="band" onclick={openRoles}>{t('reveal.edit-roles')}</button>
       </div>
     {:else if data.allRevealed}
       <div class="panel">
@@ -428,8 +428,7 @@
   .hold {
     min-height: 88px;
     padding: 0 var(--space-4);
-    border-radius: var(--radius-lg);
-    background: var(--accent-soft);
+    --cutout-fill: var(--accent-soft);
     color: var(--text);
     font-size: var(--text-lg);
     font-weight: 800;
@@ -438,7 +437,8 @@
     user-select: none;
   }
   .hold.held {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
+    --cutout-filter: var(--filter-key);
     color: var(--accent-text);
   }
   .secret-role {
@@ -533,8 +533,7 @@
   .option-button {
     min-height: 64px;
     border-radius: var(--radius-lg);
-    background: var(--surface-2);
-    box-shadow: var(--shadow-soft);
+    box-shadow: none;
     color: var(--text);
     font-weight: 700;
     cursor: pointer;

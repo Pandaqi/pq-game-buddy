@@ -58,13 +58,112 @@ All notable changes to Game Buddy. The template format is versioned separately
 - **Typed totals in the lives tool.** The score is now a button: it opens the number
   pad, so a 501 checkout is one tap and three digits instead of 441 presses of −1. It
   is drawn as a key with a one-line hint, so the way in is visible.
+- **Broken rectangles, everywhere a key is a key.** The six cutouts pandaqi.com draws
+  behind its action buttons live once in `src/core/styles/cutouts.css` as token-driven
+  masks, and one rule gives them to every key in the app: no pill survives, from the
+  footer's "All templates" to a tool's mode pills, its tabs, the seats strip, the
+  player chips, sheet actions and the number pad. Two volumes of one family: deep,
+  chipped, tilted shapes for the keys that commit (`.primary`, `.danger`) and a
+  quieter third-depth version on the square viewBox for ordinary keys and the tool
+  cards. Colour carries the kind — a solid family accent goes forward, a tool's tabs
+  wear that tool's own wash (so a session's tabs are its palette), a red wash throws
+  something away, cream closes and navigates, a player chip wears the seat's colour —
+  and every view's own copy of a key's fill, radius and shadow is gone, so a
+  `primary`, a `wide primary` and a `danger` look the same in every tool. The shape is
+  a masked `::before` and the key itself is transparent, so the label and the focus
+  ring are never clipped and a state changes `--cutout-fill` instead of painting a
+  rectangle; fields, cushions and cards that only show something stay clean.
+- **Seat ink that survives any colour.** A template may name a pale seat and an imported
+  file may carry any hex, so cream ink could land on cream. `core/colour.ts` now picks the
+  ink per seat colour — cream `--on-seat` on a dark seat, deep `--on-seat-deep` on a pale
+  one — and nudges a colour the shortest way (towards black for cream, towards white for
+  deep) when neither clears 4.5:1, measured on the rounded hex that is actually painted.
+  The nine seats and the nine palette names are unchanged and clear AA as they are; a
+  pale `#ffe066` now gets 14.45:1 instead of failing. A test walks an 18×18×18 lattice of
+  colours and fails if any paint lands under AA.
+- **One colour list.** Seats and the names a template writes (`colour = green`) were two
+  near-identical palettes that had already drifted apart; both now read
+  `src/data/colours.ts`, so a seat and a named colour cannot disagree.
+- **The word bank tripled, one chunk per language.** Every pack is now its own lazy
+  import, so ten lists no longer ride in the Words tool's chunk: the largest chunk fell
+  from 25.2 KB to 16.0 KB. The lists grew from 5,526 entries to 17,036 unique ones across
+  the ten languages, duplicates are dropped when a pack is parsed so the count on screen
+  is the real one, and the tool draws its frame while the words arrive. The deferred
+  ceiling moved once, 464 KB → 512 KB, with the arithmetic in `ROADMAP.md` §5.2; the
+  first visit did not move.
+- **Bands for wide keys.** A key that spans its column is now cut from a 960×80 ribbon
+  (`--band-1…6`): a dozen small tears along each edge, a torn end, and no tilt. A loud
+  cut stretched across a metre wobbled slowly and read as a crooked bar; the band keeps
+  the hand-cut edge at 320 px and at 1200 px. `.wide` takes it, and `.band` names the
+  other full-width keys — the coin's flip, a draw, a buzzer pad, Deal, "Copy sheet",
+  the editor's diagnostic rows, the next-turn key.
+- **The whole faces, as files.** Raleway and Game Buddy are complete `.woff2` files
+  again — nothing is subset, so Turkish, Vietnamese and every other offered language
+  draws with the bundled face. The hosted build copies them to `dist/fonts/` and
+  `app.css` asks for `./fonts/<name>.woff2`; only the single-file build embeds them as
+  base64, because that file has no siblings. `app.css` falls from 84 KB of inlined type
+  to 32 KB, the first visit from 166.8 KB to 104.6 KB of JS+CSS, and a page that shows
+  text fetches 286 KB of woff2 once, which the browser then caches.
 
 ### Changed
 
+- **A front page a search engine can read.** Every hosted page already carried its own
+  canonical URL and Open Graph tags; the app root was the one URL that did not. Its
+  description, canonical URL, Open Graph tags, `twitter:card` and the shared 1200 × 630
+  card (`public/og.jpg`) now come from one `pageHead()` in the build, and the front page
+  adds the one JSON-LD block that describes the app. Each hosted build also writes a
+  `sitemap.xml` listing the front page and, in `site` mode, every tool and template page,
+  because a hash route is a single URL to a crawler. No `robots.txt`: only the domain
+  root's is read, and `docs/RELEASING.md` says to announce the sitemap there.
+- **The code is MIT licensed.** `LICENSE` at the root, with the MIT terms and a note that
+  templates, word lists and prompt packs stay CC BY-SA 4.0 and the bundled fonts keep
+  their own licences. `docs/LICENSES.md` and the README say the same thing.
+- **The repository has a README worth arriving on.** What it is, the hosted link and the
+  single-file download, the build commands, the tool, template and language lists,
+  screenshots of the app in use, the documentation map, and where the licences live.
+  A GitHub Actions workflow runs `bun run check` on every push and pull request, and the
+  five screenshots live in `docs/screenshots/` instead of loose at the repository root.
+- **AA on every seat colour.** The active player chip put dark `--on-seat` ink on the
+  seat colour at 3.14:1, and no seat cleared AA with dark ink — even pure black stops at
+  4.14:1 on the orange one. The ink is now cream, the same `#fffaf0` as `--on-accent`,
+  and the five seat colours that could not carry it were deepened (green, orange,
+  purple, plum, olive), so all nine clear 4.5:1 in both themes: red 5.23, blue 4.86,
+  green 5.00, orange 5.12, purple 5.39, teal 4.52, plum 5.33, olive 5.40, grey 4.65.
+  The same ink draws the initials on every seat dot, so Lives, Score, the session strip
+  and the player chips all moved together.
+- **Raleway in three files, and real Turkish, Vietnamese and Polish.** The body face was
+  one file that silently fell back to the machine's font for `ł ś ż`, `ş ğ` and `ạ ế ơ đ`.
+  It now ships as three unicode-range subsets of one family — Latin (48 KB), Latin
+  extended (31 KB), Vietnamese (11 KB) — so those letters come from the bundled face,
+  Cyrillic and Greek cost nothing, and a browser downloads only the subsets a page uses.
+  Game Buddy covers all of them except `đ`, which now falls through to Raleway; the
+  display stack names it second for that reason. Japanese, Chinese and Korean draw with
+  the platform's own faces, named per language in `fonts.css`: a CJK font that covers all
+  three scripts is megabytes and would be wrong even at that size, because each script
+  wants its own drawing of the same codepoints.
+- **Japanese, Chinese and Korean get real faces.** Three Noto faces now ship —
+  `cjk-ja.woff2` (763 KB), `cjk-zh.woff2` (981 KB), `cjk-ko.woff2` (1,026 KB) — each cut from
+  the variable font to the characters an interface uses: kana and the 2,136 jōyō kanji, the
+  3,500 common simplified hanzi, all 11,172 hangul syllables. The cut keeps the weight axis,
+  so a CJK heading is truly heavier instead of synthetically emboldened, and every file
+  declares its `unicode-range`, so an English screen downloads none of it, a Japanese screen
+  fetches its own 763 KB once, and a rare kanji still falls through to the platform face.
+  `bun run fonts:cjk` regenerates them; it is the only script that touches the network, and
+  it never runs as part of `bun run check`. The single-file build grows to 5.95 MB, which is
+  the price of a copy of the app that carries its own type; nothing else moved.
+- **Prepared for three more languages.** 日本語, 简体中文 and 한국어 are named in the language
+  list, with their CJK typography in place — looser line height, no tracking on headings,
+  character-level wrapping — and `docs/LANGUAGES.md` lays out every step a translation takes,
+  including the fullwidth punctuation and the space-free word lists the Words tool now
+  parses. Nothing appears in the picker until a dictionary chunk exists, so no screen can
+  show a half-translated language.
+- **The home tagline names the app, not its lacks.** "No account. No internet. No
+  install." is the register every offline app writes in; the hero pill now reads
+  "Local, free, no-nonsense gaming aid." in all ten languages.
 - **A new display face.** Dosis is gone; headings, keys and numbers use Game Buddy, one
-  Bold face derived from DejaVu and subset to Latin-1, still self-hosted and inlined
-  with no request. The first visit moves once, from 150 KB to 180 KB, with the
-  arithmetic in `ROADMAP.md` §5.2.
+  Bold drawing derived from DejaVu, self-hosted and served as a file. Both faces ship
+  whole (see the entry above), so the first visit reads 104.6 KB of JS+CSS instead of
+  166.8 KB, with the arithmetic in `ROADMAP.md` §5.2.
 - **One tag vocabulary.** `cards`/`card`, `word`/`words`, `deckbuilder`/`deck-building`,
   `social-deduction`/`hidden-roles`/`deduction`, `timed`/`realtime`, `numbers`/`puzzle`
   and a bare `score` collapsed to one spelling each, so the gallery filter no longer

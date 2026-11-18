@@ -217,10 +217,9 @@ session storage or memory. Nothing is uploaded and there is no sync.
   says "not in this list", never "not a word".
 - Ten languages so far: English, Dutch, German, Spanish, French, Portuguese, Italian,
   Indonesian, Turkish and Vietnamese. All ten are written in the Latin alphabet, so every
-  one of them reads on the same screen; a script outside it is not offered. The bundled
-  display face is subset to Latin-1, so the handful of letters past it (Turkish `ı ş ğ`,
-  Vietnamese `ạ ế ơ ư đ`) are drawn by the system font in the same line — complete and
-  readable, just a different drawing of those few letters. The globe in the
+  one of them reads on the same screen; a script outside it is not offered. Both bundled
+  faces carry their full glyph sets, so Turkish `ı ş ğ` and Vietnamese `ạ ế ơ ư đ` are
+  drawn by the same face as the rest of the line. The globe in the
   header lists whatever a build carries, and the choice is saved with your settings on
   this device. Each one covers every screen — home, a game, the gallery, settings, the
   editor, the play log, all twenty-one tools, the copied summaries, and the template and

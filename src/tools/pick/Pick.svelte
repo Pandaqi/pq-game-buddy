@@ -219,7 +219,7 @@
     {/if}
   </div>
 
-  <button type="button" class="draw" onclick={() => instance.draw()}>
+  <button type="button" class="draw band" onclick={() => instance.draw()}>
     {data.source === 'seats'
       ? t('pick.seat-us')
       : data.source === 'teams'
@@ -264,14 +264,13 @@
   .sources button {
     min-height: 44px;
     padding: 0 var(--space-3);
-    border-radius: var(--radius-pill);
-    background: var(--surface);
     color: var(--text);
     cursor: pointer;
     white-space: nowrap;
   }
   .sources button.active {
-    background: var(--accent);
+    --cutout-fill: var(--accent);
+    --cutout-filter: var(--filter-key);
     color: var(--accent-text);
     font-weight: 700;
   }
@@ -307,7 +306,6 @@
     padding: 0 var(--space-4);
     border-radius: var(--radius);
     border: 0;
-    background: var(--surface-2);
     color: var(--text);
     cursor: pointer;
     font-weight: 600;
@@ -333,7 +331,6 @@
     min-height: 36px;
     border: 0;
     border-radius: var(--radius-round);
-    background: var(--surface-2);
     color: var(--text-dim);
     cursor: pointer;
   }
@@ -376,13 +373,11 @@
     min-height: 40px;
     padding: 0 var(--space-3);
     border: 0;
-    border-radius: var(--radius-pill);
-    background: transparent;
+    --cutout-fill: transparent;
     color: var(--text);
     cursor: pointer;
   }
   .views button.active {
-    background: var(--surface);
     font-weight: 700;
   }
   .reveal-all {
@@ -508,8 +503,8 @@
   .draw {
     min-height: 64px;
     border: 0;
-    border-radius: var(--radius-lg);
-    background: var(--accent);
+    --cutout-fill: var(--accent);
+    --cutout-filter: var(--filter-key);
     color: var(--accent-text);
     font-size: var(--text-xl);
     font-weight: 800;
