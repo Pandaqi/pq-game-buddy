@@ -43,6 +43,24 @@ bun run size         # check dist/size.json against the budgets
 pass. Do not use `bun test --update-snapshots` style shortcuts; there are no snapshots
 by design.
 
+## Versioning and releases
+
+Every change that lands bumps `version` in `package.json`, in the same commit as the
+work, and runs `bun run gen` so `src/core/version.generated.ts` follows (`check` fails on
+a stale copy). Semantic versioning:
+
+- **patch** (`0.3.1`) — a fix that adds no new surface;
+- **minor** (`0.4.0`) — a tool, template, language, screen, file format or setting that
+did not exist before;
+- **major** (`1.0.0`) — the template format, a saved session's shape or a route breaks.
+
+`.github/workflows/release.yml` reads that number on every push to `main`: when no
+GitHub Release `v<version>` exists yet, it runs the gate, builds the three shapes, tags
+the commit and publishes the one file, the hosted build and the site build. A change
+without a bump is therefore not released, and two changes that share a version ship as
+one release. This is the only automatic publication; pandaqi.com stays the owner's step
+(`docs/RELEASING.md` §4).
+
 ## Non-negotiables (short version)
 
 1. **No network, ever.** No `fetch`, fonts, images, CDNs, analytics. Data is compiled in;

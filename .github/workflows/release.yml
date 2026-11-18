@@ -1,0 +1,131 @@
+name: release
+
+# The version number is the release switch. Bump `version` in package.json and this
+# workflow tags the commit and publishes the three build shapes; if that version has
+# already been released it does nothing. Contract: docs/RELEASING.md §2.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Tagging the commit and opening the Release both write to the repository.
+permissions:
+  contents: write
+
+# One release at a time: a second push waits rather than racing the first tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Every tag, so "has this version already shipped" is decided from history.
+          fetch-depth: 0
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Read the version
+        id: version
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          version=$(bun -p "require('./package.json').version")
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?(\+[0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::package.json version \"$version\" is not semantic versioning (MAJOR.MINOR.PATCH)."
+            exit 1
+          fi
+          tag="v$version"
+          previous=$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)
+          echo "package.json says $version${previous:+; the last release was $previous}."
+          # A release, not a tag, is what "already shipped" means: a run that pushed the
+          # tag but died before the Release finished retries instead of skipping forever.
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "::notice::$tag is already released; nothing to publish."
+            echo "release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::$tag is new; running the gate and building it."
+            echo "release=true" >> "$GITHUB_OUTPUT"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Install
+        if: steps.version.outputs.release == 'true'
+        run: bun install --frozen-lockfile
+
+      # The gate, exactly as a pull request gets it: stale manifest, tsc, svelte-check,
+      # tests, template lint and the default build with its budgets. A red gate leaves no
+      # tag, so fixing it and pushing again retries the same version.
+      - name: Gate
+        if: steps.version.outputs.release == 'true'
+        run: bun run check
+
+      - name: Build the three shapes
+        if: steps.version.outputs.release == 'true'
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Each build wipes dist/, so snapshot the gate's default build before the next.
+          mkdir -p release
+          cp -r dist release/hosted
+          bun run build:site
+          cp -r dist release/site
+          bun run build:single
+          cp dist/index.html "release/pq-game-buddy-$VERSION.html"
+          cd release
+          zip -q -r "pq-game-buddy-$VERSION-hosted.zip" hosted
+          zip -q -r "pq-game-buddy-$VERSION-site.zip" site
+          # An empty asset is worse than a failed release: stop before tagging anything.
+          test -s "pq-game-buddy-$VERSION.html"
+          test -s "pq-game-buddy-$VERSION-hosted.zip"
+          test -s "pq-game-buddy-$VERSION-site.zip"
+          ls -lh .
+
+      - name: Tag and publish the release
+        if: steps.version.outputs.release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          set -euo pipefail
+          cat > release/notes.md <<EOF
+          Game Buddy $VERSION — three builds from one source. Pick the one that fits.
+
+          | Download | What you get |
+          | --- | --- |
+          | **pq-game-buddy-$VERSION.html** | The whole app in one file. Double-click it: works from disk, offline, nothing to install. |
+          | **pq-game-buddy-$VERSION-hosted.zip** | The hosted build — the page, its scripts, styles, lazy chunks and fonts. Serve the folder from any static host. |
+          | **pq-game-buddy-$VERSION-site.zip** | The hosted build plus a real page per tool and per template, a sitemap and the template catalogue, for links and search engines. |
+
+          Each zip unpacks into a folder of its own. The app makes no network request at
+          runtime; the single file is the surest way to play without internet.
+
+          What changed is in [CHANGELOG.md](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/blob/main/CHANGELOG.md).
+          EOF
+          # The tag goes on only after every artifact exists, so a failed build can never
+          # make the next run believe this version already shipped.
+          if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+            echo "tag $TAG already exists; reusing it."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag -a "$TAG" -m "Game Buddy $TAG"
+            git push origin "$TAG"
+          fi
+          gh release create "$TAG" \
+            --title "Game Buddy $VERSION" \
+            --notes-file release/notes.md \
+            --verify-tag \
+            "release/pq-game-buddy-$VERSION.html#One file: open it and play" \
+            "release/pq-game-buddy-$VERSION-hosted.zip#Hosted build" \
+            "release/pq-game-buddy-$VERSION-site.zip#Site build: a page per tool and template"

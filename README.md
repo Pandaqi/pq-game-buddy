@@ -60,6 +60,11 @@ bun run check        # the gate: stale manifest, tsc, svelte-check, tests, templ
 `bun run check` must pass before a change lands. It is also what
 [the CI workflow](.github/workflows/check.yml) runs on every push.
 
+Every change also bumps `version` in `package.json` (semantic versioning) and runs
+`bun run gen`: [the release workflow](.github/workflows/release.yml) tags `v<version>`
+and publishes the single file, the hosted build and the site build when that number is
+new. See [docs/RELEASING.md](docs/RELEASING.md) §2.
+
 ## Tools
 
 Twenty built-in tools for the most common use cases.

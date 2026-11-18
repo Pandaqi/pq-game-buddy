@@ -3,6 +3,24 @@
 All notable changes to Game Buddy. The template format is versioned separately
 (`format: 1`) and only changes with a compatibility note.
 
+## Unreleased — release pipeline
+
+### Added
+
+- **Releases cut themselves from the version number.** `.github/workflows/release.yml`
+  runs on every push to `main`. When `package.json` carries a version that has no GitHub
+  Release yet, it runs `bun run check`, tags the commit `v<version>` and publishes three
+  downloads from one source: the single file (`pq-game-buddy-<version>.html`), the default
+  hosted build and the site build with a real page per tool and template. A push that
+  leaves the number alone publishes nothing, and a failed gate leaves no tag, so fixing
+  it and pushing again retries the same version.
+
+### Changed
+
+- **The version is 0.3.0**, the first release cut this way. Every change that lands bumps
+  `version` in `package.json` with `bun run gen`; `AGENTS.md` and `docs/RELEASING.md` say
+  which part of the number to move.
+
 ## Unreleased — full sweep
 
 ### Added

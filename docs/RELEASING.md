@@ -43,12 +43,29 @@ hosted pages only, so the dev shell and the single file never register a worker.
 ## 2. Version and changelog
 
 1. Decide the version (semver). The template format has its own version (`format: 1`)
-   and only changes with a compatibility note.
+   and only changes with a compatibility note. Patch for a fix that adds no surface,
+   minor for anything new a player can use (a tool, a template, a language, a screen, a
+   setting), major for a break in the template format, a saved session or a route.
 2. Add a `CHANGELOG.md` entry: what changed for players, what changed for template
    authors, and any known limitation that is new.
-3. Bump `package.json`. It is the only place the number is written: `bun run gen`
-   copies it into `src/core/version.generated.ts`, and `bun run check` rejects a stale
-   copy. Versions follow semantic versioning (`MAJOR.MINOR.PATCH`).
+3. Bump `version` in `package.json`, in the same commit as the work. It is the only place
+   the number is written: `bun run gen` copies it into `src/core/version.generated.ts`
+   (commit that too), and `bun run check` rejects a stale copy.
+4. Push to `main`. `.github/workflows/release.yml` is what turns the number into a
+   release, and it asks one question: has the GitHub Release `v<version>` been published
+   already?
+   - **No** — it runs `bun run check`, builds the three shapes, tags the commit
+     `v<version>` and opens a Release with `pq-game-buddy-<version>.html` (the single
+     file, everything embedded), `pq-game-buddy-<version>-hosted.zip` (the default
+     build: page, scripts, styles, lazy chunks, fonts) and
+     `pq-game-buddy-<version>-site.zip` (the same plus a page per tool and per template,
+     `sitemap.xml` and `templates.json`).
+   - **Yes** — it stops, so a change that leaves the number alone publishes nothing and
+     two changes that share a version ship as one release.
+
+   The tag is created only after every artifact exists, so a red gate or a failed build
+   leaves no tag: fix it and push again, no version juggling. The workflow publishes a
+   GitHub Release, not a deployment — pandaqi.com is still §4 below.
 
 ## 3. Verify a downloaded copy
 
