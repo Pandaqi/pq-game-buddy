@@ -9,10 +9,14 @@ export const coreLocaleLoaders: Record<string, () => Promise<{ default: Dict }>>
   fr: () => import('./fr'),
   id: () => import('./id'),
   it: () => import('./it'),
+  ja: () => import('./ja'),
+  ko: () => import('./ko'),
   nl: () => import('./nl'),
+  pl: () => import('./pl'),
   pt: () => import('./pt'),
   tr: () => import('./tr'),
   vi: () => import('./vi'),
+  zh: () => import('./zh'),
 };
 
 export const toolTextLoaders: Record<string, () => Promise<{ default: Dict }>> = {
@@ -21,8 +25,12 @@ export const toolTextLoaders: Record<string, () => Promise<{ default: Dict }>> =
   fr: () => import('./tool-text-fr.generated'),
   id: () => import('./tool-text-id.generated'),
   it: () => import('./tool-text-it.generated'),
+  ja: () => import('./tool-text-ja.generated'),
+  ko: () => import('./tool-text-ko.generated'),
   nl: () => import('./tool-text-nl.generated'),
+  pl: () => import('./tool-text-pl.generated'),
   pt: () => import('./tool-text-pt.generated'),
   tr: () => import('./tool-text-tr.generated'),
   vi: () => import('./tool-text-vi.generated'),
+  zh: () => import('./tool-text-zh.generated'),
 };

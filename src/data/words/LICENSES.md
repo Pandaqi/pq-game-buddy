@@ -18,6 +18,10 @@ costs nothing until it is used and no pack is capped by another one's size.
 | `id.ts` | about 800 common Indonesian words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
 | `tr.ts` | about 1,300 common Turkish words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
 | `vi.ts` | about 1,000 common Vietnamese syllables | CC BY-SA 4.0 (this project) | Written for Game Buddy |
+| `pl.ts` | about 609 common Polish words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
+| `ja.ts` | about 1,555 common Japanese words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
+| `zh.ts` | about 1,524 common Simplified Chinese words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
+| `ko.ts` | about 1,481 common Korean words | CC BY-SA 4.0 (this project) | Written for Game Buddy |
 
 ## What these lists are not
 

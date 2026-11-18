@@ -287,7 +287,9 @@ function create(ctx: ToolContext, values: PresetValues = {}): WordsInstance {
             ctx.toast(translate('words.toast-type'));
             return;
           }
-          const set = new Set(words);
+          // A pack keeps its accents and its CJK characters; the query arrives folded,
+          // so compare against the same shape or half a pack can never be found.
+          const set = new Set(words.map((item) => normalise(item)).filter(Boolean));
           const valid = set.has(word);
           data.check = { word, valid, close: valid ? [] : closeMatches(words, word) };
           note(

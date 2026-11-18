@@ -29,9 +29,19 @@ export function deaccent(text: string): string {
     .replace(/[\u0300-\u036f]/g, '');
 }
 
+/**
+ * Letters a pack can be written in: Latin and its accents, kana and the CJK ideographs,
+ * and hangul. Everything else is punctuation to a word list, so it goes.
+ */
+const NOT_A_LETTER = /[^a-z\u00c0-\u024f\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff\uac00-\ud7a3]/g;
+
 export function normalise(word: string): string {
   // Deaccent first: stripping non-letters before that turns "café" into "caf".
-  return deaccent(String(word ?? '').toLowerCase().trim()).replace(/[^a-z]/g, '');
+  // It also splits hangul into jamo, so recompose before deciding what is a letter,
+  // or every Korean word would be filtered away as punctuation.
+  return deaccent(String(word ?? '').toLowerCase().trim())
+    .normalize('NFC')
+    .replace(NOT_A_LETTER, '');
 }
 
 export function scoreWord(word: string, lang: WordLang): number {
@@ -55,14 +65,17 @@ function patternToRegExp(pattern: string): RegExp | null {
 export function matchesFilters(word: string, filters: WordFilters): boolean {
   if (filters.min > 0 && word.length < filters.min) return false;
   if (filters.max > 0 && word.length > filters.max) return false;
+  // Compare in the same shape the query is typed in, so an accented or CJK word
+  // answers to what a player can actually type.
+  const clean = normalise(word);
   const starts = normalise(filters.starts);
-  if (starts && !word.startsWith(starts)) return false;
+  if (starts && !clean.startsWith(starts)) return false;
   const ends = normalise(filters.ends);
-  if (ends && !word.endsWith(ends)) return false;
+  if (ends && !clean.endsWith(ends)) return false;
   const contains = normalise(filters.contains);
-  if (contains && !word.includes(contains)) return false;
+  if (contains && !clean.includes(contains)) return false;
   const pattern = patternToRegExp(filters.pattern);
-  if (pattern && !pattern.test(word)) return false;
+  if (pattern && !pattern.test(clean)) return false;
   return true;
 }
 
@@ -93,8 +106,9 @@ export function anagramWords(words: string[], letters: string, limit = 200): str
   const rackCounts = countsOf(rack);
   const out: string[] = [];
   for (const word of words) {
-    if (word.length < 2 || word.length > rack.length) continue;
-    const counts = countsOf(word);
+    const lettersOfWord = normalise(word);
+    if (lettersOfWord.length < 2 || lettersOfWord.length > rack.length) continue;
+    const counts = countsOf(lettersOfWord);
     let ok = true;
     for (const [letter, count] of Object.entries(counts)) {
       if ((rackCounts[letter] ?? 0) < count) {
@@ -122,8 +136,9 @@ export function rackWords(
   const available = countsOf(letters);
   const out: { word: string; score: number; exact: boolean }[] = [];
   for (const word of words) {
-    if (word.length < 2) continue;
-    const needed = countsOf(word);
+    const lettersOfWord = normalise(word);
+    if (lettersOfWord.length < 2) continue;
+    const needed = countsOf(lettersOfWord);
     let missing = 0;
     for (const [letter, count] of Object.entries(needed)) {
       missing += Math.max(0, count - (available[letter] ?? 0));
@@ -146,6 +161,10 @@ const ALPHABETS: Record<WordLang, string> = {
   id: 'aeinrstduklmgpbohjwycfzv',
   tr: 'aeinrltdkmsuyboşzgçvhpğcfjöüı',
   vi: 'nhatoiucmgldybvưêôơăâđsxp',
+  pl: 'aioenrzwsctkydpmuljgębąhżśóćńfź',
+  ja: 'あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん',
+  zh: '的一是不了人我在有他这为之大来以个中上们到说国和地也子时道出而要于就下得可你年生',
+  ko: '가나다라마바사아자차카타파하고노도로모보소오조초코토포호구누두루무부수우주추쿠투푸후기니디리미비시이지치키티피히',
 };
 
 /** Weighted letters, following rough language frequency, without repeats. */

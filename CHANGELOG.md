@@ -7,6 +7,23 @@ All notable changes to Game Buddy. The template format is versioned separately
 
 ### Added
 
+- **Deeper Japanese, Chinese and Korean word packs.** The three CJK lists held about 390
+  words each, which made the Words tool thin beside the 2,260 English ones. They are now
+  1,555 Japanese, 1,524 Simplified Chinese and 1,481 Korean everyday words, still written
+  with the ideographic comma in Japanese and Chinese and with spaces in Korean. The packs
+  are lazy chunks, so the first visit did not move; the deferred total went 602.6 KB →
+  617.8 KB, inside the existing ceiling, and the arithmetic is in `ROADMAP.md` §5.2.
+- **Four more languages.** Polish, 日本語, 简体中文 and 한국어 join the fourteen, so the whole
+  app reads in Polish, Japanese, Simplified Chinese and Korean too: home, a game, the
+  gallery, settings, the editor, the play log, every tool's view, toasts, aria labels and
+  undo labels, the copied summaries, the script steps and the template and theme
+  diagnostics. Each is a shell dictionary, a locale file in all twenty-two tool folders
+  and a word pack (609 Polish, 394 Japanese, 389 Chinese, 381 Korean words), still a lazy
+  chunk, so the first visit did not move; the deferred total did, by 104.3 KB, and that
+  ceiling moved once with the arithmetic in `ROADMAP.md` §5.2. The CJK packs separate
+  words with `、` because those languages write without spaces, Korean spaces its words
+  like Latin, and the Words tool now keeps accents and CJK characters when it normalises,
+  so a Polish `ź` or a Korean syllable can be found at all.
 - **Five more languages.** Portuguese (Brazil), Italian, Indonesian, Turkish and
   Vietnamese join English, Dutch, German, Spanish and French, so the whole app reads in
   ten languages: home, a game, the gallery, settings, the editor, the play log, every

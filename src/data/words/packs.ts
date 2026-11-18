@@ -6,7 +6,21 @@
 
 import { languageInfo } from '../../core/langs';
 
-export type WordLang = 'en' | 'nl' | 'de' | 'fr' | 'es' | 'pt' | 'it' | 'id' | 'tr' | 'vi';
+export type WordLang =
+  | 'en'
+  | 'nl'
+  | 'de'
+  | 'fr'
+  | 'es'
+  | 'pt'
+  | 'it'
+  | 'id'
+  | 'tr'
+  | 'vi'
+  | 'pl'
+  | 'ja'
+  | 'zh'
+  | 'ko';
 
 export interface WordPack {
   code: WordLang;
@@ -18,7 +32,22 @@ export interface WordPack {
 
 export const WORD_PACK_LICENSE = 'Original word list, CC BY-SA 4.0';
 
-export const WORD_LANGS: WordLang[] = ['en', 'nl', 'de', 'fr', 'es', 'pt', 'it', 'id', 'tr', 'vi'];
+export const WORD_LANGS: WordLang[] = [
+  'en',
+  'nl',
+  'de',
+  'fr',
+  'es',
+  'pt',
+  'it',
+  'id',
+  'tr',
+  'vi',
+  'pl',
+  'ja',
+  'zh',
+  'ko',
+];
 
 const LOADERS: Record<WordLang, () => Promise<{ default: string }>> = {
   en: () => import('./en'),
@@ -31,6 +60,10 @@ const LOADERS: Record<WordLang, () => Promise<{ default: string }>> = {
   id: () => import('./id'),
   tr: () => import('./tr'),
   vi: () => import('./vi'),
+  pl: () => import('./pl'),
+  ja: () => import('./ja'),
+  zh: () => import('./zh'),
+  ko: () => import('./ko'),
 };
 
 const cache: Partial<Record<WordLang, WordPack>> = {};

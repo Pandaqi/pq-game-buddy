@@ -77,8 +77,9 @@ only seam a theme needs; see `docs/THEME-FORMAT.md`.
 touches), which is what a view, a tool or a component imports. That split is a rule, not
 a convenience: the parser, the theme reader and the CLI scripts print words too, and logic
 never takes a rune. `core/langs.ts` names the languages and `DEFAULT_LANGUAGE` says which
-one boots when nobody has chosen. Ten are complete — English, Dutch, German, Spanish,
-French, Portuguese, Italian, Indonesian, Turkish and Vietnamese — and each ships every
+one boots when nobody has chosen. Fourteen are complete — English, Dutch, German, Spanish,
+French, Portuguese, Italian, Indonesian, Turkish, Vietnamese, Polish, Japanese, Chinese
+(Simplified) and Korean — and each ships every
 shell key and every tool key, because the gate in
 `tests/i18n.test.ts` compares a language against the English set and fails on a gap.
 
@@ -89,10 +90,10 @@ are Noto variable fonts cut to the common character sets by `scripts/fonts-cjk.t
 (`bun run fonts:cjk`, the one script that uses the network, run by hand and committed);
 `docs/STYLE.md` §2 has the reasoning and `docs/LANGUAGES.md` the steps a translation takes.
 
-No dictionary is compiled into the start-up. The Words tool's ten word packs follow the
+No dictionary is compiled into the start-up. The Words tool's fourteen word packs follow the
 same rule as the languages they belong to: `data/words/packs.ts` holds one `import()` per
 language, so a pack is its own chunk, arrives when a player picks that language, and never
-shares a chunk with nine lists it is not being used for. Every language, English included,
+shares a chunk with the other thirteen lists it is not being used for. Every language, English included,
 is a chunk loaded when it is picked and never fetched: `core/locales/<lang>.ts` for the shell and
 `core/locales/tool-text-<lang>.generated.ts` for the tools, which `bun run gen` builds
 from each `src/tools/<id>/locales/<lang>.ts`. A tool registers its own English words at

@@ -1,0 +1,48 @@
+/** 동전의 문구. 등록할 때 도구 이름이 키 앞에 붙습니다. */
+
+const ko = {
+  title: '동전',
+  blurb: '던지고 맞히기. 한 개든 열 개든, 공정하든 치우쳤든.',
+  heads: '앞면',
+  tails: '뒷면',
+  'series-won': '{side} 승리',
+  'best-of': '{target}판 승부 · {heads}–{tails}',
+  ready: '준비',
+  'tap-one': '“던지기”를 눌러 동전을 던지세요.',
+  'tap-many': '“던지기”를 눌러 동전 {count}개를 던지세요.',
+  'tally-label': '앞면 / 뒷면',
+  'all-heads': ' — 전부 앞면!',
+  flip: '던지기',
+  'flip-again': '다시 던지기',
+  format: '동전 방식',
+  single: '한 번 던지기',
+  best: '몇 판 승부',
+  tally: '앞면 {heads} · 뒷면 {tails}',
+  'first-to': '먼저',
+  call: '맞히기',
+  stats: '맞힘 {won} · 틀림 {lost} · 연속 {streak} (최고 {best})',
+  coins: '동전 수',
+  'heads-chance': '앞면 확률',
+  weighted: '치우친 동전: 설정대로 앞면 {percent}%.',
+  reset: '기록 되돌리기',
+  tie: '무승부',
+  'called-it': '맞힘',
+  missed: '틀림',
+  'initial-heads': '앞',
+  'initial-tails': '뒤',
+  'toast-series': '{side}가 {own}–{other}로 가져갔습니다',
+  'undo-reset': '동전 되돌리기',
+  'summary-none': '아직 던지지 않았습니다.',
+  'summary-main': '앞면 {heads}, 뒷면 {tails}. 맞히기: {won} 맞힘, {lost} 틀림.',
+  'summary-series': '시리즈 ({target}판 승부): 앞면 {heads}, 뒷면 {tails}.',
+  'summary-series-won': '시리즈 ({target}판 승부): 앞면 {heads}, 뒷면 {tails} — {side} 승리.',
+
+  // 사건 기록. 지금 쓰는 언어로 적습니다.
+  'undo-coins': '동전 수',
+  'undo-fairness': '동전 치우침',
+  'undo-call': '당신의 예상',
+  'undo-mode': '동전 방식',
+  'undo-target': '시리즈 목표',
+};
+
+export default ko;

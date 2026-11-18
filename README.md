@@ -1,7 +1,11 @@
 # Game Buddy
 
-Timers, dice, scorepads, secret roles, brackets and 86 ready-to-play templates for the
-games already on your table. One page. No install, no account, no internet.
+**Tools to make your board/video game night easier and more fun!** 
+
+* Timers, dice, scorepads, secret roles, brackets, and more.
+* Some 85+ ready-to-play templates for popular games already on your table. 
+* Author your own templates, tools, or themes for your needs.
+* One page, no account, offline or online. Just start using it and play anywhere :)
 
 **[Use it now →](https://pandaqi.com/game-buddy/)** ·
 [Download the offline file](https://pandaqi.com/game-buddy/pq-game-buddy.html) ·
@@ -15,7 +19,7 @@ games already on your table. One page. No install, no account, no internet.
 
 [![tools](https://img.shields.io/badge/tools-20-success)](#tools)
 [![templates](https://img.shields.io/badge/templates-86-success)](#templates)
-[![languages](https://img.shields.io/badge/languages-10-informational)](#languages)
+[![languages](https://img.shields.io/badge/languages-14-informational)](#languages)
 [![tests](https://img.shields.io/badge/tests-618-brightgreen)](tests)
 [![licence](https://img.shields.io/badge/licence-MIT-blue)](LICENSE)
 [![runtime dependencies](https://img.shields.io/badge/runtime%20dependencies-0-success)](package.json)
@@ -49,7 +53,7 @@ bun run check        # the gate: stale manifest, tsc, svelte-check, tests, templ
 | `bun run build` | `dist/`: the hosted app (`index.html`, `app.js`, `app.css`, lazy chunks, fonts) plus `dist/pq-game-buddy.html`, one self-contained offline file |
 | `bun run build:site` | The same, plus a real page per tool (`dist/<tool>/`) and per template (`dist/template/<id>/`), for search engines and links |
 | `bun run build:single` | Only `dist/index.html`, with JS, CSS and fonts embedded: one file to copy around |
-| `bun run build --langs=nl` | A build that carries one language instead of all ten |
+| `bun run build --langs=nl` | A build that carries one language instead of all fourteen |
 | `bun run size` | Checks `dist/size.json` against the byte budgets; `build` already fails over them |
 | `bun run gen` | Regenerates the manifest, schemas and template index after adding a tool or template |
 
@@ -58,8 +62,7 @@ bun run check        # the gate: stale manifest, tsc, svelte-check, tests, templ
 
 ## Tools
 
-Twenty tools, each with sane defaults and one obvious action. A tool is one lazy chunk:
-adding one does not grow the start-up.
+Twenty built-in tools for the most common use cases.
 
 | Tool | What it is for |
 |------|----------------|
@@ -84,16 +87,19 @@ adding one does not grow the start-up.
 | **Custom** | Build a tracker from fields, counters, a checklist, a table and safe formulas |
 | **Splits** | Speedrun splits with targets, personal bests and gold splits |
 
-The **play log** is a page rather than a tool: search, filters, win rates, time played and
-CSV/JSON export. **Display mode** (`#/display/<tool>`) puts a huge read-only readout on a
-second screen or a projector. **Print** styles cover score sheets, brackets, rules and
-summaries.
+Besides tools,
 
-<img src="docs/screenshots/timer.webp" alt="The timer tool: a 4:45 countdown running, with -30s, +30s, pause and quick durations" width="49%"> <img src="docs/screenshots/dice.webp" alt="The dice tool after rolling 4d6kh3: tracks 11, dice kept and dropped" width="49%">
+* **Play log** is a page rather than a tool: search, filters, win rates, time played and CSV/JSON export. 
+* **Display mode** (`#/display/<tool>`) puts a huge read-only readout on a second screen or a projector. 
+* **Print** styles cover score sheets, brackets, rules and summaries.
+
+<img src="docs/screenshots/timer.webp" alt="The timer tool: a 4:45 countdown running, with -30s, +30s, pause and quick durations" width="49%"> 
+
+<img src="docs/screenshots/dice.webp" alt="The dice tool after rolling 4d6kh3: tracks 11, dice kept and dropped" width="49%">
 
 ## Templates
 
-Eighty-six bundled games, each with its own settings, a rules card in our own words and a
+Eighty-six bundled games. Each with its own settings, a rules card in our own words and a
 drawn mark. Pick one, choose the player count, play.
 
 | Family | Examples |
@@ -108,30 +114,31 @@ drawn mark. Pick one, choose the player count, play.
 | Pandaqi | Twenty templates for [Pandaqi's own games](https://pandaqi.com/): Bidding Blocks, Naivigation, Chiptales, Maybe Games, … |
 
 The [full gallery](https://pandaqi.com/game-buddy/#/templates) filters by players, length
-and tag. Every template is a real URL (`/game-buddy/template/catan/`), and the catalogue is
-published at [`templates.json`](https://pandaqi.com/game-buddy/templates.json) so another
-site can check its links against it.
+and tag. 
+
+* Every template is a real URL (`/game-buddy/template/catan/`)
+* The catalogue is published at [`templates.json`](https://pandaqi.com/game-buddy/templates.json).
+* (So that another site can check its links against it.)
 
 ![The template gallery: 86 games with marks, player counts and length, plus filters](docs/screenshots/gallery.webp)
 
 ## Languages
 
-Ten complete languages: English, Nederlands, Deutsch, Español, Français, Português, Italiano,
-Bahasa Indonesia, Türkçe and Tiếng Việt. Every shell string and every tool string is
-translated, and a test fails the build when a language misses one.
+Fourteen complete languages: English, Nederlands, Deutsch, Español, Français, Português,
+Italiano, Bahasa Indonesia, Türkçe, Tiếng Việt, Polski, 日本語, 简体中文 and 한국어. 
 
-Each language is a lazy chunk, so the app only downloads the one you pick, and a build can
-carry a single language: `bun run build --langs=nl`. The Words tool ships a curated word
-list per language too.
+* Every shell string and every tool string is translated. 
+* A test fails the build when a language misses one.
+* Each language is a lazy chunk, so the app only downloads the one you pick.
+* Filtered builds can carry a single language: `bun run build --langs=nl`. 
+* (The Words tool ships a curated word list per language too.)
 
-## What it does not do
+## What it does NOT do
 
-- **No network requests.** Ever. No fonts, images, analytics or "check for updates" come
-  from a server, and `#/selftest` stubs `fetch` to prove it.
+- **No network requests.** No fonts, images, analytics, CDN, "check for updates", whatever.
 - **No account, no cloud, no tracking.** Templates and play history live on the device and
   leave only when you export them.
-- **No virtual tabletop.** The physical game stays the source of truth; this is the pile of
-  helpers around it.
+- **No virtual tabletop.** The physical game (or video game) stays the source of truth; this is a large **helper** around it.
 
 <img src="docs/screenshots/reveal.webp" alt="Pass-the-phone cover before a secret role is dealt" width="70%">
 
@@ -156,9 +163,14 @@ list per language too.
 
 ## Contributing
 
-Templates, bug reports and translations are welcome: open an issue or a pull request.
-Run `bun run check` first; it is the same gate CI runs. A template submission needs its
-own prose and a source link — see [docs/COMMUNITY.md](docs/COMMUNITY.md).
+**Templates, bug reports, and translations are welcome:** open an issue or a pull request.
+
+* New _Tools_ are always nice too, but the current tool set is already quite large and I don't see any other tool that must become core/bundled.
+* Run `bun run check` first; it is the same gate CI runs. 
+* A template submission needs its own prose and a source link — see [docs/COMMUNITY.md](docs/COMMUNITY.md).
+* Large parts of the core framework were made using (free) AI coding assistants. I simply wanted these tools to exist, for free, and this was the fastest way. 
+  * I am (currently) neither for nor against AI usage in coding. 
+  * This framework grew out of 4 tools I had created manually years ago (hosted at pandaqi.com/tools then) and is now a wonderfully weird mixture of manual coding and AI assistance.
 
 ## Licence and attribution
 

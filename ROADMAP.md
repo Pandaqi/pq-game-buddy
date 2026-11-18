@@ -4,9 +4,10 @@
 
 > Doc version 6 · 2026-11-17 · Owner: Tiamo / Pandaqi
 >
-> **Status: M0–M10 code shipped. M10 (localization) is complete: ten languages
+> **Status: M0–M10 code shipped. M10 (localization) is complete: fourteen languages
 > (English, Dutch, German, Spanish, French, Portuguese, Italian, Indonesian, Turkish,
-> Vietnamese), the runtime, the header switcher, the build
+> Vietnamese, Polish, Japanese, Chinese (Simplified), Korean), the runtime, the header
+> switcher, the build
 > filter, every shell screen, all twenty-one tools, the template and theme diagnostics
 > and every context summary. Every language is a lazy chunk, English included.**
 > M7 closed with theme files, dice lab, initiative order, log filters and stats, pick
@@ -20,8 +21,8 @@
 > widely played board, card and party games. `bun run check` passes end to end:
 > stale-manifest check, `tsc`, `svelte-check` with 0 warnings, the full test suite
 > (613 tests), template lint (108 files · 0 errors · 0 warnings) and a build inside
-> budget (107.6 KB gzipped first visit, 5,952 KB single file with all ten languages and the
-> three prepared CJK faces).
+> budget (107.9 KB gzipped first visit, 6,311 KB single file with all fourteen languages
+> and their faces).
 > 21 tools are live, and 86 game templates plus 21 tool examples ship, with 86 marks. M6 replaced the
 > visual language twice: the second pass is the woodland lantern table in
 > `docs/STYLE.md`, with self-hosted Game Buddy and Raleway, borderless fills, folds and
@@ -68,6 +69,7 @@ The trick to supporting "every tool anyone might want" is not to build a hundred
 | M9 | Marks for the rest of the catalogue | Shipped | A drawn mark beside every template, on the same grid, none a letter in a box |
 | M10 | Localization | Shipped | `t()` everywhere it reaches a screen, diagnostics and summaries included, per-tool locale folders, a language switcher, five complete languages (en, nl, de, es, fr), every language a lazy chunk, a `--langs` build filter |
 | M13 | Five more languages | Shipped | Portuguese, Italian, Indonesian, Turkish and Vietnamese on the M10 contract: every shell and tool key, a word pack each, no placeholder drift |
+| M13.7 | Four more languages | Shipped | Polish, Japanese, Chinese (Simplified) and Korean on the same contract: every shell and tool key, a word pack each, the CJK copy written without spaces |
 
 ### How to read this document
 
@@ -264,16 +266,16 @@ No network, ever. Zero runtime dependencies. Core knows no tools; tools never im
 
 | Budget | Limit | Current |
 |--------|-------|---------|
-| One chunk, gzipped | 26 KB | 16.0 KB (the words tool: view, logic and ten language string sets; each word pack is a chunk of its own) |
-| All deferred chunks, gzipped | 512 KB | 498.3 KB (ten languages, 17,036 words, 13.7 KB left) |
+| One chunk, gzipped | 26 KB | 16.2 KB (the Polish tool-text chunk; each word pack is a chunk of its own) |
+| All deferred chunks, gzipped | 620 KB | 617.8 KB (fourteen languages, 22,205 words, 2.2 KB left) |
 | Core JS and CSS, gzipped | 45 KB | inside |
-| First visit (entry + shared chunk + CSS), gzipped | 180 KB | 104.6 KB |
-| Single file, gzipped | no ceiling: the whole app in one file | 793.4 KB |
+| First visit (entry + shared chunk + CSS), gzipped | 180 KB | 107.9 KB |
+| Single file, gzipped | no ceiling: the whole app in one file | 3,780.3 KB |
 
 **Why the first-visit budget is where it is.** The old 120 KB was written for eleven tools at a 12 KB ceiling and never held; M4 raised it to 200 KB to finish 21 tools. Then views and secondary pages became chunks (`loadView` + `core/ui/LazyView.svelte`) and the template texts moved behind `templateText(id)`, which took the first visit from 196 KB to 119 KB. M5 then made whole tool modules chunks: `src/core/tools.generated.ts` holds one `import()` per tool and the session store awaits it before building a session, so the start-up carries only the shell, the core and each tool's `meta.ts` and `preset.ts`. That took the first visit to 62 KB, and a new tool now costs nothing at start-up at all. Each tool's view then moved back into its own chunk: once the module is itself a lazy import, a second chunk per tool only doubled the requests a session makes (a six-tool game fetched about a dozen), so a tool is one chunk today and that game fetches six. Styles still compile with CSS injected, so a tool's styles ride inside its own chunk and `app.css` is tokens, base and the shared screen primitives (15.2 KB gzipped). The two faces are plain `.woff2` files beside the app rather than base64 in that stylesheet: a browser downloads each once and caches it, they are counted as transfer rather than in this JS+CSS figure, and the figure therefore reads 104.6 KB where it read 166.8 — a page that shows text also fetches 286 KB of font, which is the price of shipping every glyph of every offered language. The per-chunk ceiling is 26 KB because a chunk is now one screen: the words tool is 25.2 KB (its view, logic, ten language string sets and ten word packs), so a tool that passes it is one to split rather than a budget to raise, and the rulebooks are split the same way: a stable hash of the template id files each one of the 86 texts into one of four shelves, so a preview pulls 2–3 KB instead of the library and no single text chunk grows past the ceiling as templates are added. A total ceiling on the deferred chunks keeps the catalogue from sprawling while the first visit stays flat: it was 250 KB from M5 until M10 finished three more languages and moved it to 320 KB, with the arithmetic a few sentences on. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. M6 spent about 3 KB of gzipped first-visit budget on its first pass (paper grain, keys, fields, a mark per tool and the family accents), then the second pass replaced that spend with the font layer: Dosis and Raleway are subset, base64-inlined and gzipped to 56 KB inside `app.css`, which is 47 percent of the current first visit. That is the largest single deliberate cost in the app and it is what makes the type warm instead of system-default; the 150 KB ceiling has 15.2 KB of headroom left. M7 has added about 3 KB to the first visit (theme parsing and template icons in the core) and about 10 KB to the single file, with no new dependency. M8 and M9 add nine templates and nine marks, which land in the deferred chunks: the first visit stayed at 132 KB and the single file grew to 294 KB. The core ceiling did not move; the single-file ceiling is gone by design, because that build is the entire app inlined so one file can be copied around. The style system is a fixed cost, so the next tool still costs nothing at start-up. M10 adds the language layer without moving a ceiling, and it gives one back: no dictionary is compiled into the start-up any more. English is a chunk like every other language, loaded at boot only because it is the stored default, so the first visit *fell* from 139.0 KB to 133.4 KB even after paying for the language sheet and the lookup. A language is two chunks: `core/locales/<lang>.ts` and the generated `tool-text-<lang>.generated.ts`, which gathers each tool's `locales/<lang>.ts`. The en+nl build was 236.2 KB across 36 deferred chunks, `--langs=en` is 215.9 KB across 34, so a complete extra language costs about 21.7 KB and two chunks: the measurable difference the DoD asks for. German, Spanish and French landed in one pass and took that total to 302.6 KB across 42 chunks (largest 21.5 KB), an addition of 66.4 KB or 22.1 KB per language. That is a fixed amount of finished surface added by the milestone itself, so the deferred ceiling moved once, from 250 KB to 320 KB. The later template sweep added nineteen rulebooks and three text shelves: 312.6 KB across 45 chunks (largest 21.5 KB), which is 7.4 KB inside the deferred ceiling and 15.2 KB inside the first-visit one. A sixth language needs its own arithmetic written here before it moves again, and at roughly 22 KB apiece it will be the moment to ask whether the shell chunk should split per area instead. A tool that registers its own English strings adds nothing extra to its chunk: the words simply moved from the view into `locales/en.ts`. M11 added the tool-file runtime: one 6.8 KB chunk and about 0.3 KB in each of the four non-English tool-text chunks, against a ceiling that had 0.4 KB of headroom. The deferred total is 327.9 KB across 48 chunks, so the ceiling moved 16 KB to 336 KB and keeps 8.1 KB of headroom; the first visit was 140.6 KB and the per-chunk ceiling did not move. The first visit then moved once more, for finished surface rather than slack: the owner's art landed behind the home hero (a 900 px wash, 9.3 KB gzipped, blurred inside the file so its baked wordmark becomes a ghost), the badge sits inline in the header (about 6.2 KB), and the display face changed from Dosis to Game Buddy, whose Latin-1 subset is 29 KB against Dosis's 21 KB and takes the inlined faces from 56 KB to 64 KB gzipped. That is 140.6 + 9 + 6 + 8 = 165 KB measured, so the ceiling moved once, to 180 KB, leaving 15 KB for the next change. The 2026-11-18 audit added seven rulebooks to the shelves and seven marks, all deferred: the total is 335.9 KB across 48 chunks, 70 bytes inside the ceiling, so tool-file
 scripts and the twenty-nine diagnostic strings that had never been translated used the last
 of the headroom; the next addition needs a shelf split with its arithmetic written down
-here, not a silent raise, and the first visit is 165.3 KB, 14.7 KB inside its own. M13 then added five languages at once — Portuguese, Italian, Indonesian, Turkish and Vietnamese — and took the deferred total from 335.9 KB across 48 chunks to 454.2 KB across 58. That is 118.3 KB, or 23.7 KB per language: about 21.7 KB for the pair of string chunks and 2 KB because the words tool now carries ten word packs and five more locale sets. As a formula, 217.6 KB of non-language chunks plus 10 × 23.7 = 454.6 KB, measured at 454.2. Both ceilings moved once, by arithmetic rather than to make a build pass: one chunk 24 KB → 26 KB, all deferred 336 KB → 464 KB. Neither has a language of headroom left, so an eleventh language needs its own arithmetic here first.
+here, not a silent raise, and the first visit is 165.3 KB, 14.7 KB inside its own. M13 then added five languages at once — Portuguese, Italian, Indonesian, Turkish and Vietnamese — and took the deferred total from 335.9 KB across 48 chunks to 454.2 KB across 58. That is 118.3 KB, or 23.7 KB per language: about 21.7 KB for the pair of string chunks and 2 KB because the words tool now carries ten word packs and five more locale sets. As a formula, 217.6 KB of non-language chunks plus 10 × 23.7 = 454.6 KB, measured at 454.2. Both ceilings moved once, by arithmetic rather than to make a build pass: one chunk 24 KB → 26 KB, all deferred 336 KB → 464 KB. Neither had a language of headroom left, so an eleventh language needed its own arithmetic here first.
 
 **Preparing the CJK languages, M13.6.** Japanese, Chinese and Korean are named in
 `core/langs.ts` but not shipped: a language appears the moment its dictionary chunk does,
@@ -295,6 +297,47 @@ Subsetting the variable font to the standard common sets is what made it afforda
 it keeps the `wght` axis, so a CJK heading is truly heavier rather than synthetic.
 
 **The word bank, M13.5.** The ten packs were the reason the per-chunk ceiling had moved, so the packs stopped riding in the words tool's chunk: each is now its own `import()`, picked by a dropdown that rarely changes, and the tool shows its frame while the words arrive. That alone took the largest chunk from 25.2 KB to 16.0 KB. The lists then grew from 5,526 entries to 17,036 unique ones (English 1,454 → 2,260, Dutch 360 → 2,510, German 545 → 1,408, French 949 → 3,438, Spanish 1,120 → 2,039, Portuguese 232 → 1,042, Italian 181 → 1,283, Indonesian 220 → 813, Turkish 240 → 1,279, Vietnamese 225 → 964), which is 118.5 KB of source text where there were 37 KB. Duplicates are dropped when a pack is parsed, so the count on the screen is the real one. Measured: 498.3 KB across 68 chunks, against 454.2 KB across 58 before — 44.1 KB for about 11,500 more words and ten more chunks, or 3.8 KB per thousand words. That is finished data, not slack, so the deferred ceiling moved once, 464 KB → 512 KB, and the per-chunk ceiling did not need to move: no pack is over 8 KB gzipped. The first visit did not move (107.4 KB), because a pack costs nothing until a player picks that language. The first visit did not move (166.8 KB, 13.2 KB inside its own) because no dictionary is compiled into the start-up, and the single file is 578.4 KB with all ten. These are ceilings, not targets.
+
+**Four more languages, M13.7.** Polish, Japanese, Chinese (Simplified) and Korean joined on
+the M10 contract: a shell dictionary, a locale file in all twenty-two tool folders, a word
+pack each (Polish 609 words, Japanese 394, Simplified Chinese 389, Korean 381 — 18,998
+across fourteen packs), and fourteen entries in the picker with no half-translated screen.
+The CJK packs are the new shape: Japanese and Chinese write without spaces, so their words
+are separated by `、` and a single character is a whole word, which `parseWords` already
+accepted; Korean spaces its words like Latin does. The Words tool's normaliser had to move
+with them: it stripped everything outside `a-z`, so every CJK word became an empty string
+and a Polish `ź` lost its accent against an accented pack, which meant check mode could
+never match. It now keeps Latin accents and Latin Extended-A, kana, the CJK ideographs and
+hangul, and the checker, the filters, the anagram and the rack modes compare a query and a
+pack word in the same folded shape. Measured: 498.3 KB across 68 chunks → 602.6 KB across
+80, so 104.3 KB for four languages, or 26.1 KB each: a tool-text chunk of 15.8–16.2 KB, a
+shell chunk of 7.9–8.1 KB and a pack of 1.6–2.4 KB. The per-chunk ceiling did not need to
+move, since the largest chunk is the Polish tool-text one at 16.2 KB. The deferred ceiling
+moved once, 512 KB → 620 KB, which leaves 17.4 KB — less than a fifteenth language, so that
+one needs its own arithmetic here first. The first visit did not move (107.9 KB, 72.1 KB
+inside its ceiling), because a translation is still a lazy chunk; the single file is
+6,280 KB with all fourteen languages and the three CJK faces. These are ceilings, not
+targets.
+
+**Everyday vocabularies for the CJK packs, M13.8.** A 390-word pack cannot serve a word
+game: it answers "not in this list" for words a player has known since childhood. The
+three CJK packs were rewritten field by field — home and kitchen, food, nature, time,
+people and trades, the body and health, animals and plants, position and shape,
+adjectives, verbs, numbers and adverbs, games, town and travel, school, work and
+electronics, clothing, feelings — and are now 1,555 Japanese, 1,524 Simplified Chinese
+and 1,481 Korean words against 394, 389 and 381 before. Japanese and Chinese keep the
+`、` separator because a single character can be a whole word there; Korean keeps its
+spaces, which is the shape `parseWords` already reads. Nothing but the three pack chunks
+moved: measured 602.6 KB across 80 chunks → 617.8 KB across the same 80, which is 15.2 KB
+for 3,396 more words, or 4.5 KB per thousand — a little dearer than the 3.8 KB per
+thousand the Latin packs averaged, because a CJK word carries more bytes under gzip than a
+Latin one. The per-chunk ceiling did not move (the largest chunk is still the 16.2 KB
+Polish tool-text one) and neither did the deferred one: 620 KB still holds, with 2.2 KB
+left. That is on purpose. The ceiling moved once for these languages in M13.7, and a
+longer word list is not a reason to move it a second time, so the next pack growth, like
+a fifteenth language, needs its own arithmetic written here first. The first visit did not
+move (107.9 KB) and the single file is 6,311 KB; the three lists are now 69, 67 and 66
+percent of the 2,260 English words, where they were 17 percent each.
 
 ### 5.3 Gates
 

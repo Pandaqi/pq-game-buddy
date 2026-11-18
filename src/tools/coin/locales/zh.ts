@@ -1,0 +1,48 @@
+/** 硬币的文案。注册时键名会带上工具名。 */
+
+const zh = {
+  title: '硬币',
+  blurb: '抛起来再猜。一枚或十枚，公平或有偏。',
+  heads: '正面',
+  tails: '反面',
+  'series-won': '{side} 获胜',
+  'best-of': '{target} 局制 · {heads}–{tails}',
+  ready: '准备',
+  'tap-one': '点“抛”把硬币抛起来。',
+  'tap-many': '点“抛”把 {count} 枚硬币抛起来。',
+  'tally-label': '正面 / 反面',
+  'all-heads': ' —— 全是正面！',
+  flip: '抛',
+  'flip-again': '再抛一次',
+  format: '硬币形式',
+  single: '抛一次',
+  best: '几局制',
+  tally: '正面 {heads} · 反面 {tails}',
+  'first-to': '先到',
+  call: '猜',
+  stats: '赢 {won} · 输 {lost} · 连续 {streak}（最好 {best}）',
+  coins: '硬币数',
+  'heads-chance': '正面概率',
+  weighted: '有偏的硬币：按设置 {percent}% 正面。',
+  reset: '重置计数',
+  tie: '平局',
+  'called-it': '猜对了',
+  missed: '猜错了',
+  'initial-heads': '正',
+  'initial-tails': '反',
+  'toast-series': '{side} 以 {own}–{other} 拿下这轮',
+  'undo-reset': '重置硬币',
+  'summary-none': '还没有抛过。',
+  'summary-main': '正面 {heads}，反面 {tails}。猜正反：赢 {won}，输 {lost}。',
+  'summary-series': '一轮（{target} 局制）：正面 {heads}，反面 {tails}。',
+  'summary-series-won': '一轮（{target} 局制）：正面 {heads}，反面 {tails} —— {side} 赢了。',
+
+  // 事件记录，用当前语言写。
+  'undo-coins': '硬币数量',
+  'undo-fairness': '硬币配重',
+  'undo-call': '你的猜测',
+  'undo-mode': '硬币形式',
+  'undo-target': '一轮的目标',
+};
+
+export default zh;

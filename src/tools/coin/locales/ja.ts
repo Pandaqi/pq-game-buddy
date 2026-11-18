@@ -1,0 +1,48 @@
+/** コインの言葉。キーは登録時にツール名がつきます。 */
+
+const ja = {
+  title: 'コイン',
+  blurb: '投げて当てる。1枚でも10枚でも、公平でも偏りありでも。',
+  heads: '表',
+  tails: '裏',
+  'series-won': '{side}の勝ち',
+  'best-of': '{target}本先取 · {heads}–{tails}',
+  ready: '準備OK',
+  'tap-one': '「投げる」を押してコインを投げます。',
+  'tap-many': '「投げる」を押してコイン{count}枚を投げます。',
+  'tally-label': '表 / 裏',
+  'all-heads': ' — 全部表！',
+  flip: '投げる',
+  'flip-again': 'もう一度投げる',
+  format: 'コインの形式',
+  single: '1回だけ投げる',
+  best: '何本先取',
+  tally: '表{heads} · 裏{tails}',
+  'first-to': '先に',
+  call: '当てる',
+  stats: '当たり{won} · 外れ{lost} · 連続{streak}（最高{best}）',
+  coins: 'コイン',
+  'heads-chance': '表の確率',
+  weighted: '偏ったコイン：設定どおり表{percent}%。',
+  reset: '数を戻す',
+  tie: '引き分け',
+  'called-it': '当てた',
+  missed: '外した',
+  'initial-heads': '表',
+  'initial-tails': '裏',
+  'toast-series': '{side}が{own}–{other}で取った',
+  'undo-reset': 'コインを戻す',
+  'summary-none': 'まだ投げていません。',
+  'summary-main': '表{heads}、裏{tails}。当てもの：{won}当たり、{lost}外れ。',
+  'summary-series': 'シリーズ（{target}本先取）：表{heads}、裏{tails}。',
+  'summary-series-won': 'シリーズ（{target}本先取）：表{heads}、裏{tails} — {side}の勝ち。',
+
+  // 出来事の記録。表示中の言語で書きます。
+  'undo-coins': 'コインの枚数',
+  'undo-fairness': 'コインの重み',
+  'undo-call': 'あなたの予想',
+  'undo-mode': 'コインの形式',
+  'undo-target': 'シリーズの本数',
+};
+
+export default ja;

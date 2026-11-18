@@ -3,7 +3,7 @@ import type { PresetSchema } from '../../core/template/schema';
 const preset: PresetSchema = {
   profile: {
     type: 'enum',
-    values: ['en', 'nl', 'de', 'fr', 'es', 'pt', 'it', 'id', 'tr', 'vi'],
+    values: ['en', 'nl', 'de', 'fr', 'es', 'pt', 'it', 'id', 'tr', 'vi', 'pl', 'ja', 'zh', 'ko'],
     default: 'en',
     label: 'Word pack',
   },

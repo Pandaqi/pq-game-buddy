@@ -58,7 +58,13 @@ const BUDGET_CHUNK_GZ = 26 * 1024;
 // largest chunk fell from 25.2 KB to 16.0 KB, because ten packs no longer ride in the
 // words tool's chunk. That is 44.1 KB of finished data, so the ceiling moved once to
 // 512 KB; the arithmetic is in ROADMAP.md §5.2.
-const BUDGET_CHUNKS_TOTAL_GZ = 512 * 1024;
+// M13.7 raised it once more, to 620 KB: Polish, Japanese, Chinese (Simplified) and
+// Korean cost 104.3 KB together, or 26.1 KB each (a 15.8–16.2 KB tool-text chunk, a
+// 7.9–8.1 KB shell chunk and a 1.6–2.4 KB word pack), which is 498.3 + 104.3 =
+// 602.6 KB across 80 chunks. That leaves 17.4 KB, less than one more language, so the
+// next one needs its own arithmetic in ROADMAP.md §5.2. The per-chunk ceiling did not
+// move: the largest chunk is the Polish tool-text one at 16.2 KB.
+const BUDGET_CHUNKS_TOTAL_GZ = 620 * 1024;
 
 const MODES = ['spa', 'site', 'single'] as const;
 type Mode = (typeof MODES)[number];

@@ -423,7 +423,7 @@ dispatch `timer` and `reveal` already use — `callExternal` → `splitCommand` 
 `ctx.session.instance(target)` → `commands[command]()` — so the runtime needs no new
 code, only the verb in two lists (`core/template/parse.ts` and `tools/script/logic.ts`,
 which may not import from core by the layering rule), one condition in the script tool,
-one locale key in ten languages and a test.
+one locale key in fourteen languages and a test.
 
 That this is the existing dispatch is now written down in `docs/TEMPLATE-FORMAT.md`: a
 `timer` or `reveal` step takes `<instance> <command>` (`3. timer: kitchen start`), not a

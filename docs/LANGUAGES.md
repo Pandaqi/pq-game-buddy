@@ -1,7 +1,8 @@
 # Adding a language
 
-The app ships ten languages and is prepared for three more — Japanese, Chinese (Simplified)
-and Korean. This page is the whole job, in the order the gates complain about it. Read
+The app ships fourteen languages — English, Dutch, German, Spanish, French, Portuguese,
+Italian, Indonesian, Turkish, Vietnamese, Polish, Japanese, Chinese (Simplified) and Korean.
+This page is the whole job, in the order the gates complain about it. Read
 `docs/ARCHITECTURE.md` §"Languages" for how the pieces fit; this is the checklist.
 
 A language is **two chunks** — `src/core/locales/<id>.ts` for the shell and the generated
@@ -20,14 +21,20 @@ dictionary file exists, so a half-finished language must never be committed.
 3. **Regenerate.** `bun run gen` writes `tool-text-<id>.generated.ts` and adds the language
    to `registry.generated.ts`. This is also what makes the build and the picker see it.
 4. **Word pack.** `src/data/words/<id>.ts` exports one default string of words; register the
-   id in `WordLang`, `WORD_LANGS` and `LOADERS` in `src/data/words/packs.ts`, and add a row
-   to `src/data/words/LICENSES.md` with its count, licence and source. Latin-script packs
-   separate words with spaces. Japanese and Chinese write without spaces, so a CJK pack
-   separates words with the ideographic comma (`、`) or a newline; a single character is a
-   valid word there, and the parser knows it.
-5. **Name.** `src/core/langs.ts` already carries the entry for the prepared three
-   (`ja`, `zh`, `ko`). A new language outside them needs one line there too: the label in
-   the language's own script, its English name as the quiet second line.
+   id in `WordLang`, `WORD_LANGS` and `LOADERS` in `src/data/words/packs.ts`, add its
+   alphabetical position to the `profile` enum in `src/tools/words/preset.ts`, give it a
+   letter set in `ALPHABETS` (`src/tools/words/logic.ts`, used by the rack and letters
+   modes), and add a row to `src/data/words/LICENSES.md` with its count, licence and
+   source. Latin-script packs separate words with spaces. Japanese and Chinese write
+   without spaces, so a CJK pack separates words with the ideographic comma (`、`) or a
+   newline; a single character is a valid word there, and the parser knows it. Accents and
+   CJK characters survive normalising, so a pack reads in its own script; the checker folds
+   the query the same way, so `ź` and `한` are findable.
+5. **Name.** `src/core/langs.ts` carries an entry for every language above, including the
+   four added last (`pl`, `ja`, `zh`, `ko`). A new language outside that list needs one line
+   there too: the label in the language's own script, its English name as the quiet second
+   line. A language with no dictionary chunk never reaches the picker, so an entry is free
+   until the translation lands.
 6. **Run the gate.** `bun run check`. It will also compare the localized tool folders with
    the explicit `LOCALES` list in `tests/i18n.test.ts` — add a tool there only if it grew a
    `locales/` folder, which is the step that says its strings moved out of its view.

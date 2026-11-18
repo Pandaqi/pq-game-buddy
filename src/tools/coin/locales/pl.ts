@@ -1,0 +1,48 @@
+/** Słowa monety. Klucze dostają nazwę narzędzia przy rejestracji. */
+
+const pl = {
+  title: 'Moneta',
+  blurb: 'Zgaduj w powietrzu. Jedna moneta albo dziesięć, uczciwa albo ważona.',
+  heads: 'Orzeł',
+  tails: 'Reszka',
+  'series-won': 'wygrywa: {side}',
+  'best-of': 'Do {target} · {heads}–{tails}',
+  ready: 'Gotowe',
+  'tap-one': 'Dotknij Rzuć, żeby podrzucić monetę.',
+  'tap-many': 'Dotknij Rzuć, żeby podrzucić monety: {count}.',
+  'tally-label': 'orzeł / reszka',
+  'all-heads': ' — same orły!',
+  flip: 'Rzuć',
+  'flip-again': 'Rzuć jeszcze raz',
+  format: 'Format monety',
+  single: 'Jeden rzut',
+  best: 'Do ilu wygranych',
+  tally: 'Orły {heads} · Reszki {tails}',
+  'first-to': 'Do',
+  call: 'Zgaduj',
+  stats: 'wygrane {won} · przegrane {lost} · seria {streak} (najlepsza {best})',
+  coins: 'Monety',
+  'heads-chance': 'Szansa na orła',
+  weighted: 'Ważona moneta: {percent}% orłów, jak ustawiono.',
+  reset: 'Wyczyść liczniki',
+  tie: 'remis',
+  'called-it': 'trafione',
+  missed: 'pudło',
+  'initial-heads': 'O',
+  'initial-tails': 'R',
+  'toast-series': '{side} bierze serię {own}–{other}',
+  'undo-reset': 'reset monety',
+  'summary-none': 'Jeszcze bez rzutów.',
+  'summary-main': 'Orły {heads}, reszki {tails}. Zgadywanie: {won} trafionych, {lost} pudła.',
+  'summary-series': 'Seria (do {target}): orły {heads}, reszki {tails}.',
+  'summary-series-won': 'Seria (do {target}): orły {heads}, reszki {tails} — wygrywa {side}.',
+
+  // Dziennik zdarzeń, w aktywnym języku.
+  'undo-coins': 'liczba monet',
+  'undo-fairness': 'ważenie monety',
+  'undo-call': 'twój typ',
+  'undo-mode': 'format monety',
+  'undo-target': 'cel serii',
+};
+
+export default pl;
