@@ -1,26 +1,32 @@
 name: release
 
 # The whole pipeline in one file, so a push cannot be gated by one workflow and silently
-# skipped by another. Every push and pull request runs the gate; on `main` the second job
-# asks one question about package.json: does a GitHub Release `v<version>` exist already?
-# No - build the three shapes, tag the commit, publish. Yes - stop.
+# skipped by another. Every push to `main` that changes something other than prose runs
+# the gate; the second job then asks one question about package.json: does a GitHub
+# Release `v<version>` exist already? No - build the three shapes, tag the commit,
+# publish. Yes - stop. Runs are billed in Actions minutes, so nothing runs for words.
 # Contract: docs/RELEASING.md, section 2.
 
 on:
   push:
     branches: [main]
-  pull_request:
+    # Prose ships nothing and every run spends minutes: a commit whose files are all
+    # markdown or under docs/ starts no run at all. package.json is deliberately absent
+    # from this list, so a version bump always runs even when the rest is words.
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
   workflow_dispatch:
 
 # Tagging the commit and opening the Release both write to the repository.
 permissions:
   contents: write
 
-# One release at a time: a second push on `main` waits rather than racing the first tag,
-# while a pull request supersedes its own earlier run.
+# One release at a time: a second push on `main` waits rather than racing the first tag.
+# Nothing is cancelled, because a half-run release is worse than a late one.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  cancel-in-progress: false
 
 jobs:
   gate:
@@ -45,8 +51,8 @@ jobs:
   release:
     name: release
     needs: gate
-    # Pull requests are gated only; a release is cut from `main`.
-    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    # A release is cut from `main` only; a manual run from another branch just gates.
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

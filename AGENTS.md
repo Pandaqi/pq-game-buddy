@@ -55,12 +55,15 @@ did not exist before;
 - **major** (`1.0.0`) — the template format, a saved session's shape or a route breaks.
 
 `.github/workflows/release.yml` is the only workflow: it runs on every push to `main`
-and on every pull request. Its `gate` job runs `bun run check`, so nothing lands red.
-On `main` the `release` job then reads that number and asks one question: does a GitHub
-Release `v<version>` exist already? No - it tags the commit `v<version>` and publishes
-the one file, the hosted build and the site build; yes - it stops. A change without a
-bump is therefore not released, and two changes that share a version ship as one
-release. A release can also be started by hand from the Actions tab
+that changes something other than prose, because runs are billed in Actions minutes (a
+commit whose files are all `**.md` or under `docs/` starts no run, and `package.json` is
+not in that list, so a version bump always runs). Its `gate` job runs `bun run check`, but
+that guards the release, not the branch: nothing stops a red commit reaching `main`, it
+just cannot cut one. The `release` job then reads that number and asks one question:
+does a GitHub Release `v<version>` exist already? No - it tags the commit `v<version>`
+and publishes the one file, the hosted build and the site build; yes - it stops. A change
+without a bump is therefore not released, and two changes that share a version ship as
+one release. A release can also be started by hand from the Actions tab
 (`workflow_dispatch`). This is the only automatic publication; pandaqi.com stays the
 owner's step (`docs/RELEASING.md` §4).
 

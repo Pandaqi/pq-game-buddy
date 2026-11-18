@@ -52,9 +52,14 @@ hosted pages only, so the dev shell and the single file never register a worker.
    the number is written: `bun run gen` copies it into `src/core/version.generated.ts`
    (commit that too), and `bun run check` rejects a stale copy.
 4. Push to `main`. `.github/workflows/release.yml` is the only workflow: the `gate` job
-   runs `bun run check` on every push and pull request, and on `main` the `release` job
-   turns the number into a release by asking one question: has the GitHub Release
-   `v<version>` been published already?
+   runs `bun run check` on every push that changes something other than prose, and the
+   `release` job turns the number into a release by asking one question: has the GitHub
+   Release `v<version>` been published already?
+
+   Runs cost Actions minutes, so the workflow is deliberately quiet: no pull-request
+   trigger, and a push whose changed files are all `**.md` or under `docs/` starts no run.
+   A version bump still runs, because `package.json` is not ignored. A commit that is
+   only prose therefore changes nothing a player downloads, which is the point.
    - **No** — it takes the gate's build as the hosted build, builds the other two
      shapes, tags the commit `v<version>` and opens a Release with
      `pq-game-buddy-<version>.html` (the single
@@ -70,6 +75,13 @@ hosted pages only, so the dev shell and the single file never register a worker.
    needs retrying can be started by hand from the Actions tab (the workflow has
    `workflow_dispatch`). The workflow publishes a GitHub Release, not a deployment —
    pandaqi.com is still §4 below.
+
+   Two repository settings are a one-time prerequisite and neither lives in the YAML
+   file. Settings → Actions → General has to allow actions: with "Disable actions"
+   selected, a push starts no run at all and the Actions tab says only "This workflow has
+   no runs yet". And Workflow permissions has to be "Read and write permissions", or the
+   release cannot push its tag. A push that produces no run is a settings question before
+   it is a workflow-file question.
 
 ## 3. Verify a downloaded copy
 

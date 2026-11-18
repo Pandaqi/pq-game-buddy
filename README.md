@@ -58,8 +58,9 @@ bun run check        # the gate: stale manifest, tsc, svelte-check, tests, templ
 | `bun run gen` | Regenerates the manifest, schemas and template index after adding a tool or template |
 
 `bun run check` must pass before a change lands. It is also what
-[the release workflow](.github/workflows/release.yml) runs on every push and pull
-request, before it considers cutting a release.
+[the release workflow](.github/workflows/release.yml) runs on every push that changes
+something other than prose — a guard on the release rather than on the branch: a red
+commit still reaches `main`, it just cuts no release.
 
 Every change also bumps `version` in `package.json` (semantic versioning) and runs
 `bun run gen`: on `main`, the same workflow tags `v<version>` and publishes the single

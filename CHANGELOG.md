@@ -17,9 +17,15 @@ All notable changes to Game Buddy. The template format is versioned separately
 
 ### Changed
 
+- **The pipeline only spends Actions minutes where it can matter.** There is no
+  pull-request trigger any more, and a push whose changed files are all markdown or under
+  `docs/` starts no run at all; `package.json` is not on that list, so a version bump
+  always runs. A prose-only commit publishes nothing, which is what it did before, only
+  now it costs nothing too.
 - **One workflow instead of two.** `check.yml` and `release.yml` are now a single
-  `release.yml`: the `gate` job runs the same check on every push and pull request, and
-  the `release` job reuses that build as the hosted build instead of compiling it twice.
+  `release.yml`: the `gate` job runs the same check first, and the `release` job reuses
+  that build as the hosted build instead of compiling it twice. The gate stops a red
+  build from being released, not from landing: there is no pull-request trigger.
   One file with one trigger, so a push can no longer be gated by one workflow while the
   other silently does nothing. A release can still be started by hand from the Actions
   tab.
